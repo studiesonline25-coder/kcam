@@ -5,6 +5,7 @@ import android.graphics.ImageFormat
 import android.graphics.Rect
 import android.graphics.YuvImage
 import android.media.Image
+import android.util.Log
 import com.virtucam.ModuleMain
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
@@ -31,7 +32,7 @@ class FrameInjector {
             ImageFormat.YUV_420_888 -> injectYUV420(image, bitmap)
             ImageFormat.JPEG -> injectJPEG(image, bitmap)
             ImageFormat.NV21 -> injectNV21(image, bitmap)
-            else -> ModuleMain.log("Unsupported image format: ${image.format}")
+            else -> Log.e(TAG, "Unsupported image format: ${image.format}")
         }
     }
     
@@ -87,7 +88,7 @@ class FrameInjector {
             }
             
         } catch (e: Exception) {
-            ModuleMain.log("$TAG: Failed to inject YUV420: ${e.message}")
+            Log.e(TAG, "Failed to inject YUV420", e)
         }
     }
     
@@ -119,7 +120,7 @@ class FrameInjector {
             }
             
         } catch (e: Exception) {
-            ModuleMain.log("$TAG: Failed to inject JPEG: ${e.message}")
+            Log.e(TAG, "Failed to inject JPEG", e)
         }
     }
     
@@ -151,7 +152,7 @@ class FrameInjector {
             }
             
         } catch (e: Exception) {
-            ModuleMain.log("$TAG: Failed to inject NV21: ${e.message}")
+            Log.e(TAG, "Failed to inject frame in current format", e)
         }
     }
     

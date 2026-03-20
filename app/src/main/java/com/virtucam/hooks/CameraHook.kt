@@ -175,7 +175,7 @@ object CameraHook {
                         Log.e(TAG, "VirtuCam_Hook: Error in createCaptureSession hook", t)
                     }
                 }
-            }
+            )
         }
     }
 
