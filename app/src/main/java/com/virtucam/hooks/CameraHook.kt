@@ -32,20 +32,26 @@ object CameraHook {
     private var streamUrl: String = ""
     private var targetPackage: String = ""
     
-    private val renderThreads = mutableListOf<VirtualRenderThread>()
+    private val renderThreads = mutableListOf<Any>() // Use Any to avoid early class loading of VirtualRenderThread
+    
+    private var configLoaded = false
 
     /**
      * Initialize all camera hooks
      */
     fun init(lpparam: XC_LoadPackage.LoadPackageParam) {
-        targetPackage = lpparam.packageName
-        
-        loadConfiguration()
-        
-        hookCameraDevice(lpparam)
-        hookCameraDeviceOutputConfigurations(lpparam)
-        
-        ModuleMain.log("Camera Surface Hijacking hooks set up for $targetPackage")
+        try {
+            targetPackage = lpparam.packageName
+            
+            // Do NOT call loadConfiguration() here. It requires a Context which isn't ready yet.
+            
+            hookCameraDevice(lpparam)
+            hookCameraDeviceOutputConfigurations(lpparam)
+            
+            ModuleMain.log("Camera hooks deployed for $targetPackage")
+        } catch (t: Throwable) {
+            ModuleMain.log("CRITICAL: Failed to deploy hooks in $targetPackage: ${t.message}")
+        }
     }
 
     private fun createDummySurface(): Surface {
@@ -121,15 +127,16 @@ object CameraHook {
             object : XC_MethodHook() {
                 @Suppress("UNCHECKED_CAST")
                 override fun beforeHookedMethod(param: MethodHookParam) {
-                    if (!isEnabled) return
+                        // Lazy load configuration when camera is actually accessed
+                        loadConfiguration()
+                        if (!isEnabled) return
 
-                    try {
                         val args = param.args
                         if (args.isEmpty() || args[0] !is List<*>) return
 
                         val surfacesList = args[0] as List<Surface>
                         if (surfacesList.isNotEmpty()) {
-                            ModuleMain.log("Intercepted createCaptureSession (Surface list) - count: ${surfacesList.size}")
+                            ModuleMain.log("Intercepted createCaptureSession - count: ${surfacesList.size}")
                             
                             val newSurfaces = ArrayList<Surface>()
                             val targetSurfaces = ArrayList<Surface>()
@@ -246,16 +253,24 @@ object CameraHook {
     }
 
     private fun startRenderThreads(targetSurfaces: List<Surface>) {
-        renderThreads.forEach { it.quit() }
+        renderThreads.forEach { 
+            try {
+                // Reflectively call quit() to avoid explicit type checks during load
+                it.javaClass.getMethod("quit").invoke(it)
+            } catch (e: Exception) {}
+        }
         renderThreads.clear()
         
         val context = AndroidAppHelper.currentApplication() ?: return
         
         for (surface in targetSurfaces) {
-            val thread = VirtualRenderThread(surface, context, isVideo, isStream, streamUrl).apply {
-                start()
+            try {
+                val thread = VirtualRenderThread(surface, context, isVideo, isStream, streamUrl)
+                thread.start()
+                renderThreads.add(thread)
+            } catch (t: Throwable) {
+                ModuleMain.log("Failed to start RenderThread: ${t.message}")
             }
-            renderThreads.add(thread)
         }
     }
     

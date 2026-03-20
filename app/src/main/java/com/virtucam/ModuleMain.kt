@@ -22,20 +22,24 @@ class ModuleMain : IXposedHookLoadPackage {
     }
     
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
-        // Skip our own app
-        if (lpparam.packageName == "com.virtucam") {
-            return
-        }
-        
-        log("Loaded in: ${lpparam.packageName}")
-        
         try {
-            // Initialize camera hooks
-            CameraHook.init(lpparam)
-            log("Camera hooks initialized for ${lpparam.packageName}")
-        } catch (e: Throwable) {
-            log("Failed to initialize hooks: ${e.message}")
-            XposedBridge.log(e)
+            // Skip our own app
+            if (lpparam.packageName == "com.virtucam") {
+                return
+            }
+            
+            log("Attaching to: ${lpparam.packageName}")
+            
+            // Initialize camera hooks with defensive catch
+            try {
+                CameraHook.init(lpparam)
+            } catch (hookError: Throwable) {
+                log("Hook initialization failed: ${hookError.message}")
+            }
+            
+        } catch (t: Throwable) {
+            // Final safety net to prevent any possible crash from bubbling up to the target app
+            XposedBridge.log("VirtuCam: Critical failure in handleLoadPackage for ${lpparam.packageName}: ${t.message}")
         }
     }
 }
