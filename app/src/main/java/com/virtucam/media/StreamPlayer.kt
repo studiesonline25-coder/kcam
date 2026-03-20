@@ -56,7 +56,7 @@ class StreamPlayer(
 
         // 1. Build ExoPlayer instance with ultra-low latency load control
         val loadControl = DefaultLoadControl.Builder()
-            .setBufferMs(0, 500, 0, 0)
+            .setBufferDurationsMs(0, 500, 0, 0)
             .setPrioritizeTimeOverSizeThresholds(true)
             .build()
 

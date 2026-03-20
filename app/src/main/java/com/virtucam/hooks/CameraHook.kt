@@ -146,6 +146,7 @@ object CameraHook {
             object : XC_MethodHook() {
                 @Suppress("UNCHECKED_CAST")
                 override fun beforeHookedMethod(param: MethodHookParam) {
+                    try {
                         // Lazy load configuration when camera is actually accessed
                         loadConfiguration()
                         if (!isEnabled) return
@@ -192,9 +193,10 @@ object CameraHook {
             "createCaptureSessionByOutputConfigurations",
             object : XC_MethodHook() {
                 override fun beforeHookedMethod(param: MethodHookParam) {
-                    if (!isEnabled) return
-                    
                     try {
+                        loadConfiguration()
+                        if (!isEnabled) return
+                        
                         val args = param.args
                         if (args.isEmpty() || args[0] !is List<*>) return
                         
@@ -232,9 +234,10 @@ object CameraHook {
             "createCaptureSession",
             object : XC_MethodHook() {
                 override fun beforeHookedMethod(param: MethodHookParam) {
-                    if (!isEnabled) return
-                    
                     try {
+                        loadConfiguration()
+                        if (!isEnabled) return
+                        
                         val args = param.args
                         if (args.isEmpty()) return
                         
