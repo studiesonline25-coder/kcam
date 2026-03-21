@@ -136,12 +136,9 @@ object CameraHook {
         })
     }
 
-    private fun createDummySurface(targetSurface: Surface?): Surface {
+    private fun createDummySurface(targetSurface: Surface?, width: Int = 1280, height: Int = 720): Surface {
         val texId = nextTextureId++
         val dummySurfaceTexture = SurfaceTexture(texId)
-        
-        var width = 1920
-        var height = 1080
         
         dummySurfaceTexture.setDefaultBufferSize(width, height)
         val surface = Surface(dummySurfaceTexture)
@@ -155,9 +152,54 @@ object CameraHook {
         return surface
     }
 
+    /**
+     * Extract width/height from an OutputConfiguration via reflection
+     */
+    private fun getSizeFromOutputConfig(config: Any): Pair<Int, Int> {
+        try {
+            val getSurfaceMethod = config.javaClass.getMethod("getSurface")
+            val surface = getSurfaceMethod.invoke(config) as? Surface
+            if (surface != null) {
+                // Try to get size from the Surface's internal canvas or native fields
+                try {
+                    val mConfiguredWidthField = XposedHelpers.findFieldIfExists(config.javaClass, "mConfiguredSize")
+                    if (mConfiguredWidthField != null) {
+                        val size = mConfiguredWidthField.get(config)
+                        if (size != null) {
+                            val w = size.javaClass.getMethod("getWidth").invoke(size) as Int
+                            val h = size.javaClass.getMethod("getHeight").invoke(size) as Int
+                            if (w > 0 && h > 0) {
+                                Log.d(TAG, "VirtuCam_Hook: Extracted OutputConfig size: ${w}x${h}")
+                                return Pair(w, h)
+                            }
+                        }
+                    }
+                } catch (_: Throwable) {}
+
+                // Fallback: try mSurfaceSize
+                try {
+                    val sizeField = XposedHelpers.findFieldIfExists(config.javaClass, "mSurfaceSize")
+                    if (sizeField != null) {
+                        val size = sizeField.get(config)
+                        if (size != null) {
+                            val w = size.javaClass.getMethod("getWidth").invoke(size) as Int
+                            val h = size.javaClass.getMethod("getHeight").invoke(size) as Int
+                            if (w > 0 && h > 0) {
+                                Log.d(TAG, "VirtuCam_Hook: Extracted SurfaceSize: ${w}x${h}")
+                                return Pair(w, h)
+                            }
+                        }
+                    }
+                } catch (_: Throwable) {}
+            }
+        } catch (_: Throwable) {}
+        return Pair(1280, 720) // Safe default for the Redmi 14C
+    }
+
     @Suppress("UNCHECKED_CAST")
     private fun swapSurfaceInOutputConfig(config: Any, targetSurface: Surface) {
-        val dummySurface = createDummySurface(targetSurface)
+        val (w, h) = getSizeFromOutputConfig(config)
+        val dummySurface = createDummySurface(targetSurface, w, h)
         
         try {
             // NotebookLM Research: enableSurfaceSharing() relaxes internal validation
