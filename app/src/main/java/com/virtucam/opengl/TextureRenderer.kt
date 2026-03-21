@@ -60,11 +60,13 @@ class TextureRenderer(private val isVideo: Boolean = true) {
              1.0f,  1.0f    // 3 top right
         )
 
+        // Texture coords with flipped V-axis to correct OpenGL's bottom-left origin
+        // to Android Surface's top-left origin. Without this, the image appears upside-down.
         private val TEXTURE_COORDS = floatArrayOf(
-            0.0f, 0.0f,     // 0 bottom left
-            1.0f, 0.0f,     // 1 bottom right
-            0.0f, 1.0f,     // 2 top left
-            1.0f, 1.0f      // 3 top right
+            0.0f, 1.0f,     // 0 bottom left  → sample from top
+            1.0f, 1.0f,     // 1 bottom right → sample from top
+            0.0f, 0.0f,     // 2 top left     → sample from bottom
+            1.0f, 0.0f      // 3 top right    → sample from bottom
         )
     }
 
