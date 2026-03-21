@@ -164,11 +164,11 @@ object CameraHook {
             }
         })
 
-        // Also suppress in acquireNextSurfaceImage (internal method that throws the actual error)
-        XposedBridge.hookAllMethods(imageReaderClass, "acquireNextSurfaceImage", object : XC_MethodHook() {
+        // Suppress format mismatch in acquireNextImage (returns Image Object, safe for null returns)
+        XposedBridge.hookAllMethods(imageReaderClass, "acquireNextImage", object : XC_MethodHook() {
             override fun afterHookedMethod(param: MethodHookParam) {
                 if (param.throwable is UnsupportedOperationException) {
-                    Log.d(TAG, "VirtuCam_Hook: Suppressed ImageReader format mismatch in acquireNextSurfaceImage")
+                    Log.d(TAG, "VirtuCam_Hook: Suppressed ImageReader format mismatch in acquireNextImage")
                     param.throwable = null
                     param.result = null
                 }
