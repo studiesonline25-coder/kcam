@@ -44,8 +44,9 @@ object CameraHook {
     private val renderThreads = mutableListOf<Any>()
     // Strong references to prevent GC from destroying surfaces while native camera pipeline uses them
     private val dummySurfaces = mutableListOf<Surface>()
-    private val dummyTextures = mutableListOf<SurfaceTexture>()
-    private var nextTextureId = 100
+    private val dummyImageReaders = mutableListOf<ImageReader>()
+    private var dummySinkThread: HandlerThread? = null
+    private var dummySinkHandler: Handler? = null
     private var configLoaded = false
     // Maps original surfaces to their dummy replacements for CaptureRequest consistency
     private val surfaceMap = mutableMapOf<Surface, Surface>()
@@ -70,6 +71,7 @@ object CameraHook {
             hookCameraDevice(lpparam)
             hookCameraDeviceOutputConfigurations(lpparam)
             hookCamera1(lpparam)
+            hookGlobalThreadGuard(lpparam)
             
             Log.d(TAG, "VirtuCam_Hook: All hooks deployed successfully.")
         } catch (t: Throwable) {
@@ -187,11 +189,37 @@ object CameraHook {
                 try {
                     val image = param.result as? Image ?: return
                     val format = image.format
-                    // Data Override is exclusively for strictly validated formats like YUV.
-                    if (format == ImageFormat.YUV_420_888 || format == ImageFormat.YV12 || format == 35) {
-                        val bridge = activeBridges.firstOrNull { it.width == image.width && it.height == image.height }
-                        if (bridge != null) {
-                            bridge.overwriteImageWithLatestYuv(image)
+                    
+                    // Find matching bridge for this image dimensions
+                    val bridge = activeBridges.firstOrNull { it.width == image.width && it.height == image.height }
+                    
+                    when (format) {
+                        ImageFormat.YUV_420_888, ImageFormat.YV12, 35 -> {
+                            // YUV Data Override path
+                            if (bridge != null) {
+                                bridge.overwriteImageWithLatestYuv(image)
+                                Log.d(TAG, "VirtuCam_Hook: Overwrote YUV image ${image.width}x${image.height}")
+                            }
+                        }
+                        256 -> { // JPEG = 0x100 = 256
+                            // JPEG Capture Override path
+                            if (bridge != null) {
+                                bridge.overwriteImageWithLatestJpeg(image)
+                                Log.d(TAG, "VirtuCam_Hook: Overwrote JPEG capture ${image.width}x${image.height}")
+                            } else {
+                                // No matching bridge - try any bridge
+                                val anyBridge = activeBridges.firstOrNull()
+                                if (anyBridge != null) {
+                                    anyBridge.overwriteImageWithLatestJpeg(image)
+                                    Log.d(TAG, "VirtuCam_Hook: Overwrote JPEG capture (fallback bridge) ${image.width}x${image.height}")
+                                }
+                            }
+                        }
+                        else -> {
+                            // Unknown format - try YUV overwrite as a best-effort
+                            if (bridge != null && image.planes.size >= 3) {
+                                bridge.overwriteImageWithLatestYuv(image)
+                            }
                         }
                     }
                 } catch (e: Throwable) {
@@ -268,22 +296,40 @@ object CameraHook {
     }
 
     private fun createDummySurface(targetSurface: Surface?, width: Int = 1280, height: Int = 720): Surface {
-        val texId = nextTextureId++
-        val dummySurfaceTexture = SurfaceTexture(texId)
+        // [ONCE AND FOR ALL] Prevent BufferQueue Stalls (pipelineFull Native Crashes)
+        // Instead of a bare SurfaceTexture that no one reads, we use an ImageReader sink.
+        // It actively consumes and discards frames so the HAL never blocks.
         
-        dummySurfaceTexture.setDefaultBufferSize(width, height)
-        val surface = Surface(dummySurfaceTexture)
+        if (dummySinkThread == null) {
+            dummySinkThread = HandlerThread("VirtuCam-DummySink-${System.currentTimeMillis()}").apply { start() }
+            dummySinkHandler = Handler(dummySinkThread!!.looper)
+        }
+        
+        // Use YUV_420_888 as it's universally supported for sinks
+        val format = android.graphics.ImageFormat.YUV_420_888
+        val reader = ImageReader.newInstance(width, height, format, 4)
+        
+        reader.setOnImageAvailableListener({ ir ->
+            try {
+                // Instantly consume and discard the image to keep the pipeline flowing
+                ir.acquireNextImage()?.close()
+            } catch (e: Exception) {
+                // Ignore errors during discard
+            }
+        }, dummySinkHandler)
+        
+        val surface = reader.surface
         
         // Retain strong references — prevents GC from destroying surfaces
         // while the native camera pipeline is still writing to them
-        dummyTextures.add(dummySurfaceTexture)
+        dummyImageReaders.add(reader)
         dummySurfaces.add(surface)
         // Track original→dummy mapping for CaptureRequest swapping
         if (targetSurface != null) {
             surfaceMap[targetSurface] = surface
         }
         
-        Log.d(TAG, "VirtuCam_Hook: Created dummy surface (texId=$texId, ${width}x${height})")
+        Log.d(TAG, "VirtuCam_Hook: Created active ImageReader dummy sink (${width}x${height}, format=$format)")
         return surface
     }
 
@@ -580,8 +626,15 @@ object CameraHook {
         // Release old dummy surfaces safely now that render threads are stopped
         dummySurfaces.forEach { try { it.release() } catch (_: Throwable) {} }
         dummySurfaces.clear()
-        dummyTextures.forEach { try { it.release() } catch (_: Throwable) {} }
-        dummyTextures.clear()
+        dummyImageReaders.forEach { try { it.close() } catch (_: Throwable) {} }
+        dummyImageReaders.clear()
+        
+        try {
+            dummySinkThread?.quitSafely()
+            dummySinkThread = null
+            dummySinkHandler = null
+        } catch (_: Throwable) {}
+        
         surfaceMap.clear()
     }
 
@@ -600,6 +653,32 @@ object CameraHook {
         }
     }
     
+    /**
+     * Global crash guard: Catches ANY uncaught exception on all HandlerThreads.
+     * This is the last line of defense — if all other hooks fail, this prevents the app from crashing.
+     */
+    private fun hookGlobalThreadGuard(lpparam: XC_LoadPackage.LoadPackageParam) {
+        try {
+            val handlerThreadClass = XposedHelpers.findClassIfExists(
+                "android.os.HandlerThread", lpparam.classLoader
+            ) ?: return
+            
+            XposedBridge.hookAllMethods(handlerThreadClass, "run", object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    if (param.throwable != null && isEnabled) {
+                        val threadName = (param.thisObject as? Thread)?.name ?: "unknown"
+                        Log.e(TAG, "VirtuCam_Guard: CRASH PREVENTED on thread '$threadName': ${param.throwable?.javaClass?.name}: ${param.throwable?.message}")
+                        param.throwable = null
+                    }
+                }
+            })
+            
+            Log.d(TAG, "VirtuCam_Hook: Global HandlerThread crash guard installed.")
+        } catch (t: Throwable) {
+            Log.e(TAG, "VirtuCam_Hook: Failed to install global crash guard", t)
+        }
+    }
+
     /**
      * Anti-Plugin mechanism: Removes our hooking frames from thread stack trace
      */

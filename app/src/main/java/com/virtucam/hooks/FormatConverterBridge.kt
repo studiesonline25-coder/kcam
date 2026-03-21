@@ -1,5 +1,6 @@
 package com.virtucam.hooks
 
+import android.graphics.Bitmap
 import android.graphics.PixelFormat
 import android.media.Image
 import android.media.ImageReader
@@ -7,6 +8,7 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
 import android.view.Surface
+import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 
 /**
@@ -140,6 +142,44 @@ class FormatConverterBridge(
                 yBuffer.position(pos)
                 yBuffer.put(yRow, 0, yIndex.coerceAtMost(yBuffer.remaining()))
             }
+        }
+    }
+
+    /**
+     * Overwrite a JPEG-format Image buffer with our spoofed content.
+     * Converts cached RGBA → Bitmap → JPEG bytes → writes into the Image's single plane.
+     */
+    fun overwriteImageWithLatestJpeg(targetImage: Image) {
+        val rgbaBytes = cachedRgbaData ?: return
+        
+        try {
+            val planes = targetImage.planes
+            if (planes.isEmpty()) return
+            
+            val jpegBuffer = planes[0].buffer
+            if (!jpegBuffer.hasRemaining()) return
+            
+            // Create Bitmap from cached RGBA
+            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            val rgbaBuffer = ByteBuffer.wrap(rgbaBytes)
+            bitmap.copyPixelsFromBuffer(rgbaBuffer)
+            
+            // Compress to JPEG
+            val baos = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 95, baos)
+            bitmap.recycle()
+            
+            val jpegBytes = baos.toByteArray()
+            
+            // Write JPEG into the image buffer
+            jpegBuffer.clear()
+            val bytesToWrite = jpegBytes.size.coerceAtMost(jpegBuffer.capacity())
+            jpegBuffer.put(jpegBytes, 0, bytesToWrite)
+            jpegBuffer.flip()
+            
+            Log.d(TAG, "FormatConverterBridge: Overwrote JPEG image (${jpegBytes.size} bytes)")
+        } catch (e: Exception) {
+            Log.e(TAG, "FormatConverterBridge: Failed to overwrite JPEG", e)
         }
     }
 
