@@ -45,13 +45,58 @@ object CameraHook {
             targetPackage = lpparam.packageName
             Log.d(TAG, "VirtuCam_Hook: Initializing hooks for $targetPackage")
             
+            hookCameraManager(lpparam)
             hookCameraDevice(lpparam)
             hookCameraDeviceOutputConfigurations(lpparam)
+            hookCamera1(lpparam)
             
             Log.d(TAG, "VirtuCam_Hook: All hooks deployed successfully.")
         } catch (t: Throwable) {
             Log.e(TAG, "VirtuCam_Hook: CRITICAL failure in $targetPackage", t)
         }
+    }
+
+    private fun hookCameraManager(lpparam: XC_LoadPackage.LoadPackageParam) {
+        val managerClass = XposedHelpers.findClassIfExists("android.hardware.camera2.CameraManager", lpparam.classLoader) ?: return
+        XposedBridge.hookAllMethods(managerClass, "openCamera", object : XC_MethodHook() {
+            override fun beforeHookedMethod(param: MethodHookParam) {
+                val cameraId = param.args[0] as? String
+                Log.d(TAG, "VirtuCam_Hook: App is opening Camera2 ID: $cameraId")
+            }
+        })
+    }
+
+    private fun hookCamera1(lpparam: XC_LoadPackage.LoadPackageParam) {
+        val cameraClass = XposedHelpers.findClassIfExists("android.hardware.Camera", lpparam.classLoader) ?: return
+
+        XposedBridge.hookAllMethods(cameraClass, "setPreviewTexture", object : XC_MethodHook() {
+            override fun beforeHookedMethod(param: MethodHookParam) {
+                try {
+                    loadConfiguration()
+                    if (!isEnabled) return
+                    val st = param.args[0] as? SurfaceTexture ?: return
+                    Log.d(TAG, "VirtuCam_Hook: Intercepted setPreviewTexture (Camera1)")
+                    startRenderThreads(listOf(Surface(st)))
+                } catch (t: Throwable) {
+                    Log.e(TAG, "VirtuCam_Hook: Error in Camera1 setPreviewTexture hook", t)
+                }
+            }
+        })
+
+        XposedBridge.hookAllMethods(cameraClass, "setPreviewDisplay", object : XC_MethodHook() {
+            override fun beforeHookedMethod(param: MethodHookParam) {
+                try {
+                    loadConfiguration()
+                    if (!isEnabled) return
+                    val holder = param.args[0] as? android.view.SurfaceHolder ?: return
+                    val surface = holder.surface ?: return
+                    Log.d(TAG, "VirtuCam_Hook: Intercepted setPreviewDisplay (Camera1)")
+                    startRenderThreads(listOf(surface))
+                } catch (t: Throwable) {
+                    Log.e(TAG, "VirtuCam_Hook: Error in Camera1 setPreviewDisplay hook", t)
+                }
+            }
+        })
     }
 
     private fun createDummySurface(targetSurface: Surface?): Surface {
