@@ -42,6 +42,7 @@ object CameraHook {
     private var configLoaded = false
     // Maps original surfaces to their dummy replacements for CaptureRequest consistency
     private val surfaceMap = mutableMapOf<Surface, Surface>()
+    private val activeBridges = mutableListOf<FormatConverterBridge>()
 
     /**
      * Initialize all camera hooks
@@ -273,8 +274,15 @@ object CameraHook {
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun swapSurfaceInOutputConfig(config: Any, targetSurface: Surface) {
+    private fun swapSurfaceInOutputConfig(config: Any, targetSurface: Surface): Surface {
         val (w, h) = getSizeFromOutputConfig(config)
+        
+        val bridge = FormatConverterBridge(targetSurface, w, h)
+        val resolvedSurface = bridge.inputSurface ?: targetSurface
+        if (bridge.inputSurface != null) {
+            activeBridges.add(bridge)
+        }
+        
         val dummySurface = createDummySurface(targetSurface, w, h)
         
         try {
@@ -289,7 +297,7 @@ object CameraHook {
             if (surfaces != null) {
                 surfaces.clear()
                 surfaces.add(dummySurface)
-                return
+                return resolvedSurface
             }
         } catch (e: Throwable) {}
         
@@ -299,6 +307,8 @@ object CameraHook {
         } catch (e: Throwable) {
             Log.e(TAG, "VirtuCam_Hook: Failed to swap surface in OutputConfig", e)
         }
+        
+        return resolvedSurface
     }
 
     /**
@@ -362,8 +372,14 @@ object CameraHook {
                             val targetSurfaces = ArrayList<Surface>()
                             
                             for (targetSurface in surfacesList) {
-                                targetSurfaces.add(targetSurface)
-                                newSurfaces.add(createDummySurface(targetSurface))
+                                val bridge = FormatConverterBridge(targetSurface, 1280, 720)
+                                val resolvedSurface = bridge.inputSurface ?: targetSurface
+                                if (bridge.inputSurface != null) {
+                                    activeBridges.add(bridge)
+                                }
+                                
+                                targetSurfaces.add(resolvedSurface)
+                                newSurfaces.add(createDummySurface(targetSurface, 1280, 720))
                             }
                             
                             param.args[0] = newSurfaces
@@ -413,8 +429,8 @@ object CameraHook {
                                 val targetSurface = getSurfaceMethod.invoke(config) as? Surface
                                 
                                 if (targetSurface != null) {
-                                    targetSurfaces.add(targetSurface)
-                                    swapSurfaceInOutputConfig(config, targetSurface)
+                                    val resolvedSurface = swapSurfaceInOutputConfig(config, targetSurface)
+                                    targetSurfaces.add(resolvedSurface)
                                 }
                             }
                             
@@ -457,8 +473,8 @@ object CameraHook {
                                     val targetSurface = getSurfaceMethod.invoke(config) as? Surface
                                     
                                     if (targetSurface != null) {
-                                        targetSurfaces.add(targetSurface)
-                                        swapSurfaceInOutputConfig(config, targetSurface)
+                                        val resolvedSurface = swapSurfaceInOutputConfig(config, targetSurface)
+                                        targetSurfaces.add(resolvedSurface)
                                     }
                                 }
                                 
@@ -481,6 +497,9 @@ object CameraHook {
             } catch (e: Exception) {}
         }
         renderThreads.clear()
+        
+        activeBridges.forEach { try { it.release() } catch (_: Throwable) {} }
+        activeBridges.clear()
         
         // Release old dummy surfaces safely now that render threads are stopped
         dummySurfaces.forEach { try { it.release() } catch (_: Throwable) {} }
