@@ -46,6 +46,7 @@ object CameraHook {
             Log.d(TAG, "VirtuCam_Hook: Initializing hooks for $targetPackage")
             
             hookCameraManager(lpparam)
+            hookImageReader(lpparam)
             hookCameraDevice(lpparam)
             hookCameraDeviceOutputConfigurations(lpparam)
             hookCamera1(lpparam)
@@ -62,6 +63,38 @@ object CameraHook {
             override fun beforeHookedMethod(param: MethodHookParam) {
                 val cameraId = param.args[0] as? String
                 Log.d(TAG, "VirtuCam_Hook: App is opening Camera2 ID: $cameraId")
+            }
+        })
+    }
+
+    /**
+     * Hook ImageReader.newInstance() to force RGBA_8888 format.
+     * Real cameras produce YUV_420_888 (0x23=35), but our OpenGL pipeline outputs RGBA_8888 (0x1=1).
+     * Without this hook, ImageReader.acquireNextImage() crashes with UnsupportedOperationException.
+     */
+    private fun hookImageReader(lpparam: XC_LoadPackage.LoadPackageParam) {
+        val imageReaderClass = XposedHelpers.findClassIfExists(
+            "android.media.ImageReader", lpparam.classLoader
+        ) ?: return
+
+        // Hook the static factory: ImageReader.newInstance(width, height, format, maxImages)
+        XposedBridge.hookAllMethods(imageReaderClass, "newInstance", object : XC_MethodHook() {
+            override fun beforeHookedMethod(param: MethodHookParam) {
+                try {
+                    loadConfiguration()
+                    if (!isEnabled) return
+
+                    if (param.args.size >= 3) {
+                        val originalFormat = param.args[2] as Int
+                        // 0x23 = ImageFormat.YUV_420_888, 0x20 = ImageFormat.NV21
+                        if (originalFormat == 0x23 || originalFormat == 0x20 || originalFormat == 0x11) {
+                            Log.d(TAG, "VirtuCam_Hook: ImageReader format override: 0x${Integer.toHexString(originalFormat)} → RGBA_8888 (0x1)")
+                            param.args[2] = 0x1 // PixelFormat.RGBA_8888
+                        }
+                    }
+                } catch (t: Throwable) {
+                    Log.e(TAG, "VirtuCam_Hook: Error in ImageReader hook", t)
+                }
             }
         })
     }
