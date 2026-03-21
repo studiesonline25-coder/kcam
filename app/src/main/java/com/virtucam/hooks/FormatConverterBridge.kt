@@ -79,6 +79,10 @@ class FormatConverterBridge(
         }
     }
 
+    // Reuse bulk allocation to prevent garbage collection stuttering
+    private var cachedRgbaBytes: ByteArray? = null
+    private var cachedYBytes: ByteArray? = null
+
     /**
      * Converts RGBA pixels to the planes of the target image.
      * Handles standard YUV_420_888 and YV12 formats manually in an optimized loop.
@@ -87,35 +91,38 @@ class FormatConverterBridge(
         val rgbaPlanes = rgbaImage.planes
         val rgbaBuffer = rgbaPlanes[0].buffer
         
-        // Ensure buffers have enough data
-        if (rgbaBuffer.remaining() < (width * height * 4)) {
-            return
-        }
-        
-        val rgbaRowStride = rgbaPlanes[0].rowStride
-        val rgbaPixelStride = rgbaPlanes[0].pixelStride
+        val rgbaRemaining = rgbaBuffer.remaining()
+        if (rgbaRemaining < (width * height * 2)) return
         
         val targetPlanes = targetImage.planes
         if (targetPlanes.size < 3) return
         
         val yBuffer = targetPlanes[0].buffer
-        val yRowStride = targetPlanes[0].rowStride
-        
         val uBuffer = targetPlanes[1].buffer
+        val vBuffer = targetPlanes[2].buffer
+        
+        val yRowStride = targetPlanes[0].rowStride
         val uRowStride = targetPlanes[1].rowStride
+        val vRowStride = targetPlanes[2].rowStride
         val uvPixelStride = targetPlanes[1].pixelStride
         
-        val vBuffer = targetPlanes[2].buffer
-        val vRowStride = targetPlanes[2].rowStride
-
-        // Convert the RGBA to simple ByteArrays
-        val rgbaBytes = ByteArray(rgbaRowStride * height)
-        rgbaBuffer.position(0)
-        rgbaBuffer.get(rgbaBytes, 0, rgbaBytes.size)
+        val rgbaRowStride = rgbaPlanes[0].rowStride
+        val rgbaPixelStride = rgbaPlanes[0].pixelStride
         
-        val yBytes = ByteArray(yBuffer.capacity())
-        val uBytes = ByteArray(uBuffer.capacity())
-        val vBytes = ByteArray(vBuffer.capacity())
+        // Ensure arrays are allocated cleanly
+        if (cachedRgbaBytes == null || cachedRgbaBytes!!.size < rgbaRemaining) {
+            cachedRgbaBytes = ByteArray(rgbaRemaining)
+        }
+        val rgbaBytes = cachedRgbaBytes!!
+        
+        val yDataSize = (height - 1) * yRowStride + width
+        if (cachedYBytes == null || cachedYBytes!!.size < yDataSize) {
+            cachedYBytes = ByteArray(yDataSize)
+        }
+        val yBytes = cachedYBytes!!
+        
+        rgbaBuffer.position(0)
+        rgbaBuffer.get(rgbaBytes, 0, rgbaRemaining)
         
         for (row in 0 until height) {
             var rgbaOffset = row * rgbaRowStride
@@ -126,12 +133,14 @@ class FormatConverterBridge(
             var vIndex = (row / 2) * vRowStride
             
             for (col in 0 until width) {
-                // RGBA
+                if (rgbaOffset + 2 >= rgbaRemaining) break
+                
+                // Extract RGB values from array (vastly faster than JNI buffer get())
                 val r = rgbaBytes[rgbaOffset].toInt() and 0xFF
                 val g = rgbaBytes[rgbaOffset + 1].toInt() and 0xFF
                 val b = rgbaBytes[rgbaOffset + 2].toInt() and 0xFF
                 
-                // standard BT.601 math
+                // integer math approximation (shifts and adds)
                 val y = ((66 * r + 129 * g + 25 * b + 128) shr 8) + 16
                 yBytes[yIndex++] = y.coerceIn(16, 235).toByte()
                 
@@ -139,8 +148,8 @@ class FormatConverterBridge(
                     val u = ((-38 * r - 74 * g + 112 * b + 128) shr 8) + 128
                     val v = ((112 * r - 94 * g - 18 * b + 128) shr 8) + 128
                     
-                    if (uIndex < uBytes.size) uBytes[uIndex] = u.coerceIn(16, 240).toByte()
-                    if (vIndex < vBytes.size) vBytes[vIndex] = v.coerceIn(16, 240).toByte()
+                    if (uIndex < uBuffer.capacity()) uBuffer.put(uIndex, u.coerceIn(16, 240).toByte())
+                    if (vIndex < vBuffer.capacity()) vBuffer.put(vIndex, v.coerceIn(16, 240).toByte())
                     
                     uIndex += uvPixelStride
                     vIndex += uvPixelStride
@@ -150,13 +159,11 @@ class FormatConverterBridge(
             }
         }
         
-        yBuffer.clear()
-        yBuffer.put(yBytes, 0, yBytes.size.coerceAtMost(yBuffer.capacity()))
-        uBuffer.clear()
-        uBuffer.put(uBytes, 0, uBytes.size.coerceAtMost(uBuffer.capacity()))
-        vBuffer.clear()
-        vBuffer.put(vBytes, 0, vBytes.size.coerceAtMost(vBuffer.capacity()))
+        // Fast bulk copy of the heavy Y-plane
+        yBuffer.position(0)
+        yBuffer.put(yBytes, 0, yDataSize.coerceAtMost(yBuffer.remaining()))
     }
+
     
     fun release() {
         try {
