@@ -146,6 +146,17 @@ object CameraHook {
 
         val overwriteHook = object : XC_MethodHook() {
             override fun afterHookedMethod(param: MethodHookParam) {
+                // CRITICAL: Suppress format mismatch exceptions from nativeImageSetup.
+                // Our dummy SurfaceTexture produces RGBA (0x1) but MIUI camera's ImageReader
+                // expects YUV (0x32315659). The native layer throws before we can overwrite.
+                // We catch it here and return null (no image) instead of crashing the app.
+                if (param.throwable is UnsupportedOperationException) {
+                    Log.d(TAG, "VirtuCam_Hook: Suppressed format mismatch: ${param.throwable?.message}")
+                    param.throwable = null
+                    param.result = null
+                    return
+                }
+
                 try {
                     val image = param.result as? Image ?: return
                     val format = image.format
