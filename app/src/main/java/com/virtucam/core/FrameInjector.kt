@@ -139,6 +139,7 @@ class FrameInjector {
         if (scaledBitmap != bitmap) {
             scaledBitmap.recycle()
         }
+    }
     
     /**
      * Convert ARGB Bitmap to YUV420 byte array

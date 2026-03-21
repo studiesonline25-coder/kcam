@@ -168,9 +168,8 @@ class FormatConverterBridge(
     fun overwriteImageWithLatestJpeg(targetImage: Image) {
         val rgbaBytes = cachedRgbaData ?: return
         
-        try {
-            val planes = targetImage.planes
-            if (planes.isEmpty()) return
+        val planes = targetImage.planes
+        if (planes.isEmpty()) return
             
             val jpegBuffer = planes[0].buffer
             if (!jpegBuffer.hasRemaining()) return
