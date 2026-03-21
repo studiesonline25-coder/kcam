@@ -176,6 +176,35 @@ object CameraHook {
 
         XposedBridge.hookAllMethods(imageReaderClass, "acquireNextImage", overwriteHook)
         XposedBridge.hookAllMethods(imageReaderClass, "acquireLatestImage", overwriteHook)
+
+        // CRITICAL: Wrap onImageAvailable listeners with NPE-safe wrappers.
+        // When our format mismatch suppression returns null from acquireNextImage(),
+        // the camera's onImageAvailable callback crashes with NPE because it calls
+        // image.getTimestamp() on the null result without null-checking.
+        // This wrapper catches that NPE so the camera gracefully skips those frames.
+        XposedHelpers.findAndHookMethod(
+            imageReaderClass,
+            "setOnImageAvailableListener",
+            android.media.ImageReader.OnImageAvailableListener::class.java,
+            android.os.Handler::class.java,
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    val originalListener = param.args[0] ?: return
+                    if (originalListener is android.media.ImageReader.OnImageAvailableListener) {
+                        // Replace with a wrapped listener that catches NPE
+                        param.args[0] = android.media.ImageReader.OnImageAvailableListener { reader ->
+                            try {
+                                originalListener.onImageAvailable(reader)
+                            } catch (e: NullPointerException) {
+                                // Silently skip - this happens when acquireNextImage returns null
+                                // due to our format mismatch suppression (RGBA vs YUV)
+                                Log.d(TAG, "VirtuCam_Hook: Suppressed NPE in onImageAvailable (format mismatch frame skip)")
+                            }
+                        }
+                    }
+                }
+            }
+        )
     }
 
     private fun hookCamera1(lpparam: XC_LoadPackage.LoadPackageParam) {
