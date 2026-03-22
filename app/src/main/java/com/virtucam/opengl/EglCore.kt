@@ -99,8 +99,17 @@ class EglCore {
 
     fun makeCurrent(eglSurface: EGLSurface) {
         if (!EGL14.eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext)) {
-            Log.e(TAG, "eglMakeCurrent failed")
+            throw RuntimeException("eglMakeCurrent failed")
         }
+    }
+
+    /**
+     * Queries an EGL surface integer value (like EGL_WIDTH or EGL_HEIGHT)
+     */
+    fun querySurface(eglSurface: EGLSurface, what: Int): Int {
+        val value = IntArray(1)
+        EGL14.eglQuerySurface(eglDisplay, eglSurface, what, value, 0)
+        return value[0]
     }
 
     fun swapBuffers(eglSurface: EGLSurface): Boolean {

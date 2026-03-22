@@ -137,7 +137,7 @@ class TextureRenderer(private val isVideo: Boolean = true) {
     /**
      * Draw the texture to currently bound frame buffer
      */
-    fun draw(transformMatrix: FloatArray, rotationDegrees: Int) {
+    fun draw(transformMatrix: FloatArray, rotationDegrees: Int, videoWidth: Int = 0, videoHeight: Int = 0, viewWidth: Int = 0, viewHeight: Int = 0) {
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
 
@@ -148,8 +148,29 @@ class TextureRenderer(private val isVideo: Boolean = true) {
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
         GLES20.glBindTexture(target, textureId)
 
-        // Compute rotation (Relative Rotation)
+        // Compute aspect ratio scaling (CENTER_CROP) to prevent elongation
         Matrix.setIdentityM(mvpMatrix, 0)
+        
+        if (videoWidth > 0 && videoHeight > 0 && viewWidth > 0 && viewHeight > 0) {
+            val videoRatio = videoWidth.toFloat() / videoHeight.toFloat()
+            val viewRatio = viewWidth.toFloat() / viewHeight.toFloat()
+            
+            val scaleX: Float
+            val scaleY: Float
+            
+            // CENTER_CROP: fill the camera preview perfectly without stretching
+            if (videoRatio > viewRatio) {
+                scaleX = videoRatio / viewRatio
+                scaleY = 1f
+            } else {
+                scaleX = 1f
+                scaleY = viewRatio / videoRatio
+            }
+            
+            Matrix.scaleM(mvpMatrix, 0, scaleX, scaleY, 1f)
+        }
+
+        // Compute rotation (Relative Rotation)
         if (rotationDegrees != 0) {
             Matrix.rotateM(mvpMatrix, 0, rotationDegrees.toFloat(), 0f, 0f, 1f)
         }

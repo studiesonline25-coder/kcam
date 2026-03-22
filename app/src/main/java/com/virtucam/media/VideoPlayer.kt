@@ -27,6 +27,11 @@ class VideoPlayer(
     private var extractor: MediaExtractor? = null
     private var decoder: MediaCodec? = null
 
+    var videoWidth: Int = 0
+        private set
+    var videoHeight: Int = 0
+        private set
+
     private var playThread: Thread? = null
     @Volatile
     private var isPlaying = false
@@ -79,6 +84,13 @@ class VideoPlayer(
         if (videoTrackIndex < 0 || format == null) {
             Log.e(TAG, "No video track found")
             return
+        }
+
+        if (format.containsKey(MediaFormat.KEY_WIDTH)) {
+            videoWidth = format.getInteger(MediaFormat.KEY_WIDTH)
+        }
+        if (format.containsKey(MediaFormat.KEY_HEIGHT)) {
+            videoHeight = format.getInteger(MediaFormat.KEY_HEIGHT)
         }
 
         extractor!!.selectTrack(videoTrackIndex)

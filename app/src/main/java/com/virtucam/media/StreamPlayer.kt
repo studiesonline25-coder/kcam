@@ -34,6 +34,11 @@ class StreamPlayer(
     private var handlerThread: HandlerThread? = null
     private var handler: Handler? = null
 
+    var videoWidth: Int = 0
+        private set
+    var videoHeight: Int = 0
+        private set
+
     /**
      * Start connecting to the live stream
      */
@@ -83,6 +88,8 @@ class StreamPlayer(
         exoPlayer?.addListener(object : Player.Listener {
             override fun onVideoSizeChanged(videoSize: VideoSize) {
                 super.onVideoSizeChanged(videoSize)
+                videoWidth = videoSize.width
+                videoHeight = videoSize.height
                 Log.d(TAG, "Stream Video Size: ${videoSize.width}x${videoSize.height}")
             }
 

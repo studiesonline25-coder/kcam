@@ -765,6 +765,9 @@ class VirtualRenderThread(
             
             val uri = Uri.parse("content://com.virtucam.provider/file")
             
+            val viewWidth = eglCore!!.querySurface(eglSurface!!, android.opengl.EGL14.EGL_WIDTH)
+            val viewHeight = eglCore!!.querySurface(eglSurface!!, android.opengl.EGL14.EGL_HEIGHT)
+            
             if (isStream) {
                 // Live Stream Pipeline (ExoPlayer)
                 mediaSurfaceTexture = SurfaceTexture(textureRenderer!!.textureId)
@@ -786,7 +789,7 @@ class VirtualRenderThread(
                         } catch (e: Exception) {}
                     }
                     mediaSurfaceTexture?.getTransformMatrix(matrix)
-                    textureRenderer?.draw(matrix, 0)
+                    textureRenderer?.draw(matrix, 0, streamPlayer!!.videoWidth, streamPlayer!!.videoHeight, viewWidth, viewHeight)
                     if (eglCore?.swapBuffers(eglSurface!!) == false) {
                         Log.w("VirtuCam_Render", "Target surface abandoned during stream. Stopping thread.")
                         quit()
@@ -821,7 +824,7 @@ class VirtualRenderThread(
                             } catch (e: Exception) {}
                         }
                         mediaSurfaceTexture?.getTransformMatrix(matrix)
-                        textureRenderer?.draw(matrix, 0)
+                        textureRenderer?.draw(matrix, 0, videoPlayer!!.videoWidth, videoPlayer!!.videoHeight, viewWidth, viewHeight)
                         if (eglCore?.swapBuffers(eglSurface!!) == false) {
                             Log.w("VirtuCam_Render", "Target surface abandoned during video. Stopping thread.")
                             quit()
@@ -840,6 +843,9 @@ class VirtualRenderThread(
                 stream?.close()
                 
                 if (bitmap != null) {
+                    val staticImageW = bitmap.width
+                    val staticImageH = bitmap.height
+                    
                     GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureRenderer!!.textureId)
                     GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0)
                     bitmap.recycle()
@@ -848,7 +854,7 @@ class VirtualRenderThread(
                     Matrix.setIdentityM(matrix, 0)
                     
                     while (isRunning) {
-                        textureRenderer?.draw(matrix, 0)
+                        textureRenderer?.draw(matrix, 0, staticImageW, staticImageH, viewWidth, viewHeight)
                         if (eglCore?.swapBuffers(eglSurface!!) == false) {
                             Log.w("VirtuCam_Render", "Target surface abandoned. Stopping Static Image thread.")
                             quit()

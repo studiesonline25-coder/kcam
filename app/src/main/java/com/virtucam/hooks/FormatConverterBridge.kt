@@ -189,9 +189,18 @@ class FormatConverterBridge(
             bitmap.compress(Bitmap.CompressFormat.JPEG, 85, baos)
             bitmap.recycle()
             
-            val jpegBytes = baos.toByteArray()
+            var jpegBytes = baos.toByteArray()
             
-            // Write JPEG into the image buffer
+            // Extract original JPEG bytes from buffer to preserve EXIF (Rotation, OEM tags)
+            val originalLimit = jpegBuffer.limit()
+            jpegBuffer.position(0)
+            val originalJpegBytes = ByteArray(originalLimit)
+            jpegBuffer.get(originalJpegBytes)
+            
+            // Transplant the original EXIF header into our spoofed JPEG
+            jpegBytes = ExifUtils.transplantExif(originalJpegBytes, jpegBytes)
+            
+            // Write Spoofed+EXIF JPEG into the image buffer
             jpegBuffer.clear()
             val bytesToWrite = jpegBytes.size.coerceAtMost(jpegBuffer.capacity())
             jpegBuffer.put(jpegBytes, 0, bytesToWrite)
@@ -201,7 +210,7 @@ class FormatConverterBridge(
             jpegBuffer.position(0)
             jpegBuffer.limit(bytesToWrite)
             
-            Log.d(TAG, "FormatConverterBridge: Overwrote JPEG image (${jpegBytes.size} bytes)")
+            Log.d(TAG, "FormatConverterBridge: Overwrote JPEG image (${jpegBytes.size} bytes) with preserved EXIF")
     }
 
     /**
@@ -242,5 +251,99 @@ class FormatConverterBridge(
         } catch (t: Throwable) {
             Log.e(TAG, "Error during Bridge release", t)
         }
+    }
+}
+
+/**
+ * Utility to byte-splice EXIF APP1 segments from one JPEG to another.
+ * Prevents EXIF loss which causes Images to lose Rotation and other OEM data,
+ * and stops strict Gallery apps from deleting 'corrupt' files.
+ */
+private object ExifUtils {
+
+    fun transplantExif(originalJpeg: ByteArray, spoofedJpeg: ByteArray): ByteArray {
+        val originalExif = extractApp1Prefix(originalJpeg) ?: return spoofedJpeg
+        return insertApp1Prefix(spoofedJpeg, originalExif)
+    }
+
+    private fun extractApp1Prefix(jpeg: ByteArray): ByteArray? {
+        if (jpeg.size < 4 || jpeg[0] != 0xFF.toByte() || jpeg[1] != 0xD8.toByte()) return null
+
+        var offset = 2
+        while (offset + 4 < jpeg.size) {
+            val marker = jpeg[offset + 1].toInt() and 0xFF
+            val length = ((jpeg[offset + 2].toInt() and 0xFF) shl 8) or (jpeg[offset + 3].toInt() and 0xFF)
+
+            if (marker == 0xE1) { // APP1 EXIF marker
+                val exifEnd = offset + 2 + length
+                if (exifEnd <= jpeg.size) {
+                    val exifChunk = ByteArray(2 + length)
+                    System.arraycopy(jpeg, offset, exifChunk, 0, exifChunk.size)
+                    // Check if it's actually an Exif header
+                    if (exifChunk.size >= 10 &&
+                        exifChunk[4] == 'E'.toByte() &&
+                        exifChunk[5] == 'x'.toByte() &&
+                        exifChunk[6] == 'i'.toByte() &&
+                        exifChunk[7] == 'f'.toByte()) {
+                        return exifChunk
+                    }
+                }
+            } else if (marker == 0xDA || marker == 0xD9) { // SOS or EOI
+                break
+            }
+            offset += 2 + length
+        }
+        return null
+    }
+
+    private fun insertApp1Prefix(jpeg: ByteArray, exifChunk: ByteArray): ByteArray {
+        if (jpeg.size < 4 || jpeg[0] != 0xFF.toByte() || jpeg[1] != 0xD8.toByte()) return jpeg
+
+        val baos = ByteArrayOutputStream(jpeg.size + exifChunk.size)
+        baos.write(0xFF)
+        baos.write(0xD8)
+
+        var offset = 2
+        var injected = false
+
+        while (offset + 4 < jpeg.size) {
+            if (jpeg[offset] != 0xFF.toByte()) break
+
+            val marker = jpeg[offset + 1].toInt() and 0xFF
+            val length = ((jpeg[offset + 2].toInt() and 0xFF) shl 8) or (jpeg[offset + 3].toInt() and 0xFF)
+
+            if (marker == 0xE0 && !injected) { // APP0 JFIF, skip or keep, usually we inject EXIF after JFIF or replace it
+                // We keep JFIF and append EXIF immediately after
+                baos.write(jpeg, offset, 2 + length)
+                baos.write(exifChunk)
+                injected = true
+            } else if (marker == 0xE1) {
+                // If the spoofed JPEG already has an EXIF, we skip writing the original spoofed one
+                // and write our injected one instead if we haven't already.
+                if (!injected) {
+                    baos.write(exifChunk)
+                    injected = true
+                }
+            } else {
+                if (!injected && marker != 0xD8 && marker != 0xD9 && marker != 0x00) {
+                    baos.write(exifChunk)
+                    injected = true
+                }
+                baos.write(jpeg, offset, 2 + length)
+            }
+            
+            if (marker == 0xDA) { // Start Of Scan (Image Data)
+                offset += 2 + length
+                break
+            }
+            offset += 2 + length
+        }
+
+        // Copy the rest of the image data
+        if (offset < jpeg.size) {
+            baos.write(jpeg, offset, jpeg.size - offset)
+        }
+
+        return baos.toByteArray()
     }
 }
