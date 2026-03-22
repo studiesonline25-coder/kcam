@@ -219,25 +219,30 @@ class FormatConverterBridge(
      */
     fun pushLatestFrameToWriter() {
         if (imageWriter == null) return
-        Thread {
-            try {
-                val outImage = imageWriter!!.dequeueInputImage()
-                if (outImage != null) {
+        try {
+            val outImage = imageWriter!!.dequeueInputImage()
+            if (outImage != null) {
+                var success = false
+                try {
                     if (outImage.format == 256 || outputFormat == 256) {
                         overwriteImageWithLatestJpeg(outImage)
                     } else {
                         overwriteImageWithLatestYuv(outImage)
                     }
                     imageWriter!!.queueInputImage(outImage)
+                    success = true
+                } finally {
+                    if (!success) {
+                        try {
+                            outImage.close()
+                        } catch (e: Exception) {}
+                    }
                 }
-            } catch (e: IllegalStateException) {
-                // Expected backpressure behavior: No free buffers until app initiates CaptureRequest
-            } catch (e: Exception) {
-                Log.e(TAG, "FormatConverterBridge: ImageWriter push failed", e)
             }
-        }.apply {
-            name = "VirtuCam-WriterPush"
-            start()
+        } catch (e: IllegalStateException) {
+            // Expected backpressure behavior: No free buffers until app initiates CaptureRequest
+        } catch (e: Exception) {
+            Log.e(TAG, "FormatConverterBridge: ImageWriter push failed", e)
         }
     }
 
