@@ -88,9 +88,15 @@ class StreamPlayer(
         exoPlayer?.addListener(object : Player.Listener {
             override fun onVideoSizeChanged(videoSize: VideoSize) {
                 super.onVideoSizeChanged(videoSize)
-                videoWidth = videoSize.width
-                videoHeight = videoSize.height
-                Log.d(TAG, "Stream Video Size: ${videoSize.width}x${videoSize.height}")
+                if (videoSize.unappliedRotationDegrees == 90 || videoSize.unappliedRotationDegrees == 270) {
+                    videoWidth = videoSize.height
+                    videoHeight = videoSize.width
+                    Log.d(TAG, "Stream Video Size (Rotated): ${videoWidth}x${videoHeight}")
+                } else {
+                    videoWidth = videoSize.width
+                    videoHeight = videoSize.height
+                    Log.d(TAG, "Stream Video Size: ${videoWidth}x${videoHeight}")
+                }
             }
 
             override fun onRenderedFirstFrame() {

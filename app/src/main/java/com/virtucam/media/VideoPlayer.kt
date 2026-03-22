@@ -92,6 +92,17 @@ class VideoPlayer(
         if (format.containsKey(MediaFormat.KEY_HEIGHT)) {
             videoHeight = format.getInteger(MediaFormat.KEY_HEIGHT)
         }
+        
+        // Correct dimensions if the video has an EXIF rotation metadata
+        if (format.containsKey(MediaFormat.KEY_ROTATION)) {
+            val rotation = format.getInteger(MediaFormat.KEY_ROTATION)
+            if (rotation == 90 || rotation == 270) {
+                val temp = videoWidth
+                videoWidth = videoHeight
+                videoHeight = temp
+                Log.d(TAG, "Swapped dimensions because EXIF rotation is $rotation. New size: ${videoWidth}x${videoHeight}")
+            }
+        }
 
         extractor!!.selectTrack(videoTrackIndex)
         val mime = format.getString(MediaFormat.KEY_MIME)!!
