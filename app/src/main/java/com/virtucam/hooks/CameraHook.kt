@@ -703,21 +703,30 @@ class VirtualRenderThread(
                 mediaSurfaceTexture = SurfaceTexture(textureRenderer!!.textureId)
                 mediaSurface = Surface(mediaSurfaceTexture)
                 
-                streamPlayer = StreamPlayer(context, streamUrl, mediaSurface!!) {
-                    if (!isRunning) return@StreamPlayer
-                    mediaSurfaceTexture?.updateTexImage()
-                    val matrix = FloatArray(16)
+                @Volatile var hasNewFrame = false
+                mediaSurfaceTexture?.setOnFrameAvailableListener {
+                    hasNewFrame = true
+                }
+                
+                streamPlayer = StreamPlayer(context, streamUrl, mediaSurface!!) {}
+                streamPlayer!!.start()
+                
+                val matrix = FloatArray(16)
+                while (isRunning) {
+                    if (hasNewFrame) {
+                        try {
+                            mediaSurfaceTexture?.updateTexImage()
+                        } catch (e: Exception) {}
+                        hasNewFrame = false
+                    }
                     mediaSurfaceTexture?.getTransformMatrix(matrix)
-                    textureRenderer?.draw(matrix, 0) // Align with portrait source default
+                    textureRenderer?.draw(matrix, 0)
                     if (eglCore?.swapBuffers(eglSurface!!) == false) {
                         Log.w("VirtuCam_Render", "Target surface abandoned during stream. Stopping thread.")
                         quit()
+                        break
                     }
-                }
-                streamPlayer!!.start()
-                
-                while (isRunning) {
-                    sleep(100)
+                    sleep(33)
                 }
                 streamPlayer!!.stop()
                 
@@ -729,21 +738,31 @@ class VirtualRenderThread(
                 val pfd = context.contentResolver.openFileDescriptor(uri, "r")
                 if (pfd != null) {
                     val fd = pfd.fileDescriptor
-                    videoPlayer = VideoPlayer(fd, mediaSurface!!) {
-                        if (!isRunning) return@VideoPlayer
-                        mediaSurfaceTexture?.updateTexImage()
-                        val matrix = FloatArray(16)
+                    
+                    @Volatile var hasNewFrame = false
+                    mediaSurfaceTexture?.setOnFrameAvailableListener {
+                        hasNewFrame = true
+                    }
+                    
+                    videoPlayer = VideoPlayer(fd, mediaSurface!!) {}
+                    videoPlayer!!.start()
+                    
+                    val matrix = FloatArray(16)
+                    while (isRunning) {
+                        if (hasNewFrame) {
+                            try {
+                                mediaSurfaceTexture?.updateTexImage()
+                            } catch (e: Exception) {}
+                            hasNewFrame = false
+                        }
                         mediaSurfaceTexture?.getTransformMatrix(matrix)
                         textureRenderer?.draw(matrix, 0)
                         if (eglCore?.swapBuffers(eglSurface!!) == false) {
                             Log.w("VirtuCam_Render", "Target surface abandoned during video. Stopping thread.")
                             quit()
+                            break
                         }
-                    }
-                    videoPlayer!!.start()
-                    
-                    while (isRunning) {
-                        sleep(100)
+                        sleep(33)
                     }
                     
                     videoPlayer!!.stop()
