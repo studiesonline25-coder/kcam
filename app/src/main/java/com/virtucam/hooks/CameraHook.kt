@@ -703,9 +703,9 @@ class VirtualRenderThread(
                 mediaSurfaceTexture = SurfaceTexture(textureRenderer!!.textureId)
                 mediaSurface = Surface(mediaSurfaceTexture)
                 
-                @Volatile var hasNewFrame = false
+                val hasNewFrame = java.util.concurrent.atomic.AtomicBoolean(false)
                 mediaSurfaceTexture?.setOnFrameAvailableListener {
-                    hasNewFrame = true
+                    hasNewFrame.set(true)
                 }
                 
                 streamPlayer = StreamPlayer(context, streamUrl, mediaSurface!!) {}
@@ -713,11 +713,10 @@ class VirtualRenderThread(
                 
                 val matrix = FloatArray(16)
                 while (isRunning) {
-                    if (hasNewFrame) {
+                    if (hasNewFrame.compareAndSet(true, false)) {
                         try {
                             mediaSurfaceTexture?.updateTexImage()
                         } catch (e: Exception) {}
-                        hasNewFrame = false
                     }
                     mediaSurfaceTexture?.getTransformMatrix(matrix)
                     textureRenderer?.draw(matrix, 0)
@@ -739,9 +738,9 @@ class VirtualRenderThread(
                 if (pfd != null) {
                     val fd = pfd.fileDescriptor
                     
-                    @Volatile var hasNewFrame = false
+                    val hasNewFrame = java.util.concurrent.atomic.AtomicBoolean(false)
                     mediaSurfaceTexture?.setOnFrameAvailableListener {
-                        hasNewFrame = true
+                        hasNewFrame.set(true)
                     }
                     
                     videoPlayer = VideoPlayer(fd, mediaSurface!!) {}
@@ -749,11 +748,10 @@ class VirtualRenderThread(
                     
                     val matrix = FloatArray(16)
                     while (isRunning) {
-                        if (hasNewFrame) {
+                        if (hasNewFrame.compareAndSet(true, false)) {
                             try {
                                 mediaSurfaceTexture?.updateTexImage()
                             } catch (e: Exception) {}
-                            hasNewFrame = false
                         }
                         mediaSurfaceTexture?.getTransformMatrix(matrix)
                         textureRenderer?.draw(matrix, 0)
