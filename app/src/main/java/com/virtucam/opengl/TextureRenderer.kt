@@ -137,7 +137,7 @@ class TextureRenderer(private val isVideo: Boolean = true) {
     /**
      * Draw the texture to currently bound frame buffer
      */
-    fun draw(transformMatrix: FloatArray, textureRotationDegrees: Int = 0, videoWidth: Int = 0, videoHeight: Int = 0, viewWidth: Int = 0, viewHeight: Int = 0) {
+    fun draw(transformMatrix: FloatArray, videoWidth: Int = 0, videoHeight: Int = 0, viewWidth: Int = 0, viewHeight: Int = 0) {
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
 
@@ -176,20 +176,8 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             Matrix.scaleM(mvpMatrix, 0, scaleX, scaleY, 1f)
         }
 
-        // Copy transform matrix from SurfaceTexture
+        // Copy transform matrix from SurfaceTexture which Android natively encodes with EXIF Video rotators
         System.arraycopy(transformMatrix, 0, stMatrix, 0, 16)
-        
-        if (textureRotationDegrees != 0) {
-            // MediaCodec outputs raw unrotated decoded pixels (typically Landscape like 1920x1080)
-            // even if the Video EXIF flags it as rotated (e.g. Portrait TikToks). 
-            // To prevent horizontal squishing into our explicitly swapped geometric bounds, we
-            // inject an affine rotation matrix into the UV Texture sampling bounds.
-            Matrix.translateM(stMatrix, 0, 0.5f, 0.5f, 0f)
-            // We rotate by NEGATIVE textureRotationDegrees to offset the camera's raw encoding axis. 
-            // e.g. If the video claims EXIF 90 (it was shot sideways), rotating the UV map by -90 perfectly rights it.
-            Matrix.rotateM(stMatrix, 0, -textureRotationDegrees.toFloat(), 0f, 0f, 1f)
-            Matrix.translateM(stMatrix, 0, -0.5f, -0.5f, 0f)
-        }
 
         // Bind attributes/uniforms
         vertexBuffer.position(0)

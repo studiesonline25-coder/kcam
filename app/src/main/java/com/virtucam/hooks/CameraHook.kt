@@ -845,7 +845,7 @@ class VirtualRenderThread(
                             } catch (e: Exception) {}
                         }
                         mediaSurfaceTexture?.getTransformMatrix(matrix)
-                        textureRenderer?.draw(matrix, videoPlayer!!.videoRotation, videoPlayer!!.videoWidth, videoPlayer!!.videoHeight, viewWidth, viewHeight)
+                        textureRenderer?.draw(matrix, videoPlayer!!.videoWidth, videoPlayer!!.videoHeight, viewWidth, viewHeight)
                         if (eglCore?.swapBuffers(eglSurface!!) == false) {
                             Log.w("VirtuCam_Render", "Target surface abandoned during video. Stopping thread.")
                             quit()
