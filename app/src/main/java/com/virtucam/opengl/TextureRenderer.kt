@@ -154,21 +154,25 @@ class TextureRenderer(private val isVideo: Boolean = true) {
         
         if (videoWidth > 0 && videoHeight > 0 && viewWidth > 0 && viewHeight > 0) {
             // Use the provided targetRatio (e.g. screen aspect) if valid, otherwise fallback to physical surface ratio.
-            val viewRatio = if (targetRatio > 0f) targetRatio else (viewWidth.toFloat() / viewHeight.toFloat())
+            // We only apply this compensation if the surface is small (likely Preview/Video), 
+            // the massive high-res surfaces (Snapshot) should usually be 1:1 raw to avoid squashing saved JPEGs.
+            val isSnapshot = viewWidth >= 2500 || viewHeight >= 2500
+            val viewRatio = if (targetRatio > 0f && !isSnapshot) targetRatio else (viewWidth.toFloat() / viewHeight.toFloat())
             val videoRatio = videoWidth.toFloat() / videoHeight.toFloat()
             
             val scaleX: Float
             val scaleY: Float
             
-            // CENTER_CROP: scale the quad to fill the physical view entirely, cropping excess edges.
-            // This natively mimics hardware sensors pushing full 4:3 edge-to-edge grids, preventing 
-            // the downstream app from double-squishing baked-in black bars when stretching buffers mapping.
+            // FIT_CENTER (CENTER_INSIDE): scale the quad to fit entirely inside the virtual view.
+            // This ensures the user sees the 100% of their video/image without heads being chopped off.
+            // When combined with targetRatio (screen aspect), this pre-squishes the image so that 
+            // the OEM's blind billboard-stretch perfectly rights the proportions.
             if (videoRatio > viewRatio) {
-                scaleX = videoRatio / viewRatio
-                scaleY = 1f
-            } else {
                 scaleX = 1f
                 scaleY = viewRatio / videoRatio
+            } else {
+                scaleX = videoRatio / viewRatio
+                scaleY = 1f
             }
             
             // To properly orient the spoofed video, we scale the geometry to preserve aspect ratio.
