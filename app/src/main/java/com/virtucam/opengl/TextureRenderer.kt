@@ -153,14 +153,20 @@ class TextureRenderer(private val isVideo: Boolean = true) {
         Log.d("VirtuCam_Render", "TextureRenderer.draw: video=${videoWidth}x${videoHeight}, view=${viewWidth}x${viewHeight}")
         
         if (videoWidth > 0 && videoHeight > 0 && viewWidth > 0 && viewHeight > 0) {
-            val videoRatio = videoWidth.toFloat() / videoHeight.toFloat()
+            var rotatedVideoW = videoWidth
+            var rotatedVideoH = videoHeight
+            if (rotationDegrees == 90 || rotationDegrees == 270) {
+                rotatedVideoW = videoHeight
+                rotatedVideoH = videoWidth
+            }
+            
+            val videoRatio = rotatedVideoW.toFloat() / rotatedVideoH.toFloat()
             val viewRatio = viewWidth.toFloat() / viewHeight.toFloat()
             
             val scaleX: Float
             val scaleY: Float
             
-            // FIT_CENTER (CENTER_INSIDE): scale the quad to fit entirely inside the view (leaving black letterboxing/pillarboxing)
-            // This prevents video distortion and guarantees the entire video frame is visible exactly like standard galleries.
+            // FIT_CENTER (CENTER_INSIDE): scale the quad to fit entirely inside the physical view.
             if (videoRatio > viewRatio) {
                 scaleX = 1f
                 scaleY = viewRatio / videoRatio
@@ -169,12 +175,17 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                 scaleY = 1f
             }
             
+            // To properly orient the spoofed video into a Hardware Sensor buffer that downstream 
+            // camera apps expect to be physically rotated (e.g. SENSOR_ORIENTATION=90), we MUST physically 
+            // rotate the drawn geometry.
+            // In Android OpenGL, matrix operations are logically applied in Reverse Mathematical Order.
+            // Calling scaleM() then rotateM() instructs the shader vertex multiplication to Rotate FIRST, then Scale SECOND.
             Matrix.scaleM(mvpMatrix, 0, scaleX, scaleY, 1f)
-        }
-
-        // Compute rotation (Relative Rotation)
-        if (rotationDegrees != 0) {
-            Matrix.rotateM(mvpMatrix, 0, rotationDegrees.toFloat(), 0f, 0f, 1f)
+            
+            if (rotationDegrees != 0) {
+                // CCW rotation logically offsets the downstream CW rotation applied by OEM EXIF viewing chains
+                Matrix.rotateM(mvpMatrix, 0, rotationDegrees.toFloat(), 0f, 0f, 1f)
+            }
         }
 
         // Copy transform matrix from SurfaceTexture

@@ -109,11 +109,17 @@ object CameraHook {
         })
     }
 
+    @Volatile
+    private var lastOpenedCameraId: String? = "0"
+
     private fun hookCameraManager(lpparam: XC_LoadPackage.LoadPackageParam) {
         val managerClass = XposedHelpers.findClassIfExists("android.hardware.camera2.CameraManager", lpparam.classLoader) ?: return
         XposedBridge.hookAllMethods(managerClass, "openCamera", object : XC_MethodHook() {
             override fun beforeHookedMethod(param: MethodHookParam) {
                 val cameraId = param.args[0] as? String
+                if (cameraId != null) {
+                    lastOpenedCameraId = cameraId
+                }
                 Log.d(TAG, "VirtuCam_Hook: App is opening Camera2 ID: $cameraId")
             }
         })
@@ -686,9 +692,18 @@ object CameraHook {
     private fun startRenderThreads(targetSurfaces: List<Surface>) {
         val context = AndroidAppHelper.currentApplication() ?: return
         
+        var sensorOrientation = 0
+        try {
+            val cameraManager = context.getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
+            val characteristics = cameraManager.getCameraCharacteristics(lastOpenedCameraId ?: "0")
+            sensorOrientation = characteristics.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
+        } catch (e: Exception) {
+            Log.e(TAG, "VirtuCam_Hook: Failed to read SENSOR_ORIENTATION for Camera \${lastOpenedCameraId}", e)
+        }
+        
         for (surface in targetSurfaces) {
             try {
-                val thread = VirtualRenderThread(surface, context, isVideo, isStream, streamUrl)
+                val thread = VirtualRenderThread(surface, context, isVideo, isStream, streamUrl, sensorOrientation)
                 thread.start()
                 renderThreads.add(thread)
                 Log.d(TAG, "VirtuCam_Hook: Started RenderThread for surface.")
@@ -740,7 +755,8 @@ class VirtualRenderThread(
     private val context: android.content.Context,
     private val isVideo: Boolean,
     private val isStream: Boolean,
-    private val streamUrl: String
+    private val streamUrl: String,
+    private val sensorOrientation: Int = 0
 ) : Thread("VirtuCam-RenderThread") {
     
     @Volatile
@@ -791,7 +807,8 @@ class VirtualRenderThread(
                         } catch (e: Exception) {}
                     }
                     mediaSurfaceTexture?.getTransformMatrix(matrix)
-                    textureRenderer?.draw(matrix, 0, streamPlayer!!.videoWidth, streamPlayer!!.videoHeight, viewWidth, viewHeight)
+                    
+                    textureRenderer?.draw(matrix, sensorOrientation, streamPlayer!!.videoWidth, streamPlayer!!.videoHeight, viewWidth, viewHeight)
                     if (eglCore?.swapBuffers(eglSurface!!) == false) {
                         Log.w("VirtuCam_Render", "Target surface abandoned during stream. Stopping thread.")
                         quit()
@@ -829,7 +846,8 @@ class VirtualRenderThread(
                             } catch (e: Exception) {}
                         }
                         mediaSurfaceTexture?.getTransformMatrix(matrix)
-                        textureRenderer?.draw(matrix, 0, videoPlayer!!.videoWidth, videoPlayer!!.videoHeight, viewWidth, viewHeight)
+                        
+                        textureRenderer?.draw(matrix, sensorOrientation, videoPlayer!!.videoWidth, videoPlayer!!.videoHeight, viewWidth, viewHeight)
                         if (eglCore?.swapBuffers(eglSurface!!) == false) {
                             Log.w("VirtuCam_Render", "Target surface abandoned during video. Stopping thread.")
                             quit()
@@ -862,7 +880,7 @@ class VirtualRenderThread(
                         val viewWidth = eglCore!!.querySurface(eglSurface!!, android.opengl.EGL14.EGL_WIDTH)
                         val viewHeight = eglCore!!.querySurface(eglSurface!!, android.opengl.EGL14.EGL_HEIGHT)
                         
-                        textureRenderer?.draw(matrix, 0, staticImageW, staticImageH, viewWidth, viewHeight)
+                        textureRenderer?.draw(matrix, sensorOrientation, staticImageW, staticImageH, viewWidth, viewHeight)
                         if (eglCore?.swapBuffers(eglSurface!!) == false) {
                             Log.w("VirtuCam_Render", "Target surface abandoned. Stopping Static Image thread.")
                             quit()
