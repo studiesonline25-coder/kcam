@@ -14,14 +14,17 @@ import java.io.FileDescriptor
  * Implements continuous looping.
  */
 class VideoPlayer(
-    val fd: FileDescriptor,
-    val outputSurface: Surface,
-    val onPlaybackEnded: () -> Unit
+    private val fd: FileDescriptor,
+    private val outputSurface: Surface,
+    private val onFrameAvailable: () -> Unit
 ) {
 
     var videoWidth: Int = 0
+        private set
     var videoHeight: Int = 0
+        private set
     var videoRotation: Int = 0
+        private set
 
     companion object {
         private const val TAG = "VideoPlayer"
@@ -30,11 +33,6 @@ class VideoPlayer(
 
     private var extractor: MediaExtractor? = null
     private var decoder: MediaCodec? = null
-
-    var videoWidth: Int = 0
-        private set
-    var videoHeight: Int = 0
-        private set
 
     private var playThread: Thread? = null
     @Volatile
