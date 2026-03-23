@@ -774,8 +774,9 @@ class VirtualRenderThread(
 
     private fun getTargetRatio(vW: Int, vH: Int): Float {
         return try {
-            val dm = android.content.res.Resources.getSystem().displayMetrics
-            dm.widthPixels.toFloat() / dm.heightPixels.toFloat()
+            // Most modern camera apps stretch 4:3 buffers to exactly a 16:9 preview area.
+            // Using the raw screen ratio (e.g. 0.45) overshot the compensation.
+            9f / 16f 
         } catch (e: Exception) {
             vW.toFloat() / vH.toFloat()
         }
