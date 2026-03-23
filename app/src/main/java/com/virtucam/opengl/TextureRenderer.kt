@@ -159,13 +159,15 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             val scaleX: Float
             val scaleY: Float
             
-            // FIT_CENTER (CENTER_INSIDE): scale the quad to fit entirely inside the physical view.
+            // CENTER_CROP: scale the quad to fill the physical view entirely, cropping excess edges.
+            // This natively mimics hardware sensors pushing full 4:3 edge-to-edge grids, preventing 
+            // the downstream app from double-squishing baked-in black bars when stretching buffers mapping.
             if (videoRatio > viewRatio) {
-                scaleX = 1f
-                scaleY = viewRatio / videoRatio
-            } else {
                 scaleX = videoRatio / viewRatio
                 scaleY = 1f
+            } else {
+                scaleX = 1f
+                scaleY = viewRatio / videoRatio
             }
             
             // To properly orient the spoofed video, we scale the geometry to preserve aspect ratio.
