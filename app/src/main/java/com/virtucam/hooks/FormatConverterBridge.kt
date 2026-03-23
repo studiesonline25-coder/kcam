@@ -180,37 +180,66 @@ class FormatConverterBridge(
             }
             
             // Create Bitmap from cached RGBA
-            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            var bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
             val rgbaBuffer = ByteBuffer.wrap(rgbaBytes)
             bitmap.copyPixelsFromBuffer(rgbaBuffer)
+            
+            // Extract original JPEG bytes from buffer to detect Hardware EXIF Rotation
+            val originalLimit = jpegBuffer.limit()
+            jpegBuffer.position(0)
+            val originalJpegBytes = ByteArray(originalLimit)
+            jpegBuffer.get(originalJpegBytes)
+            
+            try {
+                // Parse Hardware JPEG to read physical sensor orientation (usually 90 or 270 on phones, or 180 for upside-down)
+                val exifInterface = android.media.ExifInterface(java.io.ByteArrayInputStream(originalJpegBytes))
+                val orientation = exifInterface.getAttributeInt(
+                    android.media.ExifInterface.TAG_ORIENTATION,
+                    android.media.ExifInterface.ORIENTATION_NORMAL
+                )
+                
+                val rotationDegrees = when (orientation) {
+                    android.media.ExifInterface.ORIENTATION_ROTATE_90 -> 90f
+                    android.media.ExifInterface.ORIENTATION_ROTATE_180 -> 180f
+                    android.media.ExifInterface.ORIENTATION_ROTATE_270 -> 270f
+                    else -> 0f
+                }
+                
+                // Physically apply the rotation to our upright spoofed Bitmap
+                // This guarantees our spoofed pixels exactly mimic the hardware sensor's rotated layout
+                // before the OEM camera app processes and tags the final EXIF (e.g. CAM_ExifTool putting orientation=180).
+                if (rotationDegrees != 0f) {
+                    val matrix = android.graphics.Matrix()
+                    matrix.postRotate(rotationDegrees)
+                    val rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+                    bitmap.recycle()
+                    bitmap = rotatedBitmap
+                    Log.d(TAG, "FormatConverterBridge: Physically rotated spoofed Bitmap by $rotationDegrees degrees to mimic Hardware EXIF")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "FormatConverterBridge: Failed to parse/apply Original EXIF rotation", e)
+            }
             
             // Compress to JPEG
             val baos = ByteArrayOutputStream()
             bitmap.compress(Bitmap.CompressFormat.JPEG, 85, baos)
             bitmap.recycle()
             
-            var jpegBytes = baos.toByteArray()
+            val jpegBytes = baos.toByteArray()
             
-            // Extract original JPEG bytes from buffer to preserve EXIF (Rotation, OEM tags)
-            val originalLimit = jpegBuffer.limit()
-            jpegBuffer.position(0)
-            val originalJpegBytes = ByteArray(originalLimit)
-            jpegBuffer.get(originalJpegBytes)
-            
-            // Transplant the original EXIF header into our spoofed JPEG
-            jpegBytes = ExifUtils.transplantExif(originalJpegBytes, jpegBytes)
-            
-            // Write Spoofed+EXIF JPEG into the image buffer
+            // Write Spoofed JPEG into the image buffer
             jpegBuffer.clear()
             val bytesToWrite = jpegBytes.size.coerceAtMost(jpegBuffer.capacity())
             jpegBuffer.put(jpegBytes, 0, bytesToWrite)
             
             // Do NOT flip. We want the camera framework to read up to its native size.
-            // Appending our JPEG at the start of the buffer is enough; BitmapFactory stops at EOF.
+            // Appending our naked JPEG without EXIF APP1 blocks is enough because modern 
+            // camera zipping modules (like Xiaomi CAM_ParallelDataZipper) parse and overwrite EXIF 
+            // based on CaptureRequest parameters downstream automatically. Let them do their job.
             jpegBuffer.position(0)
             jpegBuffer.limit(bytesToWrite)
             
-            Log.d(TAG, "FormatConverterBridge: Overwrote JPEG image (${jpegBytes.size} bytes) with preserved EXIF")
+            Log.d(TAG, "FormatConverterBridge: Overwrote JPEG image (${jpegBytes.size} bytes) with mimicked physical rotation")
     }
 
     /**
@@ -262,96 +291,4 @@ class FormatConverterBridge(
     }
 }
 
-/**
- * Utility to byte-splice EXIF APP1 segments from one JPEG to another.
- * Prevents EXIF loss which causes Images to lose Rotation and other OEM data,
- * and stops strict Gallery apps from deleting 'corrupt' files.
- */
-private object ExifUtils {
 
-    fun transplantExif(originalJpeg: ByteArray, spoofedJpeg: ByteArray): ByteArray {
-        val originalExif = extractApp1Prefix(originalJpeg) ?: return spoofedJpeg
-        return insertApp1Prefix(spoofedJpeg, originalExif)
-    }
-
-    private fun extractApp1Prefix(jpeg: ByteArray): ByteArray? {
-        if (jpeg.size < 4 || jpeg[0] != 0xFF.toByte() || jpeg[1] != 0xD8.toByte()) return null
-
-        var offset = 2
-        while (offset + 4 < jpeg.size) {
-            val marker = jpeg[offset + 1].toInt() and 0xFF
-            val length = ((jpeg[offset + 2].toInt() and 0xFF) shl 8) or (jpeg[offset + 3].toInt() and 0xFF)
-
-            if (marker == 0xE1) { // APP1 EXIF marker
-                val exifEnd = offset + 2 + length
-                if (exifEnd <= jpeg.size) {
-                    val exifChunk = ByteArray(2 + length)
-                    System.arraycopy(jpeg, offset, exifChunk, 0, exifChunk.size)
-                    // Check if it's actually an Exif header
-                    if (exifChunk.size >= 10 &&
-                        exifChunk[4] == 'E'.toByte() &&
-                        exifChunk[5] == 'x'.toByte() &&
-                        exifChunk[6] == 'i'.toByte() &&
-                        exifChunk[7] == 'f'.toByte()) {
-                        return exifChunk
-                    }
-                }
-            } else if (marker == 0xDA || marker == 0xD9) { // SOS or EOI
-                break
-            }
-            offset += 2 + length
-        }
-        return null
-    }
-
-    private fun insertApp1Prefix(jpeg: ByteArray, exifChunk: ByteArray): ByteArray {
-        if (jpeg.size < 4 || jpeg[0] != 0xFF.toByte() || jpeg[1] != 0xD8.toByte()) return jpeg
-
-        val baos = ByteArrayOutputStream(jpeg.size + exifChunk.size)
-        baos.write(0xFF)
-        baos.write(0xD8)
-
-        var offset = 2
-        var injected = false
-
-        while (offset + 4 < jpeg.size) {
-            if (jpeg[offset] != 0xFF.toByte()) break
-
-            val marker = jpeg[offset + 1].toInt() and 0xFF
-            val length = ((jpeg[offset + 2].toInt() and 0xFF) shl 8) or (jpeg[offset + 3].toInt() and 0xFF)
-
-            if (marker == 0xE0 && !injected) { // APP0 JFIF, skip or keep, usually we inject EXIF after JFIF or replace it
-                // We keep JFIF and append EXIF immediately after
-                baos.write(jpeg, offset, 2 + length)
-                baos.write(exifChunk)
-                injected = true
-            } else if (marker == 0xE1) {
-                // If the spoofed JPEG already has an EXIF, we skip writing the original spoofed one
-                // and write our injected one instead if we haven't already.
-                if (!injected) {
-                    baos.write(exifChunk)
-                    injected = true
-                }
-            } else {
-                if (!injected && marker != 0xD8 && marker != 0xD9 && marker != 0x00) {
-                    baos.write(exifChunk)
-                    injected = true
-                }
-                baos.write(jpeg, offset, 2 + length)
-            }
-            
-            if (marker == 0xDA) { // Start Of Scan (Image Data)
-                offset += 2 + length
-                break
-            }
-            offset += 2 + length
-        }
-
-        // Copy the rest of the image data
-        if (offset < jpeg.size) {
-            baos.write(jpeg, offset, jpeg.size - offset)
-        }
-
-        return baos.toByteArray()
-    }
-}
