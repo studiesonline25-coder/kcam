@@ -630,12 +630,16 @@ object CameraHook {
                             val targetSurfaces = ArrayList<Pair<Surface, Boolean>>()
                             
                             for (targetSurface in surfacesList) {
+                                val size = SurfaceUtils.getSurfaceSize(targetSurface)
+                                val w = size.first
+                                val h = size.second
+                                
                                 val isCapture = captureSurfaces.contains(targetSurface)
                                 val format = SurfaceUtils.getSurfaceFormat(targetSurface)
                                 val isPreview = (format == 0x22 || format == 0x1)
                                 
                                 val bridge = if (!isPreview) {
-                                    val b = FormatConverterBridge(1280, 720, targetSurface, format)
+                                    val b = FormatConverterBridge(w, h, targetSurface, format)
                                     activeBridges.add(b)
                                     targetSurfaces.add(Pair(b.inputSurface ?: targetSurface, isCapture))
                                     b
@@ -644,7 +648,7 @@ object CameraHook {
                                     null
                                 }
                                 
-                                val dummySurface = createDummySurface(targetSurface, 1280, 720, bridge)
+                                val dummySurface = createDummySurface(targetSurface, w, h, bridge)
                                 surfaceMap[targetSurface] = dummySurface
                                 newSurfaces.add(dummySurface)
                             }
