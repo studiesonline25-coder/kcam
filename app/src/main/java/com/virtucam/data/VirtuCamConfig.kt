@@ -61,6 +61,13 @@ class VirtuCamConfig(context: Context) {
         set(value) = prefs.edit().putFloat("compensation_factor", value).apply()
     
     /**
+     * Whether to mirror the output (lateral inversion fix)
+     */
+    var isMirrored: Boolean
+        get() = prefs.getBoolean("is_mirrored", false)
+        set(value) = prefs.edit().putBoolean("is_mirrored", value).apply()
+    
+    /**
      * List of package names for apps to target
      */
     var targetApps: Set<String>

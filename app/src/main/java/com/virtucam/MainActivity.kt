@@ -121,6 +121,12 @@ class MainActivity : AppCompatActivity() {
                 // Settings are already saved via setter in config
             }
         })
+
+        // Mirror switch
+        binding.mirrorSwitch.setOnCheckedChangeListener { _, isChecked ->
+            config.isMirrored = isChecked
+            Toast.makeText(this, if (isChecked) "Mirror mode enabled" else "Mirror mode disabled", Toast.LENGTH_SHORT).show()
+        }
     }
     
     private fun loadSavedState() {
@@ -142,6 +148,9 @@ class MainActivity : AppCompatActivity() {
                 showSelectedMedia(uri)
             }
         }
+        
+        // Load mirror state
+        binding.mirrorSwitch.isChecked = config.isMirrored
     }
     
     private fun updateStatusUI(enabled: Boolean) {

@@ -137,7 +137,7 @@ class TextureRenderer(private val isVideo: Boolean = true) {
     /**
      * Draw the texture to currently bound frame buffer
      */
-    fun draw(transformMatrix: FloatArray, videoWidth: Int = 0, videoHeight: Int = 0, viewWidth: Int = 0, viewHeight: Int = 0, targetRatio: Float = 0f, rotationDegrees: Int = 0) {
+    fun draw(transformMatrix: FloatArray, videoWidth: Int = 0, videoHeight: Int = 0, viewWidth: Int = 0, viewHeight: Int = 0, targetRatio: Float = 0f, rotationDegrees: Int = 0, isMirrored: Boolean = false) {
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
 
@@ -181,9 +181,9 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                 scaleY = 1f
             }
             
-            Matrix.scaleM(mvpMatrix, 0, scaleX, scaleY, 1f)
+            Matrix.scaleM(mvpMatrix, 0, if (isMirrored) -scaleX else scaleX, scaleY, 1f)
             
-            Log.d("VirtuCam_Render", "TextureRenderer.draw: rot=$rotationDegrees, video=${videoWidth}x${videoHeight}, view=${viewWidth}x${viewHeight}, scales=${scaleX}x${scaleY}")
+            Log.d("VirtuCam_Render", "TextureRenderer.draw: rot=$rotationDegrees, mirror=$isMirrored, video=${videoWidth}x${videoHeight}, view=${viewWidth}x${viewHeight}, scales=${scaleX}x${scaleY}")
         }
 
         // Copy transform matrix from SurfaceTexture which Android natively encodes with EXIF Video rotators

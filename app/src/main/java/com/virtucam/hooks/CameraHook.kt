@@ -37,7 +37,11 @@ object CameraHook {
     
     private const val TAG = "VirtuCam_Hook"
     private var isEnabled = true
-    private var isVideo = false
+    @Volatile
+    var isMirrored: Boolean = false
+    
+    @Volatile
+    var isVideo: Boolean = false
     private var isStream = false
     private var streamUrl: String = ""
     private var targetPackage: String = ""
@@ -595,8 +599,9 @@ object CameraHook {
                         isStream = if (it.columnCount > 3) it.getInt(3) == 1 else false
                         streamUrl = if (it.columnCount > 4) it.getString(4) ?: "" else ""
                         compensationFactor = if (it.columnCount > 6) it.getFloat(6) else 1.0f
+                        isMirrored = if (it.columnCount > 7) it.getInt(7) == 1 else false
                         
-                        Log.d(TAG, "VirtuCam_Hook: Config loaded. Enabled: $isEnabled, Factor: $compensationFactor")
+                        Log.d(TAG, "VirtuCam_Hook: Config loaded. Enabled: $isEnabled, Factor: $compensationFactor, Mirrored: $isMirrored")
                     } catch (innerE: Exception) {
                         Log.e(TAG, "VirtuCam_Hook: Error parsing cursor columns", innerE)
                     }
@@ -1039,11 +1044,11 @@ class VirtualRenderThread(
                 eglCore!!.makeCurrent(es)
                 val vw = eglCore!!.querySurface(es, android.opengl.EGL14.EGL_WIDTH)
                 val vh = eglCore!!.querySurface(es, android.opengl.EGL14.EGL_HEIGHT)
-                
-                val applyRotation = if (isCapture) sensorOrientation else 0
-                textureRenderer?.draw(matrix, contentW, contentH, vw, vh, getTargetRatio(vw, vh, isCapture), applyRotation)
-                
-                if (eglCore?.swapBuffers(es) == false) {
+                // Draw the frame
+            val applyRotation = if (isCapture) sensorOrientation else 0
+            textureRenderer?.draw(matrix, contentW, contentH, vw, vh, getTargetRatio(vw, vh, isCapture), applyRotation, CameraHook.isMirrored)
+            
+            if (eglCore?.swapBuffers(es) == false) {
                     Log.w("VirtuCam_Render", "Surface abandoned, removing.")
                     it.remove()
                 }
