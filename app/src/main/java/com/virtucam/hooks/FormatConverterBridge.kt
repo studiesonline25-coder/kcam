@@ -107,136 +107,99 @@ class FormatConverterBridge(
     private var uvRowBytes: ByteArray? = null
 
     /**
-     * Synchronously overwrites the physically-allocated target buffer with our cached YUV computations.
-     * Optimized for speed AND robustness to prevent Xiaomi Parallel Service timeouts/crashes.
+     * Synchronously overwrites the target image with our RGBA data converted to YUV.
+     * Uses absolute indexing for maximum robustness against stride and interleave variations.
      */
-    fun overwriteImageWithLatestYuv(targetImage: Image) {
+    fun overwriteImageWithLatestYuv(targetImage: Image, timestamp: Long) {
         val rgbaBytes = cachedRgbaData ?: return
         
         try {
-            val targetPlanes = targetImage.planes
-            if (targetPlanes.size < 2) return
+            val w = targetImage.width
+            val h = targetImage.height
+            val planes = targetImage.planes
+            val format = targetImage.format
             
-            val tW = targetImage.width
-            val tH = targetImage.height
-            
-            // Detect rotation: If dimensions are swapped (Portrait source -> Landscape buffer), we rotate.
-            val rotationNeeded = if (tW == height && tH == width) 90 else 0
-            
-            val yBuffer = targetPlanes[0].buffer
-            val yRowStride = targetPlanes[0].rowStride
-            
-            val uPlane = targetPlanes[1]
-            val vPlane = if (targetPlanes.size > 2) targetPlanes[2] else null
-            val uBuffer = uPlane.buffer
-            val vBuffer = vPlane?.buffer ?: uBuffer
-            
-            val uRowStride = uPlane.rowStride
-            val vRowStride = vPlane?.rowStride ?: uRowStride
-            val uPixelStride = uPlane.pixelStride
-            val vPixelStride = vPlane?.pixelStride ?: uPixelStride
-            
-            val isInterleaved = (uPixelStride == 2)
-            val vOffsetInU = if (isInterleaved && vPlane == null) 1 else 0
-            
-            if (yRowBytes == null || yRowBytes!!.size < yRowStride) {
-                yRowBytes = ByteArray(yRowStride)
-            }
-            if (uvRowBytes == null || uvRowBytes!!.size < uRowStride) {
-                uvRowBytes = ByteArray(uRowStride)
-            }
-            val yRowArr = yRowBytes!!
-            val uvRowArr = uvRowBytes!!
-            
-            val srcStride = width * 4
-            val srcH = height
+            // Detect rotation: Source is always width x height. 
+            val rotation = if (w == height && h == width) 90 else 0
+
+            // Standard YUV_420_888: Plane 0=Y, 1=U, 2=V
+            // YV12 (842094169): Plane 0=Y, 1=V, 2=U
+            val isYV12 = (format == 842094169)
+            val yPlane = planes[0]
+            val uPlane = if (isYV12) (if (planes.size > 2) planes[2] else null) else (if (planes.size > 1) planes[1] else null)
+            val vPlane = if (isYV12) (if (planes.size > 1) planes[1] else null) else (if (planes.size > 2) planes[2] else null)
+
             val srcW = width
+            val srcH = height
+            val srcStrideArr = srcW * 4
 
-            for (row in 0 until tH) {
-                val isEvenRow = (row % 2 == 0)
-                val uvRow = row / 2
-                val populateUV = isEvenRow 
-                
-                var yIdx = 0
-                val colToSrcRowStep = srcStride 
-                val baseSrcCol: Int
-                val baseSrcRow: Int
-                
-                if (rotationNeeded == 90) {
-                    // srcRow = col, srcCol = (srcH - 1 - row)
-                    baseSrcRow = 0
-                    baseSrcCol = srcH - 1 - row
-                } else {
-                    // srcRow = srcH - 1 - row, srcCol = col
-                    baseSrcRow = srcH - 1 - row
-                    baseSrcCol = 0
-                }
-                
-                // Pre-calculate the starting offset for this row
-                var currentRgbaOffset = (baseSrcRow * srcStride) + (baseSrcCol * 4)
-
-                for (col in 0 until tW) {
-                    if (currentRgbaOffset < 0 || currentRgbaOffset + 3 >= rgbaBytes.size) {
-                        yRowArr[yIdx++] = 16 
-                        if (rotationNeeded == 90) currentRgbaOffset += colToSrcRowStep else currentRgbaOffset += 4
-                        continue
+            // Process Y Plane
+            val yBuffer = yPlane.buffer
+            val yRowStride = yPlane.rowStride
+            val yPixStride = yPlane.pixelStride
+            
+            for (row in 0 until h) {
+                val rowPos = row * yRowStride
+                for (col in 0 until w) {
+                    val srcRow = if (rotation == 90) col else row
+                    val srcCol = if (rotation == 90) (h - 1 - row) else col
+                    
+                    val rgbaOff = (srcRow * srcStrideArr) + (srcCol * 4)
+                    if (rgbaOff >= 0 && rgbaOff + 3 < rgbaBytes.size) {
+                        val r = rgbaBytes[rgbaOff].toInt() and 0xFF
+                        val g = rgbaBytes[rgbaOff+1].toInt() and 0xFF
+                        val b = rgbaBytes[rgbaOff+2].toInt() and 0xFF
+                        val y = ((66 * r + 129 * g + 25 * b + 128) shr 8) + 16
+                        val pos = rowPos + (col * yPixStride)
+                        if (pos < yBuffer.capacity()) {
+                            yBuffer.put(pos, y.coerceIn(16, 235).toByte())
+                        }
                     }
-                    
-                    val r = rgbaBytes[currentRgbaOffset].toInt() and 0xFF
-                    val g = rgbaBytes[currentRgbaOffset + 1].toInt() and 0xFF
-                    val b = rgbaBytes[currentRgbaOffset + 2].toInt() and 0xFF
-                    
-                    val y = ((66 * r + 129 * g + 25 * b + 128) shr 8) + 16
-                    if (yIdx < yRowArr.size) yRowArr[yIdx++] = y.coerceIn(16, 235).toByte()
-                    
-                    if (populateUV && (col % 2 == 0)) {
-                        val u = ((-38 * r - 74 * g + 112 * b + 128) shr 8) + 128
-                        val v = ((112 * r - 94 * g - 18 * b + 128) shr 8) + 128
+                }
+            }
+
+            // Process Chroma Planes (Independent write for each byte handles all layouts)
+            fun writeChroma(plane: Image.Plane?, isU: Boolean) {
+                if (plane == null) return
+                val buffer = plane.buffer
+                val pStride = plane.rowStride
+                val pixStride = plane.pixelStride
+                val tW = w / 2
+                val tH = h / 2
+                
+                for (row in 0 until tH) {
+                    val rowPos = row * pStride
+                    for (col in 0 until tW) {
+                        val srcRowForUV = (if (rotation == 90) col else row) * 2
+                        val srcColForUV = (if (rotation == 90) (tH - 1 - row) else col) * 2
                         
-                        val uvCol = col / 2
-                        if (isInterleaved) {
-                            val uIdx = uvCol * uPixelStride
-                            val vIdx = uIdx + vOffsetInU
-                            if (vIdx < uvRowArr.size) {
-                                uvRowArr[uIdx] = u.coerceIn(16, 240).toByte()
-                                uvRowArr[vIdx] = v.coerceIn(16, 240).toByte()
+                        val rgbaOff = (srcRowForUV * srcStrideArr) + (srcColForUV * 4)
+                        if (rgbaOff >= 0 && rgbaOff + 3 < rgbaBytes.size) {
+                            val r = rgbaBytes[rgbaOff].toInt() and 0xFF
+                            val g = rgbaBytes[rgbaOff+1].toInt() and 0xFF
+                            val b = rgbaBytes[rgbaOff+2].toInt() and 0xFF
+                            
+                            val chroma = if (isU) {
+                                ((-38 * r - 74 * g + 112 * b + 128) shr 8) + 128
+                            } else {
+                                ((112 * r - 94 * g - 18 * b + 128) shr 8) + 128
                             }
-                        } else {
-                            val uIdxTotal = uvRow * uRowStride + uvCol
-                            if (uIdxTotal < uBuffer.capacity()) uBuffer.put(uIdxTotal, u.coerceIn(16, 240).toByte())
-                            if (vPlane != null) {
-                                val vIdxTotal = uvRow * vRowStride + uvCol
-                                if (vIdxTotal < vBuffer.capacity()) vBuffer.put(vIdxTotal, v.coerceIn(16, 240).toByte())
+                            
+                            val pos = rowPos + (col * pixStride)
+                            if (pos < buffer.capacity()) {
+                                buffer.put(pos, chroma.coerceIn(16, 240).toByte())
                             }
                         }
                     }
-                    
-                    if (rotationNeeded == 90) {
-                        currentRgbaOffset += colToSrcRowStep // Moving col in target moves srcRow in source
-                    } else {
-                        currentRgbaOffset += 4 // Moving col in target moves srcCol in source
-                    }
-                }
-                
-                // Final Bulk Writes (Sanity checked)
-                val yPos = row * yRowStride
-                if (yPos + yIdx <= yBuffer.capacity()) {
-                    yBuffer.position(yPos)
-                    yBuffer.put(yRowArr, 0, yIdx)
-                }
-                
-                if (populateUV && isInterleaved) {
-                    val uvPos = uvRow * uRowStride
-                    val uvLen = uRowStride.coerceAtMost(uvRowArr.size)
-                    if (uvPos + uvLen <= uBuffer.capacity()) {
-                        uBuffer.position(uvPos)
-                        uBuffer.put(uvRowArr, 0, uvLen)
-                    }
                 }
             }
-            Log.d(TAG, "FormatConverterBridge: Successfully overwrote hardware YUV buffer (${tW}x${tH})")
-        } catch (e: Throwable) {
-            Log.e(TAG, "FormatConverterBridge: CRITICAL ERROR during YUV overwrite", e)
+
+            writeChroma(uPlane, true)
+            writeChroma(vPlane, false)
+            
+            Log.d(TAG, "FormatConverterBridge: Captured frame (${w}x${h}) rewritten successfully. Format=$format")
+        } catch (e: Exception) {
+            Log.e(TAG, "FormatConverterBridge: Error overwriting capture buffer", e)
         }
     }
 
@@ -337,7 +300,7 @@ class FormatConverterBridge(
     fun connectToImageReader(imageReader: ImageReader) {
         try {
             this.imageReader = imageReader
-            this.imageWriter = ImageWriter.newInstance(imageReader.surface, 2, ImageFormat.YUV_420_888)
+            this.imageWriter = ImageWriter.newInstance(imageReader.surface, 5, ImageFormat.YUV_420_888)
             Log.i(TAG, "FormatConverterBridge: Connected to ImageReader ${width}x${height} for format ${imageReader.imageFormat}")
         } catch (e: Exception) {
             Log.e(TAG, "FormatConverterBridge: Failed to connect to ImageReader", e)
@@ -362,8 +325,8 @@ class FormatConverterBridge(
                 val fmt = outImage.format
                 if (fmt == 256) { // JPEG
                     overwriteImageWithLatestJpeg(outImage)
-                } else { // YUV_420_888 (35) or similar
-                    overwriteImageWithLatestYuv(outImage)
+                } else {
+                    overwriteImageWithLatestYuv(outImage, timestamp)
                 }
                 
                 writer.queueInputImage(outImage)
