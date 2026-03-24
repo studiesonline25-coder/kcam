@@ -431,7 +431,9 @@ object CameraHook {
         
         // Use YUV_420_888 as it's universally supported for sinks
         val format = android.graphics.ImageFormat.YUV_420_888
-        val reader = ImageReader.newInstance(width, height, format, 4)
+        // [STABILITY FIX] Use maxImages=5 to give the Camera HAL plenty of breathing room during bursts. 
+        // A value of 1 crashes the HAL if our encoder blocks the queue even for a few milliseconds (Error 4).
+        val reader = ImageReader.newInstance(width, height, format, 5)
         
         reader.setOnImageAvailableListener({ ir ->
             try {
@@ -440,7 +442,12 @@ object CameraHook {
                 val realTimestamp = realImage?.timestamp ?: 0L
                 realImage?.close()
                 // Sync Trigger: The real camera just took a photo! Push our spoofed frame to the app NOW!
-                bridge?.pushLatestFrameToWriter(realTimestamp)
+                // Offload the heavy JPEG compression (50ms+) so we don't stall the physical HAL
+                if (bridge != null && bridge.hasImageWriter) {
+                    dummySinkHandler?.post {
+                        bridge.pushLatestFrameToWriter(realTimestamp)
+                    }
+                }
             } catch (e: Exception) {
                 // Ignore errors during discard
             }
@@ -872,10 +879,16 @@ class VirtualRenderThread(
     private var mediaSurfaceTexture: SurfaceTexture? = null
     private var mediaSurface: Surface? = null
 
-    private fun getTargetRatio(vW: Int, vH: Int): Float {
+    private fun getTargetRatio(vW: Int, vH: Int, isCapture: Boolean): Float {
         return try {
-            // Most modern camera apps stretch 4:3 buffers to exactly a 16:9 preview area.
-            (9f / 16f) * CameraHook.compensationFactor
+            if (isCapture) {
+                // Captured Output (Photos/Videos) do NOT get blindly stretched by the OEM UI.
+                // We must return true geometrical ratio to prevent JPEG/YUV output from being heavily squished.
+                vW.toFloat() / vH.toFloat()
+            } else {
+                // Most modern camera apps stretch 4:3 Preview buffers to exactly a 16:9 UI viewfinder.
+                (9f / 16f) * CameraHook.compensationFactor
+            }
         } catch (e: Exception) {
             vW.toFloat() / vH.toFloat()
         }
@@ -997,7 +1010,7 @@ class VirtualRenderThread(
                 val vh = eglCore!!.querySurface(es, android.opengl.EGL14.EGL_HEIGHT)
                 
                 val applyRotation = if (isCapture) sensorOrientation else 0
-                textureRenderer?.draw(matrix, contentW, contentH, vw, vh, getTargetRatio(vw, vh), applyRotation)
+                textureRenderer?.draw(matrix, contentW, contentH, vw, vh, getTargetRatio(vw, vh, isCapture), applyRotation)
                 
                 if (eglCore?.swapBuffers(es) == false) {
                     Log.w("VirtuCam_Render", "Surface abandoned, removing.")
