@@ -390,7 +390,7 @@ object CameraHook {
                     if (!isEnabled) return
                     val st = param.args[0] as? SurfaceTexture ?: return
                     Log.d(TAG, "VirtuCam_Hook: Intercepted setPreviewTexture (Camera1)")
-                    startRenderThreads(listOf(Surface(st)))
+                    startRenderThreads(listOf(Pair(Surface(st), false)))
                 } catch (t: Throwable) {
                     Log.e(TAG, "VirtuCam_Hook: Error in Camera1 setPreviewTexture hook", t)
                 }
@@ -406,7 +406,7 @@ object CameraHook {
                     val surface = holder.surface ?: return
                     Log.d(TAG, "VirtuCam_Hook: Intercepted setPreviewDisplay (Camera1)")
                     stopOldPipeline()
-                    startRenderThreads(listOf(surface))
+                    startRenderThreads(listOf(Pair(surface, false)))
                 } catch (t: Throwable) {
                     Log.e(TAG, "VirtuCam_Hook: Error in Camera1 setPreviewDisplay hook", t)
                 }
