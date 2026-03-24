@@ -264,7 +264,7 @@ object CameraHook {
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     try {
                         if (!isEnabled) return
-                        val builder = param.thisObject as? android.hardware.camera2.CaptureRequest.Builder<*> ?: return
+                        val builder = param.thisObject ?: return
                         
                         // Disable Xiaomi Parallel / MiAlgo processing (forces 'Simple' capture path)
                         setXiaomiVendorTag(builder, "xiaomi.parallel.enabled", 0.toByte())
@@ -283,13 +283,16 @@ object CameraHook {
         }
     }
 
-    private fun setXiaomiVendorTag(builder: android.hardware.camera2.CaptureRequest.Builder<*>, name: String, value: Any) {
+    private fun setXiaomiVendorTag(builder: Any, name: String, value: Any) {
         try {
             // Xiaomi uses reflection to create keys for hidden vendor tags
-            val keyConstructor = android.hardware.camera2.CaptureRequest.Key::class.java.getDeclaredConstructor(String::class.java, Class::class.java)
+            val keyClass = Class.forName("android.hardware.camera2.CaptureRequest\$Key")
+            val keyConstructor = keyClass.getDeclaredConstructor(String::class.java, Class::class.java)
             keyConstructor.isAccessible = true
-            val key = keyConstructor.newInstance(name, value::class.java) as android.hardware.camera2.CaptureRequest.Key<Any>
-            builder.set(key, value)
+            val key = keyConstructor.newInstance(name, value::class.java)
+            
+            // Use reflection for the .set() call to avoid Builder<T> vs Builder compile issues
+            XposedHelpers.callMethod(builder, "set", key, value)
         } catch (_: Exception) {}
     }
 
