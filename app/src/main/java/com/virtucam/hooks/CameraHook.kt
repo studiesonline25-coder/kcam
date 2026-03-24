@@ -66,6 +66,9 @@ object CameraHook {
     private val surfaceSizes = java.util.Collections.synchronizedMap(java.util.WeakHashMap<Surface, Pair<Int, Int>>())
     private val surfaceTextureSizes = java.util.Collections.synchronizedMap(java.util.WeakHashMap<SurfaceTexture, Pair<Int, Int>>())
 
+    // Dynamic Xiaomi Vendor Tag Discovery
+    private val discoveredXiaomiKeys = java.util.concurrent.ConcurrentHashMap<String, android.hardware.camera2.CaptureRequest.Key<*>>()
+
     // [ONCE AND FOR ALL] Surface tracking and crash prevention structures
     private val surfaceFormats = Collections.synchronizedMap(WeakHashMap<Surface, Int>())
     private val hookedListenerClasses = java.util.Collections.newSetFromMap(java.util.WeakHashMap<Class<*>, Boolean>())
@@ -216,6 +219,13 @@ object CameraHook {
                 val cameraId = param.args[0] as? String
                 if (cameraId != null) {
                     lastOpenedCameraId = cameraId
+                    
+                    // Trigger Discovery: Find all Xiaomi vendor tags supported by this specific camera sensor
+                    try {
+                        val manager = param.thisObject as android.hardware.camera2.CameraManager
+                        val characteristics = manager.getCameraCharacteristics(cameraId)
+                        discoverXiaomiVendorTags(characteristics)
+                    } catch (_: Exception) {}
                 }
                 Log.d(TAG, "VirtuCam_Hook: App is opening Camera2 ID: $cameraId")
             }
@@ -266,31 +276,46 @@ object CameraHook {
                         if (!isEnabled) return
                         val builder = param.thisObject ?: return
                         
-                        // [Redmi 14C Fix] Apply Xiaomi Capture Bypass to STILL_CAPTURE (2) and ZSL (5) templates.
-                        // Xiaomi's Parallel Engine (MiAlgo/MIVI) often uses Zero Shutter Lag (ZSL) streams.
+                        // [Redmi 14C Fix] Apply Xiaomi Capture Bypass (forces 'Simple' capture path)
+                        // By disabling the Parallel Engine (MiAlgo/MIVI), we prevent it from rejecting virtual buffers.
                         val template = try { XposedHelpers.getIntField(builder, "mTemplate") } catch (e: Exception) { -1 }
                         
-                        // Disable Xiaomi Parallel / MiAlgo / MIVI processing (forces 'Simple' capture path)
-                        // Applying to ALL templates on Xiaomi is safer to prevent engine initialization.
+                        // 1. DYNAMIC SUPPRESSION: Automatically disable all discovered vendor tags related to post-processing
+                        for ((name, key) in discoveredXiaomiKeys) {
+                            try {
+                                if (name.contains("parallel.enabled", true) || 
+                                    name.contains("mivi.enabled", true) || 
+                                    name.contains("algoengine.enabled", true) ||
+                                    name.contains("hdr.enabled", true) ||
+                                    name.contains("mfnr.enabled", true) ||
+                                    name.contains("snapshot.optimize", true) ||
+                                    name.contains("super.pixel.enabled", true)) {
+                                    
+                                    // Set to false or 0 based on reasonable guess (setXiaomiVendorTag handles the .set() call)
+                                    setXiaomiVendorTag(builder, name, false)
+                                    setXiaomiVendorTag(builder, name, 0.toByte()) 
+                                } else if (name == "xiaomi.capturepipeline.simple") {
+                                    setXiaomiVendorTag(builder, name, 1.toByte())
+                                }
+                            } catch (_: Exception) {}
+                        }
+
+                        // 2. HARDCODED OVERRIDES: Ensure critical known tags are set (even if not discovered in availableKeys)
                         setXiaomiVendorTag(builder, "xiaomi.parallel.enabled", 0.toByte())
                         setXiaomiVendorTag(builder, "xiaomi.mivi.enabled", false)
                         setXiaomiVendorTag(builder, "xiaomi.algoengine.enabled", 0.toByte())
                         
-                        if (template != 2 && template != 5) return // 1=Preview, 2=StillCapture, 5=ZSL
+                        if (template != 2 && template != 5) return // Early exit for preview if it's not a capture request
                         
-                        Log.d(TAG, "XiaomiBypass: Applying extra suppression to template $template")
+                        Log.d(TAG, "XiaomiBypass: Applied dynamic suppression to template $template")
                         
                         // Disable multi-frame and post-processing dependencies
                         setXiaomiVendorTag(builder, "xiaomi.mfnr.enabled", 0.toByte())
                         setXiaomiVendorTag(builder, "xiaomi.hdr.enabled", 0.toByte())
                         setXiaomiVendorTag(builder, "xiaomi.multiframe.inputNum", 1)
                         setXiaomiVendorTag(builder, "xiaomi.snapshot.optimize.enabled", 0.toByte())
-                        
-                        // Newer MIVI specific suppressions
                         setXiaomiVendorTag(builder, "xiaomi.mivi.super.pixel.enabled", false)
                         setXiaomiVendorTag(builder, "xiaomi.mivi.super.night.enabled", false)
-                        
-                        // Device-dependent tags
                         setXiaomiVendorTag(builder, "xiaomi.capturepipeline.simple", 1.toByte())
                         setXiaomiVendorTag(builder, "xiaomi.sat.enabled", 0.toByte())
                         
@@ -304,7 +329,15 @@ object CameraHook {
 
     private fun setXiaomiVendorTag(builder: Any, name: String, value: Any) {
         try {
-            // Xiaomi uses reflection to create keys for hidden vendor tags
+            // First check if we've discovered this key from the Hardware HAL
+            val discoveredKey = discoveredXiaomiKeys[name]
+            if (discoveredKey != null) {
+                XposedHelpers.callMethod(builder, "set", discoveredKey, value)
+                Log.v(TAG, "XiaomiBypass: Set HAL-verified tag $name success")
+                return
+            }
+
+            // Fallback: Reflection to create keys for hidden vendor tags
             val keyClass = Class.forName("android.hardware.camera2.CaptureRequest\$Key")
             val keyConstructor = keyClass.getDeclaredConstructor(String::class.java, Class::class.java)
             keyConstructor.isAccessible = true
@@ -324,9 +357,28 @@ object CameraHook {
             XposedHelpers.callMethod(builder, "set", key, value)
             
             // Helpful logging to verify which tags were accepted by the HAL
-            Log.v(TAG, "XiaomiBypass: Set $name success")
+            Log.v(TAG, "XiaomiBypass: Set $name (reflected) success")
         } catch (_: Throwable) {
             Log.v(TAG, "XiaomiBypass: Tag $name not supported on this device")
+        }
+    }
+
+    private fun discoverXiaomiVendorTags(characteristics: android.hardware.camera2.CameraCharacteristics) {
+        try {
+            val keys = characteristics.availableCaptureRequestKeys
+            var count = 0
+            for (key in keys) {
+                val name = key.name
+                if (name.contains("xiaomi", ignoreCase = true)) {
+                    discoveredXiaomiKeys[name] = key
+                    count++
+                }
+            }
+            if (count > 0) {
+                Log.d(TAG, "Xiaomi Discovery: Found $count legitimate Xiaomi vendor tags in HAL.")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to discover Xiaomi vendor tags from HAL", e)
         }
     }
 
