@@ -1,9 +1,11 @@
 package com.virtucam.hooks
 
 import android.graphics.Bitmap
+import android.graphics.ImageFormat
 import android.graphics.PixelFormat
 import android.media.Image
 import android.media.ImageReader
+import android.media.ImageWriter
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log

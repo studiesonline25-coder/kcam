@@ -57,6 +57,11 @@ object CameraHook {
     private val surfaceMap = mutableMapOf<Surface, Surface>()
     private val activeBridges = mutableListOf<FormatConverterBridge>()
     
+    // global capture state for render threads
+    @Volatile var captureCount = 0
+    val captureQueue = java.util.concurrent.LinkedBlockingQueue<Pair<Long, Int>>()
+    val formatBridges = java.util.concurrent.ConcurrentHashMap<android.util.Size, FormatConverterBridge>()
+    
     // Global telemetry for surface dimensions
     private val surfaceSizes = java.util.Collections.synchronizedMap(java.util.WeakHashMap<Surface, Pair<Int, Int>>())
     private val surfaceTextureSizes = java.util.Collections.synchronizedMap(java.util.WeakHashMap<SurfaceTexture, Pair<Int, Int>>())
@@ -83,11 +88,66 @@ object CameraHook {
             hookCameraDevice(lpparam)
             hookCameraDeviceOutputConfigurations(lpparam)
             hookCamera1(lpparam)
+            hookCaptureCallback(lpparam)
             
             Log.d(TAG, "VirtuCam_Hook: All hooks deployed successfully.")
         } catch (t: Throwable) {
             Log.e(TAG, "VirtuCam_Hook: CRITICAL failure in $targetPackage", t)
         }
+    }
+
+    /**
+     * Hook CameraCaptureSession.capture() and setRepeatingRequest() to intercept
+     * the CaptureCallback and identify the exact moment a photo is taken.
+     */
+    private fun hookCaptureCallback(lpparam: XC_LoadPackage.LoadPackageParam) {
+        val sessionClass = XposedHelpers.findClassIfExists(
+            "android.hardware.camera2.impl.CameraCaptureSessionImpl", lpparam.classLoader
+        ) ?: return
+
+        val callbackHook = object : XC_MethodHook() {
+            override fun beforeHookedMethod(param: MethodHookParam) {
+                try {
+                    val callbackIndex = if (param.method.name == "capture") 1 else 1
+                    val originalCallback = if (param.args.size > callbackIndex) param.args[callbackIndex] as? android.hardware.camera2.CameraCaptureSession.CaptureCallback else null
+                    
+                    if (originalCallback == null) return
+                    
+                    // Wrap the original callback to intercept onCaptureCompleted
+                    val wrappedCallback = object : android.hardware.camera2.CameraCaptureSession.CaptureCallback() {
+                        override fun onCaptureStarted(session: android.hardware.camera2.CameraCaptureSession, request: android.hardware.camera2.CaptureRequest, timestamp: Long, frameNumber: Long) {
+                            originalCallback.onCaptureStarted(session, request, timestamp, frameNumber)
+                        }
+                        
+                        override fun onCaptureCompleted(session: android.hardware.camera2.CameraCaptureSession, request: android.hardware.camera2.CaptureRequest, result: android.hardware.camera2.TotalCaptureResult) {
+                            try {
+                                val isSingleCapture = !request.tag.toString().contains("Repeating") // Heuristic
+                                // On Xiaomi, repeating requests (preview) should be ignored for captureCount
+                                if (param.method.name == "capture") {
+                                    val sensorTimestamp = result.get(android.hardware.camera2.CaptureResult.SENSOR_TIMESTAMP) ?: System.nanoTime()
+                                    synchronized(CameraHook) {
+                                        captureCount++
+                                        captureQueue.offer(Pair(sensorTimestamp, captureCount))
+                                        Log.d(TAG, "VirtuCam_Hook: Capture Event Detected! TS=$sensorTimestamp, QueueSize=${captureQueue.size}")
+                                    }
+                                }
+                            } catch (e: Exception) {}
+                            originalCallback.onCaptureCompleted(session, request, result)
+                        }
+                        
+                        override fun onCaptureFailed(session: android.hardware.camera2.CameraCaptureSession, request: android.hardware.camera2.CaptureRequest, failure: android.hardware.camera2.CaptureFailure) {
+                            originalCallback.onCaptureFailed(session, request, failure)
+                        }
+                    }
+                    param.args[callbackIndex] = wrappedCallback
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error wrapping CaptureCallback", e)
+                }
+            }
+        }
+
+        XposedBridge.hookAllMethods(sessionClass, "capture", callbackHook)
+        XposedBridge.hookAllMethods(sessionClass, "captureBurst", callbackHook)
     }
 
     /**
@@ -1008,12 +1068,12 @@ class VirtualRenderThread(
                         if (!drawToAllSurfaces(matrix, staticImageW, staticImageH)) break
                         
                         // Handle Photo/Capture Requests (Static Image)
-                        synchronized(this) {
-                            while (captureCount > 0) {
-                                val capture = captureQueue.poll()
+                        synchronized(CameraHook) {
+                            while (CameraHook.captureCount > 0) {
+                                val capture = CameraHook.captureQueue.poll()
                                 val timestamp = capture?.first ?: System.nanoTime()
-                                formatBridges.forEach { it.value.pushLatestFrameToWriter(timestamp) }
-                                captureCount--
+                                CameraHook.formatBridges.values.forEach { it.pushLatestFrameToWriter(timestamp) }
+                                CameraHook.captureCount--
                             }
                         }
                         
@@ -1044,15 +1104,15 @@ class VirtualRenderThread(
             if (!drawToAllSurfaces(matrix, vw, vh)) break
 
             // Handle Photo/Capture Requests
-            synchronized(this) {
-                while (captureCount > 0) {
-                    val capture = captureQueue.poll()
+            synchronized(CameraHook) {
+                while (CameraHook.captureCount > 0) {
+                    val capture = CameraHook.captureQueue.poll()
                     val timestamp = capture?.first ?: System.nanoTime()
                     
-                    formatBridges.forEach { 
-                        it.value.pushLatestFrameToWriter(timestamp) 
+                    CameraHook.formatBridges.values.forEach { 
+                        it.pushLatestFrameToWriter(timestamp) 
                     }
-                    captureCount--
+                    CameraHook.captureCount--
                 }
             }
             
