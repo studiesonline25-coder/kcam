@@ -266,16 +266,22 @@ object CameraHook {
                         if (!isEnabled) return
                         val builder = param.thisObject ?: return
                         
+                        // [Redmi 14C Fix] Only apply Xiaomi Capture Bypass to STILL_CAPTURE templates (2)
+                        // This prevents breaking the PREVIEW stream which causes a 'black screen'.
+                        val template = try { XposedHelpers.getIntField(builder, "mTemplate") } catch (e: Exception) { -1 }
+                        if (template != 2) return // 1=Preview, 2=StillCapture, 3=Record
+                        
                         // Disable Xiaomi Parallel / MiAlgo processing (forces 'Simple' capture path)
                         setXiaomiVendorTag(builder, "xiaomi.parallel.enabled", 0.toByte())
                         setXiaomiVendorTag(builder, "xiaomi.mfnr.enabled", 0.toByte())
                         setXiaomiVendorTag(builder, "xiaomi.hdr.enabled", 0.toByte())
                         setXiaomiVendorTag(builder, "xiaomi.multiframe.inputNum", 1)
-                        setXiaomiVendorTag(builder, "xiaomi.capturepipeline.simple", 1.toByte())
                         
-                        // Disable SAT (Smooth Transition) which requires multi-stream parallel zipping
+                        // Device-specific tags; setXiaomiVendorTag will gracefully ignore if unsupported.
+                        setXiaomiVendorTag(builder, "xiaomi.capturepipeline.simple", 1.toByte())
                         setXiaomiVendorTag(builder, "xiaomi.sat.enabled", 0.toByte())
-                    } catch (_: Exception) {}
+                        
+                    } catch (_: Throwable) {}
                 }
             })
         } catch (e: Exception) {
@@ -289,11 +295,20 @@ object CameraHook {
             val keyClass = Class.forName("android.hardware.camera2.CaptureRequest\$Key")
             val keyConstructor = keyClass.getDeclaredConstructor(String::class.java, Class::class.java)
             keyConstructor.isAccessible = true
-            val key = keyConstructor.newInstance(name, value::class.java)
+            
+            // Map Kotlin primitive classes to Java primitives (required for Camera2 keys)
+            val valueClass = when(value) {
+                is Byte -> java.lang.Byte.TYPE
+                is Int -> java.lang.Integer.TYPE
+                is Boolean -> java.lang.Boolean.TYPE
+                else -> value::class.java
+            }
+            
+            val key = keyConstructor.newInstance(name, valueClass)
             
             // Use reflection for the .set() call to avoid Builder<T> vs Builder compile issues
             XposedHelpers.callMethod(builder, "set", key, value)
-        } catch (_: Exception) {}
+        } catch (_: Throwable) {}
     }
 
     /**
