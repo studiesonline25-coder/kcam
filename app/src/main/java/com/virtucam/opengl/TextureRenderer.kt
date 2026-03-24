@@ -137,7 +137,7 @@ class TextureRenderer(private val isVideo: Boolean = true) {
     /**
      * Draw the texture to currently bound frame buffer
      */
-    fun draw(transformMatrix: FloatArray, videoWidth: Int = 0, videoHeight: Int = 0, viewWidth: Int = 0, viewHeight: Int = 0, targetRatio: Float = 0f) {
+    fun draw(transformMatrix: FloatArray, videoWidth: Int = 0, videoHeight: Int = 0, viewWidth: Int = 0, viewHeight: Int = 0, targetRatio: Float = 0f, rotationDegrees: Int = 0) {
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
 
@@ -150,35 +150,41 @@ class TextureRenderer(private val isVideo: Boolean = true) {
 
         // Compute aspect ratio scaling (FIT_CENTER) to prevent stretching
         Matrix.setIdentityM(mvpMatrix, 0)
-        Log.d("VirtuCam_Render", "TextureRenderer.draw: video=${videoWidth}x${videoHeight}, view=${viewWidth}x${viewHeight}")
         
         if (videoWidth > 0 && videoHeight > 0 && viewWidth > 0 && viewHeight > 0) {
-            // Use the provided targetRatio (e.g. screen aspect) if valid, otherwise fallback to physical surface ratio.
-            // We only apply this compensation if the surface is small (likely Preview/Video), 
-            // the massive high-res surfaces (Snapshot) should usually be 1:1 raw to avoid squashing saved JPEGs.
+            // Apply physical rotation to compensate for Camera Sensor Orientation
+            // Android SENSOR_ORIENTATION 90 means the sensor is physically turned 90 CCW.
+            // We rotate our quad CW to pre-compensate.
+            if (rotationDegrees != 0) {
+                // OpenGL rotation is CCW, so -rotationDegrees rotates CW.
+                Matrix.rotateM(mvpMatrix, 0, -rotationDegrees.toFloat(), 0f, 0f, 1f)
+            }
+
             val isSnapshot = viewWidth >= 2500 || viewHeight >= 2500
             val viewRatio = if (targetRatio > 0f && !isSnapshot) targetRatio else (viewWidth.toFloat() / viewHeight.toFloat())
-            val videoRatio = videoWidth.toFloat() / videoHeight.toFloat()
+            
+            // If we rotated 90 or 270, the effective video dimensions are swapped for ratio calc
+            val effectiveVideoRatio = if (rotationDegrees == 90 || rotationDegrees == 270) {
+                videoHeight.toFloat() / videoWidth.toFloat()
+            } else {
+                videoWidth.toFloat() / videoHeight.toFloat()
+            }
             
             val scaleX: Float
             val scaleY: Float
             
-            // FIT_CENTER (CENTER_INSIDE): scale the quad to fit entirely inside the virtual view.
-            // This ensures the user sees the 100% of their video/image without heads being chopped off.
-            // When combined with targetRatio (screen aspect), this pre-squishes the image so that 
-            // the OEM's blind billboard-stretch perfectly rights the proportions.
-            if (videoRatio > viewRatio) {
+            // FIT_CENTER logic based on effective (rotated) video ratio
+            if (effectiveVideoRatio > viewRatio) {
                 scaleX = 1f
-                scaleY = viewRatio / videoRatio
+                scaleY = viewRatio / effectiveVideoRatio
             } else {
-                scaleX = videoRatio / viewRatio
+                scaleX = effectiveVideoRatio / viewRatio
                 scaleY = 1f
             }
             
-            // To properly orient the spoofed video, we scale the geometry to preserve aspect ratio.
-            // Android camera previews default to drawing perfectly upright without requiring 
-            // a global geometric hardware orientation offset during spoofing playback.
             Matrix.scaleM(mvpMatrix, 0, scaleX, scaleY, 1f)
+            
+            Log.d("VirtuCam_Render", "TextureRenderer.draw: rot=$rotationDegrees, video=${videoWidth}x${videoHeight}, view=${viewWidth}x${viewHeight}, scales=${scaleX}x${scaleY}")
         }
 
         // Copy transform matrix from SurfaceTexture which Android natively encodes with EXIF Video rotators

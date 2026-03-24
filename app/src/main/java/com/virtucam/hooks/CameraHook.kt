@@ -756,8 +756,9 @@ object CameraHook {
         var sensorOrientation = 0
         try {
             val cameraManager = context.getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
-            val characteristics = cameraManager.getCameraCharacteristics("0")
+            val characteristics = cameraManager.getCameraCharacteristics(lastOpenedCameraId ?: "0")
             sensorOrientation = characteristics.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
+            Log.d(TAG, "VirtuCam_Hook: Using SENSOR_ORIENTATION $sensorOrientation for camera $lastOpenedCameraId")
         } catch (e: Exception) {
             Log.e(TAG, "VirtuCam_Hook: Failed to read SENSOR_ORIENTATION", e)
         }
@@ -963,7 +964,7 @@ class VirtualRenderThread(
                 val vw = eglCore!!.querySurface(es, android.opengl.EGL14.EGL_WIDTH)
                 val vh = eglCore!!.querySurface(es, android.opengl.EGL14.EGL_HEIGHT)
                 
-                textureRenderer?.draw(matrix, contentW, contentH, vw, vh, getTargetRatio(vw, vh))
+                textureRenderer?.draw(matrix, contentW, contentH, vw, vh, getTargetRatio(vw, vh), sensorOrientation)
                 
                 if (eglCore?.swapBuffers(es) == false) {
                     Log.w("VirtuCam_Render", "Surface abandoned, removing.")
