@@ -21,4 +21,5 @@
     <color name="accent_purple">#E040FB</color>
     
     <color name="overlay_dark">#80000000</color>
+    <color name="white">#FFFFFF</color>
 </resources>
