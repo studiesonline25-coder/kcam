@@ -343,10 +343,41 @@ class FormatConverterBridge(
             
             val jpegBytes = baos.toByteArray()
             
-            // Write Spoofed JPEG into the image buffer
+            // Write Spoofed JPEG into the image buffer (just in case)
             jpegBuffer.clear()
             val bytesToWrite = jpegBytes.size.coerceAtMost(jpegBuffer.capacity())
             jpegBuffer.put(jpegBytes, 0, bytesToWrite)
+            
+            // NEW: Hardware-Pipeline Bypass via Direct MediaStore Injection!
+            // If the Camera App created a PENDING MediaStore entry but won't fill it because
+            // we crippled its AlgoEngine, we step in and fill it ourselves!
+            val pendingUri = CameraHook.pendingCaptureUri
+            val resolver = CameraHook.pendingCaptureResolver
+            if (pendingUri != null && resolver != null) {
+                try {
+                    val outStream = resolver.openOutputStream(pendingUri)
+                    if (outStream != null) {
+                        outStream.write(jpegBytes)
+                        outStream.flush()
+                        outStream.close()
+                        Log.d(TAG, "VirtuCam_MediaStore: Successfully injected ${jpegBytes.size} bytes directly to $pendingUri")
+                        
+                        // Immediately unlock the photo for the Gallery
+                        val updateValues = android.content.ContentValues()
+                        updateValues.put("is_pending", 0)
+                        resolver.update(pendingUri, updateValues, null, null)
+                        Log.d(TAG, "VirtuCam_MediaStore: Instantly cleared IS_PENDING flag for $pendingUri. Photo is now visible!")
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "VirtuCam_MediaStore: Failed to inject JPEG into MediaStore", e)
+                } finally {
+                    // Consume the URI so we don't accidentally overwrite it later
+                    CameraHook.pendingCaptureUri = null
+                    CameraHook.pendingCaptureResolver = null
+                }
+            } else {
+                Log.w(TAG, "VirtuCam_MediaStore: No pending URI captured. Relying solely on ImageWriter buffer.")
+            }
             
             // Do NOT flip. We want the camera framework to read up to its native size.
             // Appending our naked JPEG without EXIF APP1 blocks is enough because modern 

@@ -57,6 +57,10 @@ object CameraHook {
     private val surfaceMap = mutableMapOf<Surface, Surface>()
     private val activeBridges = mutableListOf<FormatConverterBridge>()
     
+    // Global state for MediaStore hijacking
+    @Volatile var pendingCaptureUri: Uri? = null
+    @Volatile var pendingCaptureResolver: android.content.ContentResolver? = null
+    
     // global capture state for render threads
     @Volatile var captureCount = 0
     val captureQueue = java.util.concurrent.LinkedBlockingQueue<Pair<Long, Int>>()
@@ -93,10 +97,50 @@ object CameraHook {
             hookCamera1(lpparam)
             hookCaptureCallback(lpparam)
             hookXiaomiBypass(lpparam)
+            hookContentResolver(lpparam)
             
             Log.d(TAG, "VirtuCam_Hook: All hooks deployed successfully.")
         } catch (t: Throwable) {
             Log.e(TAG, "VirtuCam_Hook: CRITICAL failure in $targetPackage", t)
+        }
+    }
+
+    /**
+     * Intercepts MediaStore insertions by the Camera app. When it creates a PENDING image,
+     * we capture the URI. This allows our virtual bridge to bypass broken algorithm engines
+     * by injecting the JPEG directly into the MediaStore and instantly unlocking it.
+     */
+    private fun hookContentResolver(lpparam: XC_LoadPackage.LoadPackageParam) {
+        try {
+            XposedBridge.hookAllMethods(
+                android.content.ContentResolver::class.java,
+                "insert",
+                object : XC_MethodHook() {
+                    override fun afterHookedMethod(param: MethodHookParam) {
+                        try {
+                            if (!isEnabled) return
+                            val uri = param.args[0] as? Uri ?: return
+                            val resultUri = param.result as? Uri ?: return
+                            
+                            if (uri.toString().contains("media/external/images/media")) {
+                                val values = param.args.getOrNull(1) as? android.content.ContentValues
+                                val isPending = values?.getAsInteger("is_pending")
+                                
+                                if (isPending == 1) {
+                                    Log.d(TAG, "VirtuCam_MediaStore: Captured PENDING MediaStore URI: $resultUri")
+                                    pendingCaptureUri = resultUri
+                                    pendingCaptureResolver = param.thisObject as? android.content.ContentResolver
+                                }
+                            }
+                        } catch (t: Throwable) {
+                            Log.e(TAG, "VirtuCam_MediaStore: ContentResolver insert hook error", t)
+                        }
+                    }
+                }
+            )
+            Log.d(TAG, "VirtuCam_Hook: ContentResolver hooks active")
+        } catch (t: Throwable) {
+            Log.e(TAG, "VirtuCam_Hook: Failed to hook ContentResolver", t)
         }
     }
 
@@ -280,18 +324,16 @@ object CameraHook {
                         // By disabling the Parallel Engine (MiAlgo/MIVI), we prevent it from rejecting virtual buffers.
                         val template = try { XposedHelpers.getIntField(builder, "mTemplate") } catch (e: Exception) { -1 }
                         
-                        // 1. DYNAMIC SUPPRESSION: Automatically disable multi-frame and AI tags, 
-                        // but DO NOT disable 'parallel', 'mivi', or 'algoengine'. If we disable the core
-                        // processing engines, the camera app never receives the final JPEG, leading to 
-                        // an IS_PENDING=1 MediaStore lock (the "disappearing photo" via Gallery exception).
+                        // 1. DYNAMIC SUPPRESSION: Automatically disable all discovered vendor tags related to post-processing
                         for ((name, key) in discoveredXiaomiKeys) {
                             try {
-                                if (name.contains("hdr.enabled", true) ||
+                                if (name.contains("parallel.enabled", true) || 
+                                    name.contains("mivi.enabled", true) || 
+                                    name.contains("algoengine.enabled", true) ||
+                                    name.contains("hdr.enabled", true) ||
                                     name.contains("mfnr.enabled", true) ||
                                     name.contains("snapshot.optimize", true) ||
-                                    name.contains("super.pixel", true) ||
-                                    name.contains("super.night", true) ||
-                                    name.contains("sat.enabled", true)) {
+                                    name.contains("super.pixel.enabled", true)) {
                                     
                                     // Set to false or 0 based on reasonable guess (setXiaomiVendorTag handles the .set() call)
                                     setXiaomiVendorTag(builder, name, false)
@@ -301,6 +343,11 @@ object CameraHook {
                                 }
                             } catch (_: Exception) {}
                         }
+
+                        // 2. HARDCODED OVERRIDES: Ensure critical known tags are set (even if not discovered in availableKeys)
+                        setXiaomiVendorTag(builder, "xiaomi.parallel.enabled", 0.toByte())
+                        setXiaomiVendorTag(builder, "xiaomi.mivi.enabled", false)
+                        setXiaomiVendorTag(builder, "xiaomi.algoengine.enabled", 0.toByte())
 
                         if (template != 2 && template != 5) return // Early exit for preview if it's not a capture request
                         
