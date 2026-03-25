@@ -281,9 +281,9 @@ class MainActivity : AppCompatActivity() {
         previewPlayer?.stop()
         previewPlayer?.release()
         
-        // Setup ExoPlayer for live preview
+        // Setup ExoPlayer for live preview with more resilient buffer settings (closer to VLC)
         val loadControl = androidx.media3.exoplayer.DefaultLoadControl.Builder()
-            .setBufferDurationsMs(100, 500, 100, 100)
+            .setBufferDurationsMs(2000, 8000, 1500, 2000)
             .setPrioritizeTimeOverSizeThresholds(true)
             .build()
             
@@ -293,7 +293,7 @@ class MainActivity : AppCompatActivity() {
             
         binding.playerPreview.player = previewPlayer
         
-        // Trim URL to prevent spaces from breaking detection
+        // Trim URL to prevent spaces from breaking detection (crucial for RTSP)
         val trimmedUrl = url.trim()
         val uri = Uri.parse(trimmedUrl)
         

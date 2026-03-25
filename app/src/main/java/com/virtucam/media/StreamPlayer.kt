@@ -56,9 +56,9 @@ class StreamPlayer(
     private fun initializePlayer() {
         if (exoPlayer != null) return
 
-        // 1. Build ExoPlayer instance with ultra-low latency load control
+        // 1. Build ExoPlayer instance with more resilient buffer settings (balanced for latency and stability)
         val loadControl = DefaultLoadControl.Builder()
-            .setBufferDurationsMs(500, 2000, 500, 500)
+            .setBufferDurationsMs(2000, 8000, 1500, 2000)
             .setPrioritizeTimeOverSizeThresholds(true)
             .build()
 
@@ -70,10 +70,11 @@ class StreamPlayer(
         // 2. Set the target OpenGL-backed Surface for rendering
         exoPlayer?.setVideoSurface(outputSurface)
 
-        // 3. Configure the stream
-        val uri = Uri.parse(streamUrl)
+        // 3. Configure the stream (trim to avoid whitespace issues)
+        val trimmedUrl = streamUrl.trim()
+        val uri = Uri.parse(trimmedUrl)
         
-        val mediaSource = if (streamUrl.startsWith("rtsp", ignoreCase = true)) {
+        val mediaSource = if (trimmedUrl.startsWith("rtsp", ignoreCase = true)) {
             // Use RtspMediaSource for explicit RTSP support
             RtspMediaSource.Factory()
                 .setForceUseRtpTcp(useTcp) // Configurable: TCP is safer for firewalls, UDP is lower latency
@@ -107,9 +108,20 @@ class StreamPlayer(
                 onFrameAvailable()
             }
             
+            override fun onPlaybackStateChanged(state: Int) {
+                val stateString = when (state) {
+                    Player.STATE_IDLE -> "IDLE"
+                    Player.STATE_BUFFERING -> "BUFFERING"
+                    Player.STATE_READY -> "READY"
+                    Player.STATE_ENDED -> "ENDED"
+                    else -> "UNKNOWN"
+                }
+                Log.d(TAG, "Playback state changed: $stateString")
+            }
+
             override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
                 super.onPlayerError(error)
-                Log.e(TAG, "Stream error: ${error.message}")
+                Log.e(TAG, "Stream error: ${error.message} (code: ${error.errorCode})")
             }
         })
         
