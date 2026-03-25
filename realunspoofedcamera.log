@@ -1,0 +1,1020 @@
+1774427058.322 10155 15973 22110 D libCameraNativeTool: i420ToJpeg src size: 960 x 720 = 691200, dst: 69598
+1774427058.323 10155 15973 22110 D Codec   : nv21CompressToJpeg to jpeg
+1774427058.323 10155 15973 22110 D Codec   : nv21 to jpeg size: 69598
+1774427058.323 10155 15973 22110 D CAM_Camera2Module: E: do save thumbnail
+1774427058.323 10155 15973 22110 D CAM_CameraConfigs: getThumbnailShotPath: /storage/emulated/0/DCIM/Camera/IMG_20260325_112417.jpg, size:0
+1774427058.325 10155 15973 22110 V CAM_CameraUtil: getRotation: sensorOrientation:90,orientation:0
+1774427058.325 10155 15973 22110 D CAM_Camera2Module: AnchorPreviewCallbackImpl#doSave, needIcc: false ,mode: 163 ,isCvWaterMarkEnabled: false ,cost: 0
+1774427058.325 10155 15973 22110 I CAM_Camera2Module: [K_PROCESS]: saveJpegOrBitmapAsThumbnail: isParallel = true, shot2Gallery = false, format = JPEG, data = [B@5aa56ef, anchorFrame= true, noGaussian= true, filterId= 66048
+1774427058.325 10155 15973 22110 D CAM_ParallelTaskData: fillJpegData: dataLen=69598, imageType=0
+1774427058.326 10155 15973 22110 E CAM_CameraSettings: INVALID BEAUTY! Please adapter!
+1774427058.326 10155 15973 22110 I CAM_ImageSaver: [K_PROCESS]: onParallelProcessFinish: path: /storage/emulated/0/DCIM/Camera/IMG_20260325_112417.jpg
+1774427058.326 10155 15973 22110 D CAM_ImageSaver: onParallelProcessFinish: insert: 199099900
+1774427058.327 10155 15973 22110 I CAM_PerformanceManager: [P_PERFORM]: Action: shot_create_thumbnail_163_0 takes 430 ms
+1774427058.327 10155 15973 22110 D CAM_Camera2Module: X: do save thumbnail
+1774427058.328 10155 15973 15973 D CAM_Camera2Module: anchor frame as thumbnail success 302478614409000
+1774427058.332 10155 15973 22330 D CAM_PreviewSaveRequest: preview orientation: 0, jpegOrientation: 90, anchorPreview: true
+1774427058.332 10155 15973 22330 D CAM_PreviewSaveRequest: reFill preview image
+1774427058.336 10155 15973 22330 D CAM_DbInnerTask: getItemByMediaId: null
+1774427058.336 10155 15973 22330 D CAM_SaveTask: setStartTime:1774427058325
+1774427058.336 10155 15973 22330 D CAM_SaveTask: setApplicationId: com.android.camera
+1774427058.340 10155 15973 15973 D CAM_MiCamera2: isCaptureBusy: simple return true
+1774427058.351 10155 15973 22330 D CAM_PreviewSaveRequest: insert preview picture: /storage/emulated/0/DCIM/Camera/IMG_20260325_112417.jpg
+1774427058.351 10155 15973 22330 I CAM_PreviewSaveRequest: [K_PROCESS]: image save try to create thumbnail
+1774427058.352 10155 15973 22330 D skia    : SkJpegCodec::onGetPixels + (960, 720)
+1774427058.360 10155 15973 22330 D skia    : SkJpegCodec::onGetPixels -
+1774427058.380 10155 15973 22330 V CAM_ImageSaverCallbackImpl: [K_PROCESS]: postUpdateThumbnail true
+1774427058.381 10155 15973 15973 D CAM_ImageSaver: updateThumbnail needAnimation:true
+1774427058.381 10155 15973 15973 I CAM_PerformanceManager: [P_PERFORM]: Event: SLOW_MOTION_SAVING has no start time, ignore this stop event as take 0 ms
+1774427058.388 10155 15973 22330 I CAM_BaseModule: [K_PROCESS]: enableCameraControls: enable = true, caller: r7.b.h(Unknown Source:55), w7.j.t(Unknown Source:10), w7.n.h(Unknown Source:832),
+1774427058.389 10155 15973 15973 D CAM_ImageSaverCallbackImpl: updateThumbnail: Thumbnail{mUri=null, mBitmap=android.graphics.Bitmap@a7f1894, mFromFile=false, mWaitingForUri=true, mIsGif=false, gifWidth=-1, gifHeight=-1, applied=false}
+1774427058.389 10155 15973 15973 D CAM_ThumbnailUpdater: setThumbnail mLastUri=null
+1774427058.389 10155 15973 15973 D CAM_Thumbnail: setBitmapApplied(null): true
+1774427058.389 10155 15973 15973 D CAM_FragmentBottomAction: updateThumbnail: update image: Thumbnail{mUri=null, mBitmap=android.graphics.Bitmap@a7f1894, mFromFile=false, mWaitingForUri=true, mIsGif=false, gifWidth=-1, gifHeight=-1, applied=true}
+1774427058.391 10155 15973 16013 I CAM_Storage: setLeftSpace(111620874240)
+1774427058.393 10155 15973 22370 D CAM_DbItemSaveTask: getItemByPath: SaveTask{id=3, startTime=1774427058325, mediaStoreId=null, path='/storage/emulated/0/DCIM/Camera/IMG_20260325_112417.jpg', status=1, percentage=0, jpegRotation=0, noGaussian=1, applicationId=com.android.camera, thumbnailPath='null', bucketId = null, progressAnimType = 0, captureTimestamp = 0}
+1774427058.403 10155 15973 22370 D CAM_ExifTool: pictureCRC size Pair{609 69598} sha =321c8e745d7f3f21aaf23c4938c41822c8215005e4af047fbb84b3b0718ac921
+1774427058.403 10155 15973 22370 I CAM_PerformanceManager: [P_PERFORM]: Action: picture_crc_163_0 takes 1 ms
+1774427058.403 10155 15973 22370 D CAM_ExifTool: <updateExif>save orientationTag
+1774427058.409 10155 15973 22370 D CAM_ExifTool: updateOffsetTime +03:00
+1774427058.420 10155 15973 22370 D CAM_ExifTool: save xiaomi comment: {"mirror":false,"sensorType":"rear","Hdr":"auto","OpMode":36869,"smallPicture":true,"AIScene":0,"filterId":66048,"zoomMultiple":1}, aiType = 0, needWriteApp3: true, XIAOMI_SIQE_TYPE: 0
+1774427058.441 10155 15973 22370 D XmpIdentifier: content is an invalid data
+1774427058.441 10155 15973 22370 D IccProfileIdentifier: content is an invalid data
+1774427058.441 10155 15973 22370 D XmpIdentifier: content is an invalid data
+1774427058.441 10155 15973 22370 D IccProfileIdentifier: content is an invalid data
+1774427058.442 10155 15973 22370 D CAM_ExifTool: add datetime = 1774427058325
+1774427058.442 10155 15973 22370 V CAM_ExifTool: update exif cost=5
+1774427058.442 10155 15973 22370 D CAM_Storage: addImage: parallel=true | orientation > 90
+1774427058.455 10155 15973 22370 D CAM_ScopedStorageUtil: getThumbnailFilePathFor(/storage/emulated/0/DCIM/Camera/IMG_20260325_112417.jpg): IMG_20260325_112417.jpg
+1774427058.458 10155 15973 22370 D CAM_Storage: insertToMediaStore: title = IMG_20260325_112417, displayName = IMG_20260325_112417.jpg, size = 71847, filePath = /storage/emulated/0/DCIM/Camera/IMG_20260325_112417.jpg, timestamp = 1774427058325
+1774427058.490 10155 15973 15973 D CAM_MiCamera2: isCaptureBusy: simple return true
+1774427058.516 10155 15973 23033 D CAM_GalleryHelper: bind service: camera = com.android.camera.Camera@da2b8f5, mIsGalleryServiceBound = false
+1774427058.517 10155 15973 23033 D CAM_BoostFrameworkImpl: startBoost: duration = 100, scene = 6
+1774427058.517 10155 15973 23033 D CAM_BoostFrameworkImpl: ready to boost
+1774427058.517 10155 15973 23033 I mtkpower_client: perf_lock_acq, hdl:0, dur:100, num:8, pid:15973, tid:23033
+1774427058.521 10155 15973 23033 I mtkpower_client: ret_hdl:166880
+1774427058.539 10155 15973 15973 V CAM_GalleryHelper: connected: ComponentInfo{com.miui.gallery/com.miui.gallery.util.GalleryBackgroundService}
+1774427058.543 10155 15973 22078 I CAM_MlkitWrapper: cancleJobInfo: remove job upload log
+1774427058.548 10155 15973 22370 D CAM_Storage: insert to media store: title IMG_20260325_112417, orientation = 90, uri = content://media/external_primary/images/media/1000549470
+1774427058.548 10155 15973 22370 D CAM_ScopedStorageUtil: getThumbnailFilePathFor(/storage/emulated/0/DCIM/Camera/IMG_20260325_112417.jpg): IMG_20260325_112417.jpg
+1774427058.548 10155 15973 22370 I CAM_ScopedStorageUtil: PPP: insert record: 1000549470 | /storage/emulated/0/DCIM/Camera/IMG_20260325_112417.jpg | /data/user/0/com.android.camera/files/thumbnails/IMG_20260325_112417.jpg | 1774427058325
+1774427058.549 10155 15973 22370 V CAM_ParallelProcessProvider: insert uri: content://com.xiaomi.camera.parallelservice.provider.SpecialTypesProvider/processing
+1774427058.549 10155 15973 22370 D CAM_ParallelProcessProvider: algo db: insert: 1000549470 | /storage/emulated/0/DCIM/Camera/IMG_20260325_112417.jpg
+1774427058.549 10155 15973 22370 V CAM_ParallelProcessProvider: getDbItemSaveTask
+1774427058.550 10155 15973 22370 D CAM_DbItemSaveTask: getItemByPath: SaveTask{id=3, startTime=1774427058325, mediaStoreId=null, path='/storage/emulated/0/DCIM/Camera/IMG_20260325_112417.jpg', status=1, percentage=0, jpegRotation=0, noGaussian=1, applicationId=com.android.camera, thumbnailPath='null', bucketId = null, progressAnimType = 0, captureTimestamp = 0}
+1774427058.550 10155 15973 22370 V CAM_ParallelProcessProvider: getDbItemSaveTask
+1774427058.553 10155 15973 22370 I CAM_ScopedStorageUtil: PPP: record uri: content://com.xiaomi.camera.parallelservice.provider.SpecialTypesProvider/processing/1000549470
+1774427058.553 10155 15973 22370 D CAM_Storage: insert to parallel store: filePath /storage/emulated/0/DCIM/Camera/IMG_20260325_112417.jpg, thumbnail = /data/user/0/com.android.camera/files/thumbnails/IMG_20260325_112417.jpg, bucketId = -1739773001, timestamp = 1774427058325
+1774427058.555 10155 15973 22370 D CAM_Storage: insertMediaStore OK uri = content://media/external_primary/images/media/1000549470
+1774427058.555 10155 15973 22370 D CAM_Storage: addImage: insert_first cost_ms | 113
+1774427058.555 10155 15973 22370 D CAM_Storage: addImage: writeFile cost_ms |0
+1774427058.555 10155 15973 22370 D CAM_Storage: addImage: updateFirst cost_ms |0
+1774427058.556 10155 15973 22370 D CAM_Thumbnail: setUri: content://media/external_primary/images/media/1000549470
+1774427058.556 10155 15973 22370 D CAM_PreviewSaveRequest: image save finished
+1774427058.556 10155 15973 22370 I CAM_PerformanceManager: [P_PERFORM]: Action: shot_2_gallery_163_0 takes 659 ms
+1774427058.558 10155 15973 22373 I CAM_Storage: request gallery scan, filePath: /storage/emulated/0/DCIM/Camera/IMG_20260325_112417.jpg, parallelProcess: true, mediaStoreId: 1000549470, noGaussian: true, timestamp: 1774427058325
+1774427058.584 10155 15973 22910 D CAM_CRE_PreviewRenderEngine: surface draw fps: 22.892887637478015
+1774427058.592 10155 15973 22373 D CAM_Storage: Notify image ready to com.android.fileexplorer
+1774427058.593 10155 15973 22910 I .android.camera: createIfNeeded: Recreate new EGLImage since dataspace changed
+1774427058.596 10155 15973 16046 V CAM_NormalLocationManager: update location, it is from network
+1774427058.596 10155 15973 16046 V CAM_NormalLocationManager: stopReceivingGPSLocationUpdates
+1774427058.620 10155 15973 20738 V CAM_ParallelProcessProvider: query uri: content://com.xiaomi.camera.parallelservice.provider.SpecialTypesProvider/processing
+1774427058.621 10155 15973 20738 V CAM_ParallelProcessProvider: getDbItemSaveTask
+1774427058.622 10155 15973 20738 D CAM_DbItemSaveTask: queryRaw: count = 1
+1774427058.648 10155 15973 15973 V CAM_QRCodeDecoder: showOrHideQrCode : result =
+1774427058.709 10155 15973 20738 V CAM_ParallelProcessProvider: query uri: content://com.xiaomi.camera.parallelservice.provider.SpecialTypesProvider/processing
+1774427058.709 10155 15973 20738 V CAM_ParallelProcessProvider: getDbItemSaveTask
+1774427058.710 10155 15973 20738 D CAM_DbItemSaveTask: queryRaw: count = 1
+1774427058.727 10155 15973 15973 D CAM_MiCamera2: isCaptureBusy: simple return true
+1774427058.737 10155 15973 22370 I CAM_Storage: setLeftSpace(111620775936)
+1774427058.835 10155 15973 15973 D CAM_MiCamera2: isCaptureBusy: simple return true
+1774427058.876 10155 15973 22910 I .android.camera: createIfNeeded: Recreate new EGLImage since dataspace changed
+1774427058.883 10155 15973 15973 D VRI[Camera]: getMiuiFreeformStackInfo mTmpFrames.miuiFreeFormStackInfo: null
+1774427058.894 10155 15973 22910 I .android.camera: createIfNeeded: Recreate new EGLImage since dataspace changed
+1774427058.911 10155 15973 15973 D CAM_MiCamera2: isCaptureBusy: simple return true
+1774427058.954 10155 15973 15973 D CAM_BatteryDetector: onReceive battery = 37 cutoff = false
+1774427058.954 10155 15973 15973 D CAM_BatteryDetector: onBatteryNotification action=0 caller = com.android.camera.BatteryDetector.b(Unknown Source:9), z.g0.onReceive(Unknown Source:95), android.app.LoadedApk$ReceiverDispatcher$Args.lambda$getRunnable$0(LoadedApk.java:1898), android.app.LoadedApk$ReceiverDispatcher$Args.$r8$lambda$mcNAAl1SQ4MyJPyDg8TJ2x2h0Rk(Unknown Source:0), android.app.LoadedApk$ReceiverDispatcher$Args$$ExternalSyntheticLambda0.run(D8$$SyntheticClass:0),
+1774427058.974 10155 15973 22910 D CAM_CRE_PreviewRenderEngine: onDrawFrame rendering count:60 hasExtRenderer:false
+1774427059.013 10155 15973 15973 D CAM_MiCamera2: isCaptureBusy: simple return true
+1774427059.045 10155 15973 15973 D CAM_MiCamera2: isCaptureBusy: simple return true
+1774427059.203 10155 15973 22910 I .android.camera: createIfNeeded: Recreate new EGLImage since dataspace changed
+1774427059.209 10155 15973 15973 D CAM_MiCamera2: isCaptureBusy: simple return true
+1774427059.230 10155 15973 22910 I .android.camera: createIfNeeded: Recreate new EGLImage since dataspace changed
+1774427059.234 10155 15973 15973 D CAM_MiCamera2: isCaptureBusy: simple return true
+1774427059.277 10155 15973 15973 D CAM_MiCamera2: isCaptureBusy: simple return true
+1774427059.331 10155 15973 23273 D CAM_PreviewWatchDogCallback: currentFrameNO 72; result=true
+1774427059.354 10155 15973 15973 D CAM_MiCamera2: isCaptureBusy: simple return true
+1774427059.395 10155 15973 15973 I MIUIInput: [MotionEvent] ViewRootImpl windowName 'com.android.camera/com.android.camera.Camera', { action=ACTION_DOWN, id[0]=0, pointerCount=1, eventTime=302480073, downTime=302480073, phoneEventTime=11:24:19.391 } moveCount:0
+1774427059.396 10155 15973 15973 D CAM_Camera@228767989: onUserInteraction
+1774427059.396 10155 15973 15973 V CAM_AutoLockManager: send MSG_HIBERNATE
+1774427059.396 10155 15973 15973 D CAM_MiCamera2: isCaptureBusy: simple return true
+1774427059.399 10155 15973 15973 I CAM_FragmentBottomAction: [U_ACTION]: onClick: v9_thumbnail_layout
+1774427059.399 10155 15973 15973 I CAM_FragmentBottomAction: [U_ACTION]: onClick: v9_thumbnail_layout, onThumbnailClicked
+1774427059.399 10155 15973 15973 W CAM_DataItemPluginBase: d1.m1 getDataObject null
+1774427059.400 10155 15973 15973 E CAM_GalleryHelper: gotoGallery: checking thumbnail uri: content://media/external_primary/images/media/1000549470
+1774427059.400 10155 15973 15973 D CAM_ThumbnailUpdater: getLastUri = content://media/external_primary/images/media/1000549465
+1774427059.401 10155 15973 15973 D CAM_DbItemSaveTask: getItemByMediaId: SaveTask{id=3, startTime=1774427058325, mediaStoreId=1000549470, path='/storage/emulated/0/DCIM/Camera/IMG_20260325_112417.jpg', status=1, percentage=0, jpegRotation=0, noGaussian=1, applicationId=com.android.camera, thumbnailPath='/data/user/0/com.android.camera/files/thumbnails/IMG_20260325_112417.jpg', bucketId = -1739773001, progressAnimType = 0, captureTimestamp = 1774427058325}
+1774427059.402 10155 15973 15973 D CAM_GalleryHelper: gotoGallery: thumbnail uri=content://media/external_primary/images/media/1000549470
+1774427059.402 10155 15973 16025 D CAM_Camera@228767989: pausePreview: E
+1774427059.402 10155 15973 16025 V CAM_MiCamera2: pausePreview: cameraId=0
+1774427059.402 10155 15973 16025 I CAM_MiCamera2: [K_PROCESS]: pausePreview: reason stopRepeating
+1774427059.403 10155 15973 16025 D CAM_Camera@228767989: pausePreview: X 0
+1774427059.403 10155 15973 15973 D CAM_RenderEngineV2: setAnimationType: ANIMATION_NONE
+1774427059.403 10155 15973 22910 D CAM_CRE_PreviewRenderEngine: setAnimationType type reset to ANIMATION_NONE
+1774427059.410 10155 15973 15973 D CAM_ShareableMemoryFileBitmap: case: reuse android.os.MemoryFile@4e3e2fd
+1774427059.410 10155 15973 15973 D CAM_GalleryHelper: E: Send shareable bitmap@{ParcelFileDescriptor: java.io.FileDescriptor@2eed6c0} to android.os.Messenger@da01ff9
+1774427059.412 10155 15973 15973 D CAM_GalleryHelper: X: Send shareable bitmap@{ParcelFileDescriptor: java.io.FileDescriptor@2eed6c0} to android.os.Messenger@da01ff9
+1774427059.412 10155 15973 15973 D CAM_GalleryHelper: GalleryBackgroundService width = 720 height = 960
+1774427059.412 10155 15973 15973 D CAM_GalleryHelper: gotoGallery: com.android.camera.action.REVIEW
+1774427059.415 10155 15973 15973 D CAM_GalleryHelper: gotoGallery: fileSize = -1@176270142
+1774427059.433 10155 15973 16031 V CAM_ShotParallelStill: [K_PROCESS]: onCaptureProgressed
+1774427059.433 10155 15973 16031 D CAM_ShotParallelStill: isCurrentModuleSupportP2done:false,isP2doneReady:false
+1774427059.434 10155 15973 22144 I CAM_PostProcessor: [K_PROCESS]: [0] onImageAvailable: timestamp = 302478514432000, target = 0, type = 1, format = 35
+1774427059.434 10155 15973 22144 I CAM_PostProcessor: onImageAvailable, queueImageToPool E
+1774427059.435 10155 15973 22144 D BQ_4080x3072_35: queueImage: start. image: android.media.ImageReader$SurfaceImage@b56fd9f | 302478514432000
+1774427059.436 10155 15973 16031 V CAM_ShotParallelStill: [K_PROCESS]: onCaptureProgressed
+1774427059.436 10155 15973 16031 D CAM_ShotParallelStill: isCurrentModuleSupportP2done:false,isP2doneReady:false
+1774427059.438 10155 15973 22144 E .android.camera: [onQueue]: GraphicBuffer is null
+1774427059.438 10155 15973 22144 E .android.camera: [onAcquire]: GraphicBuffer is null
+1774427059.438 10155 15973 16029 D BQ_4080x3072_35: onImageAvailable: android.media.ImageReader$SurfaceImage@d4a9eec | 302478514432000
+1774427059.438 10155 15973 22144 D BQ_4080x3072_35: queueImage: end
+1774427059.439 10155 15973 22144 D HalImagePool: holdImage: image: android.media.ImageReader$SurfaceImage@d4a9eec | 302478514432000 qSize: 1 | totalSize: 1
+1774427059.439 10155 15973 22144 I CAM_PostProcessor: onImageAvailable, queueImageToPool X: image android.media.ImageReader$SurfaceImage@d4a9eec
+1774427059.439 10155 15973 22144 I CAM_PostProcessor: [K_PROCESS]: [0] onImageAvailable: timestamp = 302478514432000, target = 2, type = 1, format = 842094169
+1774427059.439 10155 15973 22144 I CAM_PostProcessor: onImageAvailable, queueImageToPool E
+1774427059.439 10155 15973 22144 D BQ_1440x1080_35: queueImage: start. image: android.media.ImageReader$SurfaceImage@bb9c2b5 | 302478514432000
+1774427059.440 10155 15973 16045 D CAM_ParallelDataZipper: setImage: timestamp = 302478514432000, firstTimestamp = 302478514432000, streamNum = 1, fusionType = FusionType(type: 0, algo: 0, mcnt: 0, scnt: 0), hasCaptureData = true, isHdrSr = false
+1774427059.440 10155 15973 16045 D CAM_CaptureData: isDataReady(): mResult: null mMainImage: android.media.ImageReader$SurfaceImage@d4a9eec mSubImage: null isTuningDataReady: false isHasCaptureData: true
+1774427059.440 10155 15973 16045 D CAM_CaptureData: isDataReady(): false
+1774427059.442 10155 15973 16031 I CAM_ShotParallelStill: [K_PROCESS]: onCaptureCompleted: frameNumber=46
+1774427059.442 10155 15973 16031 D CAM_MiCamera2: onCapturePictureFinished:
+1774427059.442 10155 15973 16031 D CAM_MiCamera2: unlockFocusForCapture
+1774427059.442 10155 15973 22144 E .android.camera: [onQueue]: GraphicBuffer is null
+1774427059.442 10155 15973 22144 E .android.camera: [onAcquire]: GraphicBuffer is null
+1774427059.442 10155 15973 16029 D BQ_1440x1080_35: onImageAvailable: android.media.ImageReader$SurfaceImage@4693d4a | 302478514432000
+1774427059.443 10155 15973 16031 D CAM_CaptureRequestBuilder: applyAfMode: focusMode=4
+1774427059.443 10155 15973 16031 D CAM_CaptureRequestBuilder: applyAFRegions: default 0
+1774427059.443 10155 15973 16031 E VendorTagDescriptor: lookupTag: Tag name 'dyvideo.afRegion' does not exist.
+1774427059.443 10155 15973 16031 D CAM_CaptureRequestBuilder: applyAERegions: default 0
+1774427059.443 10155 15973 16031 E VendorTagDescriptor: lookupTag: Tag name 'dyvideo.aeRegion' does not exist.
+1774427059.444 10155 15973 16031 D CAM_CaptureRequestBuilder: applyExposureCompensation: 0
+1774427059.444 10155 15973 22144 D BQ_1440x1080_35: queueImage: end
+1774427059.444 10155 15973 16031 D CAM_CropRegionUtil: toCropRegion(): zoom ratio = 1.0, crop region = Rect(0, 0 - 4096, 3072)
+1774427059.444 10155 15973 22144 D HalImagePool: holdImage: image: android.media.ImageReader$SurfaceImage@4693d4a | 302478514432000 qSize: 1 | totalSize: 2
+1774427059.444 10155 15973 22144 I CAM_PostProcessor: onImageAvailable, queueImageToPool X: image android.media.ImageReader$SurfaceImage@4693d4a
+1774427059.444 10155 15973 16031 D CAM_RequestVendorTag: applyCropRegion: rect = Rect(0, 0 - 4096, 3072)
+1774427059.445 10155 15973 16031 E VendorTagDescriptor: lookupTag: Tag name 'objectTrackingConfig.cropRegion' does not exist.
+1774427059.446 10155 15973 16031 V CAM_CaptureRequestBuilder: applyZoomRatio(): cameraId = 0, zoomRatio = 1.0, activeArraySize = Rect(0, 0 - 4096, 3072), cropRegion = Rect(0, 0 - 4096, 3072)
+1774427059.446 10155 15973 16031 D CAM_CaptureRequestBuilder: applyAELock: false
+1774427059.446 10155 15973 16031 D CAM_CaptureRequestBuilder: applyAWBLock: false
+1774427059.447 10155 15973 16031 D CAM_CaptureRequestBuilder: applyCinematicPhoto: false
+1774427059.447 10155 15973 16031 D CAM_MiCameraCompat: applyCustomQualityEnable : false
+1774427059.447 10155 15973 16031 E VendorTagDescriptor: lookupTag: Tag name 'customquality.enable' does not exist.
+1774427059.447 10155 15973 16031 W CAM_VendorTagHelper: VTNF: com.xiaomi.customquality.enable
+1774427059.448 10155 15973 16031 D CAM_MiCameraCompat: applyPureViewEnabled : false
+1774427059.448 10155 15973 16031 E VendorTagDescriptor: lookupTag: Tag name 'pureView.enabled' does not exist.
+1774427059.448 10155 15973 16031 D CAM_CaptureRequestBuilder: APPLY_PREVIEW: false
+1774427059.448 10155 15973 16031 D CAM_CaptureRequestBuilder: applySuperNightScene: false
+1774427059.448 10155 15973 16031 D CAM_CaptureRequestBuilder: applyMiviSuperNight(): unsupported
+1774427059.449 10155 15973 16031 I CAM_CaptureRequestBuilder: [K_PROCESS]: applySuperResolution: ignored for applyType = 1
+1774427059.449 10155 15973 16031 V CAM_MiCameraCompat: [K_PROCESS]: applyMfnrEnable: false
+1774427059.450 10155 15973 16031 D CAM_MiCameraCompat: applySwMfnrEnable: false
+1774427059.450 10155 15973 16031 D CAM_CaptureRequestBuilder: applySingleBokeh: false
+1774427059.450 10155 15973 16031 V CAM_MiCameraCompat: [K_PROCESS]: applyStreetShoot: false
+1774427059.450 10155 15973 16031 E VendorTagDescriptor: lookupTag: Tag name 'streetshoot.enabled' does not exist.
+1774427059.451 10155 15973 16031 W CAM_VendorTagHelper: VTNF: com.xiaomi.streetshoot.enabled
+1774427059.451 10155 15973 16031 D CAM_MiCamera2: applyFlashMode: request android.hardware.camera2.CaptureRequest$Builder@2b7d4bb, applyType = 1
+1774427059.451 10155 15973 16031 D CAM_MiCameraCompat: applyFlashMode: mode = 3
+1774427059.451 10155 15973 16031 D CAM_MiCamera2: applyFlashMode: flashMode = 3, mScreenLightCallback = h6.d0@9c5b4ac
+1774427059.451 10155 15973 16031 D CAM_CaptureRequestBuilder: applyScreenLightHint(): false
+1774427059.451 10155 15973 16031 D CAM_MiCamera2: capture, isHighSpeed false
+1774427059.453 10155 15973 16031 D CAM_CaptureRequestBuilder: applyAfMode: focusMode=4
+1774427059.454 10155 15973 16031 D CAM_CaptureRequestBuilder: applyAFRegions: default 0
+1774427059.454 10155 15973 16045 D CAM_ParallelDataZipper: setImage: timestamp = 302478514432000, firstTimestamp = 302478514432000, streamNum = 1, fusionType = FusionType(type: 0, algo: 0, mcnt: 0, scnt: 0), hasCaptureData = true, isHdrSr = false
+1774427059.454 10155 15973 16045 D CAM_CaptureData: isDataReady(): mResult: null mMainImage: android.media.ImageReader$SurfaceImage@d4a9eec mSubImage: null isTuningDataReady: true isHasCaptureData: true
+1774427059.454 10155 15973 16031 E VendorTagDescriptor: lookupTag: Tag name 'dyvideo.afRegion' does not exist.
+1774427059.454 10155 15973 16045 D CAM_CaptureData: isDataReady(): false
+1774427059.454 10155 15973 16031 D CAM_CaptureRequestBuilder: applyAERegions: default 0
+1774427059.454 10155 15973 16031 E VendorTagDescriptor: lookupTag: Tag name 'dyvideo.aeRegion' does not exist.
+1774427059.454 10155 15973 16031 D CAM_MiCamera2: applyFlashMode: request android.hardware.camera2.CaptureRequest$Builder@c9dd25f, applyType = 1
+1774427059.454 10155 15973 16031 D CAM_MiCameraCompat: applyFlashMode: mode = 3
+1774427059.454 10155 15973 16031 D CAM_MiCamera2: applyFlashMode: flashMode = 3, mScreenLightCallback = h6.d0@9c5b4ac
+1774427059.454 10155 15973 16031 D CAM_CaptureRequestBuilder: applyScreenLightHint(): false
+1774427059.455 10155 15973 16031 D CAM_CaptureRequestBuilder: applyAELock: false
+1774427059.455 10155 15973 16031 D CAM_MiCamera2: setState: 1
+1774427059.455 10155 15973 16031 D CAM_MiCamera2: setAFModeToPreview: focusMode=4
+1774427059.455 10155 15973 16031 D CAM_CaptureRequestBuilder: applyAfMode: focusMode=4
+1774427059.455 10155 15973 16031 D CAM_CaptureRequestBuilder: applyAFRegions: default 0
+1774427059.456 10155 15973 16031 E VendorTagDescriptor: lookupTag: Tag name 'dyvideo.afRegion' does not exist.
+1774427059.456 10155 15973 16031 D CAM_CaptureRequestBuilder: applyAERegions: default 0
+1774427059.456 10155 15973 16031 E VendorTagDescriptor: lookupTag: Tag name 'dyvideo.aeRegion' does not exist.
+1774427059.459 10155 15973 16031 V CAM_MiCamera2: resumePreview: cameraId=0 highSpeed=false | caller=k9.p0.C2(Unknown Source:58), k9.p0.q0(Unknown Source:210), k9.n1.onCaptureCompleted(Unknown Source:45), android.hardware.camera2.impl.CameraCaptureSessionImpl$1.lambda$onCaptureCompleted$4(CameraCaptureSessionImpl.java:719),
+1774427059.461 10155 15973 16031 I CAM_MiCamera2: [K_PROCESS]: resumePreview: repeating sequenceId: 3
+1774427059.461 10155 15973 16031 D CAM_MiCamera2: setState: 1
+1774427059.461 10155 15973 16031 D CAM_MiCamera2: applyFlashMode: request android.hardware.camera2.CaptureRequest$Builder@c9dd25f, applyType = 7
+1774427059.461 10155 15973 16031 D CAM_MiCameraCompat: applyFlashMode: mode = 3
+1774427059.462 10155 15973 16031 D CAM_MiCamera2: applyFlashMode: flashMode = 3, mScreenLightCallback = h6.d0@9c5b4ac
+1774427059.462 10155 15973 16031 D CAM_CaptureRequestBuilder: applyScreenLightHint(): false
+1774427059.462 10155 15973 16031 D CAM_MiCamera2: applySettingsForPreview: android.hardware.camera2.CaptureRequest$Builder@c9dd25f
+1774427059.462 10155 15973 16031 D CAM_MiCamera2: applyFlashMode: request android.hardware.camera2.CaptureRequest$Builder@c9dd25f, applyType = 1
+1774427059.462 10155 15973 16031 D CAM_MiCameraCompat: applyFlashMode: mode = 3
+1774427059.462 10155 15973 16031 D CAM_MiCamera2: applyFlashMode: flashMode = 3, mScreenLightCallback = h6.d0@9c5b4ac
+1774427059.462 10155 15973 16031 D CAM_CaptureRequestBuilder: applyScreenLightHint(): false
+1774427059.462 10155 15973 16031 D CAM_CaptureRequestBuilder: applyAfMode: focusMode=4
+1774427059.462 10155 15973 16031 D CAM_CaptureRequestBuilder: applyAFRegions: default 0
+1774427059.462 10155 15973 16031 E VendorTagDescriptor: lookupTag: Tag name 'dyvideo.afRegion' does not exist.
+1774427059.463 10155 15973 16031 D CAM_CaptureRequestBuilder: applyAERegions: default 0
+1774427059.463 10155 15973 16031 E VendorTagDescriptor: lookupTag: Tag name 'dyvideo.aeRegion' does not exist.
+1774427059.463 10155 15973 16031 D CAM_CaptureRequestBuilder: applyExposureCompensation: 0
+1774427059.463 10155 15973 16031 D CAM_CropRegionUtil: toCropRegion(): zoom ratio = 1.0, crop region = Rect(0, 0 - 4096, 3072)
+1774427059.463 10155 15973 16031 D CAM_RequestVendorTag: applyCropRegion: rect = Rect(0, 0 - 4096, 3072)
+1774427059.463 10155 15973 16031 E VendorTagDescriptor: lookupTag: Tag name 'objectTrackingConfig.cropRegion' does not exist.
+1774427059.464 10155 15973 16031 V CAM_CaptureRequestBuilder: applyZoomRatio(): cameraId = 0, zoomRatio = 1.0, activeArraySize = Rect(0, 0 - 4096, 3072), cropRegion = Rect(0, 0 - 4096, 3072)
+1774427059.464 10155 15973 16031 D CAM_CaptureRequestBuilder: applyAELock: false
+1774427059.464 10155 15973 16031 D CAM_CaptureRequestBuilder: applyAWBLock: false
+1774427059.464 10155 15973 16031 D CAM_CaptureRequestBuilder: applyCinematicPhoto: false
+1774427059.465 10155 15973 16031 D CAM_MiCameraCompat: applyCustomQualityEnable : false
+1774427059.465 10155 15973 16031 E VendorTagDescriptor: lookupTag: Tag name 'customquality.enable' does not exist.
+1774427059.465 10155 15973 16031 W CAM_VendorTagHelper: VTNF: com.xiaomi.customquality.enable
+1774427059.465 10155 15973 16031 D CAM_MiCameraCompat: applyPureViewEnabled : false
+1774427059.465 10155 15973 16031 E VendorTagDescriptor: lookupTag: Tag name 'pureView.enabled' does not exist.
+1774427059.465 10155 15973 16031 D CAM_CaptureRequestBuilder: APPLY_PREVIEW: false
+1774427059.465 10155 15973 16031 D CAM_CaptureRequestBuilder: applySuperNightScene: false
+1774427059.466 10155 15973 16031 D CAM_CaptureRequestBuilder: applyMiviSuperNight(): unsupported
+1774427059.466 10155 15973 16031 I CAM_CaptureRequestBuilder: [K_PROCESS]: applySuperResolution: ignored for applyType = 1
+1774427059.466 10155 15973 16031 V CAM_MiCameraCompat: [K_PROCESS]: applyMfnrEnable: false
+1774427059.466 10155 15973 16031 D CAM_MiCameraCompat: applySwMfnrEnable: false
+1774427059.466 10155 15973 16031 D CAM_CaptureRequestBuilder: applySingleBokeh: false
+1774427059.466 10155 15973 16031 V CAM_MiCameraCompat: [K_PROCESS]: applyStreetShoot: false
+1774427059.467 10155 15973 16031 E VendorTagDescriptor: lookupTag: Tag name 'streetshoot.enabled' does not exist.
+1774427059.467 10155 15973 16031 W CAM_VendorTagHelper: VTNF: com.xiaomi.streetshoot.enabled
+1774427059.467 10155 15973 16031 D CAM_CaptureRequestBuilder: applyAELock: false
+1774427059.467 10155 15973 16031 D CAM_CaptureRequestBuilder: applyAWBLock: false
+1774427059.467 10155 15973 16031 V CAM_CaptureRequestBuilder: EIS: off
+1774427059.467 10155 15973 16031 D CAM_CaptureRequestBuilder: applyDeviceOrientation: 0
+1774427059.467 10155 15973 16031 D CAM_CaptureRequestBuilder: applyFpsRange: fpsRange = null
+1774427059.467 10155 15973 16031 D CAM_CaptureRequestBuilder: applyAiASDEnable:false, applyType = 1
+1774427059.467 10155 15973 16031 D CAM_CaptureRequestBuilder: applyASDScene: 0
+1774427059.468 10155 15973 16031 D CAM_CaptureRequestBuilder: applyHistogramStats: false
+1774427059.468 10155 15973 16031 E VendorTagDescriptor: lookupTag: Tag name 'capture.hint' does not exist.
+1774427059.468 10155 15973 16031 D CAM_CaptureRequestBuilder: applyTimedContinuousEnable  = false
+1774427059.468 10155 15973 16031 D CAM_CameraDeviceUtil: getCustomCaptureResult: resultCameraMetadataNative =android.hardware.camera2.impl.CameraMetadataNative@eb8bdd8
+1774427059.468 10155 15973 16031 D CAM_CameraDeviceUtil: getCustomCaptureResult: requestNativeMetadata =android.hardware.camera2.impl.CameraMetadataNative@b90d531
+1774427059.469 10155 15973 16031 D CAM_CameraDeviceUtil: getCustomCaptureResult: ICustomCaptureResult{mSessionId=0, mSequenceId=1, mFrameNumber=46, mResults=android.hardware.camera2.impl.CameraMetadataNative@eb8bdd8, mRequest=android.hardware.camera2.CaptureRequest@b1280fde}
+1774427059.472 10155 15973 16031 E VendorTagDescriptor: lookupTag: Tag name 'ai.asd.sceneDetectedExt' does not exist.
+1774427059.474 10155 15973 16031 W CAM_ShotParallelStill: metadata set dxo_asd_scene fail!
+1774427059.474 10155 15973 16031 D CAM_PostProcessor: [0] onCaptureCompleted: timestamp = 302478514432000 frameNo = 46
+1774427059.475 10155 15973 16045 D CAM_ParallelDataZipper: setResult: timestamp = 302478514432000, firstTimestamp = 302478514432000, sequenceId = 1, streamNum = 1, isFirst = true, fusionType = FusionType(type: 0, algo: 0, mcnt: 0, scnt: 0), hasCaptureData = true, isHdrSr = false
+1774427059.475 10155 15973 16045 D CAM_CaptureData: isDataReady(): mResult: ICustomCaptureResult{mSessionId=0, mSequenceId=1, mFrameNumber=46, mResults=android.hardware.camera2.impl.CameraMetadataNative@eb8bdd8, mRequest=android.hardware.camera2.CaptureRequest@b1280fde} mMainImage: android.media.ImageReader$SurfaceImage@d4a9eec mSubImage: null isTuningDataReady: true isHasCaptureData: true
+1774427059.475 10155 15973 16045 D CAM_CaptureData: isDataReady(): true
+1774427059.475 10155 15973 16045 D CAM_ParallelDataZipper: handleDataBeanIfReady: dataBean with timestamp 302478514432000 is ready
+1774427059.475 10155 15973 16045 W CAM_ParallelDataZipper: tryToCallback:
+1774427059.475 10155 15973 16045 W CAM_ParallelDataZipper: tryToConfirm: 302478514432000
+1774427059.475 10155 15973 16045 I CAM_ParallelDataZipper: [K_PROCESS]: Data ready and all of the images are available=true
+1774427059.475 10155 15973 16045 I CAM_PerformanceManager: [P_PERFORM]: Action: shot_device_capture_163_0 takes 1406 ms
+1774427059.475 10155 15973 16045 D CAM_PostProcessor: [z] onParallelDataAvailable: 302478514432000
+1774427059.475 10155 15973 16045 I CAM_PostProcessor: [K_PROCESS]: [z] onParallelDataAvailable: algoType = 0
+1774427059.475 10155 15973 16045 I CAM_PostProcessor: [K_PROCESS]: onImageProcessStart: get parallelTaskData: 302478514432000
+1774427059.475 10155 15973 16045 I CAM_PerformanceManager: [P_PERFORM]: Action: algo_device_capture_163_0 takes 1407 ms
+1774427059.475 10155 15973 16045 D CAM_MiCamera2: onParallelImagePostProcStart: mMiCamera2ShotQueue.poll, size:1
+1774427059.475 10155 15973 16045 I CAM_Camera2Module: [K_PROCESS]: onPictureTakenFinished: succeed = true
+1774427059.475 10155 15973 16045 I CAM_PerformanceManager: [P_PERFORM]: Event: DO_CAPTURE_163_0 takes 1578 ms
+1774427059.475 10155 15973 16045 I CAM_PerformanceManager: [P_PERFORM]: Event: DO_CAPTURE takes 1578 is less than 4000
+1774427059.475 10155 15973 16045 I CAM_PerformanceManager: [P_PERFORM]: Event: REAR_NORMAL_CAPTURE_163_0 takes 1555 ms
+1774427059.476 10155 15973 16045 I CAM_PerformanceManager: [P_PERFORM]: Event: REAR_NORMAL_CAPTURE takes 1555 is less than 4000
+1774427059.476 10155 15973 16045 I CAM_PerformanceManager: [P_PERFORM]: Event: REAR_NORMAL_CAPTURE_163_0 takes 1555 ms
+1774427059.476 10155 15973 16045 I CAM_PerformanceManager: [P_PERFORM]: Ignore this stop event, there is no event in start status.
+1774427059.476 10155 15973 16045 D CAM_Camera2CompatAdapter: Warning: getCapabilities(): return null for camera: -1
+1774427059.486 10155 15973 16045 V CAM_CameraUtil: getRotation: sensorOrientation:90,orientation:0
+1774427059.487 10155 15973 16045 I CAM_Camera2Module: [P_PERFORM]: mCaptureStartTime(from onShutterButtonClick start to jpegCallback finished) = 1556ms
+1774427059.487 10155 15973 16045 W CAM_DataItemPluginBase: d1.m1 getDataObject null
+1774427059.487 10155 15973 16045 D CAM_Camera2Module: mMultiSnapStatus: false, mBlockQuickShot: false, isQuickShot: false, isHighQualityQuickShot: false, isParallel = true
+1774427059.487 10155 15973 16045 D BQ_1440x1080_35: queueImage: start. image: android.media.ImageReader$SurfaceImage@4693d4a | 302478514432000
+1774427059.488 10155 15973 16045 E BufferQueueConsumer: [MiuiCamera-Snapshot-imagepool](id:3e650000000a,api:4,p:15973,c:15973) BQ detachBuffer 0
+1774427059.488 10155 15973 16045 E .android.camera: BnProducerListener::onBufferDetached slot: 0
+1774427059.488 10155 15973 16045 E .android.camera: [onQueue]: GraphicBuffer is null
+1774427059.488 10155 15973 16045 E .android.camera: [onAcquire]: GraphicBuffer is null
+1774427059.489 10155 15973 16027 D BQ_1440x1080_35: onImageAvailable: android.media.ImageReader$SurfaceImage@1ec936d | 302478514432000
+1774427059.489 10155 15973 16045 D BQ_1440x1080_35: queueImage: end
+1774427059.489 10155 15973 16045 D AlgoImagePool: holdImage: image: android.media.ImageReader$SurfaceImage@1ec936d | 302478514432000 qSize: 1 | totalSize: 1
+1774427059.489 10155 15973 16045 D CAM_PostProcessor: onOriginalImageClosed: android.media.ImageReader$SurfaceImage@4693d4a
+1774427059.489 10155 15973 16045 D HalImagePool: releaseImage: image: android.media.ImageReader$SurfaceImage@4693d4a qSize: 0 | totalSize: 1
+1774427059.490 10155 15973 16045 D CAM_CaptureData: getNextDispatchTaskData: E. dispatchedNum = 0, readyNum = 1
+1774427059.490 10155 15973 16045 D CAM_CaptureData: getNextDispatchTaskData: X. dispatchedNum = 1, readyNum = 1
+1774427059.490 10155 15973 16045 D CAM_PostProcessor: [1] onCaptureDataAvailable: set result for reprocess 302478514432000
+1774427059.490 10155 15973 16045 D CAM_BaseImageProcessor: dispatchTask: E. processor: dg.a0@5a9eec8
+1774427059.490 10155 15973 16045 I CAM_BaseImageProcessor: dispatchTask: send image to engine. taskNum = 1
+1774427059.490 10155 15973 16045 D CAM_BaseImageProcessor: E: sendProcessImageMessage
+1774427059.490 10155 15973 16045 D CAM_BaseImageProcessor: X: sendProcessImageMessage
+1774427059.490 10155 15973 16045 D CAM_BaseImageProcessor: dispatchTask: X
+1774427059.490 10155 15973 16045 D CAM_PostProcessor: [1] onCaptureDataAvailable: dispatchTask status is 0
+1774427059.490 10155 15973 16045 I CAM_PostProcessor: tryToCloseSession: E. processor: dg.t@413a903{mCameraToken=43672958, mOwnerToken=18624367, mState=1}
+1774427059.490 10155 15973 16045 D CAM_PostProcessor: tryToCloseSession: X. ignored. taskNum = 1
+1774427059.490 10155 15973 22237 D CAM_BaseImageProcessor: onPreProcessImage: E
+1774427059.490 10155 15973 22237 I CAM_BaseImageProcessor: onPreProcessImage: timestamp=302478514432000, startTime=1774427059490
+1774427059.491 10155 15973 22237 D CAM_BaseImageProcessor: E: sendCheckTimeoutTaskMessage
+1774427059.491 10155 15973 22237 D CAM_BaseImageProcessor: X: sendCheckTimeoutTaskMessage
+1774427059.491 10155 15973 22237 D CAM_BaseImageProcessor: onPreProcessImage: X
+1774427059.491 10155 15973 22237 D CAM_SingleCameraProcessor: processCaptureResult: cameraMetadataNative = android.hardware.camera2.impl.CameraMetadataNative@eb8bdd8
+1774427059.491 10155 15973 22237 D CAM_SingleCameraProcessor: processCaptureResult: image = android.media.ImageReader$SurfaceImage@d4a9eec
+1774427059.491 10155 15973 22237 I CAM_SingleCameraProcessor: [K_PROCESS]: processCaptureResult: timestamp = 302478514432000, target = 0
+1774427059.491 10155 15973 22237 D CAM_SingleCameraProcessor: E:processFrame
+1774427059.491 10155 15973 22237 D TaskSession: processFrame: FrameData{ mImageFlag=0, mFrameNumber=46, mCaptureResultMetadataNative=android.hardware.camera2.impl.CameraMetadataNative@eb8bdd8, mCaptureRequestMetadataNative=android.hardware.camera2.impl.CameraMetadataNative@b90d531, mBufferImage=android.media.ImageReader$SurfaceImage@d4a9eec}
+1774427059.492 10155 15973 22237 I FrameDataUtil: =======================================================
+1774427059.492 10155 15973 22237 I FrameDataUtil: frame->stream_index = 0
+1774427059.492 10155 15973 22237 I FrameDataUtil: frame->frame_number = 46
+1774427059.492 10155 15973 22237 I FrameDataUtil: frame->requestId = 1
+1774427059.492 10155 15973 22237 I FrameDataUtil: frame->meta point addr == 0xb4000077dc9ff490
+1774427059.492 10155 15973 22237 I FrameDataUtil: v9 frame->meta point addr == 0xb4000077dc9e9200
+1774427059.492 10155 15973 22237 I FrameDataUtil: =======================================================
+1774427059.492 10155 15973 22237 I FrameDataUtil: miImage->format.width = 4080
+1774427059.493 10155 15973 22237 I FrameDataUtil: miImage->format.height = 3072
+1774427059.493 10155 15973 22237 I FrameDataUtil: miImage->format.format = 35
+1774427059.494 10155 15973 22237 I FrameDataUtil: miImage->numberOfPlanes = 2
+1774427059.494 10155 15973 22237 I FrameDataUtil: plane 0 size is : 12582896
+1774427059.494 10155 15973 22237 I FrameDataUtil: miImage->planeSize[0] = 12582896; addr = 0x7518285000
+1774427059.494 10155 15973 22237 I FrameDataUtil: plane 1 size is : 6291439
+1774427059.494 10155 15973 22237 I FrameDataUtil: miImage->planeSize[1] = 6291439; addr = 0x7518e85001
+1774427059.494 10155 15973 22237 I FrameDataUtil: get mNativeBuffer
+1774427059.494 10155 15973 22237 I FrameDataUtil: get BufferItem
+1774427059.494 10155 15973 22237 I FrameDataUtil: get frame->mBuffer: 0xb40000778c974ad0
+1774427059.494 10155 15973 22237 I MI_Algo_JNI: processFrame: mCAI = 0x75b0419000
+1774427059.494 10155 15973 22237 I MI_Algo_JNI: ------------------------------------------------------------------
+1774427059.494 10155 15973 22237 I MI_Algo_JNI: processFrame: mia_frame.stream_index = 0
+1774427059.494 10155 15973 22237 I MI_Algo_JNI: processFrame: mia_frame.frame_number = 46
+1774427059.494 10155 15973 22237 I MI_Algo_JNI: processFrame: mia_frame.size = 4080 * 3072, mia_frame.format = 35
+1774427059.494 10155 15973 22237 I MI_Algo_JNI: processFrame: CameraMetadata* = 0xb4000077dc9ff490
+1774427059.494 10155 15973 22237 I MI_Algo_JNI: ------------------------------------------------------------------
+1774427059.494 10155 15973 22237 D MiaInterface: miainterface.cpp:70 MIAProcessFrame():E session:0xb4000078cc9a31b0 frame: 0x75885f9c80
+1774427059.495 10155 15973 22237 I MiaInterface: mipostprocsessionintf.cpp:273 ProcessFrame():huangxin frame_number 46, requestId 1 W*H: 4080*3072, planeStride*sliceHeight: 4080*3072, format:35 cb:0xb40000771c9834d0
+1774427059.495 10155 15973 22237 D MiaInterface: mipostprocsessionintf.cpp:279 ProcessFrame():frame 46 ADDINFO: planes num:2, pAddr[0,1]:(0x7518285000, 0x7518e85001), planeSize[0,1]:(12582896, 6291439)
+1774427059.495 10155 15973 22237 D MiaInterface: miaframewrapper.cpp:35 MiaFrameWrapper():jintao mFormat.format: 35
+1774427059.495 10155 15973 22237 E .android.camera: get input request metadata size 2744
+1774427059.495 10155 15973 22237 D MiaInterface: miaframewrapper.cpp:67 MiaFrameWrapper():getMetaData timestamp 302478514432000
+1774427059.495 10155 15973 22237 E .android.camera: get input request metadata size 1936
+1774427059.495 10155 15973 22237 E .android.camera: readTagValues -1879048185 failed
+1774427059.495 10155 15973 22237 E .android.camera: readTagValues -1879048103 failed
+1774427059.495 10155 15973 22237 I MiaInterface: miaframewrapper.cpp:164 mergeAppRequestSetting():get hdrEnable: 0
+1774427059.495 10155 15973 22237 I MiaInterface: miaframewrapper.cpp:173 mergeAppRequestSetting():get mfnrEnable: 1
+1774427059.495 10155 15973 22237 E VendorTagDescriptor: lookupTag: Tag name 'depurple.enabled' does not exist.
+1774427059.495 10155 15973 22237 E .android.camera: could not find tag ID for tagname xiaomi.depurple.enabled
+1774427059.495 10155 15973 22237 E .android.camera: error 2 in getTagID
+1774427059.495 10155 15973 22237 I MiaInterface: miaframewrapper.cpp:192 mergeAppRequestSetting():get flipEnable = 0
+1774427059.495 10155 15973 22237 E .android.camera: readTagValues -1879048178 failed
+1774427059.495 10155 15973 22237 I MiaInterface: miaframewrapper.cpp:212 mergeAppRequestSetting():get InputNum = 1
+1774427059.495 10155 15973 22237 I MiaInterface: miautil.cpp:37 calcOffset():format 35, dim->width ,dim->height (4080:3072)
+1774427059.495 10155 15973 22237 I MiaInterface: miautil.cpp:39 calcOffset():pPadding->width_padding, pPadding->height_padding, pPadding->plane_padding (64:1:64)
+1774427059.495 10155 15973 22237 I MiaInterface: miautil.cpp:40 calcOffset():stride ,scanline (4096:3072), multi result:12582912
+1774427059.495 10155 15973 22237 I MiaInterface: miautil.cpp:109 calcOffset():format:35 pBuf_planes->mp[0].len = 12582912
+1774427059.495 10155 15973 22237 D MiaInterface: miaframewrapper.cpp:99 MiaFrameWrapper():Income settings: pAddr[0,1] = (0x7518285000, 0x7518e85001), planeSize[0,1] = (12582896, 6291439)
+1774427059.495 10155 15973 22237 D MiaInterface: miaframewrapper.cpp:102 MiaFrameWrapper():We set them to: pAddr[1] 0x7518e85000, planeSize[1] 6291440
+1774427059.496 10155 15973 22237 I MiaInterface: miaframewrapper.cpp:131 MiaFrameWrapper():RequestId 1, frameNum 46, format: 0x23, W*H(4080*3072), buffersize:12582896, numplanes:2, pAddr:(0x7518285000, 0x7518e85001), fd[0,1] = (462,-1), meta 0xb40000786c9b2030
+1774427059.496 10155 15973 22237 D MiaInterface: miaframewrapperqueue.cpp:17 addFrameWrapper():addframe now-size 1
+1774427059.496 10155 15973 22237 D TaskSession: processFrame: succeed
+1774427059.496 10155 15973 22237 I CAM_SingleCameraProcessor: [K_PROCESS]: onFrameProcessed: [0]:{onProcessStarted}
+1774427059.496 10155 15973 22237 D CAM_SingleCameraProcessor: X:processFrame
+1774427059.497 10155 15973 22246 D MiaInterface: miaframewrapperqueue.cpp:33 pollFrameWrapper():pollFrame total now-size 1
+1774427059.497 10155 15973 22246 D MiaInterface: miaframewrapperqueue.cpp:37 pollFrameWrapper():pollFrame now-size 0
+1774427059.497 10155 15973 22246 E MiaInterface: mipostprocsessionintf.cpp:359 parseMiaFrame():### frame_number 46, mOperationMode:0x8001， mCameraMode：0x1
+1774427059.497 10155 15973 22246 I MiaInterface: mipostprocsessionintf.cpp:425 postProcProcessIntf():inputFrameNum 46, timestamp: 302478514432000, merge inputnum: 1
+1774427059.498 10155 15973 22246 D MiaInterface: mipostprocsessionintf.cpp:437 postProcProcessIntf():input[0] format: 35, size: 4080x3072,buffersize:12582896,planes:2,fd[0,1]=(462,-1),pAddr[0,1]=(0x7518285000,0x7518e85001)
+1774427059.498 10155 15973 22246 D MiaInterface: mipostprocsessionintf.cpp:475 postProcProcessIntf():output[0] format: 17, size: 4080x3072, planeStride:0, sliceheight:0, fd[0,1]=(-1,-1),pAddr[0,1]=(0x0,0x0)
+1774427059.498 10155 15973 22246 D MiaInterface: mipostprocsessionintf.cpp:488 postProcProcessIntf():do mialgo2.0 process
+1774427059.498 10155 15973 22246 I MiAlgoEngine: [Core] miapostprocintf.cpp:45 CameraPostProc_Process()E
+1774427059.498 10155 15973 22246 I MiAlgoEngine: [Core] miaofflinesession.cpp:278 PostProcess()frame_number 46, streamId 0, isSync 0
+1774427059.498 10155 15973 22246 I MiAlgoEngine: [Core] miaofflinesession.cpp:279 PostProcess()input num 1, output num 1
+1774427059.498 10155 15973 22246 I MiAlgoEngine: [Core] miaofflinesession.cpp:323 PostProcess()process currentinflightnum = 1
+1774427059.498 10155 15973 22246 W MiAlgoEngine: [Core] miaimage.cpp:60 MiaImage()MiaImage::MiaImage(MiaFrame *frame, MiaImageType type)
+1774427059.498 10155 15973 22246 I MiAlgoEngine: [Core] miaimage.cpp:74 MiaImage()fmImageCountormat:0x23 mImageCount:1
+1774427059.498 10155 15973 22246 E VendorTagDescriptor: lookupTag: Tag name 'exactflexyuvfmt' does not exist.
+1774427059.498 10155 15973 22246 E .android.camera: could not find tag ID for tagname com.mediatek.configure.setting.exactflexyuvfmt
+1774427059.498 10155 15973 22246 E .android.camera: error 2 in getTagID
+1774427059.498 10155 15973 22246 I MiAlgoEngine: [Core] miaimage.cpp:126 MiaImage()MiuiCamera case
+1774427059.498 10155 15973 22246 I MiAlgoEngine: [Core] miautil.cpp:31 calcOffset()format 35, dim->width, dim->height (4080:3072), width_padding/height_padding/plane_padding=(64 1 64)
+1774427059.498 10155 15973 22246 I MiAlgoEngine: [Core] miautil.cpp:32 calcOffset()stride ,scanline (4096:3072), multi result:12582912
+1774427059.498 10155 15973 22246 I MiAlgoEngine: [Core] miaimage.cpp:166 MiaImage()i:0 format:0x11,planeStride:4096,sliceheight:3072,planes:2,bufferSize:12582896,fd(0,1)=(462,-1),pAddr(0,1)=(0x7518285000,0x7518e85000)
+1774427059.498 10155 15973 22246 I MiAlgoEngine: [Core] miaimage.cpp:185 MiaImage()Construct external image count:1, type: 0, 4080x3072 format:17, planeStride:4096, sliceheight:3072, timestamp: 302478514432000
+1774427059.498 10155 15973 22246 W MiAlgoEngine: [Core] miaimage.cpp:60 MiaImage()MiaImage::MiaImage(MiaFrame *frame, MiaImageType type)
+1774427059.498 10155 15973 22246 I MiAlgoEngine: [Core] miaimage.cpp:74 MiaImage()fmImageCountormat:0x11 mImageCount:1
+1774427059.498 10155 15973 22246 W MiAlgoEngine: [Core] miaimage.cpp:111 MiaImage()buffer handle is null, it will be filled when node acquire output buffer
+1774427059.498 10155 15973 22246 E MiAlgoEngine: [Core] miaofflinesession.cpp:368 PostProcess()[MemoryReclaim] mSessionRequestCnt = 1
+1774427059.498 10155 15973 22246 D MiaInterface: miaframewrapperqueue.cpp:33 pollFrameWrapper():pollFrame total now-size 0
+1774427059.499 10155 15973 22244 E VendorTagDescriptor: lookupTag: Tag name 'portraitrepair.luxindex' does not exist.
+1774427059.499 10155 15973 22244 E .android.camera: could not find tag ID for tagname xiaomi.portraitrepair.luxindex
+1774427059.499 10155 15973 22244 E .android.camera: error 2 in getTagID
+1774427059.499 10155 15973 22244 E .android.camera: readTagValues 1114118 failed
+1774427059.499 10155 15973 22244 I SkinBeautifierPlugin: [getFaceInfoFromCapture] It did not get face from tag
+1774427059.499 10155 15973 22244 I SkinBeautifierPlugin: [IsEnabled] beautyEnabled = 0 0 faceNum = 0 requestNumber = 0 this = 0xb40000776c9ebb20
+1774427059.499 10155 15973 22244 I MiAlgoEngine: [Core] miaofflinesession.cpp:688 acquireBuffer()format: 0x11, width: 4080, height: 3072, isSinkBuffer: 1, timestamp: 302478514432000
+1774427059.499 10155 15973 22244 I MiAlgoEngine: [Core] miaimage.cpp:281 Initialize()MiaImage::Initialize, mImageCount:1
+1774427059.507 10155 15973 15973 I CAM_BaseModule: [K_PROCESS]: enableCameraControls: enable = false, caller: com.android.camera.Camera.Db(Unknown Source:278), com.android.camera.module.i.gotoGallery(Unknown Source:52), h6.e.onThumbnailClicked(Unknown Source:219),
+1774427059.508 10155 15973 15973 I CAM_PerformanceManager: [P_PERFORM]: Action: shot_thumbnail_gap_163_0 takes 952 ms
+1774427059.509 10155 15973 22244 D MiaInterface: mipostprocsessionintf.cpp:117 dequeueBuffer():[0]dequeueBuffer got anb: 0xb4000078cc9b4f80, 4080x3072 format:11 fenceFd:-1, timestamp: 302478514432000
+1774427059.509 10155 15973 22244 I MiAlgoEngine: [Core] miaimage.cpp:297 Initialize()buffer: 0xb4000078cc9b4f70, bufferSize: 4080
+1774427059.510 10155 15973 22244 I MiAlgoEngine: [Core] miautil.cpp:31 calcOffset()format 17, dim->width, dim->height (4080:3072), width_padding/height_padding/plane_padding=(64 1 64)
+1774427059.510 10155 15973 22244 I MiAlgoEngine: [Core] miautil.cpp:32 calcOffset()stride ,scanline (4096:3072), multi result:12582912
+1774427059.510 10155 15973 22244 I MiAlgoEngine: [Core] miaimage.cpp:317 Initialize()ImageVec[0] pAddr[0]=0x7517083000 pAddr[1]=0x7517c83000, fd: -1275068297, bufferSize: 4080, frame_len: 18874368
+1774427059.510 10155 15973 22244 I MiAlgoEngine: [Core] mianode.cpp:322 processRequest()[com.xiaomi.plugin.skinbeautifier] inputNum: 1  outputNum: 1
+1774427059.510 10155 15973 22244 I SkinBeautifierPlugin: [ProcessBuffer] enter requestNumber = 0
+1774427059.510 10155 15973 22244 I SkinBeautifierPlugin: [ProcessBuffer] requestNumber = 0
+1774427059.510 10155 15973 22244 I PluginUtils: [Core] miapluginutils.cpp:256 MiCopyBuffer()111 CopyImage input 4096, 4080, 3072, output 4096, 3072, 3072, format 0x11 0x11, numberOfPlanes: 2, copyPlaneStride:4096, copyheight:3072
+1774427059.511 10155 15973 15973 I MIUIInput: [MotionEvent] ViewRootImpl windowName 'com.android.camera/com.android.camera.Camera', { action=ACTION_UP, id[0]=0, pointerCount=1, eventTime=302480122, downTime=302480073, phoneEventTime=11:24:19.440 } moveCount:1
+1774427059.537 10155 15973 22244 I SkinBeautifierPlugin: [ProcessBuffer] mSkinBeautifier = 0xb4000078dc977080, mBeautyEnabled = 0, Called MiCopyBuffer()
+1774427059.537 10155 15973 22244 I SkinBeautifierPlugin: [ProcessBuffer] NULL == mSkinBeautifier copy image from in to out
+1774427059.537 10155 15973 22244 I MiAlgoEngine: [Core] mianode.cpp:389 processRequest()[com.xiaomi.plugin.skinbeautifier] Plugin ProcessRequest spend time 27.30ms, frame_number 0
+1774427059.537 10155 15973 22244 I MiAlgoEngine: [Core] mianode.cpp:262 processImage()mFrameNum:0 mTimestampUs:302478514432000, isBypassed:0
+1774427059.537 10155 15973 22244 E MiAlgoEngine: [Core] mianode.cpp:286 processImage()srcmeta is 0xb40000786c9b2030
+1774427059.537 10155 15973 22244 I MiAlgoEngine: [Core] miaofflinesession.cpp:647 onFrameComing()return frameNum:0
+1774427059.537 10155 15973 22244 I MiAlgoEngine: [Core] miaofflinesession.cpp:662 onFrameComing() release mCurrentInflightNum = 0
+1774427059.537 10155 15973 22244 I MiaInterface: mipostprocsessionintf.cpp:627 release():release type: 1, timeStampUs: 302478514432000
+1774427059.539 10155 15973 22240 I CAM_PerformanceManager: [P_PERFORM]: Action: algo_process_302478514432000_163_0 takes 63 ms
+1774427059.539 10155 15973 22240 I CAM_SingleCameraProcessor: [K_PROCESS]: onImageAvailable: effectImage received: 302478514432000
+1774427059.539 10155 15973 22240 D BQ_4080x3072_35: queueImage: start. image: android.media.ImageReader$SurfaceImage@c4431b4 | 302478514432000
+1774427059.539 10155 15973 22240 E BufferQueueConsumer: [MiuiCamera-Snapshot-effect](id:3e6500000032,api:2,p:15973,c:15973) BQ detachBuffer 1
+1774427059.539 10155 15973 22244 E .android.camera: [onQueue]: GraphicBuffer is null
+1774427059.539 10155 15973 22244 E .android.camera: [onAcquire]: GraphicBuffer is null
+1774427059.539 10155 15973 22244 D MiaInterface: mipostprocsessionintf.cpp:171 enqueueBuffer():[0]enqueueBuffer done WindowBuffer 0xb4000078cc9b4f80, timestamp 302478514432000
+1774427059.539 10155 15973 22244 D MiaInterface: mipostprocsessionintf.cpp:572 returnOutImageToSurface():Return 0 buffer timeStampUs: 302478514432000
+1774427059.540 10155 15973 22244 I MiaInterface: mipostprocsessionintf.cpp:643 release():release end
+1774427059.540 10155 15973 22244 I MiaInterface: mipostprocsessionintf.cpp:627 release():release type: 0, timeStampUs: 302478514432000
+1774427059.540 10155 15973 22244 I MiaInterface: mipostprocsessionintf.cpp:634 release():miaFrameWrapperVec size: 1
+1774427059.540 10155 15973 22244 D MiaInterface: miaframewrapper.cpp:14 ~MiaFrameWrapper():disconstruct
+1774427059.540 10155 15973 22244 D MiaInterface: miaframewrapper.cpp:21 ~MiaFrameWrapper():Release input release 0xb40000771c9834d0
+1774427059.540 10155 15973 22244 D FrameDataCallback: release: input frame: 0xb40000777ca15ee0
+1774427059.540 10155 15973 22244 D FrameData: release: close Image: android.media.ImageReader$SurfaceImage@d4a9eec
+1774427059.541 10155 15973 22244 D CAM_SingleCameraProcessor: onFrameImageClosed: android.media.ImageReader$SurfaceImage@d4a9eec
+1774427059.541 10155 15973 22244 D CAM_PostProcessor: ImageProcessor onOriginalImageClosed: android.media.ImageReader$SurfaceImage@d4a9eec
+1774427059.541 10155 15973 22244 D CAM_PostProcessor: onOriginalImageClosed: android.media.ImageReader$SurfaceImage@d4a9eec
+1774427059.541 10155 15973 22240 E .android.camera: BnProducerListener::onBufferDetached slot: 1
+1774427059.542 10155 15973 22240 E .android.camera: [onQueue]: GraphicBuffer is null
+1774427059.542 10155 15973 22240 E .android.camera: [onAcquire]: GraphicBuffer is null
+1774427059.543 10155 15973 16027 D BQ_4080x3072_35: onImageAvailable: android.media.ImageReader$SurfaceImage@56631dd | 302478514432000
+1774427059.544 10155 15973 22244 D HalImagePool: releaseImage: image: android.media.ImageReader$SurfaceImage@d4a9eec qSize: 0 | totalSize: 0
+1774427059.544 10155 15973 22244 W AlgoImagePool: releaseImage: not hold image android.media.ImageReader$SurfaceImage@d4a9eec
+1774427059.544 10155 15973 22244 I MiaInterface: mipostprocsessionintf.cpp:643 release():release end
+1774427059.544 10155 15973 22240 D BQ_4080x3072_35: queueImage: end
+1774427059.544 10155 15973 22240 D AlgoImagePool: holdImage: image: android.media.ImageReader$SurfaceImage@56631dd | 302478514432000 qSize: 1 | totalSize: 2
+1774427059.544 10155 15973 22240 D CAM_ImageProcessor: E: dispatchFilterTask
+1774427059.544 10155 15973 22240 D CAM_ImageProcessor: X: dispatchFilterTask
+1774427059.544 10155 15973 22240 D CAM_BaseImageProcessor: onProcessImageDone: E
+1774427059.545 10155 15973 22240 D CAM_BaseImageProcessor: E: sendCheckTimeoutTaskMessage
+1774427059.545 10155 15973 22240 D CAM_BaseImageProcessor: X: sendCheckTimeoutTaskMessage
+1774427059.545 10155 15973 22240 I CAM_BaseImageProcessor: onProcessImageDone: timestamp = 302478514432000
+1774427059.545 10155 15973 22240 D CAM_BaseImageProcessor: onProcessImageDone: X
+1774427059.545 10155 15973 22237 I CAM_ImageProcessor: doFilter: 302478514432000/0
+1774427059.547 10155 15973 22237 D NativeTool: isNv21 format error
+1774427059.548 10155 15973 22237 I CAM_PostProcessor: [K_PROCESS]: [2] onImageProcessed: android.media.ImageReader$SurfaceImage@56631dd | 302478514432000/0
+1774427059.548 10155 15973 22237 I CAM_PostProcessor: [K_PROCESS]: jpeg process start, timestamp: 302478514432000
+1774427059.548 10155 15973 22237 D CAM_PostProcessor: [2] onImageProcessed: captureResult = android.hardware.camera2.impl.CameraMetadataNative@eb8bdd8
+1774427059.549 10155 15973 22237 D CAM_PostProcessor: generateReprocessData = android.hardware.camera2.impl.CameraMetadataNative@eb8bdd8 image|tag = android.media.ImageReader$SurfaceImage@56631dd|302478514432000/0 reprocessFunction = 0 isRemosaic = 0
+1774427059.549 10155 15973 22237 D ReprocessorFactory: getReprocessor: type = ISP_INTERFACE
+1774427059.549 10155 15973 22237 I IspInterfaceV2: reprocess data type is: 2 inputFormat: 35 outputFormat: 256
+1774427059.550 10155 15973 22237 D IspReprocessor@105340773: submit: 302478514432000/0
+1774427059.550 10155 15973 22237 D IspReprocessor@105340773: acquireWakeLock
+1774427059.552 10155 15973 22237 I IspReprocessor@105340773: =============================================================
+1774427059.552 10155 15973 22237 D IspReprocessor@105340773: sendReprocessRequest: send MSG_REPROCESS_IMAGE
+1774427059.552 10155 15973 22237 I CAM_ImageProcessor: tryToStopWork: state = 1
+1774427059.555 10155 15973 16038 D IspReprocessor@105340773: recv MSG_REPROCESS_IMAGE
+1774427059.556 10155 15973 16038 D IspReprocessor@105340773: yuvInputSize = 4080x3072
+1774427059.556 10155 15973 16038 D IspReprocessor@105340773: createIspInterface>>yuvInput[4080x3072] output[4080x3072@256]
+1774427059.556 10155 15973 16038 D IspReprocessor@105340773: initImageReader>>4080x3072@256
+1774427059.557 10155 15973 16038 D BufferQueueConsumer: [](id:3e6500000033,api:0,p:-1,c:15973) connect: controlledByApp=true
+1774427059.558 10155 15973 16038 D IspReprocessor@105340773: initImageReader<<
+1774427059.558 10155 15973 16038 D IspInterface: ctor: E 211778595
+1774427059.560 10155 15973 16038 D IspInterface_JNI: nativeCreate: E
+1774427059.567 10155 15973 16038 D IspHalHidl: ctor
+1774427059.567 10155 15973 16038 D IspHalHidl: init: E
+1774427059.576 10155 15973 16038 E IspHalHidl: init: failed to get ISPModule interface
+1774427059.577 10155 15973 16038 E IspInterfaceContext: ISPHal hidl interface init fail, try init ISPHal aidl interface
+1774427059.577 10155 15973 16038 D IspHalHidl: dtor
+1774427059.577 10155 15973 16038 D IspHalAidl: ctor
+1774427059.577 10155 15973 16038 D IspHalAidl: init: E
+1774427059.580 10155 15973 16038 W .android.camera: AIBinder_linkToDeath is being called with a non-null cookie and no onUnlink callback set. This might not be intended. AIBinder_DeathRecipient_setOnUnlinked should be called first.
+1774427059.583 10155 15973 16038 D IspHalAidl: init: X
+1774427059.583 10155 15973 16038 I IspInterfaceContext: ISPHal aidl interface init success
+1774427059.583 10155 15973 16038 E IspInterface_JNI: nativeCreate: 1
+1774427059.583 10155 15973 16038 D IspInterfaceContext: setupOutputStream: E
+1774427059.583 10155 15973 16038 D IspInterfaceContext: setupOutputStream: output surface width: 4080
+1774427059.583 10155 15973 16038 D IspInterfaceContext: setupOutputStream: output surface height: 3072
+1774427059.583 10155 15973 16038 D IspInterfaceContext: setupOutputStream: output surface format: 33
+1774427059.583 10155 15973 16038 D IspInterfaceContext: setupOutputStream: output surface dataspace: 8c20000
+1774427059.591 10155 15973 16038 D IspInterfaceContext: setupOutputStream: jpeg stride: 19259385
+1774427059.591 10155 15973 16038 D IspInterfaceContext: setupOutputStream: jpeg stream. id=101 strideSize=1 width=4080 height=3072
+1774427059.591 10155 15973 16038 D IspInterfaceContext: setupOutputStream: X. stream=0x7641628790
+1774427059.591 10155 15973 16038 D IspInterface_JNI: nativeCreate: inputNum=1
+1774427059.591 10155 15973 16038 D IspInterface_JNI: nativeCreate: strides[0]=4096
+1774427059.591 10155 15973 16038 D IspInterface_JNI: nativeCreate: strides[1]=4096
+1774427059.591 10155 15973 16038 D IspInterface_JNI: nativeCreate: strides[2]=4096
+1774427059.591 10155 15973 16038 D IspInterface_JNI: nativeCreate: inputStream: id=3, width=4080, height=3072, size=18800640, format=0x23, dataspace=0x8c20000
+1774427059.591 10155 15973 16038 D IspInterface_JNI: nativeCreate: outputJpegStream: id=101 strideSize=1 width=4080 height=3072
+1774427059.591 10155 15973 16038 D IspInterface_JNI: nativeCreate: outputJpegStride[0]=4080
+1774427059.591 10155 15973 16038 E IspInterface_JNI: nativeCreate: null yuv output stream
+1774427059.597 10155 15973 16038 D IspInterface_JNI: initMetadata: ispTuningHint=0 vendorTag=0x800b000e
+1774427059.597 10155 15973 16038 D IspInterface_JNI: initMetadata: flipMode=0 vendorTag=0x800b0003
+1774427059.597 10155 15973 16038 D IspInterface_JNI: initMetadata: no raw super night
+1774427059.597 10155 15973 16038 D IspInterface_JNI: initMetadata orientation=-1
+1774427059.597 10155 15973 16038 D IspHalAidl: configureISPDevice: E
+1774427059.604 10155 15973 16038 D IspHalAidl: configureISPDevice: X
+1774427059.604 10155 15973 16038 D IspInterface_JNI: setNativeContext: E
+1774427059.604 10155 15973 16038 D IspInterface_JNI: setNativeContext: X
+1774427059.604 10155 15973 16038 D IspInterface_JNI: nativeCreate: X
+1774427059.604 10155 15973 16038 D IspInterface: ctor: X 211778595
+1774427059.604 10155 15973 16038 D IspReprocessor@105340773: createIspInterface<<
+1774427059.604 10155 15973 16038 D IspReprocessor@105340773: reprocessImage>>
+1774427059.604 10155 15973 16038 D IspReprocessor@105340773: reprocessImage: tag=302478514432000/0
+1774427059.605 10155 15973 16038 D IspReprocessor@105340773: reprocessImage: requestFrameNo=46
+1774427059.605 10155 15973 16038 D IspReprocessor@105340773: reprocessImage<<
+1774427059.606 10155 15973 16037 D IspReprocessor@105340773: reprocessImage: android.media.ImageReader$SurfaceImage@56631dd | 302478514432000
+1774427059.606 10155 15973 16037 D IspReprocessor@105340773: yuv2jpeg
+1774427059.606 10155 15973 16037 D IspInterface_JNI: processImage: E
+1774427059.606 10155 15973 16037 D IspInterface_JNI: processImage: requestNumber=46 flipMode=0 functionType=0 orientation=-1 remosaic=0
+1774427059.606 10155 15973 16037 D IspInterface_JNI: processImage: inputNum=1
+1774427059.606 10155 15973 16037 D IspInterface_JNI: processImage: inputBuffer[0].streamId=3
+1774427059.606 10155 15973 16037 D IspInterface_JNI: Image_unlockIfLocked
+1774427059.606 10155 15973 16037 D IspInterface_JNI: processImage: graphic buffer id: 68603512619350
+1774427059.606 10155 15973 16037 D IspInterface_JNI: Image_unlockIfLocked
+1774427059.606 10155 15973 16037 D IspInterface_JNI: processImage: metadata buffer id: 68603512619337
+1774427059.607 10155 15973 16037 D IspInterface_JNI: initMetadata: ispTuningHint=0 vendorTag=0x800b000e
+1774427059.607 10155 15973 16037 D IspInterface_JNI: initMetadata: flipMode=0 vendorTag=0x800b0003
+1774427059.607 10155 15973 16037 D IspInterface_JNI: initMetadata: no raw super night
+1774427059.607 10155 15973 16037 D IspInterface_JNI: initMetadata orientation=-1
+1774427059.607 10155 15973 16037 D IspHalAidl: processImageRequests: E
+1774427059.607 10155 15973 22910 D CAM_CRE_PreviewRenderEngine: surface draw fps: 32.25527772949939
+1774427059.609 10155 15973 15973 D CAM_Camera@228767989: onUserInteraction
+1774427059.609 10155 15973 15973 V CAM_AutoLockManager: send MSG_HIBERNATE
+1774427059.610 10155 15973 15973 D CAM_AutoLockManager: onPause:
+1774427059.610 10155 15973 15973 V CAM_AutoLockManager: removeMessage
+1774427059.610 10155 15973 15973 D CAM_BatteryDetector: unregisterReceiver
+1774427059.610 10155 15973 15973 D CAM_ThermalDetector: unregisterReceiver
+1774427059.610 10155 15973 15973 D CAM_ExtraModuleManagerImpl: onPause
+1774427059.610 10155 15973 15973 D CAM_HeapMemoryManager: checkUsedMemory is called by Camera_onPause
+1774427059.610 10155 15973 15973 D CAM_HeapMemoryManager: jvm:{totalMemory:33299167, freeMemory:1959247, usedMemory:31339920, availableMemory:505530992}
+1774427059.610 10155 15973 15973 D CAM_HeapMemoryManager: commonCache:{ByteArrayPool: 0}
+1774427059.610 10155 15973 15973 D CAM_HeapMemoryManager: ParallelTaskMaps:{"ParallelTaskDataConverter": {"mParallelItemCacheMap": 0, "cacheSize": 0},"OfflineImageDataZipper": 0,"ParallelDataZipper": workThread is already print,"MockCameraImageReceiver": [],"MIVICaptureManagerImpl": NULL}
+1774427059.610 10155 15973 15973 D CAM_HeapMemoryManager: mUsedMemory is released
+1774427059.610 10155 15973 16045 D CAM_ParallelDataZipper: mCaptureDataArray: 0, mCaptureDataBeanArray: 0
+1774427059.610 10155 15973 15973 D CAM_SensorSM@89189988: unregister fail, no sensor registered
+1774427059.610 10155 15973 15973 D CAM_ActivityBase: onPause +228767989
+1774427059.611 10155 15973 15973 D CAM_BoostFrameworkImpl: startBoost: duration = 500, scene = 6
+1774427059.611 10155 15973 15973 D CAM_BoostFrameworkImpl: ready to boost
+1774427059.611 10155 15973 15973 I mtkpower_client: perf_lock_acq, hdl:166880, dur:500, num:8, pid:15973, tid:15973
+1774427059.614 10155 15973 15973 I mtkpower_client: ret_hdl:166885
+1774427059.615 10155 15973 15973 D CAM_Camera@228767989: pauseActivity +
+1774427059.615 10155 15973 22112 V CAM_CameraUtil: [WTP]setBrightnessRampRate: E
+1774427059.615 10155 15973 22112 V CAM_CameraUtil: setBrightnessRampRate1: -1
+1774427059.616 10155 15973 22112 E CAM_CameraUtil: modify screen light ramp rate failed, so screen light will rise slowly! throw:java.lang.ClassNotFoundException: android.os.IPowerManager.Stub
+1774427059.616 10155 15973 22112 V CAM_CameraUtil: setBrightnessRampRate2: -1
+1774427059.617 10155 15973 22112 V CAM_CameraUtil: [WTP]setBrightnessRampRate: X
+1774427059.621 10155 15973 15973 D CAM_Camera@228767989: pauseActivity: doPreviewGaussianForever move to onPrelaunchGallery()
+1774427059.621 10155 15973 15973 V CAM_CameraBrightness: onPause mUseDefaultValue=false
+1774427059.632 10155 15973 15973 V CAM_ImageSaver: onHostPause
+1774427059.632 10155 15973 15973 D CAM_Camera@228767989: shouldReleaseLater = false
+1774427059.633 10155 15973 15973 D CAM_PostProcessor: isIdle: processor = dg.t@413a903{mCameraToken=43672958, mOwnerToken=18624367, mState=1}, taskNum = 1
+1774427059.641 10155 15973 15973 D CAM_CameraOptManagerCompat: boostAdj: [100, 60000]
+1774427059.642 10155 15973 15973 D CAM_Camera@228767989: pauseActivity -
+1774427059.642 10155 15973 15973 D CAM_BoostFrameworkImpl: stopBoost
+1774427059.642 10155 15973 15973 D CAM_BoostFrameworkImpl: ready to stop boost
+1774427059.642 10155 15973 15973 I mtkpower_client: perf_lock_rel, hdl:166885, tid:15973
+1774427059.649 10155 15973 15973 D CAM_FocusView: reset: type = 7, is draw = false, mIsTouchFocus = false
+1774427059.650 10155 15973 15973 D CAM_ActivityBase: onPause -
+1774427059.654 10155 15973 16046 D CAM_NormalLocationManager: stopReceivingLocationUpdates
+1774427059.655 10155 15973 16037 D IspHalAidl: processImageRequests: X
+1774427059.655 10155 15973 16037 D IspInterface_JNI: processImage: X
+1774427059.657 10155 15973 15973 D VRI[Camera]: getMiuiFreeformStackInfo mTmpFrames.miuiFreeFormStackInfo: null
+1774427059.659 10155 15973 23335 D ViewRootImplStubImpl: requestedTypes: 1
+1774427059.672 10155 15973 16007 D SessionLifecycleClient: Sending lifecycle 2 to service
+1774427059.673 10155 15973 16057 D SessionLifecycleService: Activity backgrounding at 302480355
+1774427059.681 10155 15973 23033 D CAM_CameraBrightness: adjustBrightness: cost=0ms
+1774427059.687 10155 15973 15973 D CAM_Camera@228767989: isFromKeyguard: false
+1774427059.687 10155 15973 15973 I CAM_Camera@228767989: [K_PROCESS]: onWindowFocusChanged: hasFocus: false, isFromKeyguard: false
+1774427059.687 10155 15973 15973 I CAM_Camera@228767989: [K_PROCESS]: camera2Proxy=k9.p0@11c2f6f - cid: 0; isCameraDisconnected=false
+1774427059.687 10155 15973 15973 D CAM_Camera2Module: onWindowFocusChanged: false
+1774427059.687 10155 15973 15973 V CAM_CameraBrightness: onWindowFocusChanged hasFocus=false
+1774427059.690 10155 15973 15973 V CAM_QRCodeDecoder: showOrHideQrCode : result =
+1774427059.790 10155 15973 16031 D CAM_MiCamera2: onCaptureCompleted: sequenceId = 3, frameNumber = 88
+1774427059.798 10155 15973 15977 I .android.camera: Background young concurrent mark compact GC freed 6538KB AllocSpace bytes, 11(9112KB) LOS objects, 46% free, 16MB/31MB, paused 1.601ms,2.625ms total 145.916ms
+1774427059.909 10155 15973 15979 W System  : A resource failed to call HardwareBuffer.close.
+1774427060.065 10155 15973 23433 V CAM_ParallelProcessProvider: query uri: content://com.xiaomi.camera.parallelservice.provider.SpecialTypesProvider/processing
+1774427060.065 10155 15973 23433 V CAM_ParallelProcessProvider: getDbItemSaveTask
+1774427060.067 10155 15973 23433 D CAM_DbItemSaveTask: queryRaw: count = 1
+1774427060.073 10155 15973 23280 D IspInterfaceContext: processResult: E. request 46
+1774427060.074 10155 15973 16037 D IspReprocessor@105340773: onImageAvailable: received reprocessed image android.media.ImageReader$SurfaceImage@dcc0298
+1774427060.078 10155 15973 16037 D .android.camera: onBufferReleased: buffer released
+1774427060.078 10155 15973 16037 D AlgoImagePool: releaseImage: image: android.media.ImageReader$SurfaceImage@56631dd qSize: 0 | totalSize: 1
+1774427060.078 10155 15973 23280 D IspInterfaceContext: processResult: X
+1774427060.078 10155 15973 16037 D CAM_PostProcessor: [3] onJpegAvailable: 302478514432000 | 0
+1774427060.078 10155 15973 16037 I CAM_PerformanceManager: [P_PERFORM]: Action: algo_reprocess_302478514432000_163_0 takes 539 ms
+1774427060.079 10155 15973 16037 D CAM_PostProcessor: shotType= 5
+1774427060.079 10155 15973 16037 D CAM_ParallelTaskData: fillJpegData: dataLen=2587041, imageType=0
+1774427060.079 10155 15973 16037 D CAM_ParallelTaskData: isJpegDataReady: object = ParallelTaskData[mTimestamp=302478514432000, mSavePath='/storage/emulated/0/DCIM/Camera/IMG_20260325_112417.jpg', isAbandoned=false, mDataParameter=dg.r@2379af1]; mParallelType = 5; mJpegImageData = [B@a4896d6; mRawImageData = null; mPortraitRawData = null; mPortraitDepthData = null; isVideoEmpty = true; result = true
+1774427060.079 10155 15973 16037 D CAM_PostProcessor: isIdle: processor = dg.t@413a903{mCameraToken=43672958, mOwnerToken=18624367, mState=1}, taskNum = 0
+1774427060.079 10155 15973 16037 D CAM_CameraOptManagerCompat: boostAdj: [800, 0]
+1774427060.079 10155 15973 16037 D ICustomCaptureResult: toTotalCaptureResult: -1|1|46, sdk int 35 preview sdk int 0
+1774427060.080 10155 15973 16037 D ICustomCaptureResult: logicalCameraId is 0
+1774427060.080 10155 15973 16037 D CAM_PostProcessor: [K_PROCESS]: [3] onJpegAvailable: save image start. dataLen=2587041
+1774427060.080 10155 15973 16037 I CAM_ImageSaver: [K_PROCESS]: onParallelProcessFinish: path: /storage/emulated/0/DCIM/Camera/IMG_20260325_112417.jpg
+1774427060.080 10155 15973 16037 D CAM_ImageSaver: onParallelProcessFinish: insert: 233872170
+1774427060.080 10155 15973 16037 E VendorTagDescriptor: lookupTag: Tag name 'ai.asd.sceneDetectedAFResult' does not exist.
+1774427060.080 10155 15973 16037 D CAM_MarshalQueryableDxoAsdScene: Expected size should be 8, but got: 0
+1774427060.080 10155 15973 16037 E VendorTagDescriptor: lookupTag: Tag name 'ai.asd.sceneDetectedAEResult' does not exist.
+1774427060.080 10155 15973 16037 D CAM_MarshalQueryableDxoAsdScene: Expected size should be 8, but got: 0
+1774427060.080 10155 15973 16037 E VendorTagDescriptor: lookupTag: Tag name 'hdr.sr.enabled' does not exist.
+1774427060.080 10155 15973 16037 E VendorTagDescriptor: lookupTag: Tag name 'supernight.raw.enabled' does not exist.
+1774427060.080 10155 15973 16037 E VendorTagDescriptor: lookupTag: Tag name 'mivi.supernight.mode' does not exist.
+1774427060.080 10155 15973 16037 W CAM_VendorTagHelper: VTNF: xiaomi.mivi.supernight.mode
+1774427060.081 10155 15973 16037 E VendorTagDescriptor: lookupTag: Tag name 'specshot.mode.enabled' does not exist.
+1774427060.081 10155 15973 16037 E VendorTagDescriptor: lookupTag: Tag name 'bokehrear.enabled' does not exist.
+1774427060.081 10155 15973 16037 E VendorTagDescriptor: lookupTag: Tag name 'depurple.enabled' does not exist.
+1774427060.081 10155 15973 16037 E VendorTagDescriptor: lookupTag: Tag name 'distortion.ultraWideDistortionLevel' does not exist.
+1774427060.081 10155 15973 16037 E VendorTagDescriptor: lookupTag: Tag name 'beauty.noseRatio' does not exist.
+1774427060.081 10155 15973 16037 E VendorTagDescriptor: lookupTag: Tag name 'beauty.risoriusRatio' does not exist.
+1774427060.081 10155 15973 16037 E VendorTagDescriptor: lookupTag: Tag name 'beauty.lipsRatio' does not exist.
+1774427060.081 10155 15973 16037 E VendorTagDescriptor: lookupTag: Tag name 'beauty.chinRatio' does not exist.
+1774427060.082 10155 15973 16037 E VendorTagDescriptor: lookupTag: Tag name 'beauty.smileRatio' does not exist.
+1774427060.082 10155 15973 16037 E VendorTagDescriptor: lookupTag: Tag name 'beauty.slimNoseRatio' does not exist.
+1774427060.082 10155 15973 16037 E VendorTagDescriptor: lookupTag: Tag name 'beauty.hairlineRatio' does not exist.
+1774427060.082 10155 15973 16037 E VendorTagDescriptor: lookupTag: Tag name 'beauty.headSlimRatio' does not exist.
+1774427060.082 10155 15973 16037 E VendorTagDescriptor: lookupTag: Tag name 'beauty.bodySlimRatio' does not exist.
+1774427060.082 10155 15973 16037 E VendorTagDescriptor: lookupTag: Tag name 'beauty.shoulderSlimRatio' does not exist.
+1774427060.082 10155 15973 16037 E VendorTagDescriptor: lookupTag: Tag name 'beauty.legSlimRatio' does not exist.
+1774427060.082 10155 15973 16037 E VendorTagDescriptor: lookupTag: Tag name 'beauty.oneKeySlimRatio' does not exist.
+1774427060.082 10155 15973 16037 E VendorTagDescriptor: lookupTag: Tag name 'beauty.buttPlumpSlimRatio' does not exist.
+1774427060.082 10155 15973 16037 E VendorTagDescriptor: lookupTag: Tag name 'exifInfo.info' does not exist.
+1774427060.082 10155 15973 16037 E VendorTagDescriptor: lookupTag: Tag name 'debugInfo.info' does not exist.
+1774427060.082 10155 15973 16037 E VendorTagDescriptor: lookupTag: Tag name 'Ellc.mode' does not exist.
+1774427060.082 10155 15973 16037 W CAM_VendorTagHelper: VTNF: xiaomi.Ellc.mode
+1774427060.084 10155 15973 16037 D AlgoImagePool: releaseImage: image: android.media.ImageReader$SurfaceImage@1ec936d qSize: 0 | totalSize: 0
+1774427060.084 10155 15973 16037 W HalImagePool: releaseImage: not hold image android.media.ImageReader$SurfaceImage@1ec936d
+1774427060.084 10155 15973 16037 D CAM_PostProcessor: [3] onJpegAvailable: parallelTaskHashMap remove 302478514432000
+1774427060.084 10155 15973 16037 D CAM_PostProcessor: isIdle: processor = dg.t@413a903{mCameraToken=43672958, mOwnerToken=18624367, mState=1}, taskNum = 0
+1774427060.084 10155 15973 16037 D CAM_PostProcessor: discardFreeBuffers: E
+1774427060.084 10155 15973 16037 D CAM_PostProcessor: discardFreeBuffers: imageReader_4080x3072_f35_m10
+1774427060.085 10155 15973 16037 D CAM_PostProcessor: discardFreeBuffers: imageReader_1440x1080_f842094169_m10
+1774427060.085 10155 15973 16037 D CAM_PostProcessor: discardFreeBuffers: X
+1774427060.085 10155 15973 16037 D AlgoImagePool: trimPoolBuffer: E
+1774427060.085 10155 15973 16037 D BQ_4080x3072_35: discardFreeBuffers
+1774427060.085 10155 15973 16037 D BQ_1440x1080_35: discardFreeBuffers
+1774427060.085 10155 15973 22440 D CAM_AbstractSaveRequest: parserParallelTaskData: hashcode = 233872170, savePath = /storage/emulated/0/DCIM/Camera/IMG_20260325_112417.jpg, parallelType = 5
+1774427060.086 10155 15973 22440 D CAM_AbstractSaveRequest: addParallel: path=/storage/emulated/0/DCIM/Camera/IMG_20260325_112417.jpg
+1774427060.086 10155 15973 22440 D ICustomCaptureResult: toTotalCaptureResult: 0|1|46, sdk int 35 preview sdk int 0
+1774427060.086 10155 15973 22440 D ICustomCaptureResult: logicalCameraId is 0
+1774427060.087 10155 15973 22440 D CAM_XmpMetaUtil: jpeg is valid
+1774427060.087 10155 15973 22440 D CAM_XmpMetaUtil: xmp is invalide reture origin jpeg
+1774427060.087 10155 15973 22440 D CAM_ParallelSaveRequest: save: /storage/emulated/0/DCIM/Camera/IMG_20260325_112417.jpg | 302478514432000
+1774427060.087 10155 15973 22440 D CAM_DbItemSaveTask: getItemByPath: SaveTask{id=3, startTime=1774427058325, mediaStoreId=1000549470, path='/storage/emulated/0/DCIM/Camera/IMG_20260325_112417.jpg', status=1, percentage=0, jpegRotation=0, noGaussian=1, applicationId=com.android.camera, thumbnailPath='/data/user/0/com.android.camera/files/thumbnails/IMG_20260325_112417.jpg', bucketId = -1739773001, progressAnimType = 0, captureTimestamp = 1774427058325}
+1774427060.088 10155 15973 22440 D CAM_ParallelSaveRequest: algo mark: uri: content://com.xiaomi.camera.parallelservice.provider.SpecialTypesProvider/processing/1000549470 | /storage/emulated/0/DCIM/Camera/IMG_20260325_112417.jpg
+1774427060.088 10155 15973 22440 D CAM_ParallelSaveRequest: algo mark: 90 | 3072 | 4080 | 0
+1774427060.092 10155 15973 22440 D CAM_ExifTool: pictureCRC size Pair{27341 2587041} sha =00cbddace0037095f09fe5be6def88074c5ee60c5f7e1895bcd708c9c9a65bdf
+1774427060.092 10155 15973 22440 I CAM_PerformanceManager: [P_PERFORM]: Action: picture_crc_163_0 takes 4 ms
+1774427060.092 10155 15973 22440 D CAM_ExifTool: <updateExif>save orientationTag
+1774427060.094 10155 15973 22440 D CAM_ExifTool: updateOffsetTime +03:00
+1774427060.095 10155 15973 22440 D CAM_ExifTool: save xiaomi comment: {"mirror":false,"sensorType":"rear","Hdr":"auto","OpMode":36869,"smallPicture":false,"AIScene":0,"filterId":66048,"zoomMultiple":1}, aiType = 0, needWriteApp3: true, XIAOMI_SIQE_TYPE: 0
+1774427060.106 10155 15973 16037 D AlgoImagePool: trimPoolBuffer: X
+1774427060.107 10155 15973 16037 D HalImagePool: trimPoolBuffer: E
+1774427060.107 10155 15973 16037 D BQ_4080x3072_35: discardFreeBuffers
+1774427060.107 10155 15973 16037 D BQ_1440x1080_35: discardFreeBuffers
+1774427060.107 10155 15973 16037 D HalImagePool: trimPoolBuffer: X
+1774427060.107 10155 15973 16037 D CAM_PostProcessor: isIdle: processor = dg.t@413a903{mCameraToken=43672958, mOwnerToken=18624367, mState=1}, taskNum = 0
+1774427060.107 10155 15973 16037 D CAM_BoostFrameworkImpl: stopBoost
+1774427060.107 10155 15973 16037 D CAM_BoostFrameworkImpl: ready to stop boost
+1774427060.107 10155 15973 16037 I mtkpower_client: perf_lock_rel, hdl:166885, tid:16037
+1774427060.108 10155 15973 16037 I CAM_PostProcessor: tryToCloseSession: E. processor: dg.t@413a903{mCameraToken=43672958, mOwnerToken=18624367, mState=1}
+1774427060.108 10155 15973 16037 D CAM_PostProcessor: tryToCloseSession: X. ignored. state = 1
+1774427060.108 10155 15973 16037 D IspReprocessor@105340773: jpeg return for 302478514432000/0. cost=503
+1774427060.109 10155 15973 16037 I IspReprocessor@105340773: =============================================================
+1774427060.109 10155 15973 16037 D IspReprocessor@105340773: sendReprocessRequest: idle. Try to close device 30s later.
+1774427060.112 10155 15973 22440 D XmpIdentifier: content is an invalid data
+1774427060.112 10155 15973 22440 D IccProfileIdentifier: content is an invalid data
+1774427060.112 10155 15973 22440 D XmpIdentifier: content is an invalid data
+1774427060.112 10155 15973 22440 D IccProfileIdentifier: content is an invalid data
+1774427060.113 10155 15973 22440 D XmpIdentifier: content is an invalid data
+1774427060.113 10155 15973 22440 D IccProfileIdentifier: content is an invalid data
+1774427060.148 10155 15973 22440 D CAM_ExifTool: add datetime = 1774427058153
+1774427060.148 10155 15973 22440 V CAM_ExifTool: update exif cost=36
+1774427060.148 10155 15973 22440 D CAM_Storage: updateImage:  orientation > 0
+1774427060.181 10155 15973 22440 D CAM_Storage: media provider path match!
+1774427060.191 10155 15973 22440 D CAM_Storage: updateImage:  tmpPath = /data/user/0/com.android.camera/cache/IMG_20260325_112417.jpg
+1774427060.192 10155 15973 22440 I CAM_Storage: [K_PROCESS]: updateImage uri-> content://media/external_primary/images/media/1000549470, tmpFile /data/user/0/com.android.camera/cache/IMG_20260325_112417.jpg
+1774427060.201 10155 15973 15973 D InsetsController: cancelAnimation of types: 1, animType: 0, host: com.android.camera/com.android.camera.Camera invokeCallback=false reason=android.view.InsetsController.notifyFinished:1792 android.view.InsetsAnimationThreadControlRunner$1.lambda$notifyFinished$0:84 android.view.InsetsAnimationThreadControlRunner$1.$r8$lambda$cDFF0h4Ncq-8EXdGszv69jrUu7c:0 android.view.InsetsAnimationThreadControlRunner$1$$ExternalSyntheticLambda1.run:0 android.os.Handler.handleCallback:959 android.os.Handler.dispatchMessage:100 android.os.Looper.loopOnce:249 android.os.Looper.loop:337 android.app.ActivityThread.main:9531 java.lang.reflect.Method.invoke:-2
+1774427060.223 10155 15973 22440 D CAM_Storage: updateImage  writeFile cost 75 ms, fileLen: 2592597
+1774427060.223 10155 15973 22440 D CAM_Storage: updateAllowingReplace: file = /storage/emulated/0/DCIM/Camera/IMG_20260325_112417.jpg, uri = content://media/external_primary/images/media/1000549470, data = 2592597
+1774427060.378 10155 15973 22440 D CAM_Storage: updateImage ret->1, updateAfter cost 155 ms
+1774427060.378 10155 15973 22440 D CAM_Storage: updateImage total cost 230 ms
+1774427060.379 10155 15973 22373 I CAM_Storage: request gallery scan, filePath: /storage/emulated/0/DCIM/Camera/IMG_20260325_112417.jpg, parallelProcess: false, mediaStoreId: 1000549470, noGaussian: false, timestamp: 0
+1774427060.391 10155 15973 23580 V CAM_ParallelProcessProvider: query uri: content://com.xiaomi.camera.parallelservice.provider.SpecialTypesProvider/processing
+1774427060.391 10155 15973 23580 V CAM_ParallelProcessProvider: getDbItemSaveTask
+1774427060.393 10155 15973 23580 D CAM_DbItemSaveTask: queryRaw: count = 1
+1774427060.395 10155 15973 22440 D CAM_DbUtil: algo db: finish: 1000549470 | /storage/emulated/0/DCIM/Camera/IMG_20260325_112417.jpg
+1774427060.395 10155 15973 22440 V CAM_DbUtil: deleteInProvider resultUri: content://com.xiaomi.camera.parallelservice.provider.SpecialTypesProvider/processing/1000549470
+1774427060.396 10155 15973 22440 V CAM_ParallelProcessProvider: delete uri: content://com.xiaomi.camera.parallelservice.provider.SpecialTypesProvider/processing/1000549470
+1774427060.396 10155 15973 22440 V CAM_ParallelProcessProvider: getDbItemSaveTask
+1774427060.397 10155 15973 22440 D CAM_DbItemSaveTask: getItemByMediaId: SaveTask{id=3, startTime=1774427058325, mediaStoreId=1000549470, path='/storage/emulated/0/DCIM/Camera/IMG_20260325_112417.jpg', status=1, percentage=0, jpegRotation=0, noGaussian=1, applicationId=com.android.camera, thumbnailPath='/data/user/0/com.android.camera/files/thumbnails/IMG_20260325_112417.jpg', bucketId = -1739773001, progressAnimType = 0, captureTimestamp = 1774427058325}
+1774427060.397 10155 15973 22440 D CAM_ParallelProcessProvider: deleteProcessingMetadata: mediaStoreId=1000549470
+1774427060.397 10155 15973 22440 V CAM_ParallelProcessProvider: getDbItemSaveTask
+1774427060.402 10155 15973 22440 D CAM_DbUtil: removeAssociatedThumbnailFile: /data/user/0/com.android.camera/files/thumbnails/IMG_20260325_112417.jpg
+1774427060.402 10155 15973 22440 D CAM_DbUtil: copyThumbnailFile: E
+1774427060.411 10155 15973 22440 D CAM_DbUtil: copyThumbnailFile:   _id = 1000549470
+1774427060.411 10155 15973 22440 D CAM_DbUtil: copyThumbnailFile: _data = /storage/emulated/0/DCIM/Camera/IMG_20260325_112417.jpg
+1774427060.411 10155 15973 22440 D CAM_DbUtil: copyThumbnailFile: ignored!
+1774427060.415 10155 15973 22440 D CAM_DbUtil: copyThumbnailFile: X: null
+1774427060.415 10155 15973 22440 D CAM_DbUtil: removeThumbnailFile: E
+1774427060.416 10155 15973 22440 D CAM_DbUtil: removeThumbnailFile: X: true
+1774427060.419 10155 15973 22440 D ICustomCaptureResult: toTotalCaptureResult: 0|1|46, sdk int 35 preview sdk int 0
+1774427060.419 10155 15973 22440 D ICustomCaptureResult: logicalCameraId is 0
+1774427060.419 10155 15973 22440 D CAM_CameraStatUtils: trackPictureData: E
+1774427060.420 10155 15973 22440 E VendorTagDescriptor: lookupTag: Tag name 'stableDiffusionSR.mode' does not exist.
+1774427060.420 10155 15973 22440 E VendorTagDescriptor: lookupTag: Tag name 'ai.asd.SDSRTrigger' does not exist.
+1774427060.420 10155 15973 22440 E VendorTagDescriptor: lookupTag: Tag name 'ai.asd.DepthExtend' does not exist.
+1774427060.420 10155 15973 22440 E VendorTagDescriptor: lookupTag: Tag name 'depthExpand.mode' does not exist.
+1774427060.420 10155 15973 22440 E VendorTagDescriptor: lookupTag: Tag name 'sat.afSceneResult.afDistanceInfo' does not exist.
+1774427060.421 10155 15973 22440 W CAM_VendorTagHelper: VTNF: xiaomi.sat.afSceneResult.afDistanceInfo
+1774427060.421 10155 15973 22440 W CAM_VendorTagHelper: VTNF: org.quic.camera2.statsconfigs.AECFrameControl
+1774427060.421 10155 15973 22440 D CAM_AECFrameControl: Expected size should be 222, but got: 0
+1774427060.422 10155 15973 22440 D CAM_CameraCapabilities: isSupportEdgeWideLDC: false
+1774427060.422 10155 15973 22440 E VendorTagDescriptor: lookupTag: Tag name 'mivi.supernight.mode' does not exist.
+1774427060.422 10155 15973 22440 W CAM_VendorTagHelper: VTNF: xiaomi.mivi.supernight.mode
+1774427060.422 10155 15973 22440 D CAM_CameraStatUtils: trackPictureData: X
+1774427060.423 10155 15973 22440 I CAM_PerformanceManager: [P_PERFORM]: Action: algo_capture_total_1774427057919_163_0 takes 2351 ms
+1774427060.423 10155 15973 22440 I CAM_PerformanceManager: [P_PERFORM]: Action: algo_capture_total_1774427057919_163_0 takes 2351 ms
+1774427060.423 10155 15973 22440 I CAM_PerformanceManager: [P_PERFORM]: Action: algo_image_save_302478514432000_163_0 takes 345 ms
+1774427060.423 10155 15973 22440 I CAM_PerformanceManager: [P_PERFORM]: Action: algo_image_save_302478514432000_163_0 takes 345 ms
+1774427060.423 10155 15973 22440 I CAM_PerformanceManager: [P_PERFORM]: Action: shot_2_view_1774427057919_163_0 takes 2351 ms
+1774427060.423 10155 15973 22440 I CAM_PerformanceManager: [P_PERFORM]: Action: shot_2_view_1774427057919_163_0 takes 2351 ms
+1774427060.423 10155 15973 22440 I CAM_ParallelSaveRequest: [K_PROCESS]: image save onFinish
+1774427060.423 10155 15973 22440 I CAM_ParallelSaveRequest: [K_PROCESS]: saved image finished, timestamp: 302478514432000
+1774427060.438 10155 15973 23580 V CAM_ParallelProcessProvider: query uri: content://com.xiaomi.camera.parallelservice.provider.SpecialTypesProvider/processing
+1774427060.439 10155 15973 23580 V CAM_ParallelProcessProvider: getDbItemSaveTask
+1774427060.439 10155 15973 23580 D CAM_DbItemSaveTask: queryRaw: count = 0
+1774427060.445 10155 15973 22373 D CAM_Storage: Notify image ready to com.android.fileexplorer
+1774427060.549 10155 15973 15987 V CAM_ParallelProcessProvider: query uri: content://com.xiaomi.camera.parallelservice.provider.SpecialTypesProvider/processing
+1774427060.549 10155 15973 15987 V CAM_ParallelProcessProvider: getDbItemSaveTask
+1774427060.573 10155 15973 15987 D CAM_DbItemSaveTask: queryRaw: count = 0
+1774427060.639 10155 15973 22910 D CAM_CRE_PreviewRenderEngine: surface draw fps: 28.097625319313526
+1774427060.683 10155 15973 15987 V CAM_ParallelProcessProvider: query uri: content://com.xiaomi.camera.parallelservice.provider.SpecialTypesProvider/processing?limit=1000
+1774427060.684 10155 15973 15987 V CAM_ParallelProcessProvider: getDbItemSaveTask
+1774427060.695 10155 15973 15987 D CAM_DbItemSaveTask: queryRaw: count = 0
+1774427060.745 10155 15973 15973 D VRI[Camera]: visibilityChanged oldVisibility=true newVisibility=false
+1774427060.749 10155 15973 15973 D CAM_CRE_PreviewRenderEngine: onSurfaceDestroyed start
+1774427060.750 10155 15973 22910 D CAM_CRE_PreviewRenderer: removePreviewSurface
+1774427060.761 10155 15973 22910 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774427060.768 10155 15973 15973 D CAM_CRE_PreviewRenderEngine: onSurfaceDestroyed end
+1774427060.778 10155 15973 20738 D BLASTBufferQueue: [SurfaceView[com.android.camera/com.android.camera.Camera]#10](f:0,a:4) destructor()
+1774427060.779 10155 15973 20738 D BufferQueueConsumer: [SurfaceView[com.android.camera/com.android.camera.Camera]#10(BLAST Consumer)10](id:3e650000002d,api:0,p:-1,c:15973) disconnect
+1774427060.781 10155 15973 22910 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774427060.785 10155 15973 15973 D BLASTBufferQueue: [VRI[Camera]#9](f:0,a:2) destructor()
+1774427060.785 10155 15973 15973 D BufferQueueConsumer: [VRI[Camera]#9(BLAST Consumer)9](id:3e650000002c,api:0,p:-1,c:15973) disconnect
+1774427060.809 10155 15973 15973 V CAM_QRCodeDecoder: showOrHideQrCode : result =
+1774427060.811 10155 15973 15973 D CAM_ExtraModuleManagerImpl: onStop
+1774427060.811 10155 15973 15973 D CAM_CamLayoutManagerImpl@228767989: onStop
+1774427060.813 10155 15973 15973 D CAM_ActivityBase: onStop +228767989
+1774427060.813 10155 15973 15973 D CAM_Camera@228767989: onStop start
+1774427060.813 10155 15973 15973 D CAM_BoostFrameworkImpl: startBoost: duration = 500, scene = 6
+1774427060.813 10155 15973 15973 D CAM_BoostFrameworkImpl: ready to boost
+1774427060.813 10155 15973 15973 I mtkpower_client: perf_lock_acq, hdl:166885, dur:500, num:8, pid:15973, tid:15973
+1774427060.814 10155 15973 15973 I mtkpower_client: ret_hdl:166888
+1774427060.814 10155 15973 15973 D CAM_RenderEngineV2: onPause start
+1774427060.814 10155 15973 15973 W CAM_CRE_PreviewRenderEngine: setSurfaceTextureDataSpaceTranslator: null
+1774427060.815 10155 15973 15973 D CAM_ActivityBase: updateSurfaceState: 2
+1774427060.815 10155 15973 15973 D CAM_RenderEngineV2: onPause end
+1774427060.815 10155 15973 22910 D CAM_CRE_ScreenshotRenderer: ScreenshotRenderer release surface
+1774427060.818 10155 15973 15973 I CAM_PerformanceManager: [P_PERFORM]: Event: EXIT_APP start
+1774427060.818 10155 15973 15973 I CAM_PerformanceManager: [P_PERFORM]: not allow traceStop
+1774427060.821 10155 15973 15973 D CAM_CRE_RenderEngineV2: setDrawBlackFrame to false  from : z.t0.apply(Unknown Source:11), java.util.Optional.map(Optional.java:260), com.android.camera.Camera.E(Unknown Source:11), com.android.camera.Camera.zh(Unknown Source:87), com.android.camera.ActivityBase.onStop(Unknown Source:26),
+1774427060.821 10155 15973 15973 D CAM_Camera@228767989: removeNewBie = TopMenuNewbieDialogFragment
+1774427060.822 10155 15973 15973 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+1774427060.822 10155 15973 15973 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+1774427060.822 10155 15973 15973 D CAM_Camera@228767989: releaseAll: releaseDevice = true, isCurrentModuleAlive = true, isFinishing = false
+1774427060.822 10155 15973 15973 D CAM_BaseModule: setDeparted
+1774427060.822 10155 15973 15973 D CAM_RCS_StreamingController: onStop: isVideoCast = false
+1774427060.822 10155 15973 16025 D CAM_BaseModule: release: E
+1774427060.822 10155 15973 16025 D CAM_BaseModule: unRegisterProtocol
+1774427060.822 10155 15973 16025 D CAM_BaseModule: unRegisterModulePersist
+1774427060.822 10155 15973 16025 D CAM_EffectController: setRenderEngine: null this:com.android.camera2.compat.theme.custom.cv.filter.EffectControllerCv@f3c3164
+1774427060.822 10155 15973 16025 D CAM_BaseModule: onRenderEngineDestroy
+1774427060.822 10155 15973 16025 D CAM_LiveShotManager: stopLiveShot E true
+1774427060.822 10155 15973 16025 I CAM_MiCamera2: stopLivephoto E
+1774427060.822 10155 15973 16025 I CAM_MiCamera2: stopLivephoto X
+1774427060.822 10155 15973 16025 D CAM_LiveShotManager: stopLiveShot X true
+1774427060.822 10155 15973 16025 I CAM_BaseModule: onInactive: E. CaptureModule@47599067: mid = 163, cid = 0, created = true, departed = true
+1774427060.823 10155 15973 16025 D CAM_ByteArrayPool: clearMemory, size=0
+1774427060.823 10155 15973 16025 I CAM_BaseModule: onInactive: X
+1774427060.823 10155 15973 16025 D CAM_Camera2Module: closeCamera: E
+1774427060.823 10155 15973 16025 D CAM_BaseModuleCameraManager: setCameraState: 0
+1774427060.824 10155 15973 16025 V CAM_MiCamera2: stopPreviewCallback(): isRelease = true
+1774427060.824 10155 15973 16025 V CAM_CameraConfigManager: setASDEnable: false
+1774427060.824 10155 15973 16025 D CAM_BaseModuleCameraManager: updateASD call setASDEnable with false
+1774427060.825 10155 15973 16025 D CAM_CacheImageDecoder: quit
+1774427060.825 10155 15973 16025 D CAM_BoostFrameworkImpl: stopBoost
+1774427060.825 10155 15973 16025 D CAM_BoostFrameworkImpl: ready to stop boost
+1774427060.825 10155 15973 16025 I mtkpower_client: perf_lock_rel, hdl:166888, tid:16025
+1774427060.829 10155 15973 22910 D CAM_CRE_PreviewRenderEngine: Remove local renderer in.h@460f8e8
+1774427060.829 10155 15973 22910 D CAM_CRE_MIGL: FilterBasicRender glDeleteProgram: 32
+1774427060.830 10155 15973 22910 D CAM_CRE_PreviewRenderEngine: Remove local renderer in.r@490db01
+1774427060.830 10155 15973 22910 D CAM_CRE_MIGL: SoftLightRingRenderer glDeleteProgram: 33
+1774427060.830 10155 15973 22910 W CAM_CRE_SoftLightRingRenderer: start onDetach
+1774427060.830 10155 15973 22910 D CAM_CRE_PreviewRenderEngine: Remove local renderer jn.b@3f60b85
+1774427060.830 10155 15973 22910 D CAM_CRE_MIGL: BaseProgram glDeleteProgram: 16
+1774427060.830 10155 15973 22910 D CAM_CRE_MIGL: BaseProgram glDeleteProgram: 17
+1774427060.830 10155 15973 22910 D CAM_CRE_MIGL: BaseProgram glDeleteProgram: 18
+1774427060.830 10155 15973 22910 D CAM_CRE_MIGL: BaseProgram glDeleteProgram: 19
+1774427060.830 10155 15973 22910 D CAM_CRE_PreviewRenderEngine: Remove local renderer jn.a@5239dda
+1774427060.830 10155 15973 22910 D CAM_CRE_MIGL: BaseProgram glDeleteProgram: 20
+1774427060.830 10155 15973 22910 D CAM_CRE_MIGL: BaseProgram glDeleteProgram: 21
+1774427060.830 10155 15973 22910 D CAM_CRE_MIGL: BaseProgram glDeleteProgram: 24
+1774427060.830 10155 15973 22910 D CAM_CRE_MIGL: BaseProgram glDeleteProgram: 25
+1774427060.830 10155 15973 22910 D CAM_CRE_MIGL: BaseProgram glDeleteProgram: 26
+1774427060.831 10155 15973 22910 D CAM_CRE_PreviewRenderEngine: Remove local renderer jn.c@aded20b
+1774427060.831 10155 15973 22910 D CAM_CRE_MIGL: BaseProgram glDeleteProgram: 27
+1774427060.831 10155 15973 22910 D CAM_CRE_MIGL: BaseProgram glDeleteProgram: 28
+1774427060.831 10155 15973 22910 D CAM_CRE_MIGL: BaseProgram glDeleteProgram: 45
+1774427060.831 10155 15973 22910 D CAM_CRE_MIGL: BaseProgram glDeleteProgram: 46
+1774427060.831 10155 15973 22910 D CAM_CRE_MIGL: BaseProgram glDeleteProgram: 31
+1774427060.831 10155 15973 22910 D CAM_CRE_PreviewRenderEngine: Remove local renderer in.t@82dbda6
+1774427060.831 10155 15973 22910 D CAM_CRE_MIGL: TiltShiftCircleRenderer glDeleteProgram: 34
+1774427060.831 10155 15973 22910 D CAM_CRE_MIGL: XTiltShiftCircleRenderer glDeleteProgram: 35
+1774427060.831 10155 15973 22910 D CAM_CRE_MIGL: YTiltShiftCircleRenderer glDeleteProgram: 58
+1774427060.831 10155 15973 22910 D CAM_CRE_PreviewRenderEngine: Remove local renderer in.u@fa683e7
+1774427060.831 10155 15973 22910 D CAM_CRE_MIGL: TiltShiftParallelRenderer glDeleteProgram: 59
+1774427060.831 10155 15973 22910 D CAM_CRE_MIGL: XTiltShiftParallelRenderer glDeleteProgram: 36
+1774427060.831 10155 15973 22910 D CAM_CRE_MIGL: YTiltShiftParallelRenderer glDeleteProgram: 37
+1774427060.832 10155 15973 22910 D CAM_CRE_PreviewRenderEngine: Remove local renderer in.c@1c0bb94
+1774427060.832 10155 15973 22910 D CAM_CRE_MIGL: FilterBasicRender glDeleteProgram: 38
+1774427060.832 10155 15973 16025 D CAM_Camera2Module: closeCamera: X
+1774427060.832 10155 15973 16025 E CAM_Camera2Module: onInactive: mIsNeedNightHDR is false
+1774427060.832 10155 15973 16025 D CAM_SocketController: onPause:
+1774427060.832 10155 15973 16025 D CAM_SocketManager: removeEventListener: 74968388
+1774427060.833 10155 15973 22109 D CAM_CacheImageDecoder: reset
+1774427060.834 10155 15973 16025 D CAM_SocketController: onDestroy:
+1774427060.834 10155 15973 16025 D ConnectivityManager: NetworkCallback was already unregistered
+1774427060.834 10155 15973 16025 D CAM_BaseModule: release: X
+1774427060.834 10155 15973 16025 D CAM_CameraTask: release surfaceTexture...
+1774427060.834 10155 15973 16025 D CAM_RenderEngineV2: releaseCameraScreenNail
+1774427060.834 10155 15973 16025 D CAM_CRE_PreviewRenderEngine: onCameraClosed start
+1774427060.835 10155 15973 22910 D CAM_CRE_PreviewRenderEngine: onCameraClosed timestamp:0
+1774427060.835 10155 15973 16025 D CAM_CRE_ScreenshotRenderer: clearScreenshotRequestList
+1774427060.835 10155 15973 16025 D CAM_CRE_PreviewRenderEngine: onCameraClosed end
+1774427060.835 10155 15973 16025 D CAM_CameraTask: start releaseCameraDevice: true
+1774427060.835 10155 15973 16025 D CAM_Camera2OpenManager: abandonCameraResultObservable: E
+1774427060.835 10155 15973 16025 D CAM_Camera2OpenManager: abandonCameraResultObservable: X
+1774427060.835 10155 15973 16025 D CAM_Camera2OpenManager: E: releaseAllCamerasAndWait
+1774427060.835 10155 15973 15973 D CAM_RCS_StreamingController: onStop: isStreaming = false
+1774427060.836 10155 15973 15973 D CAM_BoostFrameworkImpl: stopBoost
+1774427060.836 10155 15973 15973 D CAM_BoostFrameworkImpl: ready to stop boost
+1774427060.836 10155 15973 15973 I mtkpower_client: perf_lock_rel, hdl:166888, tid:15973
+1774427060.837 10155 15973 23088 D CAM_QRCodeDecoder: releaseQRCodeScanner: done
+1774427060.841 10155 15973 15973 D CAM_Camera@228767989: onStop end
+1774427060.841 10155 15973 15973 D CAM_Camera@228767989: IsMultiCamera: false
+1774427060.841 10155 15973 15973 I CAM_PerformanceManager: [P_PERFORM]: Event: EXIT_APP_163_0 takes 26 ms
+1774427060.841 10155 15973 15973 I CAM_PerformanceManager: [P_PERFORM]: Event: EXIT_APP takes 26 is less than 4000
+1774427060.841 10155 15973 15973 D BroadcastExecutor: BroadcastExecutor : 2
+1774427060.842 10155 15973 16031 D CAM_ThreadUtils: E: invokeAtFrontUninterruptibly#call
+1774427060.842 10155 15973 16031 D CAM_ReleaseCameraCallable: E: releaseCamera: cid = 0
+1774427060.842 10155 15973 16031 D CAM_MiCamera2: setCaptureBusyCallback: mg.g@32a7ad4
+1774427060.842 10155 15973 16031 D CAM_MiCamera2: setCaptureBusyCallback: shot queue empty
+1774427060.842 10155 15973 16031 D CAM_ReleaseCameraCallable: onCaptureCompleted: true, request to close camera, device=k9.p0@11c2f6f - cid: 0, deviceHash=18624367
+1774427060.842 10155 15973 16031 D CAM_CameraService: closeCamera addCameraCallable deviceHash = 18624367
+1774427060.842 10155 15973 16031 D CAM_ReleaseCameraCallable: X: releaseCamera: cid = 0
+1774427060.843 10155 15973 16025 D CAM_Camera2OpenManager: X: releaseAllCamerasAndWait
+1774427060.843 10155 15973 16031 D CAM_ThreadUtils: X: invokeAtFrontUninterruptibly#call
+1774427060.843 10155 15973 16031 D CAM_CloseCameraCallable: E: cid: null
+1774427060.843 10155 15973 16031 I CAM_CloseCameraCallable: [K_PROCESS]: E: closeCamera: cid = null, excludes = [], deviceHashes = [18624367]
+1774427060.843 10155 15973 16031 V CAM_MiCamera2: E: releasePreview: reason = 0
+1774427060.844 10155 15973 16045 D CAM_LocalParallelService: stopPostProcessor: E. token=18624367
+1774427060.844 10155 15973 16045 I CAM_PostProcessor: destroyWhenTasksFinished: dg.t@413a903{mCameraToken=43672958, mOwnerToken=18624367, mState=1}
+1774427060.844 10155 15973 16045 I CAM_PostProcessor: tryToCloseSession: E. processor: dg.t@413a903{mCameraToken=43672958, mOwnerToken=18624367, mState=2}
+1774427060.844 10155 15973 16045 I CAM_PostProcessor: tryToCloseSession: STATE_STOPPED
+1774427060.844 10155 15973 16031 D CAM_BoostFrameworkImpl: startBoost: duration = 2000, scene = 6
+1774427060.844 10155 15973 16031 D CAM_BoostFrameworkImpl: ready to boost
+1774427060.844 10155 15973 16031 I mtkpower_client: perf_lock_acq, hdl:166888, dur:2000, num:8, pid:15973, tid:16031
+1774427060.846 10155 15973 16031 I mtkpower_client: ret_hdl:166889
+1774427060.846 10155 15973 16031 I CAM_MiCamera2: [K_PROCESS]: abortCaptures E
+1774427060.847 10155 15973 16031 D CameraDevice-JV-0: flush: E. id = 0
+1774427060.850 10155 15973 15973 D CAM_FragmentBottomAction: onStop
+1774427060.850 10155 15973 15973 D CAM_FragmentBottomPopupTips: hideAllTipImage
+1774427060.851 10155 15973 15973 D CAM_FragmentBottomPopupTips: cancelUpdateTipImage
+1774427060.851 10155 15973 16045 I CAM_LocalParallelService: onPostProcessorClosed: processor: dg.t@413a903{mCameraToken=43672958, mOwnerToken=18624367, mState=3}
+1774427060.851 10155 15973 16045 D CAM_PostProcessor: finish: E
+1774427060.851 10155 15973 16045 D CAM_PostProcessor: isIdle: processor = dg.t@413a903{mCameraToken=43672958, mOwnerToken=18624367, mState=3}, taskNum = 0
+1774427060.851 10155 15973 16045 I CAM_BaseImageProcessor: stopWork: E. processor: dg.a0@5a9eec8
+1774427060.851 10155 15973 16045 D CAM_ImageProcessor: stopWork: E. release WorkerHandler
+1774427060.852 10155 15973 16045 D CAM_ImageProcessor: stopWork: X. release WorkerHandler
+1774427060.852 10155 15973 16045 I MI_Algo_JNI: flush: mCAI = 0x75b0419000
+1774427060.852 10155 15973 16045 D MiaInterface: miainterface.cpp:81 MIAFlush():E session:0xb4000078cc9a31b0
+1774427060.852 10155 15973 16045 D MiaInterface: mipostprocserviceintf.cpp:200 flush():E
+1774427060.852 10155 15973 16045 D MiaInterface: mipostprocsessionintf.cpp:324 Flush():waitting thread stop
+1774427060.852 10155 15973 16045 D MiaInterface: miaframewrapperqueue.cpp:69 kickOutFrameWrapperWaiter():signal to kick out framewrapper waiter
+1774427060.855 10155 15973 15973 D CAM_ActivityBase: onStop -
+1774427060.855 10155 15973 15973 D CAM_Camera@228767989: onSaveInstanceState
+1774427060.855 10155 15973 15973 D CAM_HorizontalScaleZoomView: onVisibilityChanged, visibility: 4, com.android.camera2.compat.theme.custom.mm.zoom.HorizontalScaleZoomView{4e5feaa G.ED..... ......I. 0,0-0,0 #7f0b024e app:id/dual_camera_zoom}
+1774427060.856 10155 15973 22246 D MiaInterface: mipostprocsessionintf.cpp:400 parseMiaFrame():poll NULL FrameWrapper or the session had destroy normaly!
+1774427060.856 10155 15973 22246 I MiaInterface: mipostprocsessionintf.cpp:407 postProcProcessIntf():mProcessingFrameWrpVec is empty, stop process
+1774427060.858 10155 15973 22910 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774427060.859 10155 15973 16045 D MiaInterface: mipostprocsessionintf.cpp:331 Flush():waitting thread stop end
+1774427060.859 10155 15973 16045 D TaskSession: flush: succeed
+1774427060.860 10155 15973 16045 I MI_Algo_JNI: destroySession: mCAI = 0x75b0419000
+1774427060.860 10155 15973 16045 I MiaInterface: miainterface.cpp:64 MIADestroySession():E session:0xb4000078cc9a31b0
+1774427060.860 10155 15973 16045 D MiaInterface: mipostprocserviceintf.cpp:167 destroySession():E session:0xb4000078cc9a31b0
+1774427060.860 10155 15973 15973 D CAM_FragmentBottomPopupTips: restoreAiState: maybe restore ai scene tip:0
+1774427060.860 10155 15973 15973 D CAM_Camera2ModuleHandler: onMessage MSG_ABANDON_HANDLER setActivity null
+1774427060.860 10155 15973 15973 D CAM_BaseModule: setModuleCallback, callback: null, com.android.camera.module.i.setModuleCallback(Unknown Source:19), h6.d.handleMessage(Unknown Source:28), android.os.Handler.dispatchMessage(Handler.java:107),
+1774427060.860 10155 15973 16045 D MiaInterface: mipostprocsessionintf.cpp:298 Destory():E
+1774427060.860 10155 15973 16045 I MiAlgoEngine: [Core] miapostprocintf.cpp:61 CameraPostProc_Destroy()E
+1774427060.860 10155 15973 16045 I MiAlgoEngine: [Core] miaofflinesession.cpp:381 Destroy()Destroy E
+1774427060.860 10155 15973 16045 I MiAlgoEngine: [Core] miaofflinesession.cpp:755 flush()E
+1774427060.860 10155 15973 16045 I MiAlgoEngine: [Core] miaofflinesession.cpp:766 flush()mNodes size 2
+1774427060.860 10155 15973 16045 I MiAlgoEngine: [Core] mianode.cpp:62 Stop()stop node name com.xiaomi.plugin.morphohdr begin
+1774427060.860 10155 15973 22244 I MiAlgoEngine: [Core] miaimagequeue.cpp:43 pollImage()QueueName com.xiaomi.plugin.morphohdr, thread stopped
+1774427060.860 10155 15973 22244 I MiAlgoEngine: [Core] mianode.cpp:99 runThread()X of node com.xiaomi.plugin.morphohdr
+1774427060.860 10155 15973 16045 I MiAlgoEngine: [Core] mianode.cpp:62 Stop()stop node name com.xiaomi.plugin.skinbeautifier begin
+1774427060.860 10155 15973 22243 I MiAlgoEngine: [Core] miaimagequeue.cpp:43 pollImage()QueueName com.xiaomi.plugin.skinbeautifier, thread stopped
+1774427060.861 10155 15973 22243 I MiAlgoEngine: [Core] mianode.cpp:99 runThread()X of node com.xiaomi.plugin.skinbeautifier
+1774427060.861 10155 15973 16045 I SkinBeautifierPlugin: [Destory] destroy() this = 0xb40000776c9ebb20
+1774427060.861 10155 15973 16045 I MiAlgoEngine: [Core] mianode.cpp:88 Stop()stop node name com.xiaomi.plugin.skinbeautifier end
+1774427060.861 10155 15973 16045 I MIA_N_HDR: [Plugin] morphohdrplugin.cpp:11 ~MorphoHdrPlugin()~MorphoHdrPlugin:11
+1774427060.861 10155 15973 16045 I MiAlgoEngine: [Core] mianode.cpp:88 Stop()stop node name com.xiaomi.plugin.morphohdr end
+1774427060.862 10155 15973 22245 I MiAlgoEngine: [Core] miaofflinesession.cpp:415 memoryMonitorThread()[MemoryReclaim] monitor waitRelative ret = 0
+1774427060.862 10155 15973 22245 I MiAlgoEngine: [Core] miaofflinesession.cpp:89 clearOutThresholdBuffer()[MemoryReclaim] Enter
+1774427060.862 10155 15973 22245 I MiAlgoEngine: [Core] miaofflinesession.cpp:103 clearOutThresholdBuffer()[MemoryReclaim] Exit
+1774427060.866 10155 15973 16045 I MiAlgoEngine: [Core] miaofflinesession.cpp:778 flush()flush finish
+1774427060.866 10155 15973 16045 I MiAlgoEngine: [Core] miaofflinesession.cpp:394 Destroy()bufferWrapper 0xb4000077fc942900
+1774427060.866 10155 15973 16045 I MiAlgoEngine: [Core] miaofflinesession.cpp:401 Destroy()Destroy X
+1774427060.866 10155 15973 16045 E MiAlgoEngine: [Core] miaofflinesession.cpp:259 ~MiaOfflinePostProcSession()MiaOfflinePostProcSession disconstruct
+1774427060.866 10155 15973 16045 D MI_Algo_JNI: MySessionCb has been deconstructed .
+1774427060.866 10155 15973 16045 D MI_Algo_JNI: MySessionCb has DeleteGlobalRef .
+1774427060.866 10155 15973 16045 D MiaInterface: mipostprocsessionintf.cpp:188 ~MiPostProcSessionIntf():MiPostProcSessionIntf disconstruct
+1774427060.866 10155 15973 16045 D MiaInterface: mipostprocserviceintf.cpp:194 destroySession():X session:0xb4000078cc9a31b0
+1774427060.866 10155 15973 16045 D TaskSession: destroy: succeed
+1774427060.866 10155 15973 16045 D TaskSession: session has been closed: com.xiaomi.engine.TaskSession@b2cdb47
+1774427060.866 10155 15973 16045 D BufferQueueConsumer: [MiuiCamera-Snapshot-effect](id:3e6500000032,api:0,p:-1,c:15973) disconnect
+1774427060.866 10155 15973 16045 I CAM_BaseImageProcessor: stopWork: X
+1774427060.873 10155 15973 16045 D CAM_PostProcessor: E: mWorkerThread
+1774427060.880 10155 15973 16045 D CAM_PostProcessor: X: mWorkerThread
+1774427060.880 10155 15973 16045 D CAM_PostProcessor: finish: X
+1774427060.880 10155 15973 16045 D CAM_PostProcessor: deInit: E
+1774427060.880 10155 15973 16045 D BufferQueueConsumer: [MiuiCamera-BQ-orignal](id:3e650000002f,api:4,p:1158,c:15973) disconnect
+1774427060.880 10155 15973 16045 D BufferQueueConsumer: [MiuiCamera-BQ-orignal](id:3e6500000030,api:4,p:1158,c:15973) disconnect
+1774427060.880 10155 15973 16045 D CAM_PostProcessor: deInit: X
+1774427060.880 10155 15973 16045 D CAM_BoostFrameworkImpl: stopBoost
+1774427060.881 10155 15973 16045 D CAM_BoostFrameworkImpl: ready to stop boost
+1774427060.881 10155 15973 16045 I mtkpower_client: perf_lock_rel, hdl:166889, tid:16045
+1774427060.882 10155 15973 16045 I CAM_PostProcessor: tryToCloseSession: X. closed
+1774427060.882 10155 15973 16045 D CAM_LocalParallelService: stopPostProcessor: X
+1774427060.891 10155 15973 22910 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774427060.913 10155 15973 22910 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774427060.916 10155 15973 16031 D CameraDevice-JV-0: flush: X
+1774427060.916 10155 15973 16031 I CAM_PerformanceManager: [P_PERFORM]: Action: abortCaptures_163_0 takes 70 ms
+1774427060.916 10155 15973 16031 I CAM_MiCamera2: [K_PROCESS]: abortCaptures X
+1774427060.917 10155 15973 16031 V CAM_MiCamera2: X: releasePreview
+1774427060.917 10155 15973 16031 V CAM_MiCamera2: E: resetConfigs
+1774427060.917 10155 15973 16031 V CAM_MiCamera2: X: resetConfigs
+1774427060.917 10155 15973 16031 I CAM_MiCamera2: [K_PROCESS]: E: close: cameraId = 0, reason = 0
+1774427060.917 10155 15973 16031 D CAM_BoostFrameworkImpl: startBoost: duration = 2000, scene = 6
+1774427060.917 10155 15973 16031 D CAM_BoostFrameworkImpl: ready to boost
+1774427060.917 10155 15973 16031 I mtkpower_client: perf_lock_acq, hdl:166889, dur:2000, num:8, pid:15973, tid:16031
+1774427060.918 10155 15973 15987 W CameraDevice-JV-0: Device error received, code 5, frame number 123, request ID 3, subseq ID 0
+1774427060.918 10155 15973 16031 I mtkpower_client: ret_hdl:166891
+1774427060.919 10155 15973 15987 W CameraDevice-JV-0: Device error received, code 5, frame number 123, request ID 3, subseq ID 0
+1774427060.919 10155 15973 15987 W CameraDevice-JV-0: Device error received, code 3, frame number 123, request ID 3, subseq ID 0
+1774427060.919 10155 15973 15987 W CameraDevice-JV-0: got error frame 123
+1774427060.919 10155 15973 16031 I CAM_PerformanceManager: [P_PERFORM]: Event: CAMERA_CLOSE start
+1774427060.919 10155 15973 16031 D CameraExtImplXiaoMi: releaseCameraDevice: 0
+1774427060.920 10155 15973 20738 W CameraDevice-JV-0: Device error received, code 3, frame number 127, request ID 3, subseq ID 0
+1774427060.920 10155 15973 20738 W CameraDevice-JV-0: got error frame 127
+1774427060.921 10155 15973 20738 W CameraDevice-JV-0: Device error received, code 4, frame number 121, request ID 3, subseq ID 0
+1774427060.921 10155 15973 20738 W CameraDevice-JV-0: got error frame 121
+1774427060.921 10155 15973 20738 W CameraDevice-JV-0: Device error received, code 4, frame number 122, request ID 3, subseq ID 0
+1774427060.921 10155 15973 20738 W CameraDevice-JV-0: got error frame 122
+1774427060.921 10155 15973 20738 W CameraDevice-JV-0: Device error received, code 3, frame number 124, request ID 3, subseq ID 0
+1774427060.921 10155 15973 20738 W CameraDevice-JV-0: got error frame 124
+1774427060.922 10155 15973 20738 W CameraDevice-JV-0: Device error received, code 3, frame number 125, request ID 3, subseq ID 0
+1774427060.922 10155 15973 20738 W CameraDevice-JV-0: got error frame 125
+1774427060.922 10155 15973 20738 W CameraDevice-JV-0: Device error received, code 3, frame number 126, request ID 3, subseq ID 0
+1774427060.922 10155 15973 20738 W CameraDevice-JV-0: got error frame 126
+1774427060.922 10155 15973 16031 D CameraDevice-JV-0: close: E. id = 0
+1774427061.174 10155 15973 16031 D CameraDevice-JV-0: close: X
+1774427061.175 10155 15973 16031 I CAM_PerformanceManager: [P_PERFORM]: Event: CAMERA_CLOSE_163_0 takes 256 ms
+1774427061.175 10155 15973 16031 I CAM_PerformanceManager: [P_PERFORM]: Event: CAMERA_CLOSE takes 256 is less than 4000
+1774427061.175 10155 15973 16031 D BufferQueueConsumer: [ImageReader-4080x3072f21m2-15973-33](id:3e650000002e,api:0,p:-1,c:15973) disconnect
+1774427061.175 10155 15973 16031 D CAM_MiCameraSurfaceManager: close imageReader android.media.ImageReader@2e49d67
+1774427061.175 10155 15973 16031 D BufferQueueConsumer: [ImageReader-960x720f23m21-15973-36](id:3e6500000031,api:0,p:-1,c:15973) disconnect
+1774427061.175 10155 15973 16031 V CAM_MiCamera2: E: reset
+1774427061.175 10155 15973 16031 V CAM_MiCamera2: reset: hashcode:null
+1774427061.175 10155 15973 16031 V CAM_MiCamera2: X: reset
+1774427061.175 10155 15973 16031 I CAM_MiCamera2: [K_PROCESS]: X: close: cameraId = 0
+1774427061.175 10155 15973 16031 D CAM_CloseCameraCallable: closeCamera: cache removed: cid = 0
+1774427061.175 10155 15973 16031 I CAM_CloseCameraCallable: [K_PROCESS]: X: closeCamera: cid = null, excludes = []
+1774427061.175 10155 15973 16031 D CAM_CloseCameraCallable: X: cid: null (dur: 332)
+1774427061.175 10155 15973 16031 D CAM_CloseCameraCallable: postCallback
+1774427061.176 10155 15973 16025 D CAM_CloseCameraCallable: Success: cid: null (dur: 332)
+1774427061.177 10155 15973 16031 I CAM_CameraStateCallback: [K_PROCESS]: onClosed: cid = 0, closing = true
+1774427061.177 10155 15973 16025 D CAM_CameraOpenObservable: onClosed: cid = 0, listener = 7998308
+1774427061.177 10155 15973 16025 D CAM_Camera2OpenManager: onClosed: cid = 0|android.hardware.camera2.impl.CameraDeviceImpl@29a657e
+1774427061.177 10155 15973 16025 D CAM_LocalParallelService: onCameraClosed: E. token=43672958
+1774427061.177 10155 15973 16025 D CAM_LocalParallelService: onCameraClosed: X
+1774427061.177 10155 15973 15973 D CAM_RenderEngineV2: releaseWindowSurface
+1774427061.177 10155 15973 22910 D CAM_CRE_EglWindowSurface: EglWindowSurface release start
+1774427061.177 10155 15973 22910 D CAM_CRE_EglCore: destroy Surface -5476376626980582192
+1774427061.182 10155 15973 20738 W .android.camera: Long monitor contention with owner CameraHandlerThread (16031) at void android.hardware.camera2.impl.CameraDeviceImpl.close()(CameraDeviceImpl.java:1615) waiters=0 in void android.hardware.camera2.impl.CameraDeviceImpl.onDeviceIdle() for 259ms
+1774427061.184 10155 15973 20738 W .android.camera: PerfMonitor async binderTransact :  time=262ms interface=android.hardware.camera2.ICameraDeviceCallbacks code=2
+1774427063.950 10155 15973 15973 V CAM_Camera@228767989: onTrimMemory: level=20
+1774427063.950 10155 15973 15973 D CAM_ByteArrayPool: trimMemory, level=20

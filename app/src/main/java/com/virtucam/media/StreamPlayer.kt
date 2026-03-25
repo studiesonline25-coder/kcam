@@ -75,7 +75,7 @@ class StreamPlayer(
         val mediaSource = if (streamUrl.startsWith("rtsp", ignoreCase = true)) {
             // Use RtspMediaSource for explicit RTSP support
             RtspMediaSource.Factory()
-                .setForceUseRtpTcp(true) // TCP often better for local networks
+                .setForceUseRtpTcp(useTcp) // Configurable: TCP is safer for firewalls, UDP is lower latency
                 .createMediaSource(MediaItem.fromUri(uri))
         } else {
             // Default factory for RTMP/HTTP

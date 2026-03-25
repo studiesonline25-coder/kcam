@@ -71,6 +71,9 @@ object CameraHook {
 
     // Dynamic Xiaomi Vendor Tag Discovery
     private val discoveredXiaomiKeys = java.util.concurrent.ConcurrentHashMap<String, android.hardware.camera2.CaptureRequest.Key<*>>()
+    
+    @Volatile var zoomFactor: Float = 1.0f
+    @Volatile var rtspUseTcp: Boolean = true
 
     // [ONCE AND FOR ALL] Surface tracking and crash prevention structures
     private val surfaceFormats = Collections.synchronizedMap(WeakHashMap<Surface, Int>())
@@ -868,8 +871,10 @@ object CameraHook {
                         streamUrl = if (it.columnCount > 4) it.getString(4) ?: "" else ""
                         compensationFactor = if (it.columnCount > 6) it.getFloat(6) else 1.0f
                         isMirrored = if (it.columnCount > 7) it.getInt(7) == 1 else false
+                        zoomFactor = if (it.columnCount > 8) it.getFloat(8) else 1.0f
+                        rtspUseTcp = if (it.columnCount > 9) it.getInt(9) == 1 else true
                         
-                        Log.d(TAG, "VirtuCam_Hook: Config loaded. Enabled: $isEnabled, Factor: $compensationFactor, Mirrored: $isMirrored")
+                        Log.d(TAG, "VirtuCam_Hook: Config loaded. Enabled: $isEnabled, Zoom: $zoomFactor, TCP: $rtspUseTcp")
                     } catch (innerE: Exception) {
                         Log.e(TAG, "VirtuCam_Hook: Error parsing cursor columns", innerE)
                     }
@@ -1234,7 +1239,7 @@ class VirtualRenderThread(
                 val hasNewFrame = java.util.concurrent.atomic.AtomicBoolean(false)
                 mediaSurfaceTexture?.setOnFrameAvailableListener { hasNewFrame.set(true) }
                 
-                streamPlayer = StreamPlayer(context, streamUrl, mediaSurface!!) {}
+                streamPlayer = StreamPlayer(context, streamUrl, mediaSurface!!, CameraHook.rtspUseTcp) {}
                 streamPlayer!!.start()
                 
                 renderLoop(hasNewFrame) { streamPlayer!!.videoWidth to streamPlayer!!.videoHeight }
@@ -1340,7 +1345,7 @@ class VirtualRenderThread(
                 val vh = eglCore!!.querySurface(es, android.opengl.EGL14.EGL_HEIGHT)
                 // Draw the frame
             val applyRotation = if (isCapture) sensorOrientation else 0
-            textureRenderer?.draw(matrix, contentW, contentH, vw, vh, getTargetRatio(vw, vh, isCapture), applyRotation, CameraHook.isMirrored)
+            textureRenderer?.draw(matrix, contentW, contentH, vw, vh, getTargetRatio(vw, vh, isCapture), applyRotation, CameraHook.isMirrored, CameraHook.zoomFactor)
             
             if (eglCore?.swapBuffers(es) == false) {
                     Log.w("VirtuCam_Render", "Surface abandoned, removing.")

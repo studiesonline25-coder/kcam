@@ -137,7 +137,7 @@ class TextureRenderer(private val isVideo: Boolean = true) {
     /**
      * Draw the texture to currently bound frame buffer
      */
-    fun draw(transformMatrix: FloatArray, videoWidth: Int = 0, videoHeight: Int = 0, viewWidth: Int = 0, viewHeight: Int = 0, targetRatio: Float = 0f, rotationDegrees: Int = 0, isMirrored: Boolean = false) {
+    fun draw(transformMatrix: FloatArray, videoWidth: Int = 0, videoHeight: Int = 0, viewWidth: Int = 0, viewHeight: Int = 0, targetRatio: Float = 0f, rotationDegrees: Int = 0, isMirrored: Boolean = false, zoomFactor: Float = 1.0f) {
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
 
@@ -169,8 +169,8 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                 videoWidth.toFloat() / videoHeight.toFloat()
             }
             
-            val scaleX: Float
-            val scaleY: Float
+            var scaleX: Float
+            var scaleY: Float
             
             // FIT_CENTER logic based on effective (rotated) video ratio
             if (effectiveVideoRatio > viewRatio) {
@@ -180,6 +180,10 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                 scaleX = effectiveVideoRatio / viewRatio
                 scaleY = 1f
             }
+
+            // Apply global zoom factor
+            scaleX *= zoomFactor
+            scaleY *= zoomFactor
             
             // Dynamic Smart Mirroring:
             // 1. We only mirror capture sessions (rotationDegrees != 0) to avoid touching the preview.
@@ -190,7 +194,7 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             
             Matrix.scaleM(mvpMatrix, 0, if (flipX) -scaleX else scaleX, if (flipY) -scaleY else scaleY, 1f)
             
-            Log.d("VirtuCam_Render", "TextureRenderer.draw: rot=$rotationDegrees, mirror=$isMirrored, flipX=$flipX, flipY=$flipY, video=${videoWidth}x${videoHeight}, view=${viewWidth}x${viewHeight}, scales=${scaleX}x${scaleY}")
+            Log.d("VirtuCam_Render", "TextureRenderer.draw: rot=$rotationDegrees, zoom=$zoomFactor, mirror=$isMirrored, flipX=$flipX, flipY=$flipY, video=${videoWidth}x${videoHeight}, view=${viewWidth}x${viewHeight}, scales=${scaleX}x${scaleY}")
         }
 
         // Copy transform matrix from SurfaceTexture which Android natively encodes with EXIF Video rotators

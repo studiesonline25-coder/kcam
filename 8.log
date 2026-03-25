@@ -1,0 +1,1474 @@
+1774423787.498 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (4080x3072) rewritten successfully. Format=35
+1774423787.500 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (4080x3072) to ImageWriter (Format: 35, TS: 299205344987000)
+1774423787.503 10531 21154 22174 I CAM_PostProcessor: [K_PROCESS]: [0] onImageAvailable: timestamp = 299205344987000, target = 0, type = 1, format = 35
+1774423787.503 10531 21154 22174 I CAM_PostProcessor: onImageAvailable, queueImageToPool E
+1774423787.503 10531 21154 22174 D BQ_4080x3072_35: queueImage: start. image: android.media.ImageReader$SurfaceImage@89f90bd | 299205344987000
+1774423787.503 10531 21154 22174 E BufferQueueConsumer: [MiuiCamera-BQ-orignal](id:52a200000002,api:4,p:21154,c:21154) BQ detachBuffer 1
+1774423787.503 10531 21154 22174 E saas.i18n:stub2: BnProducerListener::onBufferDetached slot: 1
+1774423787.504 10531 21154 22174 E saas.i18n:stub2: [onQueue]: GraphicBuffer is null
+1774423787.504 10531 21154 22174 E saas.i18n:stub2: [onAcquire]: GraphicBuffer is null
+1774423787.510 10531 21154 22143 D BQ_4080x3072_35: onImageAvailable: android.media.ImageReader$SurfaceImage@93866b2 | 299205344987000
+1774423787.511 10531 21154 22174 D BQ_4080x3072_35: queueImage: end
+1774423787.511 10531 21154 22174 D HalImagePool: holdImage: image: android.media.ImageReader$SurfaceImage@93866b2 | 299205344987000 qSize: 4 | totalSize: 6
+1774423787.512 10531 21154 22174 I CAM_PostProcessor: onImageAvailable, queueImageToPool X: image android.media.ImageReader$SurfaceImage@93866b2
+1774423787.514 10531 21154 22175 D CAM_ParallelDataZipper: setImage: timestamp = 299205344987000, firstTimestamp = 299204940974000, streamNum = 1, fusionType = FusionType(type: 0, algo: 0, mcnt: 0, scnt: 0), hasCaptureData = true, isHdrSr = false
+1774423787.514 10531 21154 22175 D CAM_CaptureData: isDataReady(): mResult: ICustomCaptureResult{mSessionId=0, mSequenceId=3, mFrameNumber=91, mResults=android.hardware.camera2.impl.CameraMetadataNative@1736cd, mRequest=android.hardware.camera2.CaptureRequest@8a24c38a} mMainImage: android.media.ImageReader$SurfaceImage@93866b2 mSubImage: null isTuningDataReady: false isHasCaptureData: true
+1774423787.514 10531 21154 22175 D CAM_CaptureData: isDataReady(): false
+1774423787.526 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423787.531 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423787.539 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423787.543 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423787.552 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (960x720) rewritten successfully. Format=35
+1774423787.553 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (960x720) to ImageWriter (Format: 35, TS: 299205344987000)
+1774423787.582 10531 21154 21159 I saas.i18n:stub2: Background concurrent mark compact GC freed 6225KB AllocSpace bytes, 18(11MB) LOS objects, 24% free, 72MB/96MB, paused 1.567ms,28.585ms total 539.681ms
+1774423787.586 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423787.593 10531 21154 21154 D InsetsController: cancelAnimation of types: 1, animType: 0, host: com.android.camera/com.android.camera.Camera invokeCallback=false reason=android.view.InsetsController.notifyFinished:1792 android.view.InsetsAnimationThreadControlRunner$1.lambda$notifyFinished$0:84 android.view.InsetsAnimationThreadControlRunner$1.$r8$lambda$cDFF0h4Ncq-8EXdGszv69jrUu7c:0 android.view.InsetsAnimationThreadControlRunner$1$$ExternalSyntheticLambda1.run:0 android.os.Handler.handleCallback:959 android.os.Handler.dispatchMessage:100 android.os.Looper.loopOnce:249 android.os.Looper.loop:337 android.app.ActivityThread.main:9531 java.lang.reflect.Method.invoke:-2
+1774423787.617 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423787.622 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423787.625 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423787.669 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423787.684 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423787.689 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423787.692 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423787.729 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423787.751 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423787.759 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423787.763 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423787.801 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423787.825 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423787.838 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423787.846 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423787.881 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423787.887 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423787.897 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423787.913 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423787.989 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423787.994 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423787.996 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423787.998 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423788.033 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423788.053 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423788.058 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423788.104 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423788.153 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423788.171 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423788.175 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423788.179 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423788.223 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423788.231 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423788.239 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423788.241 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423788.262 10531 21154 22432 D AidlBufferPool: bufferpool2 0x791c968a68 : 0(0 size) total buffers - 0(0 size) used buffers - 1/7 (recycle/alloc) - 9/20 (fetch/transfer)
+1774423788.262 10531 21154 22432 D AidlBufferPool: bufferpool2 0x791c9a30a8 : 0(0 size) total buffers - 0(0 size) used buffers - 2/7 (recycle/alloc) - 9/56 (fetch/transfer)
+1774423788.262 10531 21154 22432 D AidlBufferPool: bufferpool2 0x791c9908a8 : 0(0 size) total buffers - 0(0 size) used buffers - 2/7 (recycle/alloc) - 12/78 (fetch/transfer)
+1774423788.262 10531 21154 22432 D AidlBufferPool: bufferpool2 0x791c981a78 : 0(0 size) total buffers - 0(0 size) used buffers - 1/7 (recycle/alloc) - 14/128 (fetch/transfer)
+1774423788.262 10531 21154 22432 D AidlBufferPoolAcc: evictor expired: 4, evicted: 4
+1774423788.291 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423788.297 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423788.299 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423788.305 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423788.343 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423788.348 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423788.350 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: surface draw fps: 13.531155868158333
+1774423788.354 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423788.357 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423788.395 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423788.401 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423788.404 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423788.405 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423788.447 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423788.454 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423788.457 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423788.461 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423788.499 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423788.507 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423788.509 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423788.511 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423788.547 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423788.554 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423788.559 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423788.563 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423788.574 10531 18167 18167 D VRI[MainAbility]: visibilityChanged oldVisibility=true newVisibility=false
+1774423788.576 10531 21154 21154 D VRI[Camera]: visibilityChanged oldVisibility=true newVisibility=false
+1774423788.592 10531 21154 21154 D CAM_CRE_PreviewRenderEngine: onSurfaceDestroyed start
+1774423788.596 10531 21154 22234 D CAM_CRE_PreviewRenderer: removePreviewSurface
+1774423788.597 10531 21154 21154 D CAM_CRE_PreviewRenderEngine: onSurfaceDestroyed end
+1774423788.598 10531 21154 21154 D BLASTBufferQueue: [SurfaceView[com.android.camera/com.android.camera.Camera]#1](f:0,a:4) destructor()
+1774423788.600 10531 21154 21154 D BufferQueueConsumer: [SurfaceView[com.android.camera/com.android.camera.Camera]#1(BLAST Consumer)1](id:52a200000006,api:0,p:-1,c:21154) disconnect
+1774423788.606 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423788.612 10531 21154 22234 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774423788.614 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423788.620 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423788.620 10531 18167 18167 D BLASTBufferQueue: [VRI[MainAbility]#20](f:0,a:4) destructor()
+1774423788.621 10531 18167 18167 D BufferQueueConsumer: [VRI[MainAbility]#20(BLAST Consumer)20](id:46f700000014,api:0,p:-1,c:18167) disconnect
+1774423788.624 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423788.649 10531 21154 21154 D BLASTBufferQueue: [VRI[Camera]#0](f:0,a:2) destructor()
+1774423788.652 10531 21154 21154 D BufferQueueConsumer: [VRI[Camera]#0(BLAST Consumer)0](id:52a200000005,api:0,p:-1,c:21154) disconnect
+1774423788.663 10531 21154 21154 V CAM_Camera@66247493: onTrimMemory: level=20
+1774423788.663 10531 21154 21154 D CAM_ByteArrayPool: trimMemory, level=20
+1774423788.666 10531 21154 21154 D CAM_ExtraModuleManagerImpl: onStop
+1774423788.666 10531 21154 21154 D CAM_CamLayoutManagerImpl@66247493: onStop
+1774423788.669 10531 21154 21154 D CAM_ActivityBase: onStop +66247493
+1774423788.669 10531 21154 21154 D CAM_Camera@66247493: onStop start
+1774423788.669 10531 21154 21154 D CAM_BoostFrameworkImpl: startBoost: duration = 500, scene = 6
+1774423788.669 10531 21154 21154 D CAM_BoostFrameworkImpl: ready to boost
+1774423788.669 10531 21154 21154 I mtkpower_client: perf_lock_acq, hdl:0, dur:500, num:8, pid:21154, tid:21154
+1774423788.670 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423788.671 10531 21154 21154 I mtkpower_client: Couldn't load power HAL service
+1774423788.672 10531 21154 21154 E mtkpower_client: [getMtkPerfHal] nullptr
+1774423788.673 10531 21154 21154 D CAM_RenderEngineV2: onPause start
+1774423788.687 10531 21154 22234 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774423788.688 10531 21154 21154 W CAM_CRE_PreviewRenderEngine: setSurfaceTextureDataSpaceTranslator: null
+1774423788.689 10531 21154 22234 D CAM_CRE_ScreenshotRenderer: ScreenshotRenderer release surface
+1774423788.692 10531 21154 21154 D CAM_ActivityBase: updateSurfaceState: 2
+1774423788.692 10531 21154 21154 D CAM_RenderEngineV2: onPause end
+1774423788.692 10531 21154 21154 I CAM_PerformanceManager: [P_PERFORM]: Event: EXIT_APP start
+1774423788.692 10531 21154 21154 I CAM_PerformanceManager: [P_PERFORM]: not allow traceStop
+1774423788.694 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423788.695 10531 21154 21154 D CAM_CRE_RenderEngineV2: setDrawBlackFrame to false  from : z.t0.apply(Unknown Source:11), java.util.Optional.map(Optional.java:260), com.android.camera.Camera.E(Unknown Source:11), com.android.camera.Camera.zh(Unknown Source:87), com.android.camera.ActivityBase.onStop(Unknown Source:26),
+1774423788.695 10531 21154 21154 D CAM_Camera@66247493: removeNewBie = null
+1774423788.699 10531 21154 21154 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+1774423788.699 10531 21154 21154 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+1774423788.700 10531 21154 21154 D CAM_RCS_StreamingController: onStop: isVideoCast = false
+1774423788.700 10531 21154 21154 D CAM_RCS_StreamingController: onStop: isStreaming = false
+1774423788.700 10531 21154 21154 D CAM_BoostFrameworkImpl: stopBoost
+1774423788.700 10531 21154 21154 D CAM_BoostFrameworkImpl: ready to stop boost
+1774423788.700 10531 21154 21154 D CAM_Camera@66247493: onStop end
+1774423788.700 10531 21154 21154 D CAM_Camera@66247493: IsMultiCamera: false
+1774423788.700 10531 21154 21154 I CAM_PerformanceManager: [P_PERFORM]: Event: EXIT_APP_163_0 takes 8 ms
+1774423788.701 10531 21154 21154 I CAM_PerformanceManager: [P_PERFORM]: Event: EXIT_APP takes 8 is less than 4000
+1774423788.704 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423788.706 10531 21154 21154 D BroadcastExecutor: BroadcastExecutor : 2
+1774423788.713 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423788.720 10531 21154 21154 D CAM_FragmentBottomAction: onStop
+1774423788.720 10531 21154 21154 D CAM_CaptureModule: checkDragBurstEnable: reset and dispose
+1774423788.721 10531 21154 21154 D CAM_FragmentBottomPopupTips: hideAllTipImage
+1774423788.721 10531 21154 21154 D CAM_FragmentBottomPopupTips: cancelUpdateTipImage
+1774423788.752 10531 21154 21154 D CAM_ActivityBase: onStop -
+1774423788.752 10531 21154 21154 D CAM_Camera@66247493: onSaveInstanceState
+1774423788.753 10531 21154 21154 D CAM_HorizontalScaleZoomView: onVisibilityChanged, visibility: 4, com.android.camera2.compat.theme.custom.mm.zoom.HorizontalScaleZoomView{2f3909 G.ED..... ......I. 0,0-0,0 #7f0b024e app:id/dual_camera_zoom}
+1774423788.754 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423788.758 10531 21154 22234 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774423788.760 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423788.764 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423788.767 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423788.807 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423788.816 10531 21154 22234 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774423788.820 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423788.826 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423788.831 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423788.868 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423788.875 10531 21154 22234 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774423788.878 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423788.884 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423788.888 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423788.931 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423788.943 10531 21154 22234 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774423788.945 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423788.952 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423788.967 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423788.994 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (4080x3072) rewritten successfully. Format=35
+1774423788.995 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (4080x3072) to ImageWriter (Format: 35, TS: 299205421669000)
+1774423788.996 10531 21154 22174 I CAM_PostProcessor: [K_PROCESS]: [0] onImageAvailable: timestamp = 299205421669000, target = 0, type = 1, format = 35
+1774423788.996 10531 21154 22174 I CAM_PostProcessor: onImageAvailable, queueImageToPool E
+1774423788.999 10531 21154 22174 D BQ_4080x3072_35: queueImage: start. image: android.media.ImageReader$SurfaceImage@aa2b3d1 | 299205421669000
+1774423788.999 10531 21154 22174 E BufferQueueConsumer: [MiuiCamera-BQ-orignal](id:52a200000002,api:4,p:21154,c:21154) BQ detachBuffer 0
+1774423788.999 10531 21154 22174 E saas.i18n:stub2: BnProducerListener::onBufferDetached slot: 0
+1774423789.003 10531 21154 22174 E saas.i18n:stub2: [onQueue]: GraphicBuffer is null
+1774423789.004 10531 21154 22174 E saas.i18n:stub2: [onAcquire]: GraphicBuffer is null
+1774423789.004 10531 21154 22143 D BQ_4080x3072_35: onImageAvailable: android.media.ImageReader$SurfaceImage@eb66e36 | 299205421669000
+1774423789.005 10531 21154 22174 D BQ_4080x3072_35: queueImage: end
+1774423789.005 10531 21154 22174 D HalImagePool: holdImage: image: android.media.ImageReader$SurfaceImage@eb66e36 | 299205421669000 qSize: 5 | totalSize: 7
+1774423789.005 10531 21154 22174 I CAM_PostProcessor: onImageAvailable, queueImageToPool X: image android.media.ImageReader$SurfaceImage@eb66e36
+1774423789.006 10531 21154 22175 D CAM_ParallelDataZipper: setImage: timestamp = 299205421669000, firstTimestamp = 299204940974000, streamNum = 1, fusionType = FusionType(type: 0, algo: 0, mcnt: 0, scnt: 0), hasCaptureData = true, isHdrSr = false
+1774423789.006 10531 21154 22175 D CAM_CaptureData: isDataReady(): mResult: ICustomCaptureResult{mSessionId=0, mSequenceId=3, mFrameNumber=92, mResults=android.hardware.camera2.impl.CameraMetadataNative@5c572d0, mRequest=android.hardware.camera2.CaptureRequest@1bb07fd3} mMainImage: android.media.ImageReader$SurfaceImage@eb66e36 mSubImage: null isTuningDataReady: false isHasCaptureData: true
+1774423789.006 10531 21154 22175 D CAM_CaptureData: isDataReady(): false
+1774423789.008 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423789.017 10531 21154 22234 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774423789.018 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423789.026 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423789.031 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423789.073 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423789.076 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423789.081 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (960x720) rewritten successfully. Format=35
+1774423789.082 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (960x720) to ImageWriter (Format: 35, TS: 299205421669000)
+1774423789.082 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423789.082 10531 21154 22179 D CAM_PreviewDecodeManager: onPreviewFrame: activity on background, skip
+1774423789.083 10531 21154 22234 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774423789.087 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423789.127 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423789.136 10531 21154 22290 D CAM_CRE_ReceivePreviewFrameRateMonitor: preview monitor not pass: variance = 114992, max = 1552, min = 35, first frame = 65, last frame = 98, frame num = 34
+1774423789.139 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423789.144 10531 21154 22234 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774423789.145 10531 21154 22234 D CAM_CRE_RenderPreviewFrameRateMonitor: preview monitor not pass: variance = 118705, max = 1555, min = 40, first frame = 65, last frame = 98, frame num = 34
+1774423789.148 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423789.165 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423789.193 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (960x720) rewritten successfully. Format=35
+1774423789.201 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (960x720) to ImageWriter (Format: 35, TS: 299205658410000)
+1774423789.202 10531 21154 22179 D CAM_PreviewDecodeManager: onPreviewFrame: activity on background, skip
+1774423789.206 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423789.212 10531 21154 22234 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774423789.212 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423789.216 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423789.219 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423789.259 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423789.262 10531 21154 22432 D AidlBufferPool: bufferpool2 0x791c99d1d8 : 0(0 size) total buffers - 0(0 size) used buffers - 1/8 (recycle/alloc) - 7/208 (fetch/transfer)
+1774423789.262 10531 21154 22432 D AidlBufferPoolAcc: evictor expired: 1, evicted: 1
+1774423789.265 10531 21154 22234 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774423789.266 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423789.269 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423789.274 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423789.311 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423789.318 10531 21154 22234 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774423789.321 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423789.325 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423789.329 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423789.366 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423789.370 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423789.372 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: surface draw fps: 16.639090441073336
+1774423789.372 10531 21154 22234 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774423789.375 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423789.379 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423789.383 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1440x1080) rewritten successfully. Format=842094169
+1774423789.385 10531 21154 22174 I CAM_PostProcessor: [K_PROCESS]: [0] onImageAvailable: timestamp = 299204940974000, target = 2, type = 1, format = 842094169
+1774423789.385 10531 21154 22174 I CAM_PostProcessor: onImageAvailable, queueImageToPool E
+1774423789.386 10531 21154 22174 D BQ_1440x1080_35: queueImage: start. image: android.media.ImageReader$SurfaceImage@d059137 | 299204940974000
+1774423789.386 10531 21154 22174 E BufferQueueConsumer: [MiuiCamera-BQ-orignal](id:52a200000003,api:4,p:21154,c:21154) BQ detachBuffer 0
+1774423789.386 10531 21154 22174 E saas.i18n:stub2: BnProducerListener::onBufferDetached slot: 0
+1774423789.388 10531 21154 22174 E saas.i18n:stub2: [onQueue]: GraphicBuffer is null
+1774423789.388 10531 21154 22174 E saas.i18n:stub2: [onAcquire]: GraphicBuffer is null
+1774423789.388 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1440x1080) to ImageWriter (Format: 842094169, TS: 299204940974000)
+1774423789.390 10531 21154 22143 D BQ_1440x1080_35: onImageAvailable: android.media.ImageReader$SurfaceImage@527c6a4 | 299204940974000
+1774423789.390 10531 21154 22174 D BQ_1440x1080_35: queueImage: end
+1774423789.390 10531 21154 22174 D HalImagePool: holdImage: image: android.media.ImageReader$SurfaceImage@527c6a4 | 299204940974000 qSize: 3 | totalSize: 8
+1774423789.390 10531 21154 22174 I CAM_PostProcessor: onImageAvailable, queueImageToPool X: image android.media.ImageReader$SurfaceImage@527c6a4
+1774423789.391 10531 21154 22175 D CAM_ParallelDataZipper: setImage: timestamp = 299204940974000, firstTimestamp = 299204940974000, streamNum = 1, fusionType = FusionType(type: 0, algo: 0, mcnt: 0, scnt: 0), hasCaptureData = true, isHdrSr = false
+1774423789.392 10531 21154 22175 D CAM_CaptureData: isDataReady(): mResult: ICustomCaptureResult{mSessionId=0, mSequenceId=3, mFrameNumber=90, mResults=android.hardware.camera2.impl.CameraMetadataNative@69d75f6, mRequest=android.hardware.camera2.CaptureRequest@16da99f9} mMainImage: android.media.ImageReader$SurfaceImage@a80fa42 mSubImage: null isTuningDataReady: true isHasCaptureData: true
+1774423789.392 10531 21154 22175 D CAM_CaptureData: isDataReady(): true
+1774423789.393 10531 21154 22175 D CAM_ParallelDataZipper: handleDataBeanIfReady: dataBean with timestamp 299204940974000 is ready
+1774423789.393 10531 21154 22175 W CAM_ParallelDataZipper: tryToCallback:
+1774423789.426 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423789.433 10531 21154 22234 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774423789.435 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423789.438 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423789.441 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423789.478 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423789.483 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423789.484 10531 21154 22234 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774423789.489 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423789.492 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423789.529 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423789.533 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423789.534 10531 21154 22234 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774423789.537 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423789.539 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423789.548 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1440x1080) rewritten successfully. Format=842094169
+1774423789.549 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1440x1080) to ImageWriter (Format: 842094169, TS: 299205344987000)
+1774423789.549 10531 21154 22174 I CAM_PostProcessor: [K_PROCESS]: [0] onImageAvailable: timestamp = 299205344987000, target = 2, type = 1, format = 842094169
+1774423789.549 10531 21154 22174 I CAM_PostProcessor: onImageAvailable, queueImageToPool E
+1774423789.549 10531 21154 22174 D BQ_1440x1080_35: queueImage: start. image: android.media.ImageReader$SurfaceImage@74dbc0d | 299205344987000
+1774423789.549 10531 21154 22174 E BufferQueueConsumer: [MiuiCamera-BQ-orignal](id:52a200000003,api:4,p:21154,c:21154) BQ detachBuffer 0
+1774423789.549 10531 21154 22174 E saas.i18n:stub2: BnProducerListener::onBufferDetached slot: 0
+1774423789.550 10531 21154 22174 E saas.i18n:stub2: [onQueue]: GraphicBuffer is null
+1774423789.550 10531 21154 22174 E saas.i18n:stub2: [onAcquire]: GraphicBuffer is null
+1774423789.558 10531 21154 22143 D BQ_1440x1080_35: onImageAvailable: android.media.ImageReader$SurfaceImage@a7337c2 | 299205344987000
+1774423789.558 10531 21154 22174 D BQ_1440x1080_35: queueImage: end
+1774423789.560 10531 21154 22174 D HalImagePool: holdImage: image: android.media.ImageReader$SurfaceImage@a7337c2 | 299205344987000 qSize: 4 | totalSize: 9
+1774423789.560 10531 21154 22174 I CAM_PostProcessor: onImageAvailable, queueImageToPool X: image android.media.ImageReader$SurfaceImage@a7337c2
+1774423789.561 10531 21154 22175 D CAM_ParallelDataZipper: setImage: timestamp = 299205344987000, firstTimestamp = 299204940974000, streamNum = 1, fusionType = FusionType(type: 0, algo: 0, mcnt: 0, scnt: 0), hasCaptureData = true, isHdrSr = false
+1774423789.562 10531 21154 22175 D CAM_CaptureData: isDataReady(): mResult: ICustomCaptureResult{mSessionId=0, mSequenceId=3, mFrameNumber=91, mResults=android.hardware.camera2.impl.CameraMetadataNative@1736cd, mRequest=android.hardware.camera2.CaptureRequest@8a24c38a} mMainImage: android.media.ImageReader$SurfaceImage@93866b2 mSubImage: null isTuningDataReady: true isHasCaptureData: true
+1774423789.562 10531 21154 22175 D CAM_CaptureData: isDataReady(): true
+1774423789.562 10531 21154 22175 D CAM_ParallelDataZipper: handleDataBeanIfReady: dataBean with timestamp 299205344987000 is ready
+1774423789.562 10531 21154 22175 W CAM_ParallelDataZipper: tryToCallback:
+1774423789.575 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423789.579 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423789.581 10531 21154 22234 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774423789.582 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423789.585 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423789.623 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423789.630 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423789.631 10531 21154 22234 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774423789.633 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423789.638 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423789.680 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423789.686 10531 21154 22234 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774423789.686 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423789.690 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423789.698 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423789.734 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1440x1080) rewritten successfully. Format=842094169
+1774423789.735 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1440x1080) to ImageWriter (Format: 842094169, TS: 299205421669000)
+1774423789.736 10531 21154 22174 I CAM_PostProcessor: [K_PROCESS]: [0] onImageAvailable: timestamp = 299205421669000, target = 2, type = 1, format = 842094169
+1774423789.736 10531 21154 22174 I CAM_PostProcessor: onImageAvailable, queueImageToPool E
+1774423789.736 10531 21154 22174 D BQ_1440x1080_35: queueImage: start. image: android.media.ImageReader$SurfaceImage@1809d3 | 299205421669000
+1774423789.736 10531 21154 22174 E BufferQueueConsumer: [MiuiCamera-BQ-orignal](id:52a200000003,api:4,p:21154,c:21154) BQ detachBuffer 1
+1774423789.736 10531 21154 22174 E saas.i18n:stub2: BnProducerListener::onBufferDetached slot: 1
+1774423789.737 10531 21154 22174 E saas.i18n:stub2: [onQueue]: GraphicBuffer is null
+1774423789.738 10531 21154 22174 E saas.i18n:stub2: [onAcquire]: GraphicBuffer is null
+1774423789.739 10531 21154 22143 D BQ_1440x1080_35: onImageAvailable: android.media.ImageReader$SurfaceImage@96ca910 | 299205421669000
+1774423789.739 10531 21154 22174 D BQ_1440x1080_35: queueImage: end
+1774423789.739 10531 21154 22174 D HalImagePool: holdImage: image: android.media.ImageReader$SurfaceImage@96ca910 | 299205421669000 qSize: 5 | totalSize: 10
+1774423789.739 10531 21154 22174 I CAM_PostProcessor: onImageAvailable, queueImageToPool X: image android.media.ImageReader$SurfaceImage@96ca910
+1774423789.739 10531 21154 22175 D CAM_ParallelDataZipper: setImage: timestamp = 299205421669000, firstTimestamp = 299204940974000, streamNum = 1, fusionType = FusionType(type: 0, algo: 0, mcnt: 0, scnt: 0), hasCaptureData = true, isHdrSr = false
+1774423789.740 10531 21154 22175 D CAM_CaptureData: isDataReady(): mResult: ICustomCaptureResult{mSessionId=0, mSequenceId=3, mFrameNumber=92, mResults=android.hardware.camera2.impl.CameraMetadataNative@5c572d0, mRequest=android.hardware.camera2.CaptureRequest@1bb07fd3} mMainImage: android.media.ImageReader$SurfaceImage@eb66e36 mSubImage: null isTuningDataReady: true isHasCaptureData: true
+1774423789.740 10531 21154 22175 D CAM_CaptureData: isDataReady(): true
+1774423789.740 10531 21154 22175 D CAM_ParallelDataZipper: handleDataBeanIfReady: dataBean with timestamp 299205421669000 is ready
+1774423789.740 10531 21154 22175 W CAM_ParallelDataZipper: tryToCallback:
+1774423789.740 10531 21154 22175 W CAM_ParallelDataZipper: tryToConfirm: 299204940974000
+1774423789.740 10531 21154 22175 I CAM_ParallelDataZipper: [K_PROCESS]: Data ready and all of the images are available=true
+1774423789.740 10531 21154 22175 I CAM_PerformanceManager: [P_PERFORM]: Action: shot_device_capture_163_0 takes 5671 ms
+1774423789.740 10531 21154 22175 D CAM_PostProcessor: [z] onParallelDataAvailable: 299204940974000
+1774423789.740 10531 21154 22175 I CAM_PostProcessor: [K_PROCESS]: [z] onParallelDataAvailable: algoType = 1
+1774423789.740 10531 21154 22175 I CAM_PostProcessor: [K_PROCESS]: onImageProcessStart: get parallelTaskData: 299204940974000
+1774423789.740 10531 21154 22175 I CAM_PerformanceManager: [P_PERFORM]: Action: algo_device_capture_163_0 takes 5671 ms
+1774423789.741 10531 21154 22175 D CAM_MiCamera2: onParallelImagePostProcStart: mMiCamera2ShotQueue.poll, size:1
+1774423789.741 10531 21154 22175 I CAM_Camera2Module: [K_PROCESS]: onPictureTakenFinished: succeed = true
+1774423789.741 10531 21154 22175 I CAM_PerformanceManager: [P_PERFORM]: Event: DO_CAPTURE has no start time, ignore this stop event as take 0 ms
+1774423789.741 10531 21154 22175 I CAM_PerformanceManager: [P_PERFORM]: Ignore this stop event, there is no event in start status.
+1774423789.741 10531 21154 22175 D CAM_Camera2CompatAdapter: Warning: getCapabilities(): return null for camera: -1
+1774423789.748 10531 21154 22175 V CAM_CameraUtil: getRotation: sensorOrientation:90,orientation:0
+1774423789.750 10531 21154 22175 I CAM_Camera2Module: [P_PERFORM]: mCaptureStartTime(from onShutterButtonClick start to jpegCallback finished) = 5826ms
+1774423789.750 10531 21154 22175 W CAM_DataItemPluginBase: d1.m1 getDataObject null
+1774423789.750 10531 21154 22175 D CAM_Camera2Module: mMultiSnapStatus: false, mBlockQuickShot: true, isQuickShot: false, isHighQualityQuickShot: false, isParallel = true
+1774423789.750 10531 21154 22175 D CAM_ImageModuleCameraManager: isCurrentModuleSupportP2done: CaptureModeBackSupport
+1774423789.750 10531 21154 22175 D CAM_ImageModuleCameraManager: isCurrentModuleSupportSprdShotToShot: not supportSprdShotToShot
+1774423789.750 10531 21154 22175 D CAM_BaseModuleCameraManager: setCameraState: 1
+1774423789.751 10531 21154 22175 I CAM_BaseModule: [K_PROCESS]: enableCameraControls: enable = true, caller: com.android.camera.module.Camera2Module.resetStatusToIdle(Unknown Source:16), com.android.camera.module.Camera2Module.onPictureTakenFinished(Unknown Source:390), h6.p.b(Unknown Source:63),
+1774423789.751 10531 21154 22175 I CAM_PerformanceManager: [P_PERFORM]: Action: shot_2_shot_163_0 takes 5861 ms
+1774423789.751 10531 21154 22175 D CAM_Camera2Module: reset Status to Idle, caller(time-consuming):com.android.camera.module.Camera2Module.resetStatusToIdle(Unknown Source:57), com.android.camera.module.Camera2Module.onPictureTakenFinished(Unknown Source:390), h6.p.b(Unknown Source:63), dg.t$e.c(Unknown Source:110),
+1774423789.751 10531 21154 22175 D CAM_Camera2Module: doLaterRelease
+1774423789.751 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423789.752 10531 21154 22175 D CAM_Camera@66247493: releaseAll: releaseDevice = true, isCurrentModuleAlive = true, isFinishing = false
+1774423789.752 10531 21154 22175 D CAM_BaseModule: setDeparted
+1774423789.753 10531 21154 22175 D CAM_PostProcessor: choose tuning buffer: get the 0 frame metadata
+1774423789.754 10531 21154 22138 D CAM_BaseModule: release: E
+1774423789.754 10531 21154 22138 D CAM_BaseModule: unRegisterProtocol
+1774423789.754 10531 21154 22138 D CAM_BaseModule: unRegisterModulePersist
+1774423789.755 10531 21154 22138 D CAM_EffectController: setRenderEngine: null this:com.android.camera2.compat.theme.custom.cv.filter.EffectControllerCv@a9fa8c9
+1774423789.755 10531 21154 22138 D CAM_BaseModule: onRenderEngineDestroy
+1774423789.755 10531 21154 22138 D CAM_LiveShotManager: stopLiveShot E true
+1774423789.755 10531 21154 22138 I CAM_MiCamera2: stopLivephoto E
+1774423789.755 10531 21154 22138 I CAM_MiCamera2: stopLivephoto X
+1774423789.756 10531 21154 22138 D CAM_LiveShotManager: stopLiveShot X true
+1774423789.756 10531 21154 22175 D BufferQueueConsumer: [](id:52a200000011,api:0,p:-1,c:21154) connect: controlledByApp=true
+1774423789.756 10531 21154 22138 I CAM_BaseModule: onInactive: E. CaptureModule@215261920: mid = 163, cid = 0, created = true, departed = true
+1774423789.756 10531 21154 22138 D CAM_ByteArrayPool: clearMemory, size=0
+1774423789.756 10531 21154 22175 D VirtuCam_Hook: VirtuCam_Hook: Tracked ImageReader surface 1440x1080 format=35
+1774423789.757 10531 21154 22175 D VirtuCam_Hook: VirtuCam_Hook: Tracked ImageReader surface 1440x1080 format=35
+1774423789.757 10531 21154 22175 D ImagePool: could not find our method, try android method
+1774423789.757 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Remove local renderer in.h@d4198e7
+1774423789.757 10531 21154 22175 D BQ_1440x1080_35: queueImage: start. image: android.media.ImageReader$SurfaceImage@527c6a4 | 299204940974000
+1774423789.757 10531 21154 22175 E BufferQueueConsumer: [MiuiCamera-Snapshot-imagepool](id:52a200000010,api:4,p:21154,c:21154) BQ detachBuffer 2
+1774423789.757 10531 21154 22175 E saas.i18n:stub2: BnProducerListener::onBufferDetached slot: 2
+1774423789.758 10531 21154 22234 D CAM_CRE_MIGL: FilterBasicRender glDeleteProgram: 50
+1774423789.758 10531 21154 22175 E saas.i18n:stub2: [onQueue]: GraphicBuffer is null
+1774423789.758 10531 21154 22175 E saas.i18n:stub2: [onAcquire]: GraphicBuffer is null
+1774423789.758 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Remove local renderer in.r@b2eac94
+1774423789.758 10531 21154 22234 D CAM_CRE_MIGL: SoftLightRingRenderer glDeleteProgram: 53
+1774423789.759 10531 21154 22234 W CAM_CRE_SoftLightRingRenderer: start onDetach
+1774423789.760 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Remove local renderer jn.b@3ff19fc
+1774423789.760 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423789.760 10531 21154 22234 D CAM_CRE_MIGL: BaseProgram glDeleteProgram: 16
+1774423789.761 10531 21154 22234 D CAM_CRE_MIGL: BaseProgram glDeleteProgram: 19
+1774423789.761 10531 21154 22234 D CAM_CRE_MIGL: BaseProgram glDeleteProgram: 22
+1774423789.761 10531 21154 22138 I CAM_BaseModule: onInactive: X
+1774423789.762 10531 21154 22234 D CAM_CRE_MIGL: BaseProgram glDeleteProgram: 25
+1774423789.762 10531 21154 22138 D CAM_Camera2Module: closeCamera: E
+1774423789.762 10531 21154 22138 D CAM_BaseModuleCameraManager: setCameraState: 0
+1774423789.763 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Remove local renderer jn.a@69756da
+1774423789.763 10531 21154 22234 D CAM_CRE_MIGL: BaseProgram glDeleteProgram: 26
+1774423789.763 10531 21154 22138 V CAM_MiCamera2: stopPreviewCallback(): isRelease = true
+1774423789.763 10531 21154 22234 D CAM_CRE_MIGL: BaseProgram glDeleteProgram: 29
+1774423789.763 10531 21154 22138 D VirtuCam_Hook: VirtuCam_Hook: Tracked ImageReader surface 960x720 format=35
+1774423789.763 10531 21154 22234 D CAM_CRE_MIGL: BaseProgram glDeleteProgram: 32
+1774423789.763 10531 21154 22138 V CAM_CameraConfigManager: setASDEnable: false
+1774423789.763 10531 21154 22138 D CAM_BaseModuleCameraManager: updateASD call setASDEnable with false
+1774423789.763 10531 21154 22234 D CAM_CRE_MIGL: BaseProgram glDeleteProgram: 35
+1774423789.764 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423789.765 10531 21154 22141 D BQ_1440x1080_35: onImageAvailable: android.media.ImageReader$SurfaceImage@9cf702f | 299204940974000
+1774423789.765 10531 21154 22234 D CAM_CRE_MIGL: BaseProgram glDeleteProgram: 38
+1774423789.766 10531 21154 22175 D BQ_1440x1080_35: queueImage: end
+1774423789.766 10531 21154 22175 D AlgoImagePool: holdImage: image: android.media.ImageReader$SurfaceImage@9cf702f | 299204940974000 qSize: 1 | totalSize: 1
+1774423789.766 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Remove local renderer jn.c@fa406a6
+1774423789.766 10531 21154 22175 D CAM_PostProcessor: onOriginalImageClosed: android.media.ImageReader$SurfaceImage@527c6a4
+1774423789.766 10531 21154 22234 D CAM_CRE_MIGL: BaseProgram glDeleteProgram: 39
+1774423789.766 10531 21154 22175 D HalImagePool: releaseImage: image: android.media.ImageReader$SurfaceImage@527c6a4 qSize: 4 | totalSize: 9
+1774423789.766 10531 21154 22234 D CAM_CRE_MIGL: BaseProgram glDeleteProgram: 42
+1774423789.766 10531 21154 22234 D CAM_CRE_MIGL: BaseProgram glDeleteProgram: 43
+1774423789.766 10531 21154 22175 D CAM_PostProcessor: onOriginalImageClosed: android.media.ImageReader$SurfaceImage@a7337c2
+1774423789.767 10531 21154 22234 D CAM_CRE_MIGL: BaseProgram glDeleteProgram: 44
+1774423789.767 10531 21154 22175 D HalImagePool: releaseImage: image: android.media.ImageReader$SurfaceImage@a7337c2 qSize: 3 | totalSize: 8
+1774423789.767 10531 21154 22234 D CAM_CRE_MIGL: BaseProgram glDeleteProgram: 47
+1774423789.767 10531 21154 22175 D CAM_PostProcessor: onOriginalImageClosed: android.media.ImageReader$SurfaceImage@96ca910
+1774423789.767 10531 21154 22175 D HalImagePool: releaseImage: image: android.media.ImageReader$SurfaceImage@96ca910 qSize: 2 | totalSize: 7
+1774423789.767 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Remove local renderer in.t@b79e732
+1774423789.767 10531 21154 22234 D CAM_CRE_MIGL: TiltShiftCircleRenderer glDeleteProgram: 56
+1774423789.767 10531 21154 22234 D CAM_CRE_MIGL: XTiltShiftCircleRenderer glDeleteProgram: 59
+1774423789.768 10531 21154 22234 D CAM_CRE_MIGL: YTiltShiftCircleRenderer glDeleteProgram: 62
+1774423789.768 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Remove local renderer in.u@f93fe00
+1774423789.768 10531 21154 22234 D CAM_CRE_MIGL: TiltShiftParallelRenderer glDeleteProgram: 65
+1774423789.768 10531 21154 22234 D CAM_CRE_MIGL: XTiltShiftParallelRenderer glDeleteProgram: 68
+1774423789.769 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423789.769 10531 21154 22138 D CAM_CacheImageDecoder: quit
+1774423789.769 10531 21154 22138 D CAM_BoostFrameworkImpl: stopBoost
+1774423789.769 10531 21154 22138 D CAM_BoostFrameworkImpl: ready to stop boost
+1774423789.769 10531 21154 22138 D CAM_Camera2Module: closeCamera: X
+1774423789.769 10531 21154 21154 D CAM_FragmentBottomPopupTips: restoreAiState: maybe restore ai scene tip:0
+1774423789.770 10531 21154 22138 E CAM_Camera2Module: onInactive: mIsNeedNightHDR is false
+1774423789.770 10531 21154 22175 D CAM_CaptureData: getNextDispatchTaskData: E. dispatchedNum = 0, readyNum = 3
+1774423789.770 10531 21154 22138 D CAM_SocketController: onPause:
+1774423789.771 10531 21154 22138 D CAM_SocketManager: removeEventListener: 156597567
+1774423789.771 10531 21154 22175 D CAM_CaptureData: getNextDispatchTaskData: X. dispatchedNum = 3, readyNum = 3
+1774423789.771 10531 21154 22175 D CAM_PostProcessor: [1] onCaptureDataAvailable: set result for reprocess 299204940974000
+1774423789.771 10531 21154 22175 D ICustomCaptureResult: toTotalCaptureResult: 0|3|90, sdk int 35 preview sdk int 0
+1774423789.771 10531 21154 22234 D CAM_CRE_MIGL: YTiltShiftParallelRenderer glDeleteProgram: 71
+1774423789.772 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Remove local renderer in.c@d675639
+1774423789.772 10531 21154 22234 D CAM_CRE_MIGL: FilterBasicRender glDeleteProgram: 72
+1774423789.772 10531 21154 22138 D CAM_SocketController: onDestroy:
+1774423789.772 10531 21154 22175 D ICustomCaptureResult: logicalCameraId is 0
+1774423789.772 10531 21154 22138 D ConnectivityManager: NetworkCallback was already unregistered
+1774423789.772 10531 21154 22175 E VendorTagDescriptor: lookupTag: Tag name 'multiframe.keyframeId' does not exist.
+1774423789.773 10531 21154 22175 W CAM_VendorTagHelper: VTNF: com.xiaomi.multiframe.keyframeId
+1774423789.773 10531 21154 22175 D CAM_PostProcessor: need find last meta
+1774423789.774 10531 21154 22138 D CAM_BaseModule: release: X
+1774423789.774 10531 21154 22138 D CAM_CameraTask: release surfaceTexture...
+1774423789.776 10531 21154 22234 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774423789.783 10531 21154 22138 D CAM_RenderEngineV2: releaseCameraScreenNail
+1774423789.784 10531 21154 22121 D CAM_CacheImageDecoder: reset
+1774423789.784 10531 21154 22175 D CAM_BaseImageProcessor: dispatchTask: E. processor: dg.a0@2b1c3c5
+1774423789.784 10531 21154 22175 I CAM_BaseImageProcessor: dispatchTask: send image to engine. taskNum = 1
+1774423789.785 10531 21154 22175 D CAM_BaseImageProcessor: E: sendProcessImageMessage
+1774423789.785 10531 21154 22138 D CAM_CRE_PreviewRenderEngine: onCameraClosed start
+1774423789.785 10531 21154 22175 D CAM_BaseImageProcessor: X: sendProcessImageMessage
+1774423789.785 10531 21154 22175 D CAM_BaseImageProcessor: dispatchTask: X
+1774423789.785 10531 21154 22175 D CAM_PostProcessor: [1] onCaptureDataAvailable: dispatchTask status is 0
+1774423789.785 10531 21154 22175 I CAM_PostProcessor: tryToCloseSession: E. processor: dg.t@c3ae1{mCameraToken=27478793, mOwnerToken=41559851, mState=1}
+1774423789.785 10531 21154 22175 D CAM_PostProcessor: tryToCloseSession: X. ignored. taskNum = 1
+1774423789.786 10531 21154 22138 D CAM_CRE_ScreenshotRenderer: clearScreenshotRequestList
+1774423789.786 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: onCameraClosed timestamp:0
+1774423789.786 10531 21154 22306 D CAM_QRCodeDecoder: releaseQRCodeScanner: done
+1774423789.786 10531 21154 22138 D CAM_CRE_PreviewRenderEngine: onCameraClosed end
+1774423789.787 10531 21154 22138 D CAM_CameraTask: start releaseCameraDevice: true
+1774423789.787 10531 21154 22138 D CAM_Camera2OpenManager: abandonCameraResultObservable: E
+1774423789.787 10531 21154 22138 D CAM_Camera2OpenManager: abandonCameraResultObservable: X
+1774423789.787 10531 21154 22138 D CAM_Camera2OpenManager: E: releaseAllCamerasAndWait
+1774423789.789 10531 21154 22175 D CAM_LocalParallelService: stopPostProcessor: E. token=41559851
+1774423789.789 10531 21154 22148 D CAM_ThreadUtils: E: invokeAtFrontUninterruptibly#call
+1774423789.789 10531 21154 22148 D CAM_ReleaseCameraCallable: E: releaseCamera: cid = 0
+1774423789.789 10531 21154 22148 D CAM_MiCamera2: setCaptureBusyCallback: mg.g@f2b5fc5
+1774423789.790 10531 21154 22392 D CAM_BaseImageProcessor: onPreProcessImage: E
+1774423789.790 10531 21154 22148 D CAM_MiCamera2: setCaptureBusyCallback: shot queue empty
+1774423789.790 10531 21154 21154 D CAM_Camera2ModuleHandler: onMessage MSG_ABANDON_HANDLER setActivity null
+1774423789.790 10531 21154 21154 D CAM_BaseModule: setModuleCallback, callback: null, com.android.camera.module.i.setModuleCallback(Unknown Source:19), h6.d.handleMessage(Unknown Source:28), android.os.Handler.dispatchMessage(Handler.java:107),
+1774423789.790 10531 21154 22148 D CAM_ReleaseCameraCallable: onCaptureCompleted: true, request to close camera, device=k9.p0@27a272b - cid: 0, deviceHash=41559851
+1774423789.790 10531 21154 22148 D CAM_CameraService: closeCamera addCameraCallable deviceHash = 41559851
+1774423789.790 10531 21154 22148 D CAM_ReleaseCameraCallable: X: releaseCamera: cid = 0
+1774423789.791 10531 21154 22148 D CAM_ThreadUtils: X: invokeAtFrontUninterruptibly#call
+1774423789.791 10531 21154 22148 D CAM_CloseCameraCallable: E: cid: null
+1774423789.791 10531 21154 22148 I CAM_CloseCameraCallable: [K_PROCESS]: E: closeCamera: cid = null, excludes = [], deviceHashes = [41559851]
+1774423789.791 10531 21154 22148 V CAM_MiCamera2: E: releasePreview: reason = 0
+1774423789.791 10531 21154 22148 D CAM_BoostFrameworkImpl: startBoost: duration = 2000, scene = 6
+1774423789.791 10531 21154 22148 D CAM_BoostFrameworkImpl: ready to boost
+1774423789.791 10531 21154 22148 I mtkpower_client: perf_lock_acq, hdl:0, dur:2000, num:8, pid:21154, tid:22148
+1774423789.791 10531 21154 22392 I CAM_BaseImageProcessor: onPreProcessImage: timestamp=299204940974000, startTime=1774423789790
+1774423789.792 10531 21154 22138 D CAM_Camera2OpenManager: X: releaseAllCamerasAndWait
+1774423789.792 10531 21154 22392 D CAM_BaseImageProcessor: E: sendCheckTimeoutTaskMessage
+1774423789.792 10531 21154 22392 D CAM_BaseImageProcessor: X: sendCheckTimeoutTaskMessage
+1774423789.792 10531 21154 22392 D CAM_BaseImageProcessor: onPreProcessImage: X
+1774423789.792 10531 21154 22392 D CAM_SingleCameraProcessor: processCaptureResult: cameraMetadataNative = android.hardware.camera2.impl.CameraMetadataNative@69d75f6
+1774423789.792 10531 21154 22392 D CAM_SingleCameraProcessor: processCaptureResult: image = android.media.ImageReader$SurfaceImage@a80fa42
+1774423789.792 10531 21154 22392 I CAM_SingleCameraProcessor: [K_PROCESS]: processCaptureResult: timestamp = 299204940974000, target = 0
+1774423789.793 10531 21154 22175 I CAM_PostProcessor: destroyWhenTasksFinished: dg.t@c3ae1{mCameraToken=27478793, mOwnerToken=41559851, mState=1}
+1774423789.794 10531 21154 22175 I CAM_PostProcessor: tryToCloseSession: E. processor: dg.t@c3ae1{mCameraToken=27478793, mOwnerToken=41559851, mState=2}
+1774423789.794 10531 21154 22175 D CAM_PostProcessor: tryToCloseSession: X. ignored. taskNum = 1
+1774423789.794 10531 21154 22175 D CAM_LocalParallelService: stopPostProcessor: X
+1774423789.794 10531 21154 22148 I mtkpower_client: Couldn't load power HAL service
+1774423789.794 10531 21154 22148 E mtkpower_client: [getMtkPerfHal] nullptr
+1774423789.794 10531 21154 22148 I CAM_MiCamera2: [K_PROCESS]: abortCaptures E
+1774423789.794 10531 21154 22148 D CameraDevice-JV-0: flush: E. id = 0
+1774423789.795 10531 21154 22148 I CAM_PerformanceManager: [P_PERFORM]: Action: abortCaptures_163_0 takes 1 ms
+1774423789.795 10531 21154 22148 I CAM_MiCamera2: [K_PROCESS]: abortCaptures X
+1774423789.795 10531 21154 22148 V CAM_MiCamera2: X: releasePreview
+1774423789.796 10531 21154 22148 V CAM_MiCamera2: E: resetConfigs
+1774423789.796 10531 21154 22148 V CAM_MiCamera2: X: resetConfigs
+1774423789.796 10531 21154 22148 I CAM_MiCamera2: [K_PROCESS]: E: close: cameraId = 0, reason = 0
+1774423789.796 10531 21154 22148 D CAM_BoostFrameworkImpl: startBoost: duration = 2000, scene = 6
+1774423789.796 10531 21154 22148 D CAM_BoostFrameworkImpl: ready to boost
+1774423789.796 10531 21154 22148 I mtkpower_client: perf_lock_acq, hdl:0, dur:2000, num:8, pid:21154, tid:22148
+1774423789.797 10531 21154 22392 D CAM_SingleCameraProcessor: E:processFrame
+1774423789.798 10531 21154 22148 I mtkpower_client: Couldn't load power HAL service
+1774423789.798 10531 21154 22148 E mtkpower_client: [getMtkPerfHal] nullptr
+1774423789.799 10531 21154 22148 I CAM_PerformanceManager: [P_PERFORM]: Event: CAMERA_CLOSE start
+1774423789.799 10531 21154 22148 D CameraExtImplXiaoMi: releaseCameraDevice: 0
+1774423789.800 10531 21154 22392 D TaskSession: processFrame: FrameData{ mImageFlag=0, mFrameNumber=90, mCaptureResultMetadataNative=android.hardware.camera2.impl.CameraMetadataNative@69d75f6, mCaptureRequestMetadataNative=android.hardware.camera2.impl.CameraMetadataNative@d405df7, mBufferImage=android.media.ImageReader$SurfaceImage@a80fa42}
+1774423789.808 10531 21154 22392 I FrameDataUtil: =======================================================
+1774423789.808 10531 21154 22392 I FrameDataUtil: frame->stream_index = 0
+1774423789.808 10531 21154 22392 I FrameDataUtil: frame->frame_number = 90
+1774423789.808 10531 21154 22392 I FrameDataUtil: frame->requestId = 3
+1774423789.808 10531 21154 22392 I FrameDataUtil: frame->meta point addr == 0x77dc9b5f00
+1774423789.808 10531 21154 22392 I FrameDataUtil: v9 frame->meta point addr == 0x77dca07680
+1774423789.808 10531 21154 22392 I FrameDataUtil: =======================================================
+1774423789.808 10531 21154 22392 I FrameDataUtil: miImage->format.width = 4080
+1774423789.808 10531 21154 22392 I FrameDataUtil: miImage->format.height = 3072
+1774423789.808 10531 21154 22392 I FrameDataUtil: miImage->format.format = 35
+1774423789.808 10531 21154 22392 I FrameDataUtil: miImage->numberOfPlanes = 2
+1774423789.808 10531 21154 22392 I FrameDataUtil: plane 0 size is : 12582896
+1774423789.808 10531 21154 22392 I FrameDataUtil: miImage->planeSize[0] = 12582896; addr = 0x754f000000
+1774423789.808 10531 21154 22392 I FrameDataUtil: plane 1 size is : 6291439
+1774423789.808 10531 21154 22392 I FrameDataUtil: miImage->planeSize[1] = 6291439; addr = 0x754fc00001
+1774423789.808 10531 21154 22392 I FrameDataUtil: get mNativeBuffer
+1774423789.808 10531 21154 22392 I FrameDataUtil: get BufferItem
+1774423789.809 10531 21154 22392 I FrameDataUtil: get frame->mBuffer: 0x778c922c70
+1774423789.809 10531 21154 22392 I MI_Algo_JNI: processFrame: mCAI = 0x7683871000
+1774423789.809 10531 21154 22392 I MI_Algo_JNI: ------------------------------------------------------------------
+1774423789.809 10531 21154 22392 I MI_Algo_JNI: processFrame: mia_frame.stream_index = 0
+1774423789.809 10531 21154 22392 I MI_Algo_JNI: processFrame: mia_frame.frame_number = 90
+1774423789.809 10531 21154 22392 I MI_Algo_JNI: processFrame: mia_frame.size = 4080 * 3072, mia_frame.format = 35
+1774423789.809 10531 21154 22392 I MI_Algo_JNI: processFrame: CameraMetadata* = 0x77dc9b5f00
+1774423789.809 10531 21154 22392 I MI_Algo_JNI: ------------------------------------------------------------------
+1774423789.809 10531 21154 22392 D MiaInterface: miainterface.cpp:70 MIAProcessFrame():E session:0x78cc9870d0 frame: 0x75603afc80
+1774423789.809 10531 21154 22392 I MiaInterface: mipostprocsessionintf.cpp:273 ProcessFrame():huangxin frame_number 90, requestId 3 W*H: 4080*3072, planeStride*sliceHeight: 4080*3072, format:35 cb:0x771c949af0
+1774423789.809 10531 21154 22392 D MiaInterface: mipostprocsessionintf.cpp:279 ProcessFrame():frame 90 ADDINFO: planes num:2, pAddr[0,1]:(0x754f000000, 0x754fc00001), planeSize[0,1]:(12582896, 6291439)
+1774423789.809 10531 21154 22392 D MiaInterface: miaframewrapper.cpp:35 MiaFrameWrapper():jintao mFormat.format: 35
+1774423789.809 10531 21154 22392 E saas.i18n:stub2: get input request metadata size 7608
+1774423789.813 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423789.814 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (960x720) rewritten successfully. Format=35
+1774423789.817 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (960x720) to ImageWriter (Format: 35, TS: 299205708984000)
+1774423789.829 10531 21154 22148 D CameraDevice-JV-0: close: E. id = 0
+1774423789.831 10531 21154 22234 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774423789.843 10531 21154 22392 D MiaInterface: miaframewrapper.cpp:67 MiaFrameWrapper():getMetaData timestamp 299204940974000
+1774423789.843 10531 21154 22392 E saas.i18n:stub2: get input request metadata size 2064
+1774423789.843 10531 21154 22392 I MiaInterface: miaframewrapper.cpp:146 mergeAppRequestSetting():get adrcGain: 0
+1774423789.844 10531 21154 22392 I MiaInterface: miaframewrapper.cpp:155 mergeAppRequestSetting():get sceneType: 0
+1774423789.844 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423789.846 10531 21154 22392 I MiaInterface: miaframewrapper.cpp:164 mergeAppRequestSetting():get hdrEnable: 1
+1774423789.847 10531 21154 22392 I MiaInterface: miaframewrapper.cpp:173 mergeAppRequestSetting():get mfnrEnable: 1
+1774423789.847 10531 21154 22392 E VendorTagDescriptor: lookupTag: Tag name 'depurple.enabled' does not exist.
+1774423789.847 10531 21154 22392 E saas.i18n:stub2: could not find tag ID for tagname xiaomi.depurple.enabled
+1774423789.847 10531 21154 22392 E saas.i18n:stub2: error 2 in getTagID
+1774423789.847 10531 21154 22392 I MiaInterface: miaframewrapper.cpp:192 mergeAppRequestSetting():get flipEnable = 0
+1774423789.847 10531 21154 22392 E saas.i18n:stub2: readTagValues -1879048178 failed
+1774423789.847 10531 21154 22392 I MiaInterface: miaframewrapper.cpp:212 mergeAppRequestSetting():get InputNum = 3
+1774423789.847 10531 21154 22392 I MiaInterface: miautil.cpp:37 calcOffset():format 35, dim->width ,dim->height (4080:3072)
+1774423789.847 10531 21154 22392 I MiaInterface: miautil.cpp:39 calcOffset():pPadding->width_padding, pPadding->height_padding, pPadding->plane_padding (64:1:64)
+1774423789.847 10531 21154 22392 I MiaInterface: miautil.cpp:40 calcOffset():stride ,scanline (4096:3072), multi result:12582912
+1774423789.847 10531 21154 22392 I MiaInterface: miautil.cpp:109 calcOffset():format:35 pBuf_planes->mp[0].len = 12582912
+1774423789.847 10531 21154 22392 D MiaInterface: miaframewrapper.cpp:99 MiaFrameWrapper():Income settings: pAddr[0,1] = (0x754f000000, 0x754fc00001), planeSize[0,1] = (12582896, 6291439)
+1774423789.855 10531 21154 22392 D MiaInterface: miaframewrapper.cpp:102 MiaFrameWrapper():We set them to: pAddr[1] 0x754fc00000, planeSize[1] 6291440
+1774423789.855 10531 21154 22392 I MiaInterface: miaframewrapper.cpp:131 MiaFrameWrapper():RequestId 3, frameNum 90, format: 0x23, W*H(4080*3072), buffersize:12582896, numplanes:2, pAddr:(0x754f000000, 0x754fc00001), fd[0,1] = (372,-1), meta 0x789c9a9490
+1774423789.855 10531 21154 22392 D MiaInterface: miaframewrapperqueue.cpp:17 addFrameWrapper():addframe now-size 1
+1774423789.855 10531 21154 22392 D TaskSession: processFrame: succeed
+1774423789.856 10531 21154 22392 I CAM_SingleCameraProcessor: [K_PROCESS]: onFrameProcessed: [0]:{onProcessStarted}
+1774423789.856 10531 21154 22392 D CAM_SingleCameraProcessor: X:processFrame
+1774423789.856 10531 21154 22392 D CAM_SingleCameraProcessor: processCaptureResult: cameraMetadataNative = android.hardware.camera2.impl.CameraMetadataNative@1736cd
+1774423789.856 10531 21154 22392 D CAM_SingleCameraProcessor: processCaptureResult: image = android.media.ImageReader$SurfaceImage@93866b2
+1774423789.856 10531 21154 22392 I CAM_SingleCameraProcessor: [K_PROCESS]: processCaptureResult: timestamp = 299205344987000, target = 0
+1774423789.856 10531 21154 22392 D CAM_SingleCameraProcessor: E:processFrame
+1774423789.856 10531 21154 22392 D TaskSession: processFrame: FrameData{ mImageFlag=0, mFrameNumber=91, mCaptureResultMetadataNative=android.hardware.camera2.impl.CameraMetadataNative@1736cd, mCaptureRequestMetadataNative=android.hardware.camera2.impl.CameraMetadataNative@c22fb82, mBufferImage=android.media.ImageReader$SurfaceImage@93866b2}
+1774423789.856 10531 21154 22392 I FrameDataUtil: =======================================================
+1774423789.856 10531 21154 22392 I FrameDataUtil: frame->stream_index = 0
+1774423789.856 10531 21154 22392 I FrameDataUtil: frame->frame_number = 91
+1774423789.856 10531 21154 22392 I FrameDataUtil: frame->requestId = 3
+1774423789.856 10531 21154 22392 I FrameDataUtil: frame->meta point addr == 0x77dc98b720
+1774423789.856 10531 21154 22392 I FrameDataUtil: v9 frame->meta point addr == 0x77dca08700
+1774423789.856 10531 21154 22392 I FrameDataUtil: =======================================================
+1774423789.856 10531 21154 22392 I FrameDataUtil: miImage->format.width = 4080
+1774423789.856 10531 21154 22392 I FrameDataUtil: miImage->format.height = 3072
+1774423789.856 10531 21154 22392 I FrameDataUtil: miImage->format.format = 35
+1774423789.857 10531 21154 22392 I FrameDataUtil: miImage->numberOfPlanes = 2
+1774423789.857 10531 21154 22392 I FrameDataUtil: plane 0 size is : 12582896
+1774423789.857 10531 21154 22392 I FrameDataUtil: miImage->planeSize[0] = 12582896; addr = 0x751143d000
+1774423789.857 10531 21154 22392 I FrameDataUtil: plane 1 size is : 6291439
+1774423789.857 10531 21154 22392 I FrameDataUtil: miImage->planeSize[1] = 6291439; addr = 0x751203d001
+1774423789.857 10531 21154 22392 I FrameDataUtil: get mNativeBuffer
+1774423789.857 10531 21154 22392 I FrameDataUtil: get BufferItem
+1774423789.857 10531 21154 22392 I FrameDataUtil: get frame->mBuffer: 0x778c934910
+1774423789.861 10531 21154 22392 I MI_Algo_JNI: processFrame: mCAI = 0x7683871000
+1774423789.861 10531 21154 22392 I MI_Algo_JNI: ------------------------------------------------------------------
+1774423789.861 10531 21154 22392 I MI_Algo_JNI: processFrame: mia_frame.stream_index = 0
+1774423789.861 10531 21154 22392 I MI_Algo_JNI: processFrame: mia_frame.frame_number = 91
+1774423789.861 10531 21154 22392 I MI_Algo_JNI: processFrame: mia_frame.size = 4080 * 3072, mia_frame.format = 35
+1774423789.861 10531 21154 22392 I MI_Algo_JNI: processFrame: CameraMetadata* = 0x77dc98b720
+1774423789.861 10531 21154 22392 I MI_Algo_JNI: ------------------------------------------------------------------
+1774423789.861 10531 21154 22392 D MiaInterface: miainterface.cpp:70 MIAProcessFrame():E session:0x78cc9870d0 frame: 0x75603afc80
+1774423789.861 10531 21154 22392 I MiaInterface: mipostprocsessionintf.cpp:273 ProcessFrame():huangxin frame_number 91, requestId 3 W*H: 4080*3072, planeStride*sliceHeight: 4080*3072, format:35 cb:0x771c93a1b0
+1774423789.861 10531 21154 22392 D MiaInterface: mipostprocsessionintf.cpp:279 ProcessFrame():frame 91 ADDINFO: planes num:2, pAddr[0,1]:(0x751143d000, 0x751203d001), planeSize[0,1]:(12582896, 6291439)
+1774423789.861 10531 21154 22392 D MiaInterface: miaframewrapper.cpp:35 MiaFrameWrapper():jintao mFormat.format: 35
+1774423789.861 10531 21154 22392 E saas.i18n:stub2: get input request metadata size 7480
+1774423789.861 10531 21154 22392 D MiaInterface: miaframewrapper.cpp:67 MiaFrameWrapper():getMetaData timestamp 299205344987000
+1774423789.862 10531 21154 22392 E saas.i18n:stub2: get input request metadata size 2064
+1774423789.862 10531 21154 22392 I MiaInterface: miaframewrapper.cpp:146 mergeAppRequestSetting():get adrcGain: 0
+1774423789.862 10531 21154 22392 I MiaInterface: miaframewrapper.cpp:155 mergeAppRequestSetting():get sceneType: 0
+1774423789.862 10531 21154 22392 I MiaInterface: miaframewrapper.cpp:164 mergeAppRequestSetting():get hdrEnable: 1
+1774423789.862 10531 21154 22392 I MiaInterface: miaframewrapper.cpp:173 mergeAppRequestSetting():get mfnrEnable: 0
+1774423789.862 10531 21154 22392 E VendorTagDescriptor: lookupTag: Tag name 'depurple.enabled' does not exist.
+1774423789.862 10531 21154 22392 E saas.i18n:stub2: could not find tag ID for tagname xiaomi.depurple.enabled
+1774423789.862 10531 21154 22392 E saas.i18n:stub2: error 2 in getTagID
+1774423789.862 10531 21154 22392 I MiaInterface: miaframewrapper.cpp:192 mergeAppRequestSetting():get flipEnable = 0
+1774423789.862 10531 21154 22392 E saas.i18n:stub2: readTagValues -1879048178 failed
+1774423789.862 10531 21154 22392 I MiaInterface: miaframewrapper.cpp:212 mergeAppRequestSetting():get InputNum = 3
+1774423789.862 10531 21154 22392 I MiaInterface: miautil.cpp:37 calcOffset():format 35, dim->width ,dim->height (4080:3072)
+1774423789.862 10531 21154 22392 I MiaInterface: miautil.cpp:39 calcOffset():pPadding->width_padding, pPadding->height_padding, pPadding->plane_padding (64:1:64)
+1774423789.862 10531 21154 22392 I MiaInterface: miautil.cpp:40 calcOffset():stride ,scanline (4096:3072), multi result:12582912
+1774423789.862 10531 21154 22392 I MiaInterface: miautil.cpp:109 calcOffset():format:35 pBuf_planes->mp[0].len = 12582912
+1774423789.862 10531 21154 22392 D MiaInterface: miaframewrapper.cpp:99 MiaFrameWrapper():Income settings: pAddr[0,1] = (0x751143d000, 0x751203d001), planeSize[0,1] = (12582896, 6291439)
+1774423789.862 10531 21154 22392 D MiaInterface: miaframewrapper.cpp:102 MiaFrameWrapper():We set them to: pAddr[1] 0x751203d000, planeSize[1] 6291440
+1774423789.862 10531 21154 22392 I MiaInterface: miaframewrapper.cpp:131 MiaFrameWrapper():RequestId 3, frameNum 91, format: 0x23, W*H(4080*3072), buffersize:12582896, numplanes:2, pAddr:(0x751143d000, 0x751203d001), fd[0,1] = (594,-1), meta 0x789c991de0
+1774423789.862 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423789.864 10531 21154 22430 D MiaInterface: miaframewrapperqueue.cpp:33 pollFrameWrapper():pollFrame total now-size 1
+1774423789.864 10531 21154 22430 D MiaInterface: miaframewrapperqueue.cpp:37 pollFrameWrapper():pollFrame now-size 0
+1774423789.864 10531 21154 22430 E MiaInterface: mipostprocsessionintf.cpp:359 parseMiaFrame():### frame_number 90, mOperationMode:0x8001， mCameraMode：0x1
+1774423789.864 10531 21154 22430 D MiaInterface: miaframewrapperqueue.cpp:33 pollFrameWrapper():pollFrame total now-size 0
+1774423789.865 10531 21154 22392 D MiaInterface: miaframewrapperqueue.cpp:17 addFrameWrapper():addframe now-size 1
+1774423789.866 10531 21154 22392 D TaskSession: processFrame: succeed
+1774423789.866 10531 21154 22392 I CAM_SingleCameraProcessor: [K_PROCESS]: onFrameProcessed: [0]:{onProcessStarted}
+1774423789.866 10531 21154 22392 D CAM_SingleCameraProcessor: X:processFrame
+1774423789.866 10531 21154 22392 D CAM_SingleCameraProcessor: processCaptureResult: cameraMetadataNative = android.hardware.camera2.impl.CameraMetadataNative@5c572d0
+1774423789.866 10531 21154 22392 D CAM_SingleCameraProcessor: processCaptureResult: image = android.media.ImageReader$SurfaceImage@eb66e36
+1774423789.866 10531 21154 22392 I CAM_SingleCameraProcessor: [K_PROCESS]: processCaptureResult: timestamp = 299205421669000, target = 0
+1774423789.866 10531 21154 22392 D CAM_SingleCameraProcessor: E:processFrame
+1774423789.867 10531 21154 22430 D MiaInterface: miaframewrapperqueue.cpp:33 pollFrameWrapper():pollFrame total now-size 1
+1774423789.867 10531 21154 22430 D MiaInterface: miaframewrapperqueue.cpp:37 pollFrameWrapper():pollFrame now-size 0
+1774423789.867 10531 21154 22430 D MiaInterface: miaframewrapperqueue.cpp:33 pollFrameWrapper():pollFrame total now-size 0
+1774423789.868 10531 21154 22392 D TaskSession: processFrame: FrameData{ mImageFlag=0, mFrameNumber=92, mCaptureResultMetadataNative=android.hardware.camera2.impl.CameraMetadataNative@5c572d0, mCaptureRequestMetadataNative=android.hardware.camera2.impl.CameraMetadataNative@aed72c9, mBufferImage=android.media.ImageReader$SurfaceImage@eb66e36}
+1774423789.868 10531 21154 22392 I FrameDataUtil: =======================================================
+1774423789.868 10531 21154 22392 I FrameDataUtil: frame->stream_index = 0
+1774423789.868 10531 21154 22392 I FrameDataUtil: frame->frame_number = 92
+1774423789.868 10531 21154 22392 I FrameDataUtil: frame->requestId = 3
+1774423789.868 10531 21154 22392 I FrameDataUtil: frame->meta point addr == 0x77dc9f5aa0
+1774423789.868 10531 21154 22392 I FrameDataUtil: v9 frame->meta point addr == 0x77dc9dbcd0
+1774423789.868 10531 21154 22392 I FrameDataUtil: =======================================================
+1774423789.868 10531 21154 22392 I FrameDataUtil: miImage->format.width = 4080
+1774423789.868 10531 21154 22392 I FrameDataUtil: miImage->format.height = 3072
+1774423789.868 10531 21154 22392 I FrameDataUtil: miImage->format.format = 35
+1774423789.868 10531 21154 22392 I FrameDataUtil: miImage->numberOfPlanes = 2
+1774423789.868 10531 21154 22392 I FrameDataUtil: plane 0 size is : 12582896
+1774423789.868 10531 21154 22392 I FrameDataUtil: miImage->planeSize[0] = 12582896; addr = 0x750d23b000
+1774423789.868 10531 21154 22392 I FrameDataUtil: plane 1 size is : 6291439
+1774423789.868 10531 21154 22392 I FrameDataUtil: miImage->planeSize[1] = 6291439; addr = 0x750de3b001
+1774423789.868 10531 21154 22392 I FrameDataUtil: get mNativeBuffer
+1774423789.868 10531 21154 22392 I FrameDataUtil: get BufferItem
+1774423789.869 10531 21154 22392 I FrameDataUtil: get frame->mBuffer: 0x778c92aaf0
+1774423789.869 10531 21154 22392 I MI_Algo_JNI: processFrame: mCAI = 0x7683871000
+1774423789.869 10531 21154 22392 I MI_Algo_JNI: ------------------------------------------------------------------
+1774423789.869 10531 21154 22392 I MI_Algo_JNI: processFrame: mia_frame.stream_index = 0
+1774423789.869 10531 21154 22392 I MI_Algo_JNI: processFrame: mia_frame.frame_number = 92
+1774423789.869 10531 21154 22392 I MI_Algo_JNI: processFrame: mia_frame.size = 4080 * 3072, mia_frame.format = 35
+1774423789.869 10531 21154 22392 I MI_Algo_JNI: processFrame: CameraMetadata* = 0x77dc9f5aa0
+1774423789.869 10531 21154 22392 I MI_Algo_JNI: ------------------------------------------------------------------
+1774423789.869 10531 21154 22392 D MiaInterface: miainterface.cpp:70 MIAProcessFrame():E session:0x78cc9870d0 frame: 0x75603afc80
+1774423789.869 10531 21154 22392 I MiaInterface: mipostprocsessionintf.cpp:273 ProcessFrame():huangxin frame_number 92, requestId 3 W*H: 4080*3072, planeStride*sliceHeight: 4080*3072, format:35 cb:0x771c9474d0
+1774423789.869 10531 21154 22392 D MiaInterface: mipostprocsessionintf.cpp:279 ProcessFrame():frame 92 ADDINFO: planes num:2, pAddr[0,1]:(0x750d23b000, 0x750de3b001), planeSize[0,1]:(12582896, 6291439)
+1774423789.869 10531 21154 22392 D MiaInterface: miaframewrapper.cpp:35 MiaFrameWrapper():jintao mFormat.format: 35
+1774423789.870 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423789.871 10531 21154 22392 E saas.i18n:stub2: get input request metadata size 7480
+1774423789.871 10531 21154 22392 D MiaInterface: miaframewrapper.cpp:67 MiaFrameWrapper():getMetaData timestamp 299205421669000
+1774423789.871 10531 21154 22392 E saas.i18n:stub2: get input request metadata size 2064
+1774423789.871 10531 21154 22392 I MiaInterface: miaframewrapper.cpp:146 mergeAppRequestSetting():get adrcGain: 0
+1774423789.871 10531 21154 22392 I MiaInterface: miaframewrapper.cpp:155 mergeAppRequestSetting():get sceneType: 0
+1774423789.871 10531 21154 22392 I MiaInterface: miaframewrapper.cpp:164 mergeAppRequestSetting():get hdrEnable: 1
+1774423789.871 10531 21154 22392 I MiaInterface: miaframewrapper.cpp:173 mergeAppRequestSetting():get mfnrEnable: 0
+1774423789.871 10531 21154 22392 E VendorTagDescriptor: lookupTag: Tag name 'depurple.enabled' does not exist.
+1774423789.871 10531 21154 22392 E saas.i18n:stub2: could not find tag ID for tagname xiaomi.depurple.enabled
+1774423789.871 10531 21154 22392 E saas.i18n:stub2: error 2 in getTagID
+1774423789.871 10531 21154 22392 I MiaInterface: miaframewrapper.cpp:192 mergeAppRequestSetting():get flipEnable = 0
+1774423789.872 10531 21154 22392 E saas.i18n:stub2: readTagValues -1879048178 failed
+1774423789.872 10531 21154 22392 I MiaInterface: miaframewrapper.cpp:212 mergeAppRequestSetting():get InputNum = 3
+1774423789.872 10531 21154 22392 I MiaInterface: miautil.cpp:37 calcOffset():format 35, dim->width ,dim->height (4080:3072)
+1774423789.872 10531 21154 22392 I MiaInterface: miautil.cpp:39 calcOffset():pPadding->width_padding, pPadding->height_padding, pPadding->plane_padding (64:1:64)
+1774423789.872 10531 21154 22392 I MiaInterface: miautil.cpp:40 calcOffset():stride ,scanline (4096:3072), multi result:12582912
+1774423789.872 10531 21154 22392 I MiaInterface: miautil.cpp:109 calcOffset():format:35 pBuf_planes->mp[0].len = 12582912
+1774423789.872 10531 21154 22392 D MiaInterface: miaframewrapper.cpp:99 MiaFrameWrapper():Income settings: pAddr[0,1] = (0x750d23b000, 0x750de3b001), planeSize[0,1] = (12582896, 6291439)
+1774423789.874 10531 21154 22392 D MiaInterface: miaframewrapper.cpp:102 MiaFrameWrapper():We set them to: pAddr[1] 0x750de3b000, planeSize[1] 6291440
+1774423789.874 10531 21154 22392 I MiaInterface: miaframewrapper.cpp:131 MiaFrameWrapper():RequestId 3, frameNum 92, format: 0x23, W*H(4080*3072), buffersize:12582896, numplanes:2, pAddr:(0x750d23b000, 0x750de3b001), fd[0,1] = (329,-1), meta 0x789c9bc720
+1774423789.874 10531 21154 22392 D MiaInterface: miaframewrapperqueue.cpp:17 addFrameWrapper():addframe now-size 1
+1774423789.879 10531 21154 22430 D MiaInterface: miaframewrapperqueue.cpp:33 pollFrameWrapper():pollFrame total now-size 1
+1774423789.879 10531 21154 22430 D MiaInterface: miaframewrapperqueue.cpp:37 pollFrameWrapper():pollFrame now-size 0
+1774423789.879 10531 21154 22430 I MiaInterface: mipostprocsessionintf.cpp:425 postProcProcessIntf():inputFrameNum 90, timestamp: 299204940974000, merge inputnum: 3
+1774423789.879 10531 21154 22430 D MiaInterface: mipostprocsessionintf.cpp:437 postProcProcessIntf():input[0] format: 35, size: 4080x3072,buffersize:12582896,planes:2,fd[0,1]=(372,-1),pAddr[0,1]=(0x754f000000,0x754fc00001)
+1774423789.879 10531 21154 22430 D MiaInterface: mipostprocsessionintf.cpp:437 postProcProcessIntf():input[1] format: 35, size: 4080x3072,buffersize:12582896,planes:2,fd[0,1]=(594,-1),pAddr[0,1]=(0x751143d000,0x751203d001)
+1774423789.879 10531 21154 22430 D MiaInterface: mipostprocsessionintf.cpp:437 postProcProcessIntf():input[2] format: 35, size: 4080x3072,buffersize:12582896,planes:2,fd[0,1]=(329,-1),pAddr[0,1]=(0x750d23b000,0x750de3b001)
+1774423789.879 10531 21154 22430 D MiaInterface: mipostprocsessionintf.cpp:475 postProcProcessIntf():output[0] format: 17, size: 4080x3072, planeStride:0, sliceheight:0, fd[0,1]=(-1,-1),pAddr[0,1]=(0x0,0x0)
+1774423789.879 10531 21154 22430 D MiaInterface: mipostprocsessionintf.cpp:488 postProcProcessIntf():do mialgo2.0 process
+1774423789.879 10531 21154 22430 I MiAlgoEngine: [Core] miapostprocintf.cpp:45 CameraPostProc_Process()E
+1774423789.879 10531 21154 22430 I MiAlgoEngine: [Core] miaofflinesession.cpp:278 PostProcess()frame_number 90, streamId 0, isSync 0
+1774423789.879 10531 21154 22430 I MiAlgoEngine: [Core] miaofflinesession.cpp:279 PostProcess()input num 3, output num 1
+1774423789.879 10531 21154 22430 I MiAlgoEngine: [Core] miaofflinesession.cpp:323 PostProcess()process currentinflightnum = 1
+1774423789.879 10531 21154 22430 W MiAlgoEngine: [Core] miaimage.cpp:60 MiaImage()MiaImage::MiaImage(MiaFrame *frame, MiaImageType type)
+1774423789.879 10531 21154 22430 I MiAlgoEngine: [Core] miaimage.cpp:74 MiaImage()fmImageCountormat:0x23 mImageCount:3
+1774423789.879 10531 21154 22430 E VendorTagDescriptor: lookupTag: Tag name 'exactflexyuvfmt' does not exist.
+1774423789.879 10531 21154 22430 E saas.i18n:stub2: could not find tag ID for tagname com.mediatek.configure.setting.exactflexyuvfmt
+1774423789.879 10531 21154 22430 E saas.i18n:stub2: error 2 in getTagID
+1774423789.879 10531 21154 22430 I MiAlgoEngine: [Core] miaimage.cpp:126 MiaImage()MiuiCamera case
+1774423789.879 10531 21154 22430 I MiAlgoEngine: [Core] miautil.cpp:31 calcOffset()format 35, dim->width, dim->height (4080:3072), width_padding/height_padding/plane_padding=(64 1 64)
+1774423789.879 10531 21154 22430 I MiAlgoEngine: [Core] miautil.cpp:32 calcOffset()stride ,scanline (4096:3072), multi result:12582912
+1774423789.879 10531 21154 22430 I MiAlgoEngine: [Core] miaimage.cpp:166 MiaImage()i:0 format:0x11,planeStride:4096,sliceheight:3072,planes:2,bufferSize:12582896,fd(0,1)=(372,-1),pAddr(0,1)=(0x754f000000,0x754fc00000)
+1774423789.879 10531 21154 22430 I MiAlgoEngine: [Core] miaimage.cpp:126 MiaImage()MiuiCamera case
+1774423789.879 10531 21154 22430 I MiAlgoEngine: [Core] miautil.cpp:31 calcOffset()format 35, dim->width, dim->height (4080:3072), width_padding/height_padding/plane_padding=(64 1 64)
+1774423789.879 10531 21154 22430 I MiAlgoEngine: [Core] miautil.cpp:32 calcOffset()stride ,scanline (4096:3072), multi result:12582912
+1774423789.879 10531 21154 22430 I MiAlgoEngine: [Core] miaimage.cpp:166 MiaImage()i:1 format:0x11,planeStride:4096,sliceheight:3072,planes:2,bufferSize:12582896,fd(0,1)=(594,-1),pAddr(0,1)=(0x751143d000,0x751203d000)
+1774423789.879 10531 21154 22430 I MiAlgoEngine: [Core] miaimage.cpp:126 MiaImage()MiuiCamera case
+1774423789.879 10531 21154 22430 I MiAlgoEngine: [Core] miautil.cpp:31 calcOffset()format 35, dim->width, dim->height (4080:3072), width_padding/height_padding/plane_padding=(64 1 64)
+1774423789.879 10531 21154 22430 I MiAlgoEngine: [Core] miautil.cpp:32 calcOffset()stride ,scanline (4096:3072), multi result:12582912
+1774423789.879 10531 21154 22430 I MiAlgoEngine: [Core] miaimage.cpp:166 MiaImage()i:2 format:0x11,planeStride:4096,sliceheight:3072,planes:2,bufferSize:12582896,fd(0,1)=(329,-1),pAddr(0,1)=(0x750d23b000,0x750de3b000)
+1774423789.879 10531 21154 22430 I MiAlgoEngine: [Core] miaimage.cpp:185 MiaImage()Construct external image count:3, type: 0, 4080x3072 format:17, planeStride:4096, sliceheight:3072, timestamp: 299204940974000
+1774423789.880 10531 21154 22430 W MiAlgoEngine: [Core] miaimage.cpp:60 MiaImage()MiaImage::MiaImage(MiaFrame *frame, MiaImageType type)
+1774423789.880 10531 21154 22430 I MiAlgoEngine: [Core] miaimage.cpp:74 MiaImage()fmImageCountormat:0x11 mImageCount:1
+1774423789.880 10531 21154 22430 W MiAlgoEngine: [Core] miaimage.cpp:111 MiaImage()buffer handle is null, it will be filled when node acquire output buffer
+1774423789.880 10531 21154 22430 E MiAlgoEngine: [Core] miaofflinesession.cpp:368 PostProcess()[MemoryReclaim] mSessionRequestCnt = 1
+1774423789.880 10531 21154 22430 D MiaInterface: miaframewrapperqueue.cpp:33 pollFrameWrapper():pollFrame total now-size 0
+1774423789.880 10531 21154 22392 D TaskSession: processFrame: succeed
+1774423789.881 10531 21154 22392 I CAM_SingleCameraProcessor: [K_PROCESS]: onFrameProcessed: [0]:{onProcessStarted}
+1774423789.881 10531 21154 22392 D CAM_SingleCameraProcessor: X:processFrame
+1774423789.881 10531 21154 22427 I MiAlgoEngine: [Core] miaofflinesession.cpp:688 acquireBuffer()format: 0x11, width: 4080, height: 3072, isSinkBuffer: 0, timestamp: 299204940974000
+1774423789.881 10531 21154 22427 I MiAlgoEngine: [Core] mianode.cpp:322 processRequest()[com.xiaomi.plugin.morphohdr] inputNum: 3  outputNum: 1
+1774423789.881 10531 21154 22427 I MIA_N_HDR: [Plugin] morphohdrplugin.cpp:43 ProcessRequest()get inputNum: 3
+1774423789.881 10531 21154 22427 I MIA_N_HDR: [Plugin] morphohdrplugin.cpp:79 ProcessRequest()Get EV[0]: 0
+1774423789.881 10531 21154 22427 E MIA_N_HDR: [Plugin] morphohdrplugin.cpp:90 ProcessRequest()iso_arr[0] = 552
+1774423789.881 10531 21154 22427 E MIA_N_HDR: [Plugin] morphohdrplugin.cpp:105 ProcessRequest()fgmhdrcapture iso_arr[0] = 552,exp_time_arr[0]=50005, Get EV[0]: 0
+1774423789.881 10531 21154 22427 I MIA_N_HDR: [Plugin] morphohdrplugin.cpp:79 ProcessRequest()Get EV[1]: -12
+1774423789.881 10531 21154 22427 E MIA_N_HDR: [Plugin] morphohdrplugin.cpp:90 ProcessRequest()iso_arr[1] = 231
+1774423789.881 10531 21154 22427 E MIA_N_HDR: [Plugin] morphohdrplugin.cpp:105 ProcessRequest()fgmhdrcapture iso_arr[1] = 231,exp_time_arr[1]=29997, Get EV[1]: -12
+1774423789.881 10531 21154 22427 I MIA_N_HDR: [Plugin] morphohdrplugin.cpp:79 ProcessRequest()Get EV[2]: -24
+1774423789.881 10531 21154 22427 E MIA_N_HDR: [Plugin] morphohdrplugin.cpp:90 ProcessRequest()iso_arr[2] = 86
+1774423789.881 10531 21154 22427 E MIA_N_HDR: [Plugin] morphohdrplugin.cpp:105 ProcessRequest()fgmhdrcapture iso_arr[2] = 86,exp_time_arr[2]=19998, Get EV[2]: -24
+1774423789.881 10531 21154 22427 E VendorTagDescriptor: lookupTag: Tag name 'quadcfa.supported' does not exist.
+1774423789.882 10531 21154 22427 E saas.i18n:stub2: could not find tag ID for tagname xiaomi.quadcfa.supported
+1774423789.882 10531 21154 22427 E saas.i18n:stub2: error 2 in getTagID
+1774423789.882 10531 21154 22427 E saas.i18n:stub2: readTagValues -1879048135 failed
+1774423789.882 10531 21154 22427 E saas.i18n:stub2: readTagValues -1879048133 failed
+1774423789.882 10531 21154 22427 E MIA_N_HDR: [Plugin] morphohdrplugin.cpp:259 GetMetaInfo()get sensor activeSize failed
+1774423789.882 10531 21154 22427 I MIA_N_HDR: [Plugin] morphohdrplugin.cpp:266 GetMetaInfo()XRatio 1.000000, YRatio: 1.000000
+1774423789.882 10531 21154 22427 I MIA_N_HDR: [Plugin] morphohdrplugin.cpp:281 GetMetaInfo()get crop info [0 0 4096 3072]
+1774423789.882 10531 21154 22427 I MIA_N_HDR: [Plugin] morphohdrplugin.cpp:299 GetMetaInfo()zoomRatio : 1.000000 OffSize x = 0, y = 0
+1774423789.882 10531 21154 22427 I MIA_N_HDR: [Plugin] morphohdrplugin.cpp:305 GetMetaInfo()get zoom info [0 0 4096 3072]
+1774423789.882 10531 21154 22427 E saas.i18n:stub2: readTagValues 1114118 failed
+1774423789.882 10531 21154 22427 I MIA_N_HDR: [Plugin] morphohdrplugin.cpp:358 GetMetaInfo()faces are not found
+1774423789.885 10531 21154 22427 E MIA_N_MHDR: [Plugin] morphohdr.cpp:124 Process()[MIALGO_HDR][MORPHOCAP]:input_num:3
+1774423789.887 10531 21154 22427 I MIA_N_MHDR: [Plugin] morphohdr.cpp:145 process_hdr()[MIALGO_LLHDR][MORPHOCAP]: algo version = Morpho ImageRefiner Ver.2.0.8 2024-05-13 For Xiaomi
+1774423789.888 10531 21154 22427 I MIA_N_MHDR: [Plugin] morphohdr.cpp:259 process_hdr()lake Sensor_Name=WIDE=imx852_stai_main_ii_mipi_raw;FRONT=ov13b10_shine_front_ii_mipi_raw;
+1774423789.888 10531 21154 22427 E MIA_N_MHDR: [Plugin] morphohdr.cpp:343 process_hdr()[MIALGO_HDR][MORPHOCAP]:params_file_path: /vendor/etc/camera/morpho_image_refiner_tuning_params_vendor_main_imx852_ii_hdr.xml
+1774423789.904 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (960x720) rewritten successfully. Format=35
+1774423789.905 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (960x720) to ImageWriter (Format: 35, TS: 299205759557000)
+1774423789.922 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423789.930 10531 21154 22234 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774423789.933 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423789.942 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423789.948 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423789.984 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (960x720) rewritten successfully. Format=35
+1774423789.984 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (960x720) to ImageWriter (Format: 35, TS: 299205810131000)
+1774423789.987 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423789.992 10531 21154 22234 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774423789.993 10531 21154 22427 I MIA_N_MHDR: [Plugin] morphohdr.cpp:350 process_hdr()[MIALGO_HDR][MORPHOCAP]:MorphoImageRefiner_init: ret=0 cost=104.46ms
+1774423789.993 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423789.996 10531 21154 22427 I MIA_N_MHDR: [Plugin] morphohdr.cpp:378 process_hdr()[MIALGO_HDR][MORPHOCAP]:MorphoImageRefiner_setParamsByCfgFile: ret=0 cost=2.83ms
+1774423789.996 10531 21154 22427 I MIA_N_MHDR: [Plugin] morphohdr.cpp:421 process_hdr()[MIALGO_HDR][MORPHOCAP]:MorphoImageRefiner_addImage: ret=0 cost=0.00ms
+1774423789.996 10531 21154 22427 I MIA_N_MHDR: [Plugin] morphohdr.cpp:421 process_hdr()[MIALGO_HDR][MORPHOCAP]:MorphoImageRefiner_addImage: ret=0 cost=0.00ms
+1774423789.996 10531 21154 22427 I MIA_N_MHDR: [Plugin] morphohdr.cpp:421 process_hdr()[MIALGO_HDR][MORPHOCAP]:MorphoImageRefiner_addImage: ret=0 cost=0.00ms
+1774423789.996 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423790.007 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423790.081 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423790.093 10531 21154 22234 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774423790.098 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423790.100 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (960x720) rewritten successfully. Format=35
+1774423790.102 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (960x720) to ImageWriter (Format: 35, TS: 299206872182000)
+1774423790.114 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423790.124 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423790.165 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423790.175 10531 21154 22234 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774423790.176 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423790.182 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423790.195 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423790.204 10531 21154 22427 I MIA_N_MHDR: [Plugin] morphohdr.cpp:470 process_hdr()[MIALGO_HDR][MORPHOCAP]:MorphoImageRefiner_process: ret=0 cost=208.22ms
+1774423790.216 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (960x720) rewritten successfully. Format=35
+1774423790.217 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (960x720) to ImageWriter (Format: 35, TS: 299206922756000)
+1774423790.227 10531 21154 22427 I MIA_N_MHDR: [Plugin] morphohdr.cpp:482 process_hdr()[MIALGO_HDR][MORPHOCAP]:MorphoImageRefiner_uninit: ret=0 cost=22.92ms
+1774423790.227 10531 21154 22427 I MIA_N_HDR: [Plugin] morphohdrplugin.cpp:123 ProcessRequest()ProcessRequest:123 ProcessBuffer ret: 0
+1774423790.227 10531 21154 22427 I MiAlgoEngine: [Core] mianode.cpp:389 processRequest()[com.xiaomi.plugin.morphohdr] Plugin ProcessRequest spend time 346.14ms, frame_number 0
+1774423790.227 10531 21154 22427 I MiAlgoEngine: [Core] mianode.cpp:262 processImage()mFrameNum:0 mTimestampUs:299204940974000, isBypassed:0
+1774423790.227 10531 21154 22427 E MiAlgoEngine: [Core] mianode.cpp:286 processImage()srcmeta is 0x789c9a9490
+1774423790.228 10531 21154 22427 E saas.i18n:stub2: allocateCopyInterMetadata metadata size 7608
+1774423790.228 10531 21154 22427 I MiAlgoEngine: [Core] mianode.cpp:292 processImage()requestMeta: 0x789c9fa2f0
+1774423790.228 10531 21154 22427 I MiaInterface: mipostprocsessionintf.cpp:627 release():release type: 0, timeStampUs: 299204940974000
+1774423790.228 10531 21154 22427 I MiaInterface: mipostprocsessionintf.cpp:634 release():miaFrameWrapperVec size: 3
+1774423790.228 10531 21154 22427 D MiaInterface: miaframewrapper.cpp:14 ~MiaFrameWrapper():disconstruct
+1774423790.228 10531 21154 22427 D MiaInterface: miaframewrapper.cpp:21 ~MiaFrameWrapper():Release input release 0x771c9474d0
+1774423790.228 10531 21154 22427 D FrameDataCallback: release: input frame: 0x777c990c10
+1774423790.229 10531 21154 22427 D FrameData: release: close Image: android.media.ImageReader$SurfaceImage@eb66e36
+1774423790.229 10531 21154 22427 D CAM_SingleCameraProcessor: onFrameImageClosed: android.media.ImageReader$SurfaceImage@eb66e36
+1774423790.230 10531 21154 22427 D CAM_PostProcessor: ImageProcessor onOriginalImageClosed: android.media.ImageReader$SurfaceImage@eb66e36
+1774423790.230 10531 21154 22427 D CAM_PostProcessor: onOriginalImageClosed: android.media.ImageReader$SurfaceImage@eb66e36
+1774423790.230 10531 21154 22427 D HalImagePool: releaseImage: image: android.media.ImageReader$SurfaceImage@eb66e36 qSize: 4 | totalSize: 6
+1774423790.230 10531 21154 22427 W AlgoImagePool: releaseImage: not hold image android.media.ImageReader$SurfaceImage@eb66e36
+1774423790.230 10531 21154 22427 D MiaInterface: miaframewrapper.cpp:14 ~MiaFrameWrapper():disconstruct
+1774423790.230 10531 21154 22427 D MiaInterface: miaframewrapper.cpp:21 ~MiaFrameWrapper():Release input release 0x771c93a1b0
+1774423790.230 10531 21154 22427 D FrameDataCallback: release: input frame: 0x777c980a90
+1774423790.230 10531 21154 22427 D FrameData: release: close Image: android.media.ImageReader$SurfaceImage@93866b2
+1774423790.230 10531 21154 22427 D CAM_SingleCameraProcessor: onFrameImageClosed: android.media.ImageReader$SurfaceImage@93866b2
+1774423790.230 10531 21154 22427 D CAM_PostProcessor: ImageProcessor onOriginalImageClosed: android.media.ImageReader$SurfaceImage@93866b2
+1774423790.230 10531 21154 22427 D CAM_PostProcessor: onOriginalImageClosed: android.media.ImageReader$SurfaceImage@93866b2
+1774423790.230 10531 21154 22427 D HalImagePool: releaseImage: image: android.media.ImageReader$SurfaceImage@93866b2 qSize: 3 | totalSize: 5
+1774423790.230 10531 21154 22427 W AlgoImagePool: releaseImage: not hold image android.media.ImageReader$SurfaceImage@93866b2
+1774423790.230 10531 21154 22427 D MiaInterface: miaframewrapper.cpp:14 ~MiaFrameWrapper():disconstruct
+1774423790.230 10531 21154 22427 D MiaInterface: miaframewrapper.cpp:21 ~MiaFrameWrapper():Release input release 0x771c949af0
+1774423790.231 10531 21154 22427 D FrameDataCallback: release: input frame: 0x777c9fcfc0
+1774423790.231 10531 21154 22425 E VendorTagDescriptor: lookupTag: Tag name 'portraitrepair.luxindex' does not exist.
+1774423790.231 10531 21154 22427 D FrameData: release: close Image: android.media.ImageReader$SurfaceImage@a80fa42
+1774423790.231 10531 21154 22425 E saas.i18n:stub2: could not find tag ID for tagname xiaomi.portraitrepair.luxindex
+1774423790.231 10531 21154 22425 E saas.i18n:stub2: error 2 in getTagID
+1774423790.231 10531 21154 22425 E saas.i18n:stub2: readTagValues 1114118 failed
+1774423790.231 10531 21154 22425 I SkinBeautifierPlugin: [getFaceInfoFromCapture] It did not get face from tag
+1774423790.231 10531 21154 22425 I SkinBeautifierPlugin: [IsEnabled] beautyEnabled = 0 0 faceNum = 0 requestNumber = 0 this = 0x776c9ba270
+1774423790.231 10531 21154 22425 I MiAlgoEngine: [Core] miaofflinesession.cpp:688 acquireBuffer()format: 0x11, width: 4080, height: 3072, isSinkBuffer: 1, timestamp: 299204940974000
+1774423790.231 10531 21154 22425 I MiAlgoEngine: [Core] miaimage.cpp:281 Initialize()MiaImage::Initialize, mImageCount:1
+1774423790.231 10531 21154 22427 D CAM_SingleCameraProcessor: onFrameImageClosed: android.media.ImageReader$SurfaceImage@a80fa42
+1774423790.232 10531 21154 22427 D CAM_PostProcessor: ImageProcessor onOriginalImageClosed: android.media.ImageReader$SurfaceImage@a80fa42
+1774423790.232 10531 21154 22427 D CAM_PostProcessor: onOriginalImageClosed: android.media.ImageReader$SurfaceImage@a80fa42
+1774423790.232 10531 21154 22427 D HalImagePool: releaseImage: image: android.media.ImageReader$SurfaceImage@a80fa42 qSize: 2 | totalSize: 4
+1774423790.232 10531 21154 22427 W AlgoImagePool: releaseImage: not hold image android.media.ImageReader$SurfaceImage@a80fa42
+1774423790.232 10531 21154 22427 I MiaInterface: mipostprocsessionintf.cpp:643 release():release end
+1774423790.235 10531 21154 22425 D MiaInterface: mipostprocsessionintf.cpp:117 dequeueBuffer():[0]dequeueBuffer got anb: 0x78cc9934a0, 4080x3072 format:11 fenceFd:-1, timestamp: 299204940974000
+1774423790.236 10531 21154 22425 I MiAlgoEngine: [Core] miaimage.cpp:297 Initialize()buffer: 0x78cc993490, bufferSize: 4080
+1774423790.236 10531 21154 22425 I MiAlgoEngine: [Core] miautil.cpp:31 calcOffset()format 17, dim->width, dim->height (4080:3072), width_padding/height_padding/plane_padding=(64 1 64)
+1774423790.236 10531 21154 22425 I MiAlgoEngine: [Core] miautil.cpp:32 calcOffset()stride ,scanline (4096:3072), multi result:12582912
+1774423790.236 10531 21154 22425 I MiAlgoEngine: [Core] miaimage.cpp:317 Initialize()ImageVec[0] pAddr[0]=0x754f000000 pAddr[1]=0x754fc00000, fd: 119, bufferSize: 4080, frame_len: 18874368
+1774423790.236 10531 21154 22425 I MiAlgoEngine: [Core] mianode.cpp:322 processRequest()[com.xiaomi.plugin.skinbeautifier] inputNum: 1  outputNum: 1
+1774423790.236 10531 21154 22425 I SkinBeautifierPlugin: [ProcessBuffer] enter requestNumber = 0
+1774423790.236 10531 21154 22425 I SkinBeautifierPlugin: [ProcessBuffer] requestNumber = 0
+1774423790.236 10531 21154 22425 I PluginUtils: [Core] miapluginutils.cpp:256 MiCopyBuffer()111 CopyImage input 4096, 4080, 3072, output 4096, 3072, 3072, format 0x11 0x11, numberOfPlanes: 2, copyPlaneStride:4096, copyheight:3072
+1774423790.238 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423790.242 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423790.255 10531 21154 22234 W CAM_CRE_PreviewRenderer: skip preview render, window surface not ready yet!
+1774423790.259 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423790.267 10531 21154 22148 D CameraDevice-JV-0: close: X
+1774423790.267 10531 21154 22148 I CAM_PerformanceManager: [P_PERFORM]: Event: CAMERA_CLOSE_163_0 takes 469 ms
+1774423790.267 10531 21154 22148 I CAM_PerformanceManager: [P_PERFORM]: Event: CAMERA_CLOSE takes 469 is less than 4000
+1774423790.268 10531 21154 22148 D BufferQueueConsumer: [ImageReader-4080x3072f21m2-21154-0](id:52a200000001,api:0,p:-1,c:21154) disconnect
+1774423790.268 10531 21154 22148 D CAM_MiCameraSurfaceManager: close imageReader android.media.ImageReader@eed3fa9
+1774423790.268 10531 21154 22148 D BufferQueueConsumer: [ImageReader-960x720f23m21-21154-3](id:52a200000004,api:4,p:21154,c:21154) disconnect
+1774423790.268 10531 21154 22148 V CAM_MiCamera2: E: reset
+1774423790.268 10531 21154 22148 V CAM_MiCamera2: reset: hashcode:null
+1774423790.268 10531 21154 22148 V CAM_MiCamera2: X: reset
+1774423790.268 10531 21154 22148 I CAM_MiCamera2: [K_PROCESS]: X: close: cameraId = 0
+1774423790.268 10531 21154 22148 D CAM_CloseCameraCallable: closeCamera: cache removed: cid = 0
+1774423790.268 10531 21154 22148 I CAM_CloseCameraCallable: [K_PROCESS]: X: closeCamera: cid = null, excludes = []
+1774423790.269 10531 21154 22148 D CAM_CloseCameraCallable: X: cid: null (dur: 478)
+1774423790.269 10531 21154 22148 D CAM_CloseCameraCallable: postCallback
+1774423790.269 10531 21154 22148 E CAM_MiCamera2: onClosed: id=1 sessionId=0;session = android.hardware.camera2.impl.CameraCaptureSessionImpl@a24bbe0
+1774423790.269 10531 21154 22425 I SkinBeautifierPlugin: [ProcessBuffer] mSkinBeautifier = 0x78dc968ef0, mBeautyEnabled = 0, Called MiCopyBuffer()
+1774423790.269 10531 21154 22425 I SkinBeautifierPlugin: [ProcessBuffer] NULL == mSkinBeautifier copy image from in to out
+1774423790.269 10531 21154 22148 I CAM_CameraStateCallback: [K_PROCESS]: onClosed: cid = 0, closing = true
+1774423790.269 10531 21154 22138 D CAM_CloseCameraCallable: Success: cid: null (dur: 479)
+1774423790.269 10531 21154 22138 D CAM_CameraOpenObservable: onClosed: cid = 0, listener = 9168034
+1774423790.269 10531 21154 22138 D CAM_Camera2OpenManager: onClosed: cid = 0|android.hardware.camera2.impl.CameraDeviceImpl@1a34b09
+1774423790.270 10531 21154 22138 D CAM_LocalParallelService: onCameraClosed: E. token=27478793
+1774423790.270 10531 21154 22138 I CAM_PostProcessor: destroyWhenTasksFinished: dg.t@c3ae1{mCameraToken=27478793, mOwnerToken=41559851, mState=2}
+1774423790.270 10531 21154 22138 I CAM_PostProcessor: tryToCloseSession: E. processor: dg.t@c3ae1{mCameraToken=27478793, mOwnerToken=41559851, mState=2}
+1774423790.270 10531 21154 22138 D CAM_PostProcessor: tryToCloseSession: X. ignored. taskNum = 1
+1774423790.270 10531 21154 22138 I CAM_PostProcessor: tryToCloseSession: E. processor: dg.t@c3ae1{mCameraToken=27478793, mOwnerToken=41559851, mState=2}
+1774423790.270 10531 21154 22138 D CAM_PostProcessor: tryToCloseSession: X. ignored. taskNum = 1
+1774423790.270 10531 21154 22138 D CAM_LocalParallelService: onCameraClosed: X
+1774423790.270 10531 21154 21154 D CAM_RenderEngineV2: releaseWindowSurface
+1774423790.271 10531 21154 22234 D CAM_CRE_EglWindowSurface: EglWindowSurface release start
+1774423790.272 10531 21154 22234 D CAM_CRE_EglCore: destroy Surface -5476376626980582192
+1774423790.275 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423790.277 10531 21154 22425 I MiAlgoEngine: [Core] mianode.cpp:389 processRequest()[com.xiaomi.plugin.skinbeautifier] Plugin ProcessRequest spend time 33.09ms, frame_number 0
+1774423790.277 10531 21154 22425 I MiAlgoEngine: [Core] mianode.cpp:262 processImage()mFrameNum:0 mTimestampUs:299204940974000, isBypassed:0
+1774423790.277 10531 21154 22425 E MiAlgoEngine: [Core] mianode.cpp:286 processImage()srcmeta is 0x789c9fa2f0
+1774423790.277 10531 21154 22425 I MiAlgoEngine: [Core] miaofflinesession.cpp:647 onFrameComing()return frameNum:0
+1774423790.277 10531 21154 22425 I MiAlgoEngine: [Core] miaofflinesession.cpp:662 onFrameComing() release mCurrentInflightNum = 0
+1774423790.277 10531 21154 22425 I MiaInterface: mipostprocsessionintf.cpp:627 release():release type: 1, timeStampUs: 299204940974000
+1774423790.278 10531 21154 22425 E saas.i18n:stub2: [onQueue]: GraphicBuffer is null
+1774423790.278 10531 21154 22425 E saas.i18n:stub2: [onAcquire]: GraphicBuffer is null
+1774423790.278 10531 21154 22425 D MiaInterface: mipostprocsessionintf.cpp:171 enqueueBuffer():[0]enqueueBuffer done WindowBuffer 0x78cc9934a0, timestamp 299204940974000
+1774423790.278 10531 21154 22425 D MiaInterface: mipostprocsessionintf.cpp:572 returnOutImageToSurface():Return 0 buffer timeStampUs: 299204940974000
+1774423790.279 10531 21154 22425 I MiaInterface: mipostprocsessionintf.cpp:643 release():release end
+1774423790.280 10531 21154 22399 I CAM_PerformanceManager: [P_PERFORM]: Action: algo_process_299204940974000_163_0 takes 539 ms
+1774423790.280 10531 21154 22399 I CAM_SingleCameraProcessor: [K_PROCESS]: onImageAvailable: effectImage received: 299204940974000
+1774423790.289 10531 21154 22399 D BufferQueueConsumer: [](id:52a200000012,api:0,p:-1,c:21154) connect: controlledByApp=true
+1774423790.289 10531 21154 22399 D VirtuCam_Hook: VirtuCam_Hook: Tracked ImageReader surface 4080x3072 format=35
+1774423790.290 10531 21154 22399 D VirtuCam_Hook: VirtuCam_Hook: Tracked ImageReader surface 4080x3072 format=35
+1774423790.290 10531 21154 22399 D ImagePool: could not find our method, try android method
+1774423790.290 10531 21154 22399 D BQ_4080x3072_35: queueImage: start. image: android.media.ImageReader$SurfaceImage@2c47640 | 299204940974000
+1774423790.290 10531 21154 22399 E BufferQueueConsumer: [MiuiCamera-Snapshot-effect](id:52a20000000e,api:2,p:21154,c:21154) BQ detachBuffer 1
+1774423790.290 10531 21154 22399 E saas.i18n:stub2: BnProducerListener::onBufferDetached slot: 1
+1774423790.291 10531 21154 22399 E saas.i18n:stub2: [onQueue]: GraphicBuffer is null
+1774423790.291 10531 21154 22399 E saas.i18n:stub2: [onAcquire]: GraphicBuffer is null
+1774423790.292 10531 21154 22141 D BQ_4080x3072_35: onImageAvailable: android.media.ImageReader$SurfaceImage@f2e0979 | 299204940974000
+1774423790.292 10531 21154 22399 D BQ_4080x3072_35: queueImage: end
+1774423790.293 10531 21154 22399 D AlgoImagePool: holdImage: image: android.media.ImageReader$SurfaceImage@f2e0979 | 299204940974000 qSize: 1 | totalSize: 2
+1774423790.294 10531 21154 22399 D CAM_SnapRenderManager: init snapshotRender
+1774423790.294 10531 21154 22399 D CAM_YuvProcessor: YuvProcessor created q2.i@a1316be
+1774423790.295 10531 21154 22399 D CAM_ImageProcessor: E: dispatchFilterTask
+1774423790.295 10531 21154 22399 D CAM_ImageProcessor: X: dispatchFilterTask
+1774423790.295 10531 21154 22399 D CAM_BaseImageProcessor: onProcessImageDone: E
+1774423790.296 10531 21154 22399 D CAM_BaseImageProcessor: E: sendCheckTimeoutTaskMessage
+1774423790.296 10531 21154 22392 I CAM_ImageProcessor: doFilter: 299204940974000/0
+1774423790.296 10531 21154 22399 D CAM_BaseImageProcessor: X: sendCheckTimeoutTaskMessage
+1774423790.296 10531 21154 22399 I CAM_BaseImageProcessor: onProcessImageDone: timestamp = 299204940974000
+1774423790.296 10531 21154 22399 D CAM_BaseImageProcessor: onProcessImageDone: X
+1774423790.299 10531 21154 22392 D NativeTool: isNv21 format error
+1774423790.300 10531 21154 22392 I CAM_PostProcessor: [K_PROCESS]: [2] onImageProcessed: android.media.ImageReader$SurfaceImage@f2e0979 | 299204940974000/0
+1774423790.300 10531 21154 22392 I CAM_PostProcessor: [K_PROCESS]: jpeg process start, timestamp: 299204940974000
+1774423790.300 10531 21154 22392 D CAM_PostProcessor: [2] onImageProcessed: captureResult = android.hardware.camera2.impl.CameraMetadataNative@69d75f6
+1774423790.300 10531 21154 22392 D CAM_PostProcessor: generateReprocessData = android.hardware.camera2.impl.CameraMetadataNative@69d75f6 image|tag = android.media.ImageReader$SurfaceImage@f2e0979|299204940974000/0 reprocessFunction = 0 isRemosaic = 0
+1774423790.301 10531 21154 22392 D ReprocessorFactory: getReprocessor: type = ISP_INTERFACE
+1774423790.301 10531 21154 22392 I IspInterfaceV2: reprocess data type is: 2 inputFormat: 35 outputFormat: 256
+1774423790.301 10531 21154 22392 D IspReprocessor@36947199: submit: 299204940974000/0
+1774423790.301 10531 21154 22392 D IspReprocessor@36947199: acquireWakeLock
+1774423790.304 10531 21154 22392 I IspReprocessor@36947199: =============================================================
+1774423790.304 10531 21154 22392 D IspReprocessor@36947199: sendReprocessRequest: send MSG_REPROCESS_IMAGE
+1774423790.305 10531 21154 22392 I CAM_ImageProcessor: tryToStopWork: state = 1
+1774423790.305 10531 21154 22170 D IspReprocessor@36947199: recv MSG_REPROCESS_IMAGE
+1774423790.305 10531 21154 22170 D IspReprocessor@36947199: yuvInputSize = 4080x3072
+1774423790.305 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (960x720) rewritten successfully. Format=35
+1774423790.306 10531 21154 22327 E BufferQueueProducer: [ImageReader-960x720f23m21-21154-3](id:52a200000004,api:4,p:21154,c:21154) queueBuffer: BufferQueue has been abandoned
+1774423790.306 10531 21154 22170 D IspReprocessor@36947199: createIspInterface>>yuvInput[4080x3072] output[4080x3072@256]
+1774423790.306 10531 21154 22327 E Surface : queueBuffer: error queuing buffer, -19
+1774423790.306 10531 21154 22327 E ImageWriter_JNI: ImageWriter_queueImage: Queue buffer failed: No such device (-19)
+1774423790.307 10531 21154 22327 E mali_gralloc: Attempt to call unlock*() on an unlocked buffer (0x778c9229b0, ID_0)
+1774423790.307 10531 21154 22327 W Gralloc5: unlock failed with error 2
+1774423790.307 10531 21154 22327 E BufferQueueProducer: [ImageReader-960x720f23m21-21154-3](id:52a200000004,api:4,p:21154,c:21154) cancelBuffer: BufferQueue has been abandoned
+1774423790.307 10531 21154 22327 E BufferQueueProducer: [ImageReader-960x720f23m21-21154-3](id:52a200000004,api:4,p:21154,c:21154) dequeueBuffer: BufferQueue has been abandoned
+1774423790.307 10531 21154 22327 E ImageWriter_JNI: ImageWriter_dequeueImage: Dequeue buffer failed: No such device (-19)
+1774423790.307 10531 21154 22327 E BufferQueueProducer: [ImageReader-960x720f23m21-21154-3](id:52a200000004,api:4,p:21154,c:21154) dequeueBuffer: BufferQueue has been abandoned
+1774423790.307 10531 21154 22327 E ImageWriter_JNI: ImageWriter_dequeueImage: Dequeue buffer failed: No such device (-19)
+1774423790.307 10531 21154 22327 E BufferQueueProducer: [ImageReader-960x720f23m21-21154-3](id:52a200000004,api:4,p:21154,c:21154) dequeueBuffer: BufferQueue has been abandoned
+1774423790.307 10531 21154 22327 E ImageWriter_JNI: ImageWriter_dequeueImage: Dequeue buffer failed: No such device (-19)
+1774423790.308 10531 21154 22327 E BufferQueueProducer: [ImageReader-960x720f23m21-21154-3](id:52a200000004,api:4,p:21154,c:21154) dequeueBuffer: BufferQueue has been abandoned
+1774423790.308 10531 21154 22327 E ImageWriter_JNI: ImageWriter_dequeueImage: Dequeue buffer failed: No such device (-19)
+1774423790.308 10531 21154 22170 D BufferQueueConsumer: [](id:52a200000013,api:0,p:-1,c:21154) connect: controlledByApp=true
+1774423790.308 10531 21154 22170 D VirtuCam_Hook: VirtuCam_Hook: Tracked ImageReader surface 4080x3072 format=35
+1774423790.308 10531 21154 22170 D VirtuCam_Hook: VirtuCam_Hook: Tracked ImageReader surface 4080x3072 format=35
+1774423790.309 10531 21154 22170 D ImagePool: could not find our method, try android method
+1774423790.315 10531 21154 22170 D BQ_4080x3072_35: dequeueImage: android.media.ImageWriter$WriterSurfaceImage@5fcc435 | 1774423790315
+1774423790.317 10531 21154 22170 D BQ_4080x3072_35: close: E
+1774423790.319 10531 21154 22170 D BufferQueueConsumer: [MiuiCamera-Snapshot-imagepool](id:52a200000013,api:4,p:21154,c:21154) disconnect
+1774423790.319 10531 21154 22170 D BQ_4080x3072_35: close: X
+1774423790.320 10531 21154 22170 D IspReprocessor@36947199: initImageReader>>4080x3072@256
+1774423790.320 10531 21154 22170 D BufferQueueConsumer: [](id:52a200000014,api:0,p:-1,c:21154) connect: controlledByApp=true
+1774423790.320 10531 21154 22170 D VirtuCam_Hook: VirtuCam_Hook: Tracked ImageReader surface 4080x3072 format=256
+1774423790.321 10531 21154 22170 D IspReprocessor@36947199: initImageReader<<
+1774423790.321 10531 21154 22170 D VirtuCam_Hook: VirtuCam_Hook: Tracked ImageReader surface 4080x3072 format=256
+1774423790.329 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423790.335 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423790.335 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423790.341 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423790.346 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423790.355 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423790.366 10531 21154 22170 D nativeloader: Load libcamera_ispinterface_jni.xiaomi.so using system ns (caller=/system_ext/framework/miui-framework.jar): ok
+1774423790.375 10531 21154 22170 D IspInterface_JNI: nativeClassInit: E
+1774423790.376 10531 21154 22170 D IspInterface_JNI: nativeClassInit: X
+1774423790.376 10531 21154 22170 D IspInterface: ctor: E 169505339
+1774423790.382 10531 21154 22170 D IspInterface_JNI: nativeCreate: E
+1774423790.382 10531 21154 22170 D IspHalHidl: ctor
+1774423790.382 10531 21154 22170 D IspHalHidl: init: E
+1774423790.383 10531 21154 22170 E IspHalHidl: init: failed to get ISPModule interface
+1774423790.383 10531 21154 22170 E IspInterfaceContext: ISPHal hidl interface init fail, try init ISPHal aidl interface
+1774423790.383 10531 21154 22170 D IspHalHidl: dtor
+1774423790.383 10531 21154 22170 D IspHalAidl: ctor
+1774423790.383 10531 21154 22170 D IspHalAidl: init: E
+1774423790.384 10531 21154 22170 E IspHalAidl: init: failed to get ISPModule aidl interface
+1774423790.384 10531 21154 22170 D IspHalAidl: dtor
+1774423790.384 10531 21154 22170 E IspInterfaceContext: ISPHal aidl interface init fail
+1774423790.384 10531 21154 22170 E IspInterface_JNI: nativeCreate: 1
+1774423790.384 10531 21154 22170 D IspInterfaceContext: setupOutputStream: E
+1774423790.384 10531 21154 22170 D IspInterfaceContext: setupOutputStream: output surface width: 4080
+1774423790.384 10531 21154 22170 D IspInterfaceContext: setupOutputStream: output surface height: 3072
+1774423790.384 10531 21154 22170 D IspInterfaceContext: setupOutputStream: output surface format: 33
+1774423790.384 10531 21154 22170 D IspInterfaceContext: setupOutputStream: output surface dataspace: 8c20000
+1774423790.388 10531 21154 22170 D IspInterfaceContext: setupOutputStream: jpeg stride: 19259385
+1774423790.388 10531 21154 22170 D IspInterfaceContext: setupOutputStream: jpeg stream. id=101 strideSize=1 width=4080 height=3072
+1774423790.388 10531 21154 22170 D IspInterfaceContext: setupOutputStream: X. stream=0x7640e19170
+1774423790.388 10531 21154 22170 D IspInterface_JNI: nativeCreate: inputNum=1
+1774423790.388 10531 21154 22170 D IspInterface_JNI: nativeCreate: strides[0]=4096
+1774423790.388 10531 21154 22170 D IspInterface_JNI: nativeCreate: strides[1]=4096
+1774423790.388 10531 21154 22170 D IspInterface_JNI: nativeCreate: strides[2]=4096
+1774423790.388 10531 21154 22170 D IspInterface_JNI: nativeCreate: inputStream: id=1, width=4080, height=3072, size=18800640, format=0x23, dataspace=0x8c20000
+1774423790.388 10531 21154 22170 D IspInterface_JNI: nativeCreate: outputJpegStream: id=101 strideSize=1 width=4080 height=3072
+1774423790.388 10531 21154 22170 D IspInterface_JNI: nativeCreate: outputJpegStride[0]=4080
+1774423790.388 10531 21154 22170 E IspInterface_JNI: nativeCreate: null yuv output stream
+1774423790.388 10531 21154 22170 D IspInterface_JNI: initMetadata: ispTuningHint=0 vendorTag=0x800b000e
+1774423790.388 10531 21154 22170 D IspInterface_JNI: initMetadata: flipMode=0 vendorTag=0x800b0003
+1774423790.388 10531 21154 22170 D IspInterface_JNI: initMetadata: no raw super night
+1774423790.388 10531 21154 22170 D IspInterface_JNI: initMetadata orientation=-1
+1774423790.388 10531 21154 22170 D IspInterface_JNI: setNativeContext: E
+1774423790.388 10531 21154 22170 D IspInterface_JNI: setNativeContext: X
+1774423790.388 10531 21154 22170 D IspInterface_JNI: nativeCreate: X
+1774423790.388 10531 21154 22170 D IspInterface: ctor: X 169505339
+1774423790.389 10531 21154 22170 D IspReprocessor@36947199: createIspInterface<<
+1774423790.389 10531 21154 22170 D IspReprocessor@36947199: reprocessImage>>
+1774423790.389 10531 21154 22170 D IspReprocessor@36947199: reprocessImage: tag=299204940974000/0
+1774423790.390 10531 21154 22170 D IspReprocessor@36947199: reprocessImage: requestFrameNo=90
+1774423790.390 10531 21154 22170 D IspReprocessor@36947199: reprocessImage<<
+1774423790.391 10531 21154 22159 D IspReprocessor@36947199: reprocessImage: android.media.ImageReader$SurfaceImage@f2e0979 | 299204940974000
+1774423790.391 10531 21154 22159 D IspReprocessor@36947199: yuv2jpeg
+1774423790.395 10531 21154 22159 D IspInterface_JNI: processImage: E
+1774423790.396 10531 21154 22159 D IspInterface_JNI: processImage: requestNumber=90 flipMode=0 functionType=0 orientation=-1 remosaic=0
+1774423790.396 10531 21154 22159 D IspInterface_JNI: processImage: inputNum=1
+1774423790.396 10531 21154 22159 D IspInterface_JNI: processImage: inputBuffer[0].streamId=1
+1774423790.396 10531 21154 22159 D IspInterface_JNI: Image_unlockIfLocked
+1774423790.396 10531 21154 22159 D IspInterface_JNI: processImage: graphic buffer id: 90855738179677
+1774423790.396 10531 21154 22159 D IspInterface_JNI: Image_unlockIfLocked
+1774423790.396 10531 21154 22159 D IspInterface_JNI: processImage: metadata buffer id: 90855738179674
+1774423790.396 10531 21154 22159 D IspInterface_JNI: initMetadata: ispTuningHint=0 vendorTag=0x800b000e
+1774423790.396 10531 21154 22159 D IspInterface_JNI: initMetadata: flipMode=0 vendorTag=0x800b0003
+1774423790.396 10531 21154 22159 D IspInterface_JNI: initMetadata: no raw super night
+1774423790.396 10531 21154 22159 D IspInterface_JNI: initMetadata orientation=-1
+1774423790.396 10531 21154 22159 D IspInterface_JNI: processImage: X
+1774423790.408 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423790.413 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423790.413 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: surface draw fps: 14.404172513116231
+1774423790.413 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423790.413 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423790.417 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423790.431 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423790.470 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423790.476 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423790.477 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423790.477 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423790.480 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423790.484 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423790.525 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423790.536 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423790.536 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423790.537 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423790.542 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423790.550 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423790.586 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423790.591 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423790.593 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: onDrawFrame rendering count:120 hasExtRenderer:false
+1774423790.593 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423790.593 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423790.594 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423790.598 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423790.638 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423790.641 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423790.642 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423790.642 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423790.644 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423790.647 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423790.685 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423790.691 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423790.692 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423790.692 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423790.694 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423790.698 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423790.736 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423790.742 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423790.743 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423790.743 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423790.745 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423790.750 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423790.787 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423790.791 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423790.792 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423790.792 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423790.794 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423790.796 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423790.832 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423790.835 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423790.837 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423790.837 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423790.837 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423790.840 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423790.877 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423790.881 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423790.882 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423790.883 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423790.884 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423790.886 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423790.923 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423790.930 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423790.932 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423790.932 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423790.935 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423790.940 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423790.981 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423790.986 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423790.987 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423790.987 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423790.991 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423790.996 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423791.034 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423791.042 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423791.042 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423791.043 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423791.050 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423791.055 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423791.102 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423791.107 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423791.108 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423791.110 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423791.116 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423791.122 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423791.171 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423791.177 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423791.177 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423791.180 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423791.184 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423791.198 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423791.241 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423791.246 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423791.246 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423791.247 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423791.251 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423791.258 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423791.297 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423791.303 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423791.303 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423791.308 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423791.312 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423791.319 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423791.359 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423791.362 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423791.365 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423791.365 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423791.367 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423791.375 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423791.416 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423791.423 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: surface draw fps: 17.813258128554857
+1774423791.424 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423791.424 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423791.428 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423791.438 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423791.448 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423791.486 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423791.491 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423791.491 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423791.494 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423791.498 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423791.505 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423791.546 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423791.551 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423791.551 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423791.556 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423791.559 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423791.561 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423791.601 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423791.612 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423791.613 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423791.613 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423791.616 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423791.626 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423791.667 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423791.671 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423791.671 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423791.672 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423791.675 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423791.685 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423791.739 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423791.749 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423791.749 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423791.754 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423791.764 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423791.775 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423791.820 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423791.827 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423791.827 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423791.829 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423791.833 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423791.841 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423791.883 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423791.889 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423791.889 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423791.891 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423791.895 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423791.898 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423791.935 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423791.941 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423791.942 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423791.943 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423791.952 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423791.959 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423792.014 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423792.021 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.022 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.025 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423792.031 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423792.037 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423792.083 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423792.090 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423792.091 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.091 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.094 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423792.103 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423792.139 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423792.143 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.143 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.146 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423792.149 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423792.153 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423792.196 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423792.202 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.202 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.203 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423792.208 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423792.214 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423792.254 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423792.261 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.261 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.263 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423792.268 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423792.277 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423792.318 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423792.322 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.322 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.324 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423792.329 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423792.331 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423792.369 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423792.376 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.376 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.376 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423792.385 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423792.398 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423792.435 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423792.439 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: surface draw fps: 15.75735133349939
+1774423792.439 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.439 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.439 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423792.443 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423792.448 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423792.487 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423792.492 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.492 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.494 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423792.497 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423792.500 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423792.539 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423792.544 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423792.544 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.544 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.547 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423792.551 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423792.590 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423792.597 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423792.597 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.597 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.599 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423792.605 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423792.644 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423792.648 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423792.649 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.650 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.654 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423792.662 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423792.707 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423792.724 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.724 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.730 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423792.734 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423792.748 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423792.784 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423792.789 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.789 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.792 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423792.796 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423792.811 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423792.841 10531 21154 22429 I MiAlgoEngine: [Core] miaofflinesession.cpp:415 memoryMonitorThread()[MemoryReclaim] monitor waitRelative ret = -110
+1774423792.841 10531 21154 22429 I MiAlgoEngine: [Core] miaofflinesession.cpp:426 memoryMonitorThread()[MemoryReclaim] monitor waitRelative do timeout process!ret = -110
+1774423792.841 10531 21154 22429 I MiAlgoEngine: [Core] miaofflinesession.cpp:73 clearOutDefaultBuffer()[MemoryReclaim] Enter
+1774423792.841 10531 21154 22429 I MiAlgoEngine: [Core] miaofflinesession.cpp:84 clearOutDefaultBuffer()[MemoryReclaim] Exit
+1774423792.848 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423792.853 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.853 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.855 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423792.858 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423792.869 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423792.905 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423792.911 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.911 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.914 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423792.922 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423792.931 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423792.968 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423792.975 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.975 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423792.976 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423792.981 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423792.995 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423793.036 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423793.041 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.041 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.042 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423793.045 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423793.049 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423793.089 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423793.096 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.096 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.097 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423793.100 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423793.109 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423793.155 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423793.160 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.160 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.162 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423793.166 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423793.171 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423793.210 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423793.213 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.213 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.215 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423793.222 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423793.230 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423793.269 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423793.275 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423793.277 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.278 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.279 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423793.291 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423793.332 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423793.341 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.342 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.343 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423793.346 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423793.355 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423793.393 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423793.398 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.398 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.398 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423793.401 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423793.410 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423793.448 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423793.452 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: surface draw fps: 16.776679164618287
+1774423793.452 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.452 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.454 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423793.457 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423793.465 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423793.506 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423793.509 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423793.511 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.511 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.512 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423793.516 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423793.555 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423793.559 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.559 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.561 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423793.566 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423793.569 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423793.613 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423793.618 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423793.619 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.619 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.621 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423793.624 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423793.663 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423793.667 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423793.669 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.669 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.671 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423793.674 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423793.710 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423793.715 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.715 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.717 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423793.722 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423793.726 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423793.763 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423793.767 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.768 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.768 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423793.771 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423793.776 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423793.814 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423793.821 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423793.823 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.823 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.824 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423793.831 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423793.869 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423793.876 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423793.876 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.876 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.880 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423793.883 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423793.924 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423793.930 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.930 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423793.931 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423793.935 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423793.948 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423793.994 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423794.001 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423794.001 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423794.004 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423794.009 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423794.017 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423794.053 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423794.057 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423794.057 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423794.060 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423794.064 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423794.071 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423794.112 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423794.116 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: onDrawFrame rendering count:180 hasExtRenderer:false
+1774423794.116 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423794.116 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423794.121 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423794.125 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423794.128 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423794.170 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423794.178 10531 21154 22290 D CAM_CRE_ReceivePreviewFrameRateMonitor: preview monitor not pass: variance = 124, max = 100, min = 45, first frame = 98, last frame = 181, frame num = 84
+1774423794.180 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423794.180 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423794.180 10531 21154 22234 D CAM_CRE_RenderPreviewFrameRateMonitor: preview monitor not pass: variance = 125, max = 102, min = 45, first frame = 98, last frame = 181, frame num = 84
+1774423794.186 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423794.191 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423794.198 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423794.237 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423794.242 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423794.242 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423794.243 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423794.247 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423794.250 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423794.290 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423794.296 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423794.296 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423794.300 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423794.304 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423794.310 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423794.349 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423794.354 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423794.354 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423794.356 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423794.360 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423794.368 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423794.410 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423794.415 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423794.415 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423794.417 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423794.422 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423794.429 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423794.472 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423794.480 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: surface draw fps: 17.512453300124534
+1774423794.480 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423794.480 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423794.486 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423794.492 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423794.504 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423794.541 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423794.547 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423794.547 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423794.550 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423794.554 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423794.570 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423794.614 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423794.619 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423794.619 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423794.620 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423794.629 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423794.634 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423794.677 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423794.681 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423794.681 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423794.683 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423794.687 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423794.697 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333
+1774423794.743 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=0, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=0.6418804x1.0
+1774423794.753 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=4080x3072, scales=1.0x0.62338865
+1774423794.755 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423794.755 10531 21154 22234 D CAM_CRE_PreviewRenderEngine: Window Surface is not yet available.
+1774423794.760 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=1440x1080, scales=1.0x0.62583333
+1774423794.776 10531 21154 22332 D VirtuCam_Render: TextureRenderer.draw: rot=90, mirror=false, flipX=false, flipY=false, video=751x1600, view=960x720, scales=1.0x0.62583333

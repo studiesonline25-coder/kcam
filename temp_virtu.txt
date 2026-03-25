@@ -1,0 +1,38 @@
+
+8.log:1:1774423787.498 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (4080x3072) rewritten successfully. Format=35
+8.log:2:1774423787.500 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (4080x3072) to ImageWriter (Format: 35, TS: 299205344987000)
+8.log:21:1774423787.552 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (960x720) rewritten successfully. Format=35
+8.log:22:1774423787.553 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (960x720) to ImageWriter (Format: 35, TS: 299205344987000)
+8.log:170:1774423788.994 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (4080x3072) rewritten successfully. Format=35
+8.log:171:1774423788.995 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (4080x3072) to ImageWriter (Format: 35, TS: 299205421669000)
+8.log:193:1774423789.081 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (960x720) rewritten successfully. Format=35
+8.log:194:1774423789.082 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (960x720) to ImageWriter (Format: 35, TS: 299205421669000)
+8.log:206:1774423789.193 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (960x720) rewritten successfully. Format=35
+8.log:207:1774423789.201 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (960x720) to ImageWriter (Format: 35, TS: 299205658410000)
+8.log:232:1774423789.383 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1440x1080) rewritten successfully. Format=842094169
+8.log:240:1774423789.388 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1440x1080) to ImageWriter (Format: 842094169, TS: 299204940974000)
+8.log:265:1774423789.548 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1440x1080) rewritten successfully. Format=842094169
+8.log:266:1774423789.549 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1440x1080) to ImageWriter (Format: 842094169, TS: 299205344987000)
+8.log:298:1774423789.734 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1440x1080) rewritten successfully. Format=842094169
+8.log:299:1774423789.735 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1440x1080) to ImageWriter (Format: 842094169, TS: 299205421669000)
+8.log:355:1774423789.756 10531 21154 22175 D VirtuCam_Hook: VirtuCam_Hook: Tracked ImageReader surface 1440x1080 format=35
+8.log:356:1774423789.757 10531 21154 22175 D VirtuCam_Hook: VirtuCam_Hook: Tracked ImageReader surface 1440x1080 format=35
+8.log:381:1774423789.763 10531 21154 22138 D VirtuCam_Hook: VirtuCam_Hook: Tracked ImageReader surface 960x720 format=35
+8.log:534:1774423789.814 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (960x720) rewritten successfully. Format=35
+8.log:535:1774423789.817 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (960x720) to ImageWriter (Format: 35, TS: 299205708984000)
+8.log:750:1774423789.904 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (960x720) rewritten successfully. Format=35
+8.log:751:1774423789.905 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (960x720) to ImageWriter (Format: 35, TS: 299205759557000)
+8.log:757:1774423789.984 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (960x720) rewritten successfully. Format=35
+8.log:758:1774423789.984 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (960x720) to ImageWriter (Format: 35, TS: 299205810131000)
+8.log:772:1774423790.100 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (960x720) rewritten successfully. Format=35
+8.log:773:1774423790.102 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (960x720) to ImageWriter (Format: 35, TS: 299206872182000)
+8.log:782:1774423790.216 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (960x720) rewritten successfully. Format=35
+8.log:783:1774423790.217 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (960x720) to ImageWriter (Format: 35, TS: 299206922756000)
+8.log:888:1774423790.289 10531 21154 22399 D VirtuCam_Hook: VirtuCam_Hook: Tracked ImageReader surface 4080x3072 format=35
+8.log:889:1774423790.290 10531 21154 22399 D VirtuCam_Hook: VirtuCam_Hook: Tracked ImageReader surface 4080x3072 format=35
+8.log:923:1774423790.305 10531 21154 22327 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (960x720) rewritten successfully. Format=35
+8.log:940:1774423790.308 10531 21154 22170 D VirtuCam_Hook: VirtuCam_Hook: Tracked ImageReader surface 4080x3072 format=35
+8.log:941:1774423790.308 10531 21154 22170 D VirtuCam_Hook: VirtuCam_Hook: Tracked ImageReader surface 4080x3072 format=35
+8.log:949:1774423790.320 10531 21154 22170 D VirtuCam_Hook: VirtuCam_Hook: Tracked ImageReader surface 4080x3072 format=256
+8.log:951:1774423790.321 10531 21154 22170 D VirtuCam_Hook: VirtuCam_Hook: Tracked ImageReader surface 4080x3072 format=256
+

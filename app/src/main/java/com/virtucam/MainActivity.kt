@@ -127,6 +127,27 @@ class MainActivity : AppCompatActivity() {
             config.isMirrored = isChecked
             Toast.makeText(this, if (isChecked) "Mirror mode enabled" else "Mirror mode disabled", Toast.LENGTH_SHORT).show()
         }
+
+        // Zoom SeekBar
+        binding.seekZoom.progress = (config.zoomFactor * 100).toInt()
+        binding.tvZoomValue.text = String.format("Zoom Factor: %.2fx", config.zoomFactor)
+        binding.seekZoom.setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: android.widget.SeekBar?, progress: Int, fromUser: Boolean) {
+                if (fromUser) {
+                    val factor = progress / 100f
+                    config.zoomFactor = factor
+                    binding.tvZoomValue.text = String.format("Zoom Factor: %.2fx", factor)
+                }
+            }
+            override fun onStartTrackingTouch(seekBar: android.widget.SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: android.widget.SeekBar?) {}
+        })
+
+        // RTSP TCP switch
+        binding.rtspTcpSwitch.setOnCheckedChangeListener { _, isChecked ->
+            config.rtspUseTcp = isChecked
+            Toast.makeText(this, if (isChecked) "RTSP TCP mode enabled" else "RTSP UDP mode enabled", Toast.LENGTH_SHORT).show()
+        }
     }
     
     private fun loadSavedState() {
@@ -151,6 +172,13 @@ class MainActivity : AppCompatActivity() {
         
         // Load mirror state
         binding.mirrorSwitch.isChecked = config.isMirrored
+        
+        // Load zoom state
+        binding.seekZoom.progress = (config.zoomFactor * 100).toInt()
+        binding.tvZoomValue.text = String.format("Zoom Factor: %.2fx", config.zoomFactor)
+        
+        // Load RTSP state
+        binding.rtspTcpSwitch.isChecked = config.rtspUseTcp
     }
     
     private fun updateStatusUI(enabled: Boolean) {
