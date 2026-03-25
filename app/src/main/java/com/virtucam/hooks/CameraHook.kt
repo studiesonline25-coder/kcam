@@ -76,7 +76,6 @@ object CameraHook {
     @Volatile var rtspUseTcp: Boolean = true
     @Volatile var rotation: Int = 0
     @Volatile var cachedSensorOrientation: Int = 270 // Default for Helio G81 front cameras
-    @Volatile var compensationFactor: Float = 1.0f   // Aspect ratio compensation for modern UIs
 
 
     // [ONCE AND FOR ALL] Surface tracking and crash prevention structures
@@ -1237,7 +1236,7 @@ object CameraHook {
         }
     }
 
-/**
+    /**
 
  * Dedicated thread targeting the hijacked surfaces via EGL
  */
@@ -1468,5 +1467,6 @@ class VirtualRenderThread(
     fun quit() {
         isRunning = false
     }
+}
 }
 
