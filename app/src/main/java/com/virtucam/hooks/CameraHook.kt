@@ -112,6 +112,7 @@ object CameraHook {
      */
     private fun hookContentResolver(lpparam: XC_LoadPackage.LoadPackageParam) {
         try {
+            // 1. Hook 'insert' to capture the URI
             XposedBridge.hookAllMethods(
                 android.content.ContentResolver::class.java,
                 "insert",
@@ -126,11 +127,10 @@ object CameraHook {
                                 val values = param.args.getOrNull(1) as? android.content.ContentValues
                                 val isPending = values?.getAsInteger("is_pending")
                                 
-                                if (isPending == 1) {
-                                    Log.d(TAG, "VirtuCam_MediaStore: Captured PENDING MediaStore URI: $resultUri")
-                                    pendingCaptureUri = resultUri
-                                    pendingCaptureResolver = param.thisObject as? android.content.ContentResolver
-                                }
+                                // Xiaomi bypasses standard is_pending=1 logic, so we capture the latest URI regardless!
+                                Log.d(TAG, "VirtuCam_MediaStore: Captured MediaStore URI: $resultUri (isPending: $isPending)")
+                                pendingCaptureUri = resultUri
+                                pendingCaptureResolver = param.thisObject as? android.content.ContentResolver
                             }
                         } catch (t: Throwable) {
                             Log.e(TAG, "VirtuCam_MediaStore: ContentResolver insert hook error", t)
@@ -138,7 +138,31 @@ object CameraHook {
                     }
                 }
             )
-            Log.d(TAG, "VirtuCam_Hook: ContentResolver hooks active")
+
+            // 2. Hook 'delete' to prevent the Camera app from cleaning up our injected photo 
+            // when its own internal MIVI/AlgoEngine pipeline fails and triggers a rollback.
+            XposedBridge.hookAllMethods(
+                android.content.ContentResolver::class.java,
+                "delete",
+                object : XC_MethodHook() {
+                    override fun beforeHookedMethod(param: MethodHookParam) {
+                        try {
+                            if (!isEnabled) return
+                            val uri = param.args[0] as? Uri ?: return
+                            
+                            val protectedUri = pendingCaptureUri
+                            if (protectedUri != null && uri == protectedUri) {
+                                Log.w(TAG, "VirtuCam_MediaStore: BLOCKED attempt by Camera app to delete injected photo: $uri")
+                                param.result = 0 // Return 0 rows deleted, successfully spoofing a no-op
+                            }
+                        } catch (t: Throwable) {
+                            Log.e(TAG, "VirtuCam_MediaStore: ContentResolver delete hook error", t)
+                        }
+                    }
+                }
+            )
+
+            Log.d(TAG, "VirtuCam_Hook: ContentResolver hooks active (Insert & Delete protected)")
         } catch (t: Throwable) {
             Log.e(TAG, "VirtuCam_Hook: Failed to hook ContentResolver", t)
         }
