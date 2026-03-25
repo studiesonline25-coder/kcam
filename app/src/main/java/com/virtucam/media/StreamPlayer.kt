@@ -56,13 +56,24 @@ class StreamPlayer(
     private fun initializePlayer() {
         if (exoPlayer != null) return
 
-        // 1. Build ExoPlayer instance with more resilient buffer settings (balanced for latency and stability)
+        // 1. LoadControl tuned for ZERO playback buffer (start on first keyframe)
         val loadControl = DefaultLoadControl.Builder()
-            .setBufferDurationsMs(2000, 8000, 1500, 2000)
+            .setBufferDurationsMs(
+                /* minBufferMs = */ 1000, 
+                /* maxBufferMs = */ 5000, 
+                /* bufferForPlaybackMs = */ 0, // CRITICAL: Start on first frame
+                /* bufferForPlaybackAfterRebufferMs = */ 0
+            )
             .setPrioritizeTimeOverSizeThresholds(true)
             .build()
+            
+        // 2. Prefer software decoding in virtual environments to avoid MTK hardware surface deadlocks
+        val renderersFactory = androidx.media3.exoplayer.DefaultRenderersFactory(context)
+            .setExtensionRendererMode(androidx.media3.exoplayer.DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
+            .setEnableDecoderFallback(true)
 
         exoPlayer = ExoPlayer.Builder(context)
+            .setRenderersFactory(renderersFactory)
             .setMediaSourceFactory(DefaultMediaSourceFactory(context))
             .setLoadControl(loadControl)
             .build()

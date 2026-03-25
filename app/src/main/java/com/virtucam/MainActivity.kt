@@ -282,12 +282,24 @@ class MainActivity : AppCompatActivity() {
         previewPlayer?.release()
         
         // Setup ExoPlayer for live preview with more resilient buffer settings (closer to VLC)
+        // 1. LoadControl tuned for ZERO playback buffer (start on first keyframe)
         val loadControl = androidx.media3.exoplayer.DefaultLoadControl.Builder()
-            .setBufferDurationsMs(2000, 8000, 1500, 2000)
+            .setBufferDurationsMs(
+                /* minBufferMs = */ 1000, 
+                /* maxBufferMs = */ 5000, 
+                /* bufferForPlaybackMs = */ 0, // CRITICAL: Start on first frame
+                /* bufferForPlaybackAfterRebufferMs = */ 0
+            )
             .setPrioritizeTimeOverSizeThresholds(true)
             .build()
             
+        // 2. Prefer software decoding in preview to avoid MTK hardware surface deadlocks
+        val renderersFactory = androidx.media3.exoplayer.DefaultRenderersFactory(this)
+            .setExtensionRendererMode(androidx.media3.exoplayer.DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
+            .setEnableDecoderFallback(true)
+
         previewPlayer = androidx.media3.exoplayer.ExoPlayer.Builder(this)
+            .setRenderersFactory(renderersFactory)
             .setLoadControl(loadControl)
             .build()
             
