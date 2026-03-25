@@ -252,6 +252,7 @@ class FormatConverterBridge(
                     }
                 }
                 writeChroma(uPlane, true)
+                writeChroma(vPlane, false)
             }
             
             Log.d(TAG, "FormatConverterBridge: Captured frame (${w}x${h}) rewritten successfully. Format=$format")
