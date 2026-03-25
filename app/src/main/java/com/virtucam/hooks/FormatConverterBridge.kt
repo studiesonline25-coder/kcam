@@ -11,6 +11,8 @@ import android.os.HandlerThread
 import android.util.Log
 import android.view.Surface
 import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
 import java.nio.ByteBuffer
 
 /**
@@ -38,6 +40,8 @@ class FormatConverterBridge(
 
     @Volatile
     private var cachedRgbaData: ByteArray? = null
+    
+    private var debugCounter = 0
 
     // This is the surface we hand to the VirtualRenderThread (it receives RGBA from OpenGL)
     val inputSurface: Surface?
@@ -133,6 +137,8 @@ class FormatConverterBridge(
             val h = targetImage.height
             val planes = targetImage.planes
             val format = targetImage.format
+            
+            Log.d(TAG, "DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=${w}x${h}, Format=$format, Bridge=${width}x${height}")
             
             // Detect rotation: Source is always width x height. 
             val rotation = if (w == height && h == width) 90 else 0
@@ -255,6 +261,12 @@ class FormatConverterBridge(
                 writeChroma(vPlane, false)
             }
             
+            // diagnostic dump (YUV is hard to view directly, so we just log metadata or dump raw bytes)
+            if (debugCounter % 5 == 0) {
+                dumpRawBuffer(targetImage, "capture_yuv_${System.currentTimeMillis()}.raw")
+            }
+            debugCounter++
+            
             Log.d(TAG, "FormatConverterBridge: Captured frame (${w}x${h}) rewritten successfully. Format=$format")
         } catch (e: Exception) {
             Log.e(TAG, "FormatConverterBridge: Error overwriting capture buffer", e)
@@ -363,7 +375,44 @@ class FormatConverterBridge(
             jpegBuffer.position(0)
             jpegBuffer.limit(bytesToWrite)
             
+            // DIAGNOSTIC DUMP: Save the spoofed JPEG to SD card to see exactly what Veriff sees
+            saveDebugImage(jpegBytes, "capture_jpeg_${System.currentTimeMillis()}.jpg")
+            
             Log.d(TAG, "FormatConverterBridge: Overwrote JPEG image (${jpegBytes.size} bytes) Target=${tW}x${tH}")
+    }
+
+    private fun saveDebugImage(data: ByteArray, filename: String) {
+        try {
+            val dir = File("/sdcard/Download/virtucam_debug")
+            if (!dir.exists()) dir.mkdirs()
+            val file = File(dir, filename)
+            FileOutputStream(file).use { it.write(data) }
+            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Saved debug image to ${file.absolutePath} (${data.size} bytes)")
+        } catch (e: Exception) {
+            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Failed to save debug image", e)
+        }
+    }
+    
+    private fun dumpRawBuffer(image: Image, filename: String) {
+        try {
+            val dir = File("/sdcard/Download/virtucam_debug")
+            if (!dir.exists()) dir.mkdirs()
+            val file = File(dir, filename)
+            FileOutputStream(file).use { out ->
+                for (plane in image.planes) {
+                    val buf = plane.buffer
+                    val prevPos = buf.position()
+                    buf.position(0)
+                    val bytes = ByteArray(buf.remaining())
+                    buf.get(bytes)
+                    out.write(bytes)
+                    buf.position(prevPos)
+                }
+            }
+            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Saved raw buffer to ${file.absolutePath}")
+        } catch (e: Exception) {
+            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Failed to save raw buffer", e)
+        }
     }
 
     fun connectToImageReader(imageReader: ImageReader) {

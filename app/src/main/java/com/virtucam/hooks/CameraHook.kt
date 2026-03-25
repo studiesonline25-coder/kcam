@@ -306,6 +306,27 @@ object CameraHook {
                 Log.d(TAG, "VirtuCam_Hook: App is opening Camera2 ID: $cameraId")
             }
         })
+        
+        XposedBridge.hookAllMethods(managerClass, "getCameraCharacteristics", object : XC_MethodHook() {
+            override fun afterHookedMethod(param: MethodHookParam) {
+                if (!isEnabled) return
+                val cameraId = param.args[0] as? String ?: "unknown"
+                val char = param.result as? android.hardware.camera2.CameraCharacteristics ?: return
+                
+                // DIAGNOSTIC: Log key characteristics Veriff might be checking
+                val facing = char.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
+                val orientation = char.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION)
+                val level = char.get(android.hardware.camera2.CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)
+                
+                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics($cameraId) -> Facing=$facing, Orient=$orientation, HW_Level=$level")
+                
+                val streamMap = char.get(android.hardware.camera2.CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
+                if (streamMap != null) {
+                    val sizes = streamMap.getOutputSizes(android.graphics.ImageFormat.JPEG)
+                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Camera $cameraId supports ${sizes?.size ?: 0} JPEG sizes. Max: ${sizes?.firstOrNull()}")
+                }
+            }
+        })
     }
 
     /**
@@ -912,7 +933,12 @@ object CameraHook {
 
                         val surfacesList = args[0] as List<Surface>
                         if (surfacesList.isNotEmpty()) {
-                            Log.d(TAG, "VirtuCam_Hook: Intercepted createCaptureSession (Standard) - count: ${surfacesList.size}")
+                            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: createCaptureSession called with ${surfacesList.size} targets")
+                            for (s in surfacesList) {
+                                val size = SurfaceUtils.getSurfaceSize(s)
+                                val fmt = SurfaceUtils.getSurfaceFormat(s)
+                                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Target Surface: ${size.first}x${size.second}, Format=$fmt")
+                            }
                             
                             stopOldPipeline()
                             
