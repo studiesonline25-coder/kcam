@@ -23,6 +23,7 @@ class StreamPlayer(
     private val context: Context,
     private val streamUrl: String,
     private val outputSurface: Surface,
+    private val useTcp: Boolean = true,
     private val onFrameAvailable: () -> Unit
 ) {
 
