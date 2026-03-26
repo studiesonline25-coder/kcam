@@ -59,6 +59,9 @@ object CameraHook {
     @Volatile
     private var activeCameraId: String = "0"
     
+    // Maps original surfaces to their formats for correct rendering
+    internal val surfaceFormats = java.util.concurrent.ConcurrentHashMap<Surface, Int>()
+    
     // Track characteristics per cameraId
     private val cameraOrientations = java.util.concurrent.ConcurrentHashMap<String, Int>()
     private val cameraFacings = java.util.concurrent.ConcurrentHashMap<String, Int>() // 0=BACK, 1=FRONT
@@ -809,7 +812,7 @@ object CameraHook {
                     if (!isEnabled) return
                     val st = param.args[0] as? SurfaceTexture ?: return
                     Log.d(TAG, "VirtuCam_Hook: Intercepted setPreviewTexture (Camera1)")
-                    startRenderThreads(listOf(Pair(Surface(st), false)))
+                    startRenderThreads(listOf(Triple(Surface(st), false, 0x1))) // Default to RGBA8888 for Texture
                 } catch (t: Throwable) {
                     Log.e(TAG, "VirtuCam_Hook: Error in Camera1 setPreviewTexture hook", t)
                 }
@@ -822,10 +825,10 @@ object CameraHook {
                     loadConfiguration()
                     if (!isEnabled) return
                     val holder = param.args[0] as? android.view.SurfaceHolder ?: return
-                    val surface = holder.surface ?: return
+                    val holeSurface = holder.surface ?: return
                     Log.d(TAG, "VirtuCam_Hook: Intercepted setPreviewDisplay (Camera1)")
                     stopOldPipeline()
-                    startRenderThreads(listOf(Pair(surface, false)))
+                    startRenderThreads(listOf(Triple(holeSurface, false, 0x1))) // Default to RGBA8888
                 } catch (t: Throwable) {
                     Log.e(TAG, "VirtuCam_Hook: Error in Camera1 setPreviewDisplay hook", t)
                 }
@@ -1086,7 +1089,7 @@ object CameraHook {
                             }
 
                             val newSurfaces = ArrayList<Surface>()
-                            val targetSurfaces = ArrayList<Pair<Surface, Boolean>>()
+                            val targetSurfaces = ArrayList<Triple<Surface, Boolean, Int>>()
                             
                             for (targetSurface in surfacesList) {
                                 val size = SurfaceUtils.getSurfaceSize(targetSurface)
@@ -1102,10 +1105,10 @@ object CameraHook {
                                     val b = FormatConverterBridge(w, h, targetSurface, format, 0) // Changed sensorOrientation to 0
                                     activeBridges.add(b)
                                     formatBridges[android.util.Size(w, h)] = b
-                                    targetSurfaces.add(Pair(b.inputSurface ?: targetSurface, isCapture))
+                                    targetSurfaces.add(Triple(b.inputSurface ?: targetSurface, isCapture, format))
                                     b
                                 } else {
-                                    targetSurfaces.add(Pair(targetSurface, isCapture))
+                                    targetSurfaces.add(Triple(targetSurface, isCapture, format))
                                     null
                                 }
                                 
@@ -1394,9 +1397,9 @@ class VirtualRenderThread(
             eglCore = EglCore()
             
             // Create EGL surfaces for ALL targets
-            for (targetPair in targetSurfaces) {
+            for (targetTriple in targetSurfaces) {
                 try {
-                    val surface = targetPair.first
+                    val surface = targetTriple.first
                     if (!surface.isValid) continue
                     
                     // Add a tiny retry for "already connected" race conditions
@@ -1407,7 +1410,7 @@ class VirtualRenderThread(
                             val format = CameraHook.surfaceFormats[surface] ?: 0x22 // Default to PRIVATE
                             es = eglCore!!.createWindowSurface(surface)
                             if (es != null) {
-                                eglSurfaceTargets.add(Triple(es, targetPair.second, format))
+                                eglSurfaceTargets.add(Triple(es, targetTriple.second, targetTriple.third))
                                 break
                             }
                         } catch (e: Exception) {
