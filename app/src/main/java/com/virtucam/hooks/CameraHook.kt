@@ -921,10 +921,11 @@ object CameraHook {
         
         Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Swapping OutputConfig Surface. Size=${w}x${h}, Format=$format, isPreview=$isPreview")
         
-        val currentOrient = cameraOrientations[activeCameraId] ?: 270
         val bridge = if (!isPreview) {
-            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Creating FormatConverterBridge for $w x $h (Format $format) SensorRot=$currentOrient, RotOffset=$rotation, ColorSwap=$isColorSwapped")
-            val b = FormatConverterBridge(w, h, targetSurface, format, currentOrient, rotation, isColorSwapped)
+            // sensorOrientation=0: EGL render already applies rotation in drawToAllSurfaces.
+            // Bridge only handles user rotationOffset + app JPEG_ORIENTATION.
+            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Creating FormatConverterBridge for $w x $h (Format $format) SensorRot=0(EGL-handled), RotOffset=$rotation, ColorSwap=$isColorSwapped")
+            val b = FormatConverterBridge(w, h, targetSurface, format, 0, rotation, isColorSwapped)
             activeBridges.add(b)
             formatBridges[android.util.Size(w, h)] = b
             b
@@ -1044,7 +1045,8 @@ object CameraHook {
                                 val isPreview = (format == 0x22 || format == 0x1)
                                 
                                 val bridge = if (!isPreview) {
-                                    val b = FormatConverterBridge(w, h, targetSurface, format, cameraOrientations[activeCameraId] ?: 270)
+                                    // sensorOrientation=0: EGL render handles rotation
+                                    val b = FormatConverterBridge(w, h, targetSurface, format, 0)
                                     activeBridges.add(b)
                                     formatBridges[android.util.Size(w, h)] = b
                                     targetSurfaces.add(Pair(b.inputSurface ?: targetSurface, isCapture))
