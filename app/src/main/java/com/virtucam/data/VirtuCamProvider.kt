@@ -65,13 +65,14 @@ class VirtuCamProvider : ContentProvider() {
                         config.compensationFactor,
                         if (config.isMirrored) 1 else 0,
                         config.zoomFactor,
-                        config.rtspUseTcp.toInt(),
+                        if (config.rtspUseTcp) 1 else 0,
                         config.rotation,
                         if (config.isColorSwapped) 1 else 0
                     ))
                 }
             }
             CODE_MEDIA -> {
+                MatrixCursor(arrayOf("uri", "is_video", "is_stream", "stream_url", "is_mirrored", "rotation", "is_color_swapped")).apply {
                     addRow(arrayOf(
                         config.spoofMediaUri?.toString() ?: "",
                         if (config.isSpoofVideo) 1 else 0,
@@ -85,6 +86,7 @@ class VirtuCamProvider : ContentProvider() {
             }
             else -> null
         }
+
     }
     
     /**
