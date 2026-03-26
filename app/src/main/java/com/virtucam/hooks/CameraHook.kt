@@ -88,14 +88,7 @@ object CameraHook {
     @Volatile
     var lastRequestedOrientation: Int = -1 // -1 = NOT_SET
     
-    // REDMI 14C FIX: Track orientations per camera ID to prevent overwriting
-    // private val cameraOrientations = mutableMapOf<String, Int>() // Duplicate, removed
-    // @Volatile
-    // private var activeCameraId: String = "0" // Duplicate, removed
-
-
     // [ONCE AND FOR ALL] Surface tracking and crash prevention structures
-    // private val surfaceFormats = Collections.synchronizedMap(WeakHashMap<Surface, Int>()) // Moved to top
     private val hookedListenerClasses = java.util.Collections.newSetFromMap(java.util.WeakHashMap<Class<*>, Boolean>())
     private val captureSurfaces = java.util.Collections.newSetFromMap(java.util.WeakHashMap<Surface, Boolean>())
 
@@ -1489,9 +1482,9 @@ class VirtualRenderThread(
                 eglCore!!.makeCurrent(es)
                  val vw = eglCore!!.querySurface(es, android.opengl.EGL14.EGL_WIDTH)
                  val vh = eglCore!!.querySurface(es, android.opengl.EGL14.EGL_HEIGHT)
-                 
-                 // DYNAMIC ORIENTATION LOGIC
-                 // 0x100=JPEG, 0=Recorder (Dynamic Switch to 0 for storage)
+                              // DYNAMIC ORIENTATION LOGIC
+                 // If it's a real photo/video (JPEG or Recorder), match the perfect upright preview (0).
+                 // If it's YUV/PRIVATE, Veriff expects physical sensor orientation (baseline).
                  val applyRotation = if (isCapture) {
                      if (format == 0x100 || format == 0) 0 else sensorOrientation
                  } else {
@@ -1500,8 +1493,8 @@ class VirtualRenderThread(
 
                  // DYNAMIC MIRRORING LOGIC (The "Veriff" Fix)
                  // Some apps (Veriff) skip preview mirroring. Native cameras mirror in UI.
-                 // Sense Front-Camera: If isFrontCamera property is true OR sensorOrientation is 270 (Common Front-Cam).
-                 val isActuallyFront = isFrontCamera || sensorOrientation == 270
+                 // Sense Front-Camera: Strictly follow the tracked cameraFacing (1=FRONT).
+                 val isActuallyFront = (isFrontCamera)
                  val shouldMirror = if (isActuallyFront) {
                      // Mirror ImageReaders (Veriff preview/capture) so text is not backwards.
                      (format == 35 || format == 34 || format == 0x100)
@@ -1510,8 +1503,8 @@ class VirtualRenderThread(
                  }
 
                  textureRenderer?.draw(matrix, contentW, contentH, vw, vh, getTargetRatio(vw, vh, isCapture), applyRotation, userRotation, shouldMirror, CameraHook.zoomFactor)
-            
-                if (eglCore?.swapBuffers(es) == false) {
+
+                 if (eglCore?.swapBuffers(es) == false) {
                     Log.w("VirtuCam_Render", "Surface abandoned, removing.")
                     it.remove()
                 }
