@@ -56,6 +56,11 @@ object CameraHook {
     // Maps original surfaces to their dummy replacements for CaptureRequest consistency
     private val surfaceMap = mutableMapOf<Surface, Surface>()
     private val activeBridges = mutableListOf<FormatConverterBridge>()
+    private val cameraOrientations = mutableMapOf<String, Int>()
+    private val cameraFacings = mutableMapOf<String, Int>() // 0=BACK, 1=FRONT
+    val surfaceFormats = mutableMapOf<Surface, Int>()
+    @Volatile
+    private var activeCameraId: String = "0"
     
     // Global state for Late-Stage Storage Interception
     @Volatile var latestVirtualJpeg: ByteArray? = null
@@ -84,13 +89,13 @@ object CameraHook {
     var lastRequestedOrientation: Int = -1 // -1 = NOT_SET
     
     // REDMI 14C FIX: Track orientations per camera ID to prevent overwriting
-    private val cameraOrientations = mutableMapOf<String, Int>()
-    @Volatile
-    private var activeCameraId: String = "0"
+    // private val cameraOrientations = mutableMapOf<String, Int>() // Duplicate, removed
+    // @Volatile
+    // private var activeCameraId: String = "0" // Duplicate, removed
 
 
     // [ONCE AND FOR ALL] Surface tracking and crash prevention structures
-    private val surfaceFormats = Collections.synchronizedMap(WeakHashMap<Surface, Int>())
+    // private val surfaceFormats = Collections.synchronizedMap(WeakHashMap<Surface, Int>()) // Moved to top
     private val hookedListenerClasses = java.util.Collections.newSetFromMap(java.util.WeakHashMap<Class<*>, Boolean>())
     private val captureSurfaces = java.util.Collections.newSetFromMap(java.util.WeakHashMap<Surface, Boolean>())
 
@@ -169,8 +174,10 @@ object CameraHook {
                     }
                     
                     if (swapped) {
-                        // Clear the payload so we don't accidentally overwrite the NEXT photo with the SAME photo!
-                        latestVirtualJpeg = null
+                        // Delay clearing: Xiaomi may call multiple save methods sequentially (MIVI/AlgoEngine)
+                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                            latestVirtualJpeg = null
+                        }, 2000)
                     }
                 } catch (t: Throwable) {
                     Log.e(TAG, "VirtuCam_Storage: Hook execution failed in ${param.method.name}", t)
@@ -373,6 +380,13 @@ object CameraHook {
                         val manager = param.thisObject as android.hardware.camera2.CameraManager
                         val characteristics = manager.getCameraCharacteristics(cameraId)
                         discoverXiaomiVendorTags(characteristics)
+
+                        // Track camera facing
+                        val facing = characteristics.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
+                        if (facing != null) {
+                            cameraFacings[cameraId] = facing
+                            Log.d(TAG, "VirtuCam_Hook: Tracked Camera $cameraId facing: $facing")
+                        }
                     } catch (_: Exception) {}
                 }
                 Log.d(TAG, "VirtuCam_Hook: App is opening Camera2 ID: $cameraId")
@@ -917,6 +931,7 @@ object CameraHook {
         val (w, h) = getSizeFromOutputConfig(config)
         
         val format = SurfaceUtils.getSurfaceFormat(targetSurface)
+        surfaceFormats[targetSurface] = format
         val isPreview = (format == 0x22 || format == 0x1)
         
         Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Swapping OutputConfig Surface. Size=${w}x${h}, Format=$format, isPreview=$isPreview")
@@ -925,7 +940,7 @@ object CameraHook {
             // sensorOrientation=0: EGL render already applies rotation in drawToAllSurfaces.
             // Bridge only handles user rotationOffset + app JPEG_ORIENTATION.
             Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Creating FormatConverterBridge for $w x $h (Format $format) SensorRot=0(EGL-handled), RotOffset=$rotation, ColorSwap=$isColorSwapped")
-            val b = FormatConverterBridge(w, h, targetSurface, format, 0, rotation, isColorSwapped)
+            val b = FormatConverterBridge(w, h, targetSurface, format, 0, rotation, isColorSwapped) // Changed sensorOrientation to 0
             activeBridges.add(b)
             formatBridges[android.util.Size(w, h)] = b
             b
@@ -1046,7 +1061,7 @@ object CameraHook {
                                 
                                 val bridge = if (!isPreview) {
                                     // sensorOrientation=0: EGL render handles rotation
-                                    val b = FormatConverterBridge(w, h, targetSurface, format, 0)
+                                    val b = FormatConverterBridge(w, h, targetSurface, format, 0) // Changed sensorOrientation to 0
                                     activeBridges.add(b)
                                     formatBridges[android.util.Size(w, h)] = b
                                     targetSurfaces.add(Pair(b.inputSurface ?: targetSurface, isCapture))
@@ -1211,7 +1226,8 @@ object CameraHook {
         if (targetSurfaces.isNotEmpty()) {
             try {
                 // [Sync Fix] Start ONE master thread for ALL surfaces to ensure sync and save CPU
-                val thread = VirtualRenderThread(targetSurfaces, context, isVideo, isStream, streamUrl, sensorOrientation, CameraHook.rotation)
+                var isFront = (cameraFacings[activeCameraId] == 1)
+                val thread = VirtualRenderThread(targetSurfaces, context, isVideo, isStream, streamUrl, isFront, sensorOrientation, CameraHook.rotation)
                 thread.start()
                 renderThreads.add(thread)
                 Log.d(TAG, "VirtuCam_Hook: Started MASTER RenderThread for ${targetSurfaces.size} surfaces.")
@@ -1269,6 +1285,7 @@ class VirtualRenderThread(
     private val isVideo: Boolean,
     private val isStream: Boolean,
     private val streamUrl: String,
+    private val isFrontCamera: Boolean,
     private val sensorOrientation: Int = 0,
     private val userRotation: Int = 0
 ) : Thread("VirtuCam-RenderThread") {
@@ -1277,7 +1294,8 @@ class VirtualRenderThread(
     private var isRunning = true
     
     private var eglCore: EglCore? = null
-    private val eglSurfaceTargets = mutableListOf<Pair<android.opengl.EGLSurface, Boolean>>()
+    // Triple: EGLSurface, isCapture, format
+    private val eglSurfaceTargets = mutableListOf<Triple<android.opengl.EGLSurface, Boolean, Int>>()
     private var textureRenderer: TextureRenderer? = null
     
     private var videoPlayer: VideoPlayer? = null
@@ -1315,8 +1333,13 @@ class VirtualRenderThread(
                     var es: android.opengl.EGLSurface? = null
                     for (i in 0..2) {
                         try {
+                            // Get format from CameraHook.surfaceFormats
+                            val format = CameraHook.surfaceFormats[surface] ?: 0x22 // Default to PRIVATE
                             es = eglCore!!.createWindowSurface(surface)
-                            if (es != null) break
+                            if (es != null) {
+                                eglSurfaceTargets.add(Triple(es, targetPair.second, format))
+                                break
+                            }
                         } catch (e: Exception) {
                             if (i == 2) throw e
                             Thread.sleep(50)
@@ -1324,7 +1347,6 @@ class VirtualRenderThread(
                     }
                     
                     if (es != null) {
-                        eglSurfaceTargets.add(Pair(es, targetPair.second))
                         Log.d("VirtuCam_Render", "Created EGL surface for target: ${targetPair.first}")
                     }
                 } catch (e: Exception) {
@@ -1451,16 +1473,32 @@ class VirtualRenderThread(
     private fun drawToAllSurfaces(matrix: FloatArray, contentW: Int, contentH: Int): Boolean {
         val it = eglSurfaceTargets.iterator()
         while (it.hasNext()) {
-            val (es, isCapture) = it.next()
+            val (es, isCapture, format) = it.next()
             try {
                 eglCore!!.makeCurrent(es)
-                val vw = eglCore!!.querySurface(es, android.opengl.EGL14.EGL_WIDTH)
-                val vh = eglCore!!.querySurface(es, android.opengl.EGL14.EGL_HEIGHT)
-                // Draw the frame
-            val applyRotation = if (isCapture) sensorOrientation else 0
-            textureRenderer?.draw(matrix, contentW, contentH, vw, vh, getTargetRatio(vw, vh, isCapture), applyRotation, userRotation, CameraHook.isMirrored, CameraHook.zoomFactor)
+                 val vw = eglCore!!.querySurface(es, android.opengl.EGL14.EGL_WIDTH)
+                 val vh = eglCore!!.querySurface(es, android.opengl.EGL14.EGL_HEIGHT)
+                 
+                 // DYNAMIC ORIENTATION LOGIC
+                 // If it's a real photo/video (JPEG or Recorder), match the perfect upright preview (0).
+                 // If it's YUV/PRIVATE, Veriff expects physical sensor orientation (baseline).
+                 val applyRotation = if (isCapture) {
+                     if (format == ImageFormat.JPEG || format == 0) 0 else sensorOrientation
+                 } else {
+                     0
+                 }
+
+                 // DYNAMIC MIRRORING LOGIC
+                 // ImageReaders (Veriff) don't mirror naturally. Native previews do.
+                 val shouldMirror = if (isFrontCamera) {
+                     (format == ImageFormat.YUV_420_888 || format == ImageFormat.NV21 || format == ImageFormat.JPEG)
+                 } else {
+                     false
+                 }
+
+                 textureRenderer?.draw(matrix, contentW, contentH, vw, vh, getTargetRatio(vw, vh, isCapture), applyRotation, userRotation, shouldMirror, CameraHook.zoomFactor)
             
-            if (eglCore?.swapBuffers(es) == false) {
+                if (eglCore?.swapBuffers(es) == false) {
                     Log.w("VirtuCam_Render", "Surface abandoned, removing.")
                     it.remove()
                 }
