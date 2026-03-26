@@ -74,7 +74,11 @@ object CameraHook {
     
     @Volatile var zoomFactor: Float = 1.0f
     @Volatile var rtspUseTcp: Boolean = true
-    @Volatile var rotation: Int = 0
+    @Volatile
+    var rotation: Int = 0
+    
+    @Volatile
+    var isColorSwapped: Boolean = false
     @Volatile var cachedSensorOrientation: Int = 270 // Default for Helio G81 front cameras
 
 
@@ -897,14 +901,15 @@ object CameraHook {
         Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Swapping OutputConfig Surface. Size=${w}x${h}, Format=$format, isPreview=$isPreview")
         
         val bridge = if (!isPreview) {
-            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Creating FormatConverterBridge for $w x $h (Format $format) SensorRot=$cachedSensorOrientation")
-            val b = FormatConverterBridge(w, h, targetSurface, format, cachedSensorOrientation)
+            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Creating FormatConverterBridge for $w x $h (Format $format) SensorRot=$cachedSensorOrientation, RotOffset=$rotation, ColorSwap=$isColorSwapped")
+            val b = FormatConverterBridge(w, h, targetSurface, format, cachedSensorOrientation, rotation, isColorSwapped)
             activeBridges.add(b)
             formatBridges[android.util.Size(w, h)] = b
             b
         } else {
             null
         }
+
         
         val dummySurface = createDummySurface(targetSurface, w, h, bridge)
         surfaceMap[targetSurface] = dummySurface
@@ -957,8 +962,9 @@ object CameraHook {
                         zoomFactor = if (it.columnCount > 8) it.getFloat(8) else 1.0f
                         rtspUseTcp = if (it.columnCount > 9) it.getInt(9) == 1 else true
                         rotation = if (it.columnCount > 10) it.getInt(10) else 0
+                        isColorSwapped = if (it.columnCount > 11) it.getInt(11) == 1 else false
                         
-                        Log.d(TAG, "VirtuCam_Hook: Config loaded. Enabled: $isEnabled, Zoom: $zoomFactor, TCP: $rtspUseTcp, Rot: $rotation")
+                        Log.d(TAG, "VirtuCam_Hook: Config loaded. Enabled: $isEnabled, Zoom: $zoomFactor, TCP: $rtspUseTcp, Rot: $rotation, ColorSwap: $isColorSwapped")
                     } catch (innerE: Exception) {
                         Log.e(TAG, "VirtuCam_Hook: Error parsing cursor columns", innerE)
                     }

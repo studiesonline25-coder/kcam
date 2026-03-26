@@ -90,6 +90,14 @@ class VirtuCamConfig(context: Context) {
         set(value) = prefs.edit().putInt("rotation_override", value).apply()
 
     /**
+     * Whether to swap U and V planes (color fix for some devices)
+     */
+    var isColorSwapped: Boolean
+        get() = prefs.getBoolean("is_color_swapped", false)
+        set(value) = prefs.edit().putBoolean("is_color_swapped", value).apply()
+
+
+    /**
      * List of package names for apps to target
      */
     var targetApps: Set<String>

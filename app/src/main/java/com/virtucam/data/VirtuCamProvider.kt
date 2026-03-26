@@ -54,7 +54,7 @@ class VirtuCamProvider : ContentProvider() {
     ): Cursor? {
         return when (uriMatcher.match(uri)) {
             CODE_CONFIG -> {
-                MatrixCursor(arrayOf("enabled", "media_uri", "is_video", "is_stream", "stream_url", "target_apps", "compensation_factor", "is_mirrored", "zoom_factor", "rtsp_use_tcp", "rotation")).apply {
+                MatrixCursor(arrayOf("enabled", "media_uri", "is_video", "is_stream", "stream_url", "target_apps", "compensation_factor", "is_mirrored", "zoom_factor", "rtsp_use_tcp", "rotation", "is_color_swapped")).apply {
                     addRow(arrayOf(
                         if (config.isEnabled) 1 else 0,
                         config.spoofMediaUri?.toString() ?: "",
@@ -65,20 +65,21 @@ class VirtuCamProvider : ContentProvider() {
                         config.compensationFactor,
                         if (config.isMirrored) 1 else 0,
                         config.zoomFactor,
-                        if (config.rtspUseTcp) 1 else 0,
-                        config.rotation
+                        config.rtspUseTcp.toInt(),
+                        config.rotation,
+                        if (config.isColorSwapped) 1 else 0
                     ))
                 }
             }
             CODE_MEDIA -> {
-                MatrixCursor(arrayOf("uri", "is_video", "is_stream", "stream_url", "is_mirrored", "rotation")).apply {
                     addRow(arrayOf(
                         config.spoofMediaUri?.toString() ?: "",
                         if (config.isSpoofVideo) 1 else 0,
                         if (config.isStream) 1 else 0,
                         config.streamUrl ?: "",
                         if (config.isMirrored) 1 else 0,
-                        config.rotation
+                        config.rotation,
+                        if (config.isColorSwapped) 1 else 0
                     ))
                 }
             }

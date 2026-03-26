@@ -25,7 +25,9 @@ class FormatConverterBridge(
     val height: Int,
     val outputSurface: Surface? = null,
     val outputFormat: Int = android.graphics.ImageFormat.YUV_420_888,
-    val sensorOrientation: Int = 270 // Default for most front cameras
+    val sensorOrientation: Int = 270, // Default for most front cameras
+    val rotationOffset: Int = 0,
+    val isColorSwapped: Boolean = false
 ) {
     companion object {
         private const val TAG = "VirtuCam_Bridge"
@@ -148,31 +150,38 @@ class FormatConverterBridge(
             
             val srcW = width.toFloat()
             val srcH = height.toFloat()
+        
+        // DYNAMIC LOGIC: If target is Landscape but source is Portrait (or vice versa), 
+        // we likely need a 90/270 rotation regardless of sensorOrientation.
+        val targetIsLandscape = w > h
+        val sourceIsLandscape = width > height
+        
+        var baseRotation = sensorOrientation
+        if (targetIsLandscape != sourceIsLandscape) {
+            // Force a 90-degree compensation if orientations mismatch
+            // baseRotation = (baseRotation + 90) % 360
+        }
+
+        val totalRotation = (baseRotation + rotationOffset) % 360
+
             val tgtW = w.toFloat()
             val tgtH = h.toFloat()
 
             // Calculate effective source dimensions after sensor rotation
             // If rotating 90/270, source's logic width/height are swapped
-            val isRotated = (sensorOrientation == 90 || sensorOrientation == 270)
-            val logicSrcW = if (isRotated) srcH else srcW
-            val logicSrcH = if (isRotated) srcW else srcH
-
-            // Scale factor to Fit (Center-Crop)
-            val scale = Math.max(tgtW / logicSrcW, tgtH / logicSrcH)
+            val logicSrcW = if (totalRotation % 180 == 0) width.toFloat() else height.toFloat()
+            val logicSrcH = if (totalRotation % 180 == 0) height.toFloat() else width.toFloat()
             
-            // Calculations for center crop
-            // offset = half of the unused space in source coordinate system
-            val logicCropW = tgtW / scale
-            val logicCropH = tgtH / scale
-            val offsetX = (logicSrcW - logicCropW) / 2f
-            val offsetY = (logicSrcH - logicCropH) / 2f
+            val scale = Math.max(tgtW / logicSrcW, tgtH / logicSrcH)
+            val offsetX = (logicSrcW - tgtW / scale) / 2f
+            val offsetY = (logicSrcH - tgtH / scale) / 2f
 
             val srcStrideArr = width * 4
 
             // 1. Process Y Plane
-            for (ty in 0 until h) {
+            for (ty in 0 until tgtH.toInt()) {
                 val rowPos = ty * yRowStride
-                for (tx in 0 until w) {
+                for (tx in 0 until tgtW.toInt()) {
                     // a) Map target(tx, ty) back to logic source coordinate system
                     val lx = tx / scale + offsetX
                     val ly = ty / scale + offsetY
@@ -180,11 +189,12 @@ class FormatConverterBridge(
                     // b) Apply rotation to get physical source coordinates (RGBA cache)
                     var sx = 0f
                     var sy = 0f
-                    when (sensorOrientation) {
+                    when (totalRotation % 360) {
                         0 -> { sx = lx; sy = ly }
                         90 -> { sx = ly; sy = srcH - 1 - lx }
                         180 -> { sx = srcW - 1 - lx; sy = srcH - 1 - ly }
                         270 -> { sx = srcW - 1 - ly; sy = lx }
+                        else -> { sx = lx; sy = ly }
                     }
 
                     val srcRow = sx.toInt().coerceIn(0, width - 1)
@@ -234,11 +244,12 @@ class FormatConverterBridge(
                         // b) Apply rotation to get physical source coordinates (RGBA cache)
                         var sx = 0f
                         var sy = 0f
-                        when (sensorOrientation) {
+                        when (totalRotation % 360) {
                             0 -> { sx = lx; sy = ly }
                             90 -> { sx = ly; sy = srcH - 1 - lx }
                             180 -> { sx = srcW - 1 - lx; sy = srcH - 1 - ly }
                             270 -> { sx = srcW - 1 - ly; sy = lx }
+                            else -> { sx = lx; sy = ly }
                         }
 
                         val srcRow = sx.toInt().coerceIn(0, width - 1)
@@ -253,8 +264,9 @@ class FormatConverterBridge(
                             val u = ((-38 * r - 74 * g + 112 * b + 128) shr 8) + 128
                             val v = ((112 * r - 94 * g - 18 * b + 128) shr 8) + 128
                             
-                            val firstByte = if (isNv21) v else u
-                            val secondByte = if (isNv21) u else v
+                            val effectivelyNv21 = if (isColorSwapped) !isNv21 else isNv21
+                            val firstByte = if (effectivelyNv21) v else u
+                            val secondByte = if (effectivelyNv21) u else v
                             
                             val pos = rowPos + (tx * pixStride)
                             if (pos + 1 < uvBuffer.capacity()) {
@@ -285,11 +297,12 @@ class FormatConverterBridge(
 
                             var sx = 0f
                             var sy = 0f
-                            when (sensorOrientation) {
+                            when (totalRotation % 360) {
                                 0 -> { sx = lx; sy = ly }
                                 90 -> { sx = ly; sy = srcH - 1 - lx }
                                 180 -> { sx = srcW - 1 - lx; sy = srcH - 1 - ly }
                                 270 -> { sx = srcW - 1 - ly; sy = lx }
+                                else -> { sx = lx; sy = ly }
                             }
 
                             val srcRow = sx.toInt().coerceIn(0, width - 1)

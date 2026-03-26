@@ -154,6 +154,14 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        // Color Swap switch
+        binding.colorSwapSwitch.isChecked = config.isColorSwapped
+        binding.colorSwapSwitch.setOnCheckedChangeListener { _, isChecked ->
+            config.isColorSwapped = isChecked
+            Toast.makeText(this, "Color correction: " + (if (isChecked) "Enabled" else "Disabled"), Toast.LENGTH_SHORT).show()
+        }
+
+
         // Rotation Button
         binding.btnRotation.setOnClickListener {
             val nextRotation = (config.rotation + 90) % 360

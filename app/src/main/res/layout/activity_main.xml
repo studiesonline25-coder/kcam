@@ -356,7 +356,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Rotation Override"
+                        android:text="Calibration: Rotation Override"
                         android:textColor="@color/text_primary"
                         android:textSize="14sp" />
 
@@ -369,6 +369,29 @@
                         android:textColor="@color/primary"
                         app:rippleColor="@color/primary_light" />
                 </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="8dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Color Correction (Swap U/V)"
+                        android:textColor="@color/text_primary"
+                        android:textSize="14sp" />
+
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/colorSwapSwitch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:trackTint="@color/primary" />
+                </LinearLayout>
+
 
             </LinearLayout>
 
