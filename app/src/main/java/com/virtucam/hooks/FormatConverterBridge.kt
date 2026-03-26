@@ -163,7 +163,11 @@ class FormatConverterBridge(
             baseRotation = (baseRotation + 90) % 360
         }
 
-        val totalRotation = (baseRotation + rotationOffset) % 360
+        // --- METADATA SYNC ---
+        // If the app explicitly requested a rotation (via CaptureRequest tags like JPEG_ORIENTATION),
+        // we incorporate it to follow the app's own internal logic.
+        val appRotation = CameraHook.lastRequestedOrientation.let { if (it == -1) 0 else it }
+        val totalRotation = (baseRotation + rotationOffset + appRotation) % 360
 
 
             val tgtW = w.toFloat()

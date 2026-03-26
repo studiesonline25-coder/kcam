@@ -79,6 +79,9 @@ object CameraHook {
     
     @Volatile
     var isColorSwapped: Boolean = false
+    
+    @Volatile
+    var lastRequestedOrientation: Int = -1 // -1 = NOT_SET
     @Volatile var cachedSensorOrientation: Int = 270 // Default for Helio G81 front cameras
 
 
@@ -602,6 +605,19 @@ object CameraHook {
                                 Log.d(TAG, "VirtuCam_Hook: submitCaptureRequest CHOKEPOINT ACTIVATED -> Swapped ${toRemove.size} surfaces natively in immutable CaptureRequest!")
                             }
                         }
+
+                        // --- METADATA EXTRACTION ---
+                        // Check if the app is explicitly requesting a rotation tag (e.g. 90, 270)
+                        try {
+                            val jpegOrientationKey = android.hardware.camera2.CaptureRequest.JPEG_ORIENTATION
+                            val orientation = XposedHelpers.callMethod(reqObj, "get", jpegOrientationKey) as? Int
+                            if (orientation != null) {
+                                if (lastRequestedOrientation != orientation) {
+                                    Log.d(TAG, "VirtuCam_Hook: App requested JPEG_ORIENTATION = $orientation")
+                                    lastRequestedOrientation = orientation
+                                }
+                            }
+                        } catch (_: Throwable) {}
                     }
                 } catch (t: Throwable) {
                     Log.e(TAG, "VirtuCam_Hook: Error mutating immutable CaptureRequest in submitCaptureRequest", t)
