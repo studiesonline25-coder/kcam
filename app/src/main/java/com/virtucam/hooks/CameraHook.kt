@@ -1044,7 +1044,7 @@ object CameraHook {
                                 val isPreview = (format == 0x22 || format == 0x1)
                                 
                                 val bridge = if (!isPreview) {
-                                    val b = FormatConverterBridge(w, h, targetSurface, format, cachedSensorOrientation)
+                                    val b = FormatConverterBridge(w, h, targetSurface, format, cameraOrientations[activeCameraId] ?: 270)
                                     activeBridges.add(b)
                                     formatBridges[android.util.Size(w, h)] = b
                                     targetSurfaces.add(Pair(b.inputSurface ?: targetSurface, isCapture))
