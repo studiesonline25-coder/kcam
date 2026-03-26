@@ -1,0 +1,1596 @@
+1774505781.188 10531 22653 22678 E GraphicsTracker: cannot deallocate due to being stopped
+1774505781.188 10531 22653 22678 W Codec2-GraphicBufferAllocator: deallocate() 97293894159199 was not successful 1
+1774505781.190 10531 22653 22678 E GraphicsTracker: cannot deallocate due to being stopped
+1774505781.190 10531 22653 22678 W Codec2-GraphicBufferAllocator: deallocate() 97293894159200 was not successful 1
+1774505781.190 10531 22653 23549 E GraphicsTracker: cannot deallocate due to being stopped
+1774505781.191 10531 22653 23549 W Codec2-GraphicBufferAllocator: deallocate() 97293894159201 was not successful 1
+1774505781.191 10531 22653 25166 D StreamPlayer: Playback state changed: BUFFERING
+1774505781.194 10531 22653 23549 E GraphicsTracker: cannot deallocate due to being stopped
+1774505781.194 10531 22653 23549 W Codec2-GraphicBufferAllocator: deallocate() 97293894159202 was not successful 1
+1774505781.198 10531 22653 22678 E GraphicsTracker: cannot deallocate due to being stopped
+1774505781.198 10531 22653 22678 W Codec2-GraphicBufferAllocator: deallocate() 97293894159203 was not successful 1
+1774505781.200 10531 22653 22678 E GraphicsTracker: cannot deallocate due to being stopped
+1774505781.200 10531 22653 22678 W Codec2-GraphicBufferAllocator: deallocate() 97293894159204 was not successful 1
+1774505781.229 10531 22653 25170 D RtspClient: OPTIONS rtsp://10.173.9.188:554/live RTSP/1.0
+1774505781.229 10531 22653 25170 D RtspClient: User-Agent: AndroidXMedia3/1.5.1
+1774505781.229 10531 22653 25170 D RtspClient: CSeq: 0
+1774505781.238 10531 22653 25170 D RtspClient: RTSP/1.0 200 OK
+1774505781.238 10531 22653 25170 D RtspClient: CSeq: 0
+1774505781.238 10531 22653 25170 D RtspClient: Public: OPTIONS, DESCRIBE, SETUP, TEARDOWN, PLAY
+1774505781.240 10531 22653 25170 D RtspClient: DESCRIBE rtsp://10.173.9.188:554/live RTSP/1.0
+1774505781.240 10531 22653 25170 D RtspClient: User-Agent: AndroidXMedia3/1.5.1
+1774505781.240 10531 22653 25170 D RtspClient: CSeq: 1
+1774505781.240 10531 22653 25170 D RtspClient: Accept: application/sdp
+1774505781.247 10531 22653 25170 D RtspClient: RTSP/1.0 200 OK
+1774505781.247 10531 22653 25170 D RtspClient: CSeq: 1
+1774505781.247 10531 22653 25170 D RtspClient: Content-Length: 255
+1774505781.247 10531 22653 25170 D RtspClient: Content-Type: application/sdp
+1774505781.247 10531 22653 25170 D RtspClient: v=0
+1774505781.247 10531 22653 25170 D RtspClient: o=- 91774505782 1 IN IP4 10.173.9.188
+1774505781.247 10531 22653 25170 D RtspClient: t=0 0
+1774505781.247 10531 22653 25170 D RtspClient: a=control:*
+1774505781.247 10531 22653 25170 D RtspClient: m=video 0 RTP/AVP 96
+1774505781.247 10531 22653 25170 D RtspClient: a=rtpmap:96 H264/90000
+1774505781.247 10531 22653 25170 D RtspClient: a=fmtp:96 packetization-mode=1;profile-level-id=64001F;sprop-parameter-sets=Z2QAH6zZQLQKGwFqAgICgAAAAwCAAAAeR4wYyw==,aO+8sA==
+1774505781.247 10531 22653 25170 D RtspClient: a=control:track0
+1774505781.257 10531 22653 25170 D RtspClient: SETUP rtsp://10.173.9.188:554/live/track0 RTSP/1.0
+1774505781.257 10531 22653 25170 D RtspClient: User-Agent: AndroidXMedia3/1.5.1
+1774505781.257 10531 22653 25170 D RtspClient: CSeq: 2
+1774505781.257 10531 22653 25170 D RtspClient: Transport: RTP/AVP/TCP;unicast;interleaved=0-1
+1774505781.263 10531 22653 25170 I DMCodecAdapterFactory: Creating an asynchronous MediaCodec adapter for track type video
+1774505781.264 10531 22653 25170 D MediaCodec: CreateByComponentName: name c2.mtk.avc.decoder
+1774505781.273 10531 22653 25170 D CCodecBufferChannel: mBufferCountDebug=0 mIsUserLoad=1
+1774505781.273 10531 22653 25170 D MBrainDateManager: MBrainDataManager Constructor caller
+1774505781.273 10531 22653 25170 D MBrainManager: mMBrainSupport 0, return NULL
+1774505781.273 10531 22653 25170 D MBrainDateManager: mMBrainManager = nullptr
+1774505781.274 10531 22653 25170 D CCodecBufferChannel: new MBrainDataManager() fail
+1774505781.274 10531 22653 25170 D MBrainDateManager: MBrainDataManager Constructor clear
+1774505781.274 10531 22653 25170 D MediaCodec: [0x77ccf05860] init: CCodec 0x791c99e890, CCodecBufferChannel 0x777c91de70
+1774505781.274 10531 22653 25170 I MediaCodec: init video box disabled for codec not supported
+1774505781.293 10531 22653 25204 D MediaCodec: [0x77ccf05860] setState: 1
+1774505781.293 10531 22653 25204 I MediaCodec: [mId: 4] [video-debug-dec] setState: INITIALIZING
+1774505781.293 10531 22653 25208 D CCodec  : allocate(c2.mtk.avc.decoder)
+1774505781.298 10531 22653 25208 I CCodec  : setting up 'default' as default (vendor) store
+1774505781.326 10531 22653 25208 W saas.i18n:stub3: AIBinder_linkToDeath is being called with a non-null cookie and no onUnlink callback set. This might not be intended. AIBinder_DeathRecipient_setOnUnlinked should be called first.
+1774505781.326 10531 22653 25208 I CCodec  : Created component [c2.mtk.avc.decoder]
+1774505781.327 10531 22653 25208 D CCodecBufferChannel: [0x777c91de70] setComponent: mName c2.mtk.avc.decoder#897, mPipelineWatcher 0x777c91e358
+1774505781.327 10531 22653 25208 D CCodecBufferChannel: PipelineWatcher debug info [c2.mtk.avc.decoder#897] enable=0
+1774505781.327 10531 22653 25208 D CCodecConfig: read media type: video/avc
+1774505781.353 10531 22653 25208 D ReflectedParamUpdater: extent() != 1 for single value type: algo.buffers.max-count.values
+1774505781.354 10531 22653 25208 D ReflectedParamUpdater: extent() != 1 for single value type: output.subscribed-indices.values
+1774505781.355 10531 22653 25208 D ReflectedParamUpdater: extent() != 1 for single value type: input.buffers.allocator-ids.values
+1774505781.355 10531 22653 25208 D ReflectedParamUpdater: extent() != 1 for single value type: output.buffers.allocator-ids.values
+1774505781.356 10531 22653 25208 D ReflectedParamUpdater: extent() != 1 for single value type: algo.buffers.allocator-ids.values
+1774505781.357 10531 22653 25208 D ReflectedParamUpdater: extent() != 1 for single value type: output.buffers.pool-ids.values
+1774505781.357 10531 22653 25208 D ReflectedParamUpdater: extent() != 1 for single value type: algo.buffers.pool-ids.values
+1774505781.364 10531 22653 25208 D ReflectedParamUpdater: ignored struct field coded.color-format.locations
+1774505781.385 10531 22653 22659 I saas.i18n:stub3: Background young concurrent mark compact GC freed 12MB AllocSpace bytes, 0(0B) LOS objects, 22% free, 57MB/74MB, paused 4.420ms,9.492ms total 197.400ms
+1774505781.394 10531 22653 25208 D CCodecConfig: ignoring local param raw.size (0xd2001800) as it is already supported
+1774505781.395 10531 22653 25208 D CCodecConfig: ignoring local param raw.crop (0xd2001801) as it is already supported
+1774505781.395 10531 22653 25208 D CCodecConfig: ignoring local param default.color (0x5200180b) as it is already supported
+1774505781.395 10531 22653 25208 D CCodecConfig: ignoring local param raw.hdr-static-info (0xd200180a) as it is already supported
+1774505781.398 10531 22653 25208 I CCodecConfig: query failed after returning 18 values (BAD_INDEX)
+1774505781.398 10531 22653 25208 D CCodecConfig: c2 config diff is Dict {
+1774505781.398 10531 22653 25208 D CCodecConfig:   c2::u32 algo.low-latency.value = 0
+1774505781.398 10531 22653 25208 D CCodecConfig:   c2::i32 algo.priority.value = 1
+1774505781.398 10531 22653 25208 D CCodecConfig:   c2::float algo.rate.value = 0
+1774505781.398 10531 22653 25208 D CCodecConfig:   c2::float coded.frame-rate.value = 0
+1774505781.398 10531 22653 25208 D CCodecConfig:   c2::u32 coded.pl.level = 20495
+1774505781.398 10531 22653 25208 D CCodecConfig:   c2::u32 coded.pl.profile = 20481
+1774505781.398 10531 22653 25208 D CCodecConfig:   c2::u32 coded.vui.color.matrix = 0
+1774505781.398 10531 22653 25208 D CCodecConfig:   c2::u32 coded.vui.color.primaries = 0
+1774505781.398 10531 22653 25208 D CCodecConfig:   c2::u32 coded.vui.color.range = 0
+1774505781.398 10531 22653 25208 D CCodecConfig:   c2::u32 coded.vui.color.transfer = 0
+1774505781.398 10531 22653 25208 D CCodecConfig:   c2::u32 default.color.matrix = 0
+1774505781.398 10531 22653 25208 D CCodecConfig:   c2::u32 default.color.primaries = 0
+1774505781.398 10531 22653 25208 D CCodecConfig:   c2::u32 default.color.range = 0
+1774505781.398 10531 22653 25208 D CCodecConfig:   c2::u32 default.color.transfer = 0
+1774505781.398 10531 22653 25208 D CCodecConfig:   c2::u32 input.buffers.max-size.value = 2097152
+1774505781.398 10531 22653 25208 D CCodecConfig:   c2::u32 input.delay.value = 0
+1774505781.398 10531 22653 25208 D CCodecConfig:   string input.media-type.value = "video/avc"
+1774505781.398 10531 22653 25208 D CCodecConfig:   c2::u32 output.delay.value = 12
+1774505781.398 10531 22653 25208 D CCodecConfig:   string output.media-type.value = "video/raw"
+1774505781.398 10531 22653 25208 D CCodecConfig:   c2::u32 raw.color.matrix = 0
+1774505781.398 10531 22653 25208 D CCodecConfig:   c2::u32 raw.color.primaries = 0
+1774505781.398 10531 22653 25208 D CCodecConfig:   c2::u32 raw.color.range = 0
+1774505781.398 10531 22653 25208 D CCodecConfig:   c2::u32 raw.color.transfer = 0
+1774505781.398 10531 22653 25208 D CCodecConfig:   c2::u32 raw.crop.height = 239
+1774505781.398 10531 22653 25208 D CCodecConfig:   c2::u32 raw.crop.left = 0
+1774505781.398 10531 22653 25208 D CCodecConfig:   c2::u32 raw.crop.top = 0
+1774505781.398 10531 22653 25208 D CCodecConfig:   c2::u32 raw.crop.width = 319
+1774505781.398 10531 22653 25208 D CCodecConfig:   c2::float raw.hdr-static-info.master
+1774505781.399 10531 22653 25208 W ColorUtils: expected specified color aspects (0:0:0:0)
+1774505781.400 10531 22653 25204 D MediaCodec: [0x77ccf05860] setState: 2
+1774505781.400 10531 22653 25204 I MediaCodec: [mId: 4] [video-debug-dec] setState: INITIALIZED
+1774505781.409 10531 22653 25204 I MediaCodec: MediaCodec will operate in async mode
+1774505781.411 10531 22653 25170 D MediaCodec: [0x77ccf05860] [c2.mtk.avc.decoder] configure
+1774505781.411 10531 22653 25170 D AppSceneRecognizer: AppUsageScene: Unspecified
+1774505781.411 10531 22653 25170 I MediaCodec: [mId: 4] [video-debug-dec] configure: ClientName: top.bienvenido.saas.i18n ComponentName: c2.mtk.avc.decoder
+1774505781.411 10531 22653 25170 I MediaCodec: [mId: 4] [video-debug-dec] configure: ClientFormat: AMessage(what = 0x00000000) = {
+1774505781.411 10531 22653 25170 I MediaCodec:   int32_t max-height = 1280
+1774505781.411 10531 22653 25170 I MediaCodec:   string log-session-id = "kTUnXuX24ZYLaYp5"
+1774505781.411 10531 22653 25170 I MediaCodec:   int32_t importance = 1000
+1774505781.411 10531 22653 25170 I MediaCodec:   string mime = "video/avc"
+1774505781.411 10531 22653 25170 I MediaCodec:   int32_t priority = 0
+1774505781.411 10531 22653 25170 I MediaCodec:   int32_t color-standard = 1
+1774505781.411 10531 22653 25170 I MediaCodec:   Buffer csd-1 = {
+1774505781.411 10531 22653 25170 I MediaCodec:     00000000:  00 00 00 01 68 ef bc b0                           ....h...
+1774505781.411 10531 22653 25170 I MediaCodec:   }
+1774505781.411 10531 22653 25170 I MediaCodec:   int32_t color-transfer = 3
+1774505781.411 10531 22653 25170 I MediaCodec:   int32_t max-width = 720
+1774505781.411 10531 22653 25170 I MediaCodec:   int32_t width = 720
+1774505781.411 10531 22653 25170 I MediaCodec:   int32_t color-range = 2
+1774505781.411 10531 22653 25170 I MediaCodec:   int32_t rotation-degrees = 0
+1774505781.411 10531 22653 25170 I MediaCodec:   int32_t max-input-size = 691200
+1774505781.411 10531 22653 25170 I MediaCodec:   int32_t height = 1280
+1774505781.411 10531 22653 25170 I MediaCodec:   Buffer csd-0 = {
+1774505781.411 10531 22653 25170 I MediaCodec:     00000000:  00 00 00 01 67 64 00 1f  ac d9 40 b4 0a 1b 01 6a  ....gd....@....j
+1774505781.411 10531 22653 25170 I MediaCodec:     00000010:  02 02 02 80 00 00 03 00  80 00 00 1e 47 8c 18 cb  ............G...
+1774505781.411 10531 22653 25170 I MediaCodec:   }
+1774505781.411 10531 22653 25170 I MediaCodec: }
+1774505781.412 10531 22653 25170 I MediaCodec: MediaStub sendFrameRate
+1774505781.412 10531 22653 25170 D MediaImpl: MediaImpl::sendFrameRate: -1
+1774505781.412 10531 22653 25170 I MediaCodec: MediaStub sendWidth/sendHeight
+1774505781.412 10531 22653 25170 I MediaCodec: MediaStub sendMine
+1774505781.412 10531 22653 25170 D MediaImpl: MediaImpl::sendMine: video/avc
+1774505781.412 10531 22653 25170 I MediaCodec: MediaStub sendDolbyVision
+1774505781.412 10531 22653 25170 I MediaCodec: MediaStub sendPackageName
+1774505781.413 10531 22653 25170 D MediaImpl: MediaImpl::sendPackageName: top.bienvenido.saas.i18n
+1774505781.413 10531 22653 25170 I MiMediaCodec: fps video to display enabled
+1774505781.413 10531 22653 25170 I MiMediaCodec: The Fps from player is 0.000000  frameRateFloat -1.000000 frameRateInt -1
+1774505781.413 10531 22653 25170 I MediaCodec: configure : init video box disabled
+1774505781.413 10531 22653 25204 I MediaCodec: [mId: 4] [video-debug-dec] connectToSurface: surface 0x789cab3660, mSurface 0x0
+1774505781.414 10531 22653 25204 D MediaCodec: [0x77ccf05860] [c2.mtk.avc.decoder] connectToSurface: surface 0x789cab3660, mSurface 0x0
+1774505781.414 10531 22653 25204 D SurfaceUtils: connecting to surface 0x789cab3670, reason connectToSurface
+1774505781.414 10531 22653 25204 I MediaCodec: [c2.mtk.avc.decoder] setting surface generation to 23196679
+1774505781.414 10531 22653 25204 D SurfaceUtils: disconnecting from surface 0x789cab3670, reason connectToSurface(reconnect)
+1774505781.414 10531 22653 25204 D SurfaceUtils: connecting to surface 0x789cab3660, reason connectToSurface(reconnect-with-listener)
+1774505781.414 10531 22653 25204 D MediaCodec: [0x77ccf05860] setState: 3
+1774505781.414 10531 22653 25204 I MediaCodec: [mId: 4] [video-debug-dec] setState: CONFIGURING
+1774505781.414 10531 22653 25204 D MediaCodec: [c2.mtk.avc.decoder] config set c2 sleep timeout 1500 kC2SleepTimeoutMs=1500
+1774505781.415 10531 22653 25208 D CCodec  : [c2.mtk.avc.decoder] buffers are bound to CCodec for this session
+1774505781.415 10531 22653 25208 D CCodecConfig: no c2 equivalents for log-session-id
+1774505781.415 10531 22653 25208 D CCodecConfig: no c2 equivalents for importance
+1774505781.415 10531 22653 25208 D CCodecConfig: no c2 equivalents for color-standard
+1774505781.415 10531 22653 25208 D CCodecConfig: no c2 equivalents for csd-1
+1774505781.415 10531 22653 25208 D CCodecConfig: no c2 equivalents for native-window
+1774505781.415 10531 22653 25208 D CCodecConfig: no c2 equivalents for native-window-generation
+1774505781.415 10531 22653 25208 D CCodecConfig: no c2 equivalents for flags
+1774505781.417 10531 22653 25208 D CCodecConfig: c2 config diff is   c2::i32 algo.priority.value = 0
+1774505781.417 10531 22653 25208 D CCodecConfig:   c2::u32 default.color.matrix = 1
+1774505781.417 10531 22653 25208 D CCodecConfig:   c2::u32 default.color.primaries = 1
+1774505781.417 10531 22653 25208 D CCodecConfig:   c2::u32 default.color.range = 2
+1774505781.417 10531 22653 25208 D CCodecConfig:   c2::u32 default.color.transfer = 3
+1774505781.417 10531 22653 25208 D CCodecConfig:   c2::u32 input.buffers.max-size.value = 2094080
+1774505781.417 10531 22653 25208 D CCodecConfig:   c2::u32 raw.max-size.height = 1280
+1774505781.417 10531 22653 25208 D CCodecConfig:   c2::u32 raw.max-size.width = 720
+1774505781.417 10531 22653 25208 D CCodecConfig:   c2::u32 raw.pixel-format.value = 34
+1774505781.417 10531 22653 25208 D CCodecConfig:   c2::u32 raw.size.height = 1280
+1774505781.417 10531 22653 25208 D CCodecConfig:   c2::u32 raw.size.width = 720
+1774505781.417 10531 22653 25208 D CCodecConfig:   c2::u32 vendor.mtk.ext.vdec.force.output.cc.value = 0
+1774505781.417 10531 22653 25208 D CCodecConfig:   c2::u32 vendor.mtk.vdec.buffer.fetch.timeout.ms.value = 1500
+1774505781.419 10531 22653 25208 D CCodec  : client requested max input size 691200, which is smaller than what component recommended (2094080); overriding with component recommendation.
+1774505781.419 10531 22653 25208 W CCodec  : This behavior is subject to change. It is recommended that app developers double check whether the requested max input size is in reasonable range.
+1774505781.419 10531 22653 25208 D CCodec  : encoding statistics level = 0
+1774505781.419 10531 22653 25208 D CCodec  : setup formats input: AMessage(what = 0x00000000) = {
+1774505781.419 10531 22653 25208 D CCodec  :   string mime = "video/avc"
+1774505781.419 10531 22653 25208 D CCodec  :   int32_t width = 720
+1774505781.419 10531 22653 25208 D CCodec  :   int32_t profile = 65536
+1774505781.419 10531 22653 25208 D CCodec  :   int32_t priority = 0
+1774505781.419 10531 22653 25208 D CCodec  :   int32_t frame-rate = 0
+1774505781.419 10531 22653 25208 D CCodec  :   int32_t height = 1280
+1774505781.419 10531 22653 25208 D CCodec  :   int32_t level = 32768
+1774505781.419 10531 22653 25208 D CCodec  :   int32_t max-input-size = 2094080
+1774505781.419 10531 22653 25208 D CCodec  :   Rect crop(0, 0, 318, 238)
+1774505781.419 10531 22653 25208 D CCodec  : }
+1774505781.419 10531 22653 25208 D CCodec  : setup formats output: AMessage(what = 0x00000000) = {
+1774505781.419 10531 22653 25208 D CCodec  :   int32_t android._color-format = 2130708361
+1774505781.419 10531 22653 25208 D CCodec  :   int32_t android._video-scaling = 1
+1774505781.419 10531 22653 25208 D CCodec  :   int32_t sar-width = 1
+1774505781.419 10531 22653 25208 D CCodec  :   int32_t color-standard = 4
+1774505781.419 10531 22653 25208 D CCodec  :   int32_t color-range = 2
+1774505781.419 10531 22653 25208 D CCodec  :   int32_t color-transfer = 3
+1774505781.419 10531 22653 25208 D CCodec  :   int32_t android._dataspace = 259
+1774505781.419 10531 22653 25208 D CCodec  :   int32_t width = 720
+1774505781.419 10531 22653 25208 D CCodec  :   int32_t rotation-degrees = 0
+1774505781.419 10531 22653 25208 D CCodec  :   int32_t sar-height = 1
+1774505781.419 10531 22653 25208 D CCodec  :   int32_t max-width = 720
+1774505781.419 10531 22653 25208 D CCodec  :   int32_t max-height = 1280
+1774505781.419 10531 22653 25208 D CCodec  :   int32_t priority = 0
+1774505781.419 10531 22653 25208 D CCodec  :   string mime = "video/raw"
+1774505781.419 10531 22653 25208 D CCodec  :   Rect crop(0, 0, 318, 238)
+1774505781.419 10531 22653 25208 D CCodec  :   Buffer hdr-static-info = {
+1774505781.419 10531 22653 25208 D CCodec  :     00000000:  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  ................
+1774505781.419 10531 22653 25208 D CCodec  :     00000010:  00 00 00 00 00 00 00 00  00                       .........
+1774505781.419 10531 22653 25208 D CCodec  :   }
+1774505781.419 10531 22653 25208 D CCodec  :   int32_t frame-rate = 0
+1774505781.419 10531 22653 25208 D CCodec  :   int32_t height = 1280
+1774505781.419 10531 22653 25208 D CCodec  :   int32_t color-format = 2130708361
+1774505781.419 10531 22653 25208 D CCodec  : }
+1774505781.420 10531 22653 25208 I CCodecConfig: query failed after returning 20 values (BAD_INDEX)
+1774505781.421 10531 22653 25208 D CCodecConfig: c2 config diff is   c2::u32 raw.color.matrix = 1
+1774505781.421 10531 22653 25208 D CCodecConfig:   c2::u32 raw.color.primaries = 1
+1774505781.421 10531 22653 25208 D CCodecConfig:   c2::u32 raw.color.range = 2
+1774505781.421 10531 22653 25208 D CCodecConfig:   c2::u32 raw.color.transfer = 3
+1774505781.422 10531 22653 25204 D MediaCodec: [0x77ccf05860] setState: 4
+1774505781.422 10531 22653 25204 I MediaCodec: [mId: 4] [video-debug-dec] setState: CONFIGURED
+1774505781.424 10531 22653 25170 D MediaCodec: keep callback message for reclaim
+1774505781.425 10531 22653 25204 D MediaCodec: [0x77ccf05860] setState: 5
+1774505781.425 10531 22653 25204 I MediaCodec: [mId: 4] [video-debug-dec] setState: STARTING
+1774505781.442 10531 22653 25208 D CCodecBufferChannel: [c2.mtk.avc.decoder#897] Created input block pool with allocatorID 16 => poolID 21 - OK (0)
+1774505781.442 10531 22653 25208 I CCodecBufferChannel: [mId: 4] [video-debug-dec] start: inputFormat: AMessage(what = 0x00000000) = {
+1774505781.442 10531 22653 25208 I CCodecBufferChannel:   string mime = "video/avc"
+1774505781.442 10531 22653 25208 I CCodecBufferChannel:   int32_t width = 720
+1774505781.442 10531 22653 25208 I CCodecBufferChannel:   int32_t profile = 65536
+1774505781.442 10531 22653 25208 I CCodecBufferChannel:   int32_t priority = 0
+1774505781.442 10531 22653 25208 I CCodecBufferChannel:   int32_t frame-rate = 0
+1774505781.442 10531 22653 25208 I CCodecBufferChannel:   int32_t height = 1280
+1774505781.442 10531 22653 25208 I CCodecBufferChannel:   int32_t level = 32768
+1774505781.442 10531 22653 25208 I CCodecBufferChannel:   int32_t max-input-size = 2094080
+1774505781.442 10531 22653 25208 I CCodecBufferChannel:   Rect crop(0, 0, 318, 238)
+1774505781.442 10531 22653 25208 I CCodecBufferChannel: }
+1774505781.444 10531 22653 25208 D CCodecBufferChannel: [c2.mtk.avc.decoder#897] Query output surface allocator returned 0 params => BAD_INDEX (6)
+1774505781.444 10531 22653 25208 D Codec2Client: GraphicBufferAllocator created
+1774505781.449 10531 22653 25208 I CCodecBufferChannel: [c2.mtk.avc.decoder#897] Created output block pool with allocatorID 18 => poolID 1457 - OK
+1774505781.449 10531 22653 25208 D CCodecBufferChannel: [c2.mtk.avc.decoder#897] Configured output block pool ids 1457 => OK
+1774505781.450 10531 22653 25208 D CCodecBufferChannel: [0x777c91de70] [c2.mtk.avc.decoder#897] start: output->outputDelay 12, output->numSlots 16
+1774505781.450 10531 22653 25208 I CCodecBufferChannel: [mId: 4] [video-debug-dec] start: outputFormat: AMessage(what = 0x00000000) = {
+1774505781.450 10531 22653 25208 I CCodecBufferChannel:   int32_t android._color-format = 2130708361
+1774505781.450 10531 22653 25208 I CCodecBufferChannel:   int32_t android._video-scaling = 1
+1774505781.450 10531 22653 25208 I CCodecBufferChannel:   int32_t sar-width = 1
+1774505781.450 10531 22653 25208 I CCodecBufferChannel:   int32_t color-standard = 1
+1774505781.450 10531 22653 25208 I CCodecBufferChannel:   int32_t color-range = 2
+1774505781.450 10531 22653 25208 I CCodecBufferChannel:   int32_t color-transfer = 3
+1774505781.450 10531 22653 25208 I CCodecBufferChannel:   int32_t android._dataspace = 260
+1774505781.450 10531 22653 25208 I CCodecBufferChannel:   int32_t width = 720
+1774505781.450 10531 22653 25208 I CCodecBufferChannel:   int32_t rotation-degrees = 0
+1774505781.450 10531 22653 25208 I CCodecBufferChannel:   int32_t sar-height = 1
+1774505781.450 10531 22653 25208 I CCodecBufferChannel:   int32_t max-width = 720
+1774505781.450 10531 22653 25208 I CCodecBufferChannel:   int32_t max-height = 1280
+1774505781.450 10531 22653 25208 I CCodecBufferChannel:   int32_t priority = 0
+1774505781.450 10531 22653 25208 I CCodecBufferChannel:   string mime = "video/raw"
+1774505781.450 10531 22653 25208 I CCodecBufferChannel:   Rect crop(0, 0, 318, 238)
+1774505781.450 10531 22653 25208 I CCodecBufferChannel:   Buffer hdr-static-info = {
+1774505781.450 10531 22653 25208 I CCodecBufferChannel:     00000000:  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  ................
+1774505781.450 10531 22653 25208 I CCodecBufferChannel:     00000010:  00 00 00 00 00 00 00 00  00                       .........
+1774505781.450 10531 22653 25208 I CCodecBufferChannel:   }
+1774505781.450 10531 22653 25208 I CCodecBufferChannel:   int32_t frame-rate = 0
+1774505781.450 10531 22653 25208 I CCodecBufferChannel:   int32_t height = 1280
+1774505781.450 10531 22653 25208 I CCodecBufferChannel:   int32_t color-format = 2130708361
+1774505781.450 10531 22653 25208 I CCodecBufferChannel: }
+1774505781.450 10531 22653 25208 D GraphicsTracker: new surface in configuration: maxDequeueRequested(0), maxDequeueCommitted(3)
+1774505781.450 10531 22653 25208 D GraphicsTracker: new surface configured with id:97293894156311 gen:23196679 maxDequeue:3
+1774505781.450 10531 22653 25208 D GraphicsTracker: maxDequeueCount committed to IGBP: 19
+1774505781.450 10531 22653 25208 D GraphicsTracker: Cache size 0 -> 0: maybe_cleared(0), dequeued(0)
+1774505781.450 10531 22653 25208 D GraphicsTracker: maxDqueueCount change 3 -> 19: pending: 0
+1774505781.458 10531 22653 25204 D MediaCodec: [0x77ccf05860] setState: 6
+1774505781.458 10531 22653 25204 I MediaCodec: [mId: 4] [video-debug-dec] setState: STARTED
+1774505781.458 10531 22653 25204 D CCodecBufferChannel: The csd Sample queue
+1774505781.458 10531 22653 25204 D CCodecBufferChannel: [c2.mtk.avc.decoder#897] send inputSlots num:4 to codec
+1774505781.459 10531 22653 25170 D RtspClient: RTSP/1.0 200 OK
+1774505781.459 10531 22653 25170 D RtspClient: CSeq: 2
+1774505781.459 10531 22653 25170 D RtspClient: Transport: RTP/AVP/TCP;unicast;interleaved=0-1
+1774505781.459 10531 22653 25170 D RtspClient: Session: 8784
+1774505781.463 10531 22653 25170 D RtspClient: PLAY rtsp://10.173.9.188:554/live RTSP/1.0
+1774505781.463 10531 22653 25170 D RtspClient: User-Agent: AndroidXMedia3/1.5.1
+1774505781.463 10531 22653 25170 D RtspClient: CSeq: 3
+1774505781.463 10531 22653 25170 D RtspClient: Session: 8784
+1774505781.463 10531 22653 25170 D RtspClient: Range: npt=0.000-
+1774505781.463 10531 22653 23395 D AidlBufferPool: bufferpool2 0x791ca24d48 : 0(0 size) total buffers - 0(0 size) used buffers - 9/18 (recycle/alloc) - 2/2 (fetch/transfer)
+1774505781.463 10531 22653 23395 D AidlBufferPool: Destruction - bufferpool2 0x791ca24d48 cached: 0/0M, 0/0% in use; allocs: 18, 50% recycled; transfers: 2, 0% unfetched
+1774505781.464 10531 22653 25204 W saas.i18n:stub3: AIBinder_linkToDeath is being called with a non-null cookie and no onUnlink callback set. This might not be intended. AIBinder_DeathRecipient_setOnUnlinked should be called first.
+1774505781.466 10531 22653 25204 I MiMediaCodec: The CSD is not calculated
+1774505781.466 10531 22653 25204 D CCodecBufferChannel: The csd Sample queue
+1774505781.467 10531 22653 25204 I MiMediaCodec: The CSD is not calculated
+1774505781.476 10531 22653 25170 D RtspClient: RTSP/1.0 200 OK
+1774505781.476 10531 22653 25170 D RtspClient: CSeq: 3
+1774505781.476 10531 22653 25170 D RtspClient: Range: npt=0.000-
+1774505781.476 10531 22653 25170 D RtspClient: Session: 8784; timeout=60
+1774505781.564 10531 22653 22665 D GraphicsTracker: [0x78cc9c4a50] checkCacheBufferAndmDequeued  slotId 0, generation 23196679
+1774505781.566 10531 22653 23549 D GraphicsTracker: [0x78cc9c4a50] checkCacheBufferAndmDequeued  slotId 0, generation 23196679
+1774505781.567 10531 22653 25208 D CCodecConfig: c2 config diff is   c2::u32 input.delay.value = 4
+1774505781.567 10531 22653 25208 D CCodecConfig:   c2::u32 output.delay.value = 13
+1774505781.568 10531 22653 25208 D GraphicsTracker: maxDequeueCount committed to IGBP: 20
+1774505781.568 10531 22653 25208 D GraphicsTracker: Cache size 1 -> 1: maybe_cleared(0), dequeued(0)
+1774505781.568 10531 22653 25208 D GraphicsTracker: maxDqueueCount change 19 -> 20: pending: 0
+1774505781.582 10531 22653 23549 D CCodecBufferChannel: [c2.mtk.avc.decoder#897] Ignoring stale input buffer done callback: last flush index = 0, frameIndex = 0
+1774505781.697 10531 22653 25163 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505781.916 10531 22653 25163 E VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Saved raw buffer to /sdcard/Download/virtucam_debug/capture_yuv_1774505781865.raw
+1774505781.917 10531 22653 25163 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505781.918 10531 22653 25163 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381202226835000)
+1774505781.922 10531 22653 25163 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505781.930 10531 22653 25137 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505781.932 10531 22653 25137 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505781.932 10531 22653 25137 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505781.933 10531 22653 25137 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505781.948 10531 22653 25137 D CameraExtImplXiaoMi: releaseCameraDevice: 1
+1774505781.953 10531 22653 25137 D CameraDevice-JV-1: close: E. id = 1
+1774505781.990 10531 22653 22678 W CameraDevice-JV-1: Device error received, code 3, frame number 7, request ID 0, subseq ID 0
+1774505782.146 10531 22653 25163 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505782.152 10531 22653 25163 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381202326917000)
+1774505782.153 10531 22653 25163 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505782.170 10531 22653 25137 D CameraDevice-JV-1: close: X
+1774505782.174 10531 22653 22678 W CameraDevice-JV-1: Device error received, code 3, frame number 4, request ID 0, subseq ID 0
+1774505782.174 10531 22653 22678 W CameraDevice-JV-1: Device error received, code 3, frame number 5, request ID 0, subseq ID 0
+1774505782.174 10531 22653 22678 W CameraDevice-JV-1: Device error received, code 3, frame number 6, request ID 0, subseq ID 0
+1774505782.211 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.211 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.211 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.211 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.215 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.217 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.220 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.222 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.223 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.223 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.225 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.225 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.227 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.228 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.228 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.229 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.230 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.230 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.234 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.238 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.238 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.239 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.240 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.241 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.244 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.248 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.248 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.252 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.252 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.253 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.254 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.254 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.258 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.262 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.263 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.264 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.265 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.266 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.291 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.291 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.292 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.292 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.297 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.297 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.300 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.300 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.303 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.304 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.304 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.309 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.310 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.310 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.310 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.310 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.312 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.314 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.315 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.316 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.319 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.319 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.326 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.328 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.329 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.331 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.332 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.332 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.336 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.339 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.339 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.341 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.342 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.342 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.342 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.342 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.346 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.348 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.348 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.349 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.350 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.350 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.352 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.353 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.353 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.355 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.379 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.379 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.380 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.380 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.384 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.386 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.386 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.387 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.387 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.388 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.388 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.388 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.392 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.393 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.393 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.394 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.394 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.394 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.398 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.401 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.402 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.404 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.404 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.406 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.411 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.412 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.412 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.413 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.413 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.413 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.413 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.413 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.417 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.419 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.419 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.420 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.420 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.420 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.426 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.427 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.427 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.428 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.448 10531 22653 25163 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505782.449 10531 22653 25163 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381202426989000)
+1774505782.449 10531 22653 25163 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505782.508 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.508 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.508 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.508 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.510 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.511 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.511 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.512 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.512 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.512 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.512 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.512 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.514 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.517 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.517 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.519 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.520 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.520 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.527 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.528 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.529 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.530 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.530 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.530 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.533 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.534 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.534 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.536 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.536 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.537 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.538 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.538 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.543 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.544 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.544 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.544 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.545 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.545 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.547 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.549 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.549 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.550 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.555 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.555 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.556 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.556 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.559 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.560 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.560 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.561 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.561 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.561 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.561 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.562 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.564 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.566 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.566 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.568 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.570 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.570 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.576 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.578 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.578 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.579 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.579 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.579 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.582 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.583 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.583 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.584 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.584 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.584 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.584 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.584 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.590 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.591 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.591 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.591 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.592 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.592 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.595 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.596 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.596 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.597 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.607 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.607 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.607 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.607 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.609 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.610 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.610 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.611 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.611 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.611 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.612 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.612 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.614 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.616 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.616 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.618 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.618 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.618 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.623 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.625 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.625 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.626 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.626 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.626 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.628 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.629 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.629 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.630 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.630 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.630 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.630 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.630 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.633 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.635 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.635 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.637 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.638 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.639 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.641 10531 22653 25163 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505782.642 10531 22653 25163 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381202517073000)
+1774505782.642 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.643 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.643 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.644 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.657 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.658 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.658 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.659 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.661 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.662 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.662 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.663 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.664 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.664 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.665 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.665 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.668 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.668 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.670 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.671 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.676 10531 22653 23602 D VirtuCam_Hook: Xiaomi Discovery: Found 1 legitimate Xiaomi vendor tags in HAL.
+1774505782.676 10531 22653 23602 D VirtuCam_Hook: VirtuCam_Hook: App is opening Camera2 ID: 1
+1774505782.678 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.679 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.679 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.680 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.681 10531 22653 23602 W libc    : Access denied finding property "persist.vendor.camera.privapp.list"
+1774505782.681 10531 22653 23602 D CameraExtImplXiaoMi: initCameraDevice: 1
+1774505782.684 10531 22653 23602 I CameraManager: Open camera top activityName is com.tencent.mtt.MainActivity
+1774505782.713 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.713 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.714 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.714 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.716 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.717 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.717 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.718 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.718 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.718 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.718 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.719 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.720 10531 22653 25239 E cr_VideoCapture: CameraDevice.StateCallback onOpened
+1774505782.720 10531 22653 25239 D BufferQueueConsumer: [](id:587d00000018,api:0,p:-1,c:22653) connect: controlledByApp=true
+1774505782.720 10531 22653 25239 D VirtuCam_Hook: VirtuCam_Hook: Tracked ImageReader surface 1280x720 format=35
+1774505782.724 10531 22653 25239 D VirtuCam_Hook: VirtuCam_Hook: Tracked ImageReader surface 1280x720 format=35
+1774505782.724 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.725 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.725 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.727 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.727 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.728 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.728 10531 22653 25239 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.730 10531 22653 25239 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.730 10531 22653 25239 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.732 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.733 10531 22653 25239 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.734 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.734 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.736 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.736 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.737 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.737 10531 22653 25239 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.739 10531 22653 25239 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.739 10531 22653 25239 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.740 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.741 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.741 10531 22653 25239 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.741 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.742 10531 22653 25239 D VirtuCam_Hook: VirtuCam_Hook: Tracked ImageReader surface 1280x720 format=35
+1774505782.743 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.743 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.743 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.744 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.744 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.746 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.747 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.748 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.749 10531 22653 25239 D VirtuCam_Hook: VirtuCam_Hook: Config loaded. Enabled: true, Zoom: 1.0, TCP: true, Rot: 0, ColorSwap: false
+1774505782.749 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.749 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505782.749 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505782.752 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.753 10531 22653 25239 D VirtuCam_Hook: VirtuCam_Hook: Config loaded. Enabled: true, Zoom: 1.0, TCP: true, Rot: 0, ColorSwap: false
+1774505782.754 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.754 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505782.754 10531 22653 25239 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: createCaptureSession called with 1 targets
+1774505782.755 10531 22653 25239 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Target Surface: 1280x720, Format=35
+1774505782.755 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.756 10531 22653 25239 D BufferQueueConsumer: [ImageReader-1280x720f1m2-22653-7](id:587d00000014,api:1,p:22653,c:22653) disconnect
+1774505782.757 10531 22653 25239 D BufferQueueConsumer: [ImageReader-1280x720f23m5-22653-8](id:587d00000015,api:0,p:-1,c:22653) disconnect
+1774505782.757 10531 22653 25239 D BufferQueueConsumer: [](id:587d00000019,api:0,p:-1,c:22653) connect: controlledByApp=true
+1774505782.758 10531 22653 25239 D VirtuCam_Hook: VirtuCam_Hook: Tracked ImageReader surface 1280x720 format=1
+1774505782.759 10531 22653 25239 D VirtuCam_Bridge: FormatConverterBridge: ImageWriter connected to output surface
+1774505782.759 10531 22653 25239 D VirtuCam_Bridge: FormatConverterBridge (Cache Mode) started successfully.
+1774505782.759 10531 22653 25239 D VirtuCam_Hook: VirtuCam_Hook: Tracked ImageReader surface 1280x720 format=1
+1774505782.760 10531 22653 25239 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Creating Dummy Sink Surface. Width=1280, Height=720, Format=35
+1774505782.761 10531 22653 25239 D BufferQueueConsumer: [](id:587d0000001a,api:0,p:-1,c:22653) connect: controlledByApp=true
+1774505782.761 10531 22653 25164 D BufferQueueConsumer: [SurfaceTexture-1-22653-7](id:587d00000017,api:3,p:22653,c:22653) disconnect
+1774505782.762 10531 22653 25166 D StreamPlayer: Playback state changed: IDLE
+1774505782.762 10531 22653 25166 I ExoPlayerImpl: Release 6826339 [AndroidXMedia3/1.5.1] [pond, 2409BRN2CA, Xiaomi, 35] [media3.common, media3.exoplayer, media3.decoder, media3.exoplayer.rtsp, media3.datasource, media3.extractor]
+1774505782.762 10531 22653 25204 D MediaCodec: [0x77ccf05860] setState: 7
+1774505782.762 10531 22653 25204 I MediaCodec: [mId: 4] [video-debug-dec] setState: FLUSHING
+1774505782.763 10531 22653 25239 D VirtuCam_Hook: VirtuCam_Hook: Tracked ImageReader surface 1280x720 format=35
+1774505782.763 10531 22653 25239 D VirtuCam_Hook: VirtuCam_Hook: Tracked ImageReader surface 1280x720 format=35
+1774505782.763 10531 22653 25239 D VirtuCam_Hook: VirtuCam_Hook: Created active ImageReader dummy sink (1280x720, format=35)
+1774505782.764 10531 22653 25164 D libMEOW : meow delete tls: 0x782cb5a260
+1774505782.767 10531 22653 23395 D GraphicsTracker: [0x78cc9c4a50] checkCacheBufferAndmDequeued  slotId 0, generation 23196679
+1774505782.767 10531 22653 23395 E BufferQueueProducer: [SurfaceTexture-1-22653-7](id:587d00000017,api:3,p:22653,c:22653) cancelBuffer: BufferQueue has been abandoned
+1774505782.768 10531 22653 22664 D GraphicsTracker: [0x78cc9c4a50] checkCacheBufferAndmDequeued  slotId 12, generation 23196679
+1774505782.768 10531 22653 22664 E BufferQueueProducer: [SurfaceTexture-1-22653-7](id:587d00000017,api:3,p:22653,c:22653) cancelBuffer: BufferQueue has been abandoned
+1774505782.768 10531 22653 25208 I CCodecBufferChannel: [mId: 4] [video-debug-dec] flush: flushing 0 works
+1774505782.768 10531 22653 25204 D MediaCodec: [0x77ccf05860] setState: 8
+1774505782.768 10531 22653 25204 I MediaCodec: [mId: 4] [video-debug-dec] setState: FLUSHED
+1774505782.768 10531 22653 25170 D MediaCodec: keep callback message for reclaim
+1774505782.769 10531 22653 22665 E BufferQueueProducer: [SurfaceTexture-1-22653-7](id:587d00000017,api:3,p:22653,c:22653) dequeueBuffer: BufferQueue has been abandoned
+1774505782.769 10531 22653 22665 E GraphicsTracker: BQ in inconsistent status. dequeueBuffer() error -19
+1774505782.769 10531 22653 22665 D GraphicsTracker: allocate error(14): Dequeued(11), Dequeuable(9)
+1774505782.769 10531 22653 22665 D GraphicsTracker: [0x78cc9c4a50] checkCacheBufferAndmDequeued  slotId 11, generation 23196679
+1774505782.769 10531 22653 22665 E BufferQueueProducer: [SurfaceTexture-1-22653-7](id:587d00000017,api:3,p:22653,c:22653) cancelBuffer: BufferQueue has been abandoned
+1774505782.770 10531 22653 25204 D MediaCodec: [0x77ccf05860] setState: 6
+1774505782.770 10531 22653 25204 I MediaCodec: [mId: 4] [video-debug-dec] setState: STARTED
+1774505782.770 10531 22653 25204 I CCodecConfig: query failed after returning 20 values (BAD_INDEX)
+1774505782.770 10531 22653 22664 D GraphicsTracker: [0x78cc9c4a50] checkCacheBufferAndmDequeued  slotId 10, generation 23196679
+1774505782.770 10531 22653 22664 E BufferQueueProducer: [SurfaceTexture-1-22653-7](id:587d00000017,api:3,p:22653,c:22653) cancelBuffer: BufferQueue has been abandoned
+1774505782.770 10531 22653 25204 D CCodecConfig: c2 config diff is   c2::u32 coded.vui.color.matrix = 1
+1774505782.770 10531 22653 25204 D CCodecConfig:   c2::u32 coded.vui.color.primaries = 1
+1774505782.770 10531 22653 25204 D CCodecConfig:   c2::u32 coded.vui.color.range = 2
+1774505782.770 10531 22653 25204 D CCodecConfig:   c2::u32 coded.vui.color.transfer = 3
+1774505782.770 10531 22653 25204 D CCodecConfig:   c2::u32 raw.crop.height = 1280
+1774505782.770 10531 22653 25204 D CCodecConfig:   c2::u32 raw.crop.width = 720
+1774505782.770 10531 22653 25204 D CCodecConfig:   c2::u32 raw.pixel-format.value = 2130706433
+1774505782.771 10531 22653 22665 E BufferQueueProducer: [SurfaceTexture-1-22653-7](id:587d00000017,api:3,p:22653,c:22653) dequeueBuffer: BufferQueue has been abandoned
+1774505782.771 10531 22653 22665 E GraphicsTracker: BQ in inconsistent status. dequeueBuffer() error -19
+1774505782.771 10531 22653 22665 D GraphicsTracker: allocate error(14): Dequeued(9), Dequeuable(11)
+1774505782.771 10531 22653 22665 D GraphicsTracker: [0x78cc9c4a50] checkCacheBufferAndmDequeued  slotId 9, generation 23196679
+1774505782.771 10531 22653 22665 E BufferQueueProducer: [SurfaceTexture-1-22653-7](id:587d00000017,api:3,p:22653,c:22653) cancelBuffer: BufferQueue has been abandoned
+1774505782.772 10531 22653 22664 D GraphicsTracker: [0x78cc9c4a50] checkCacheBufferAndmDequeued  slotId 8, generation 23196679
+1774505782.772 10531 22653 22664 E BufferQueueProducer: [SurfaceTexture-1-22653-7](id:587d00000017,api:3,p:22653,c:22653) cancelBuffer: BufferQueue has been abandoned
+1774505782.772 10531 22653 22664 D GraphicsTracker: [0x78cc9c4a50] checkCacheBufferAndmDequeued  slotId 7, generation 23196679
+1774505782.772 10531 22653 22664 E BufferQueueProducer: [SurfaceTexture-1-22653-7](id:587d00000017,api:3,p:22653,c:22653) cancelBuffer: BufferQueue has been abandoned
+1774505782.773 10531 22653 25239 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.773 10531 22653 22664 E BufferQueueProducer: [SurfaceTexture-1-22653-7](id:587d00000017,api:3,p:22653,c:22653) dequeueBuffer: BufferQueue has been abandoned
+1774505782.773 10531 22653 22664 E GraphicsTracker: BQ in inconsistent status. dequeueBuffer() error -19
+1774505782.773 10531 22653 22664 D GraphicsTracker: allocate error(14): Dequeued(6), Dequeuable(14)
+1774505782.773 10531 22653 22665 D GraphicsTracker: [0x78cc9c4a50] checkCacheBufferAndmDequeued  slotId 6, generation 23196679
+1774505782.773 10531 22653 22665 E BufferQueueProducer: [SurfaceTexture-1-22653-7](id:587d00000017,api:3,p:22653,c:22653) cancelBuffer: BufferQueue has been abandoned
+1774505782.774 10531 22653 22665 E BufferQueueProducer: [SurfaceTexture-1-22653-7](id:587d00000017,api:3,p:22653,c:22653) dequeueBuffer: BufferQueue has been abandoned
+1774505782.774 10531 22653 22664 D GraphicsTracker: [0x78cc9c4a50] checkCacheBufferAndmDequeued  slotId 5, generation 23196679
+1774505782.774 10531 22653 22664 E BufferQueueProducer: [SurfaceTexture-1-22653-7](id:587d00000017,api:3,p:22653,c:22653) cancelBuffer: BufferQueue has been abandoned
+1774505782.774 10531 22653 22665 E GraphicsTracker: BQ in inconsistent status. dequeueBuffer() error -19
+1774505782.774 10531 22653 22665 D GraphicsTracker: allocate error(14): Dequeued(4), Dequeuable(16)
+1774505782.775 10531 22653 23395 D GraphicsTracker: [0x78cc9c4a50] checkCacheBufferAndmDequeued  slotId 4, generation 23196679
+1774505782.775 10531 22653 23395 E BufferQueueProducer: [SurfaceTexture-1-22653-7](id:587d00000017,api:3,p:22653,c:22653) cancelBuffer: BufferQueue has been abandoned
+1774505782.775 10531 22653 25239 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.775 10531 22653 25170 D MediaCodec: [0x77ccf05860] [c2.mtk.avc.decoder] releaseAsync
+1774505782.775 10531 22653 25239 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505782.775 10531 22653 25204 D BufferQueueConsumer: [](id:587d0000001b,api:0,p:-1,c:22653) connect: controlledByApp=false
+1774505782.775 10531 22653 25204 I MediaCodec: [mId: 4] [video-debug-dec] connectToSurface: surface 0x789cacad10, mSurface 0x789cab3660
+1774505782.775 10531 22653 25204 D MediaCodec: [0x77ccf05860] [c2.mtk.avc.decoder] connectToSurface: surface 0x789cacad10, mSurface 0x789cab3660
+1774505782.775 10531 22653 25204 D SurfaceUtils: connecting to surface 0x789cacad20, reason connectToSurface
+1774505782.776 10531 22653 25204 I MediaCodec: [c2.mtk.avc.decoder] setting surface generation to 23196680
+1774505782.776 10531 22653 25204 D SurfaceUtils: disconnecting from surface 0x789cacad20, reason connectToSurface(reconnect)
+1774505782.776 10531 22653 25204 D SurfaceUtils: connecting to surface 0x789cacad10, reason connectToSurface(reconnect-with-listener)
+1774505782.776 10531 22653 22665 D GraphicsTracker: [0x78cc9c4a50] checkCacheBufferAndmDequeued  slotId 3, generation 23196679
+1774505782.776 10531 22653 22665 E BufferQueueProducer: [SurfaceTexture-1-22653-7](id:587d00000017,api:3,p:22653,c:22653) cancelBuffer: BufferQueue has been abandoned
+1774505782.776 10531 22653 25204 D GraphicsTracker: new surface in configuration: maxDequeueRequested(0), maxDequeueCommitted(20)
+1774505782.776 10531 22653 25204 D GraphicsTracker: new surface configured with id:97293894156315 gen:23196680 maxDequeue:20
+1774505782.777 10531 22653 25239 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505782.778 10531 22653 25239 D VirtuCam_Hook: VirtuCam_Hook: Using SENSOR_ORIENTATION 270 for camera 1
+1774505782.779 10531 22653 25204 D GraphicsTracker: maxDequeueCount is already 20
+1774505782.779 10531 22653 25204 I MediaCodec: [mId: 4] [video-debug-dec] disconnectFromSurface: mSurface 0x789cab3660
+1774505782.779 10531 22653 25204 D MediaCodec: [0x77ccf05860] [c2.mtk.avc.decoder] disconnectFromSurface: mSurface 0x789cab3660
+1774505782.780 10531 22653 25204 D SurfaceUtils: disconnecting from surface 0x789cab3670, reason disconnectFromSurface
+1774505782.780 10531 22653 25204 D MediaCodec: [0x77ccf05860] setState: 10
+1774505782.780 10531 22653 25204 I MediaCodec: [mId: 4] [video-debug-dec] setState: RELEASING
+1774505782.781 10531 22653 25204 D CCodecBufferChannel: [c2.mtk.avc.decoder#897] MediaCodec discarded an unknown buffer
+1774505782.782 10531 22653 25204 D CCodecBufferChannel: [c2.mtk.avc.decoder#897] MediaCodec discarded an unknown buffer
+1774505782.783 10531 22653 25264 D libMEOW : meow new tls: 0x782cb4a250
+1774505782.783 10531 22653 25264 D libMEOW : applied 1 plugins for [com.transsion.phoenix]:
+1774505782.783 10531 22653 25264 D libMEOW :   plugin 1: [libMEOW_gift.so]:
+1774505782.784 10531 22653 25204 D CCodecBufferChannel: [c2.mtk.avc.decoder#897] MediaCodec discarded an unknown buffer
+1774505782.784 10531 22653 25204 D CCodecBufferChannel: [c2.mtk.avc.decoder#897] MediaCodec discarded an unknown buffer
+1774505782.785 10531 22653 25204 D CCodecBufferChannel: [c2.mtk.avc.decoder#897] MediaCodec discarded an unknown buffer
+1774505782.785 10531 22653 25204 D CCodecBufferChannel: [c2.mtk.avc.decoder#897] MediaCodec discarded an unknown buffer
+1774505782.785 10531 22653 25204 D CCodecBufferChannel: [c2.mtk.avc.decoder#897] MediaCodec discarded an unknown buffer
+1774505782.785 10531 22653 25204 D CCodecBufferChannel: [c2.mtk.avc.decoder#897] MediaCodec discarded an unknown buffer
+1774505782.786 10531 22653 25239 D VirtuCam_Hook: VirtuCam_Hook: Started MASTER RenderThread for 1 surfaces.
+1774505782.787 10531 22653 25264 D VirtuCam_Render: Created EGL surface for target: Surface(name=null mNativeObject=518024315072)/@0x4ae3878
+1774505782.788 10531 22653 25239 D CameraDevice-JV-1: waitUntilIdle: E. id = 1
+1774505782.789 10531 22653 25264 D BufferQueueConsumer: [](id:587d0000001c,api:0,p:-1,c:22653) connect: controlledByApp=true
+1774505782.789 10531 22653 25170 D RtspClient: TEARDOWN rtsp://10.173.9.188:554/live RTSP/1.0
+1774505782.789 10531 22653 25170 D RtspClient: User-Agent: AndroidXMedia3/1.5.1
+1774505782.789 10531 22653 25170 D RtspClient: CSeq: 4
+1774505782.789 10531 22653 25170 D RtspClient: Session: 8784
+1774505782.790 10531 22653 25239 D CameraDevice-JV-1: waitUntilIdle: X
+1774505782.792 10531 22653 23395 D GraphicsTracker: [0x78cc9c4a50] checkCacheBufferAndmDequeued  slotId 0, generation 23196680
+1774505782.792 10531 22653 22665 D GraphicsTracker: [0x78cc9c4a50] checkCacheBufferAndmDequeued  slotId 1, generation 23196680
+1774505782.794 10531 22653 25266 I ExoPlayerImpl: Init a4234b7 [AndroidXMedia3/1.5.1] [pond, 2409BRN2CA, Xiaomi, 35]
+1774505782.797 10531 22653 25166 W MessageQueue: Handler (android.os.Handler) {6ca6424} sending message to a Handler on a dead thread
+1774505782.797 10531 22653 25166 W MessageQueue: java.lang.IllegalStateException: Handler (android.os.Handler) {6ca6424} sending message to a Handler on a dead thread
+1774505782.797 10531 22653 25166 W MessageQueue: 	at android.os.MessageQueue.enqueueMessage(MessageQueue.java:629)
+1774505782.797 10531 22653 25166 W MessageQueue: 	at android.os.Handler.enqueueMessage(Handler.java:787)
+1774505782.797 10531 22653 25166 W MessageQueue: 	at android.os.Handler.sendMessageAtFrontOfQueue(Handler.java:759)
+1774505782.797 10531 22653 25166 W MessageQueue: 	at androidx.media3.common.util.SystemHandlerWrapper$SystemMessage.sendAtFrontOfQueue(SystemHandlerWrapper.java:153)
+1774505782.797 10531 22653 25166 W MessageQueue: 	at androidx.media3.common.util.SystemHandlerWrapper.sendMessageAtFrontOfQueue(SystemHandlerWrapper.java:79)
+1774505782.797 10531 22653 25166 W MessageQueue: 	at androidx.media3.common.util.ListenerSet.flushEvents(ListenerSet.java:238)
+1774505782.797 10531 22653 25166 W MessageQueue: 	at androidx.media3.common.util.ListenerSet.sendEvent(ListenerSet.java:263)
+1774505782.797 10531 22653 25166 W MessageQueue: 	at androidx.media3.exoplayer.analytics.DefaultAnalyticsCollector.sendEvent(DefaultAnalyticsCollector.java:899)
+1774505782.797 10531 22653 25166 W MessageQueue: 	at androidx.media3.exoplayer.analytics.DefaultAnalyticsCollector.onVideoDisabled(DefaultAnalyticsCollector.java:355)
+1774505782.797 10531 22653 25166 W MessageQueue: 	at androidx.media3.exoplayer.ExoPlayerImpl$ComponentListener.onVideoDisabled(ExoPlayerImpl.java:3079)
+1774505782.797 10531 22653 25166 W MessageQueue: 	at androidx.media3.exoplayer.video.VideoRendererEventListener$EventDispatcher.lambda$disabled$8$androidx-media3-exoplayer-video-VideoRendererEventListener$EventDispatcher(VideoRendererEventListener.java:248)
+1774505782.797 10531 22653 25166 W MessageQueue: 	at androidx.media3.exoplayer.video.VideoRendererEventListener$EventDispatcher$$ExternalSyntheticLambda5.run(Unknown Source:4)
+1774505782.797 10531 22653 25166 W MessageQueue: 	at android.os.Handler.handleCallback(Handler.java:959)
+1774505782.797 10531 22653 25166 W MessageQueue: 	at android.os.Handler.dispatchMessage(Handler.java:100)
+1774505782.797 10531 22653 25166 W MessageQueue: 	at android.os.Looper.loopOnce(Looper.java:249)
+1774505782.797 10531 22653 25166 W MessageQueue: 	at android.os.Looper.loop(Looper.java:337)
+1774505782.797 10531 22653 25166 W MessageQueue: 	at android.os.HandlerThread.run(HandlerThread.java:85)
+1774505782.798 10531 22653 25166 W MessageQueue: Handler (android.os.Handler) {3e4d142} sending message to a Handler on a dead thread
+1774505782.798 10531 22653 25166 W MessageQueue: java.lang.IllegalStateException: Handler (android.os.Handler) {3e4d142} sending message to a Handler on a dead thread
+1774505782.798 10531 22653 25166 W MessageQueue: 	at android.os.MessageQueue.enqueueMessage(MessageQueue.java:629)
+1774505782.798 10531 22653 25166 W MessageQueue: 	at android.os.Handler.enqueueMessage(Handler.java:787)
+1774505782.798 10531 22653 25166 W MessageQueue: 	at android.os.Handler.sendMessageAtFrontOfQueue(Handler.java:759)
+1774505782.798 10531 22653 25166 W MessageQueue: 	at androidx.media3.common.util.SystemHandlerWrapper$SystemMessage.sendAtFrontOfQueue(SystemHandlerWrapper.java:153)
+1774505782.798 10531 22653 25166 W MessageQueue: 	at androidx.media3.common.util.SystemHandlerWrapper.sendMessageAtFrontOfQueue(SystemHandlerWrapper.java:79)
+1774505782.798 10531 22653 25166 W MessageQueue: 	at androidx.media3.common.util.ListenerSet.flushEvents(ListenerSet.java:238)
+1774505782.798 10531 22653 25166 W MessageQueue: 	at androidx.media3.common.util.ListenerSet.sendEvent(ListenerSet.java:263)
+1774505782.798 10531 22653 25166 W MessageQueue: 	at androidx.media3.exoplayer.ExoPlayerImpl$ComponentListener.onVideoSizeChanged(ExoPlayerImpl.java:3060)
+1774505782.798 10531 22653 25166 W MessageQueue: 	at androidx.media3.exoplayer.video.VideoRendererEventListener$EventDispatcher.lambda$videoSizeChanged$5$androidx-media3-exoplayer-video-VideoRendererEventListener$EventDispatcher(VideoRendererEventListener.java:221)
+1774505782.798 10531 22653 25166 W MessageQueue: 	at androidx.media3.exoplayer.video.VideoRendererEventListener$EventDispatcher$$ExternalSyntheticLambda8.run(Unknown Source:4)
+1774505782.798 10531 22653 25166 W MessageQueue: 	at android.os.Handler.handleCallback(Handler.java:959)
+1774505782.798 10531 22653 25166 W MessageQueue: 	at android.os.Handler.dispatchMessage(Handler.java:100)
+1774505782.798 10531 22653 25166 W MessageQueue: 	at android.os.Looper.loopOnce(Looper.java:249)
+1774505782.798 10531 22653 25166 W MessageQueue: 	at android.os.Looper.loop(Looper.java:337)
+1774505782.798 10531 22653 25166 W MessageQueue: 	at android.os.HandlerThread.run(HandlerThread.java:85)
+1774505782.802 10531 22653 25166 W MessageQueue: Handler (android.os.Handler) {6ca6424} sending message to a Handler on a dead thread
+1774505782.802 10531 22653 25166 W MessageQueue: java.lang.IllegalStateException: Handler (android.os.Handler) {6ca6424} sending message to a Handler on a dead thread
+1774505782.802 10531 22653 25166 W MessageQueue: 	at android.os.MessageQueue.enqueueMessage(MessageQueue.java:629)
+1774505782.802 10531 22653 25166 W MessageQueue: 	at android.os.Handler.enqueueMessage(Handler.java:787)
+1774505782.802 10531 22653 25166 W MessageQueue: 	at android.os.Handler.sendMessageAtFrontOfQueue(Handler.java:759)
+1774505782.802 10531 22653 25166 W MessageQueue: 	at androidx.media3.common.util.SystemHandlerWrapper$SystemMessage.sendAtFrontOfQueue(SystemHandlerWrapper.java:153)
+1774505782.802 10531 22653 25166 W MessageQueue: 	at androidx.media3.common.util.SystemHandlerWrapper.sendMessageAtFrontOfQueue(SystemHandlerWrapper.java:79)
+1774505782.802 10531 22653 25166 W MessageQueue: 	at androidx.media3.common.util.ListenerSet.flushEvents(ListenerSet.java:238)
+1774505782.802 10531 22653 25166 W MessageQueue: 	at androidx.media3.common.util.ListenerSet.sendEvent(ListenerSet.java:263)
+1774505782.802 10531 22653 25166 W MessageQueue: 	at androidx.media3.exoplayer.analytics.DefaultAnalyticsCollector.sendEvent(DefaultAnalyticsCollector.java:899)
+1774505782.802 10531 22653 25166 W MessageQueue: 	at androidx.media3.exoplayer.analytics.DefaultAnalyticsCollector.onVideoDecoderReleased(DefaultAnalyticsCollector.java:346)
+1774505782.802 10531 22653 25166 W MessageQueue: 	at androidx.media3.exoplayer.ExoPlayerImpl$ComponentListener.onVideoDecoderReleased(ExoPlayerImpl.java:3074)
+1774505782.802 10531 22653 25166 W MessageQueue: 	at androidx.media3.exoplayer.video.VideoRendererEventListener$EventDispatcher.lambda$decoderReleased$7$androidx-media3-exoplayer-video-VideoRendererEventListener$EventDispatcher(VideoRendererEventListener.java:237)
+1774505782.802 10531 22653 25166 W MessageQueue: 	at androidx.media3.exoplayer.video.VideoRendererEventListener$EventDispatcher$$ExternalSyntheticLambda9.run(Unknown Source:4)
+1774505782.802 10531 22653 25166 W MessageQueue: 	at android.os.Handler.handleCallback(Handler.java:959)
+1774505782.802 10531 22653 25166 W MessageQueue: 	at android.os.Handler.dispatchMessage(Handler.java:100)
+1774505782.802 10531 22653 25166 W MessageQueue: 	at android.os.Looper.loopOnce(Looper.java:249)
+1774505782.802 10531 22653 25166 W MessageQueue: 	at android.os.Looper.loop(Looper.java:337)
+1774505782.802 10531 22653 25166 W MessageQueue: 	at android.os.HandlerThread.run(HandlerThread.java:85)
+1774505782.803 10531 22653 25204 D MediaCodec: [0x77ccf05860] [c2.mtk.avc.decoder] kWhatReleaseCompleted
+1774505782.805 10531 22653 25204 D MediaCodec: [0x77ccf05860] setState: 0
+1774505782.805 10531 22653 25204 I MediaCodec: [mId: 4] [video-debug-dec] disconnectFromSurface: mSurface 0x789cacad10
+1774505782.805 10531 22653 25204 D MediaCodec: [0x77ccf05860] [c2.mtk.avc.decoder] disconnectFromSurface: mSurface 0x789cacad10
+1774505782.805 10531 22653 25166 W MessageQueue: Handler (android.os.Handler) {6ca6424} sending message to a Handler on a dead thread
+1774505782.805 10531 22653 25166 W MessageQueue: java.lang.IllegalStateException: Handler (android.os.Handler) {6ca6424} sending message to a Handler on a dead thread
+1774505782.805 10531 22653 25166 W MessageQueue: 	at android.os.MessageQueue.enqueueMessage(MessageQueue.java:629)
+1774505782.805 10531 22653 25166 W MessageQueue: 	at android.os.Handler.enqueueMessage(Handler.java:787)
+1774505782.805 10531 22653 25166 W MessageQueue: 	at android.os.Handler.sendMessageAtFrontOfQueue(Handler.java:759)
+1774505782.805 10531 22653 25166 W MessageQueue: 	at androidx.media3.common.util.SystemHandlerWrapper$SystemMessage.sendAtFrontOfQueue(SystemHandlerWrapper.java:153)
+1774505782.805 10531 22653 25166 W MessageQueue: 	at androidx.media3.common.util.SystemHandlerWrapper.sendMessageAtFrontOfQueue(SystemHandlerWrapper.java:79)
+1774505782.805 10531 22653 25166 W MessageQueue: 	at androidx.media3.common.util.ListenerSet.flushEvents(ListenerSet.java:238)
+1774505782.805 10531 22653 25166 W MessageQueue: 	at androidx.media3.common.util.ListenerSet.sendEvent(ListenerSet.java:263)
+1774505782.805 10531 22653 25166 W MessageQueue: 	at androidx.media3.exoplayer.analytics.DefaultAnalyticsCollector.sendEvent(DefaultAnalyticsCollector.java:899)
+1774505782.805 10531 22653 25166 W MessageQueue: 	at androidx.media3.exoplayer.analytics.DefaultAnalyticsCollector.releaseInternal(DefaultAnalyticsCollector.java:952)
+1774505782.805 10531 22653 25166 W MessageQueue: 	at androidx.media3.exoplayer.analytics.DefaultAnalyticsCollector.$r8$lambda$DN4l2kv51WFx7GoN5Fyqar44Kyg(Unknown Source:0)
+1774505782.805 10531 22653 25166 W MessageQueue: 	at androidx.media3.exoplayer.analytics.DefaultAnalyticsCollector$$ExternalSyntheticLambda61.run(Unknown Source:2)
+1774505782.805 10531 22653 25166 W MessageQueue: 	at android.os.Handler.handleCallback(Handler.java:959)
+1774505782.805 10531 22653 25166 W MessageQueue: 	at android.os.Handler.dispatchMessage(Handler.java:100)
+1774505782.805 10531 22653 25166 W MessageQueue: 	at android.os.Looper.loopOnce(Looper.java:249)
+1774505782.805 10531 22653 25166 W MessageQueue: 	at android.os.Looper.loop(Looper.java:337)
+1774505782.805 10531 22653 25166 W MessageQueue: 	at android.os.HandlerThread.run(HandlerThread.java:85)
+1774505782.808 10531 22653 25204 D SurfaceUtils: disconnecting from surface 0x789cacad20, reason disconnectFromSurface
+1774505782.809 10531 22653 23448 E GraphicsTracker: cannot deallocate due to being stopped
+1774505782.809 10531 22653 23448 W Codec2-GraphicBufferAllocator: deallocate() 97293894159232 was not successful 1
+1774505782.809 10531 22653 25204 I MediaCodec: [mId: 4] [video-debug-dec] setState: UNINITIALIZED
+1774505782.810 10531 22653 23395 E GraphicsTracker: cannot deallocate due to being stopped
+1774505782.810 10531 22653 23395 W Codec2-GraphicBufferAllocator: deallocate() 97293894159233 was not successful 1
+1774505782.811 10531 22653 23395 E GraphicsTracker: cannot deallocate due to being stopped
+1774505782.811 10531 22653 23395 W Codec2-GraphicBufferAllocator: deallocate() 97293894159234 was not successful 1
+1774505782.811 10531 22653 25204 I MediaCodec: MediaStub sendHdrInfo/sendFrameRateFloatCal/updateFrcAieAisState
+1774505782.812 10531 22653 25204 D MediaImpl: FRC not support: valueSupport :
+1774505782.812 10531 22653 25204 D MediaImpl: AIE not support: valueSupport :
+1774505782.812 10531 22653 23549 E GraphicsTracker: cannot deallocate due to being stopped
+1774505782.812 10531 22653 23549 W Codec2-GraphicBufferAllocator: deallocate() 97293894159230 was not successful 1
+1774505782.812 10531 22653 25204 D MediaImpl: AIS not support: valueSupport :
+1774505782.840 10531 22653 25266 D StreamPlayer: Playback state changed: BUFFERING
+1774505782.856 10531 22653 25267 D RtspClient: OPTIONS rtsp://10.173.9.188:554/live RTSP/1.0
+1774505782.856 10531 22653 25267 D RtspClient: User-Agent: AndroidXMedia3/1.5.1
+1774505782.856 10531 22653 25267 D RtspClient: CSeq: 0
+1774505782.862 10531 22653 25267 D RtspClient: RTSP/1.0 200 OK
+1774505782.862 10531 22653 25267 D RtspClient: CSeq: 0
+1774505782.862 10531 22653 25267 D RtspClient: Public: OPTIONS, DESCRIBE, SETUP, TEARDOWN, PLAY
+1774505782.863 10531 22653 25239 D VirtuCam_Hook: VirtuCam_Hook: submitCaptureRequest CHOKEPOINT ACTIVATED -> Swapped 1 surfaces natively in immutable CaptureRequest!
+1774505782.865 10531 22653 25267 D RtspClient: DESCRIBE rtsp://10.173.9.188:554/live RTSP/1.0
+1774505782.865 10531 22653 25267 D RtspClient: User-Agent: AndroidXMedia3/1.5.1
+1774505782.865 10531 22653 25267 D RtspClient: CSeq: 1
+1774505782.865 10531 22653 25267 D RtspClient: Accept: application/sdp
+1774505782.875 10531 22653 25267 D RtspClient: RTSP/1.0 200 OK
+1774505782.875 10531 22653 25267 D RtspClient: CSeq: 1
+1774505782.875 10531 22653 25267 D RtspClient: Content-Length: 255
+1774505782.875 10531 22653 25267 D RtspClient: Content-Type: application/sdp
+1774505782.875 10531 22653 25267 D RtspClient: v=0
+1774505782.875 10531 22653 25267 D RtspClient: o=- 91774505784 1 IN IP4 10.173.9.188
+1774505782.875 10531 22653 25267 D RtspClient: t=0 0
+1774505782.875 10531 22653 25267 D RtspClient: a=control:*
+1774505782.875 10531 22653 25267 D RtspClient: m=video 0 RTP/AVP 96
+1774505782.875 10531 22653 25267 D RtspClient: a=rtpmap:96 H264/90000
+1774505782.875 10531 22653 25267 D RtspClient: a=fmtp:96 packetization-mode=1;profile-level-id=64001F;sprop-parameter-sets=Z2QAH6zZQLQKGwFqAgICgAAAAwCAAAAeR4wYyw==,aO+8sA==
+1774505782.875 10531 22653 25267 D RtspClient: a=control:track0
+1774505782.902 10531 22653 25267 D RtspClient: SETUP rtsp://10.173.9.188:554/live/track0 RTSP/1.0
+1774505782.902 10531 22653 25267 D RtspClient: User-Agent: AndroidXMedia3/1.5.1
+1774505782.902 10531 22653 25267 D RtspClient: CSeq: 2
+1774505782.902 10531 22653 25267 D RtspClient: Transport: RTP/AVP/TCP;unicast;interleaved=0-1
+1774505782.904 10531 22653 25267 I DMCodecAdapterFactory: Creating an asynchronous MediaCodec adapter for track type video
+1774505782.905 10531 22653 25267 D MediaCodec: CreateByComponentName: name c2.mtk.avc.decoder
+1774505782.916 10531 22653 25267 D CCodecBufferChannel: mBufferCountDebug=0 mIsUserLoad=1
+1774505782.916 10531 22653 25267 D MBrainDateManager: MBrainDataManager Constructor caller
+1774505782.916 10531 22653 25267 D MBrainManager: mMBrainSupport 0, return NULL
+1774505782.916 10531 22653 25267 D MBrainDateManager: mMBrainManager = nullptr
+1774505782.916 10531 22653 25267 D CCodecBufferChannel: new MBrainDataManager() fail
+1774505782.916 10531 22653 25267 D MBrainDateManager: MBrainDataManager Constructor clear
+1774505782.916 10531 22653 25267 D MediaCodec: [0x77ccecde60] init: CCodec 0x791c99eae0, CCodecBufferChannel 0x777c91de70
+1774505782.916 10531 22653 25267 I MediaCodec: init video box disabled for codec not supported
+1774505782.942 10531 22653 25289 D MediaCodec: [0x77ccecde60] setState: 1
+1774505782.942 10531 22653 25289 I MediaCodec: [mId: 5] [video-debug-dec] setState: INITIALIZING
+1774505782.942 10531 22653 25303 D CCodec  : allocate(c2.mtk.avc.decoder)
+1774505782.946 10531 22653 25303 I CCodec  : setting up 'default' as default (vendor) store
+1774505782.981 10531 22653 25303 W saas.i18n:stub3: AIBinder_linkToDeath is being called with a non-null cookie and no onUnlink callback set. This might not be intended. AIBinder_DeathRecipient_setOnUnlinked should be called first.
+1774505782.981 10531 22653 25303 I CCodec  : Created component [c2.mtk.avc.decoder]
+1774505782.981 10531 22653 25303 D CCodecBufferChannel: [0x777c91de70] setComponent: mName c2.mtk.avc.decoder#153, mPipelineWatcher 0x777c91e358
+1774505782.981 10531 22653 25303 D CCodecBufferChannel: PipelineWatcher debug info [c2.mtk.avc.decoder#153] enable=0
+1774505782.984 10531 22653 25303 D CCodecConfig: read media type: video/avc
+1774505782.998 10531 22653 25303 D ReflectedParamUpdater: extent() != 1 for single value type: algo.buffers.max-count.values
+1774505782.999 10531 22653 25303 D ReflectedParamUpdater: extent() != 1 for single value type: output.subscribed-indices.values
+1774505783.000 10531 22653 25303 D ReflectedParamUpdater: extent() != 1 for single value type: input.buffers.allocator-ids.values
+1774505783.002 10531 22653 25303 D ReflectedParamUpdater: extent() != 1 for single value type: output.buffers.allocator-ids.values
+1774505783.004 10531 22653 25303 D ReflectedParamUpdater: extent() != 1 for single value type: algo.buffers.allocator-ids.values
+1774505783.005 10531 22653 25303 D ReflectedParamUpdater: extent() != 1 for single value type: output.buffers.pool-ids.values
+1774505783.008 10531 22653 25303 D ReflectedParamUpdater: extent() != 1 for single value type: algo.buffers.pool-ids.values
+1774505783.012 10531 22653 25303 D ReflectedParamUpdater: ignored struct field coded.color-format.locations
+1774505783.034 10531 22653 25303 D CCodecConfig: ignoring local param raw.size (0xd2001800) as it is already supported
+1774505783.034 10531 22653 25303 D CCodecConfig: ignoring local param raw.crop (0xd2001801) as it is already supported
+1774505783.034 10531 22653 25303 D CCodecConfig: ignoring local param default.color (0x5200180b) as it is already supported
+1774505783.034 10531 22653 25303 D CCodecConfig: ignoring local param raw.hdr-static-info (0xd200180a) as it is already supported
+1774505783.039 10531 22653 25303 I CCodecConfig: query failed after returning 18 values (BAD_INDEX)
+1774505783.039 10531 22653 25303 D CCodecConfig: c2 config diff is Dict {
+1774505783.039 10531 22653 25303 D CCodecConfig:   c2::u32 algo.low-latency.value = 0
+1774505783.039 10531 22653 25303 D CCodecConfig:   c2::i32 algo.priority.value = 1
+1774505783.039 10531 22653 25303 D CCodecConfig:   c2::float algo.rate.value = 0
+1774505783.039 10531 22653 25303 D CCodecConfig:   c2::float coded.frame-rate.value = 0
+1774505783.039 10531 22653 25303 D CCodecConfig:   c2::u32 coded.pl.level = 20495
+1774505783.039 10531 22653 25303 D CCodecConfig:   c2::u32 coded.pl.profile = 20481
+1774505783.039 10531 22653 25303 D CCodecConfig:   c2::u32 coded.vui.color.matrix = 0
+1774505783.039 10531 22653 25303 D CCodecConfig:   c2::u32 coded.vui.color.primaries = 0
+1774505783.039 10531 22653 25303 D CCodecConfig:   c2::u32 coded.vui.color.range = 0
+1774505783.039 10531 22653 25303 D CCodecConfig:   c2::u32 coded.vui.color.transfer = 0
+1774505783.039 10531 22653 25303 D CCodecConfig:   c2::u32 default.color.matrix = 0
+1774505783.039 10531 22653 25303 D CCodecConfig:   c2::u32 default.color.primaries = 0
+1774505783.039 10531 22653 25303 D CCodecConfig:   c2::u32 default.color.range = 0
+1774505783.039 10531 22653 25303 D CCodecConfig:   c2::u32 default.color.transfer = 0
+1774505783.039 10531 22653 25303 D CCodecConfig:   c2::u32 input.buffers.max-size.value = 2097152
+1774505783.039 10531 22653 25303 D CCodecConfig:   c2::u32 input.delay.value = 0
+1774505783.039 10531 22653 25303 D CCodecConfig:   string input.media-type.value = "video/avc"
+1774505783.039 10531 22653 25303 D CCodecConfig:   c2::u32 output.delay.value = 12
+1774505783.039 10531 22653 25303 D CCodecConfig:   string output.media-type.value = "video/raw"
+1774505783.039 10531 22653 25303 D CCodecConfig:   c2::u32 raw.color.matrix = 0
+1774505783.039 10531 22653 25303 D CCodecConfig:   c2::u32 raw.color.primaries = 0
+1774505783.039 10531 22653 25303 D CCodecConfig:   c2::u32 raw.color.range = 0
+1774505783.039 10531 22653 25303 D CCodecConfig:   c2::u32 raw.color.transfer = 0
+1774505783.039 10531 22653 25303 D CCodecConfig:   c2::u32 raw.crop.height = 239
+1774505783.039 10531 22653 25303 D CCodecConfig:   c2::u32 raw.crop.left = 0
+1774505783.039 10531 22653 25303 D CCodecConfig:   c2::u32 raw.crop.top = 0
+1774505783.039 10531 22653 25303 D CCodecConfig:   c2::u32 raw.crop.width = 319
+1774505783.039 10531 22653 25303 D CCodecConfig:   c2::float raw.hdr-static-info.master
+1774505783.040 10531 22653 25303 W ColorUtils: expected specified color aspects (0:0:0:0)
+1774505783.040 10531 22653 25289 D MediaCodec: [0x77ccecde60] setState: 2
+1774505783.040 10531 22653 25289 I MediaCodec: [mId: 5] [video-debug-dec] setState: INITIALIZED
+1774505783.054 10531 22653 25289 I MediaCodec: MediaCodec will operate in async mode
+1774505783.057 10531 22653 25267 D MediaCodec: [0x77ccecde60] [c2.mtk.avc.decoder] configure
+1774505783.058 10531 22653 25267 D AppSceneRecognizer: AppUsageScene: Unspecified
+1774505783.058 10531 22653 25267 I MediaCodec: [mId: 5] [video-debug-dec] configure: ClientName: top.bienvenido.saas.i18n ComponentName: c2.mtk.avc.decoder
+1774505783.058 10531 22653 25267 I MediaCodec: [mId: 5] [video-debug-dec] configure: ClientFormat: AMessage(what = 0x00000000) = {
+1774505783.058 10531 22653 25267 I MediaCodec:   int32_t max-height = 1280
+1774505783.058 10531 22653 25267 I MediaCodec:   string log-session-id = "ZVe6WnqS3RBVq18X"
+1774505783.058 10531 22653 25267 I MediaCodec:   int32_t importance = 1000
+1774505783.058 10531 22653 25267 I MediaCodec:   string mime = "video/avc"
+1774505783.058 10531 22653 25267 I MediaCodec:   int32_t priority = 0
+1774505783.058 10531 22653 25267 I MediaCodec:   int32_t color-standard = 1
+1774505783.058 10531 22653 25267 I MediaCodec:   Buffer csd-1 = {
+1774505783.058 10531 22653 25267 I MediaCodec:     00000000:  00 00 00 01 68 ef bc b0                           ....h...
+1774505783.058 10531 22653 25267 I MediaCodec:   }
+1774505783.058 10531 22653 25267 I MediaCodec:   int32_t color-transfer = 3
+1774505783.058 10531 22653 25267 I MediaCodec:   int32_t max-width = 720
+1774505783.058 10531 22653 25267 I MediaCodec:   int32_t width = 720
+1774505783.058 10531 22653 25267 I MediaCodec:   int32_t color-range = 2
+1774505783.058 10531 22653 25267 I MediaCodec:   int32_t rotation-degrees = 0
+1774505783.058 10531 22653 25267 I MediaCodec:   int32_t max-input-size = 691200
+1774505783.058 10531 22653 25267 I MediaCodec:   int32_t height = 1280
+1774505783.058 10531 22653 25267 I MediaCodec:   Buffer csd-0 = {
+1774505783.058 10531 22653 25267 I MediaCodec:     00000000:  00 00 00 01 67 64 00 1f  ac d9 40 b4 0a 1b 01 6a  ....gd....@....j
+1774505783.058 10531 22653 25267 I MediaCodec:     00000010:  02 02 02 80 00 00 03 00  80 00 00 1e 47 8c 18 cb  ............G...
+1774505783.058 10531 22653 25267 I MediaCodec:   }
+1774505783.058 10531 22653 25267 I MediaCodec: }
+1774505783.059 10531 22653 25267 I MediaCodec: MediaStub sendFrameRate
+1774505783.059 10531 22653 25267 D MediaImpl: MediaImpl::sendFrameRate: -1
+1774505783.059 10531 22653 25267 I MediaCodec: MediaStub sendWidth/sendHeight
+1774505783.059 10531 22653 25267 I MediaCodec: MediaStub sendMine
+1774505783.059 10531 22653 25267 D MediaImpl: MediaImpl::sendMine: video/avc
+1774505783.059 10531 22653 25267 I MediaCodec: MediaStub sendDolbyVision
+1774505783.059 10531 22653 25267 I MediaCodec: MediaStub sendPackageName
+1774505783.059 10531 22653 25267 D MediaImpl: MediaImpl::sendPackageName: top.bienvenido.saas.i18n
+1774505783.059 10531 22653 25267 I MiMediaCodec: fps video to display enabled
+1774505783.059 10531 22653 25267 I MiMediaCodec: The Fps from player is 0.000000  frameRateFloat -1.000000 frameRateInt -1
+1774505783.059 10531 22653 25267 I MediaCodec: configure : init video box disabled
+1774505783.060 10531 22653 25289 I MediaCodec: [mId: 5] [video-debug-dec] connectToSurface: surface 0x789cab3660, mSurface 0x0
+1774505783.060 10531 22653 25289 D MediaCodec: [0x77ccecde60] [c2.mtk.avc.decoder] connectToSurface: surface 0x789cab3660, mSurface 0x0
+1774505783.060 10531 22653 25289 D SurfaceUtils: connecting to surface 0x789cab3670, reason connectToSurface
+1774505783.060 10531 22653 25289 I MediaCodec: [c2.mtk.avc.decoder] setting surface generation to 23196681
+1774505783.060 10531 22653 25289 D SurfaceUtils: disconnecting from surface 0x789cab3670, reason connectToSurface(reconnect)
+1774505783.060 10531 22653 25289 D SurfaceUtils: connecting to surface 0x789cab3660, reason connectToSurface(reconnect-with-listener)
+1774505783.060 10531 22653 25289 D MediaCodec: [0x77ccecde60] setState: 3
+1774505783.060 10531 22653 25289 I MediaCodec: [mId: 5] [video-debug-dec] setState: CONFIGURING
+1774505783.060 10531 22653 25289 D MediaCodec: [c2.mtk.avc.decoder] config set c2 sleep timeout 1500 kC2SleepTimeoutMs=1500
+1774505783.061 10531 22653 25303 D CCodec  : [c2.mtk.avc.decoder] buffers are bound to CCodec for this session
+1774505783.062 10531 22653 25303 D CCodecConfig: no c2 equivalents for log-session-id
+1774505783.062 10531 22653 25303 D CCodecConfig: no c2 equivalents for importance
+1774505783.062 10531 22653 25303 D CCodecConfig: no c2 equivalents for color-standard
+1774505783.062 10531 22653 25303 D CCodecConfig: no c2 equivalents for csd-1
+1774505783.062 10531 22653 25303 D CCodecConfig: no c2 equivalents for native-window
+1774505783.062 10531 22653 25303 D CCodecConfig: no c2 equivalents for native-window-generation
+1774505783.062 10531 22653 25303 D CCodecConfig: no c2 equivalents for flags
+1774505783.068 10531 22653 25303 D CCodecConfig: c2 config diff is   c2::i32 algo.priority.value = 0
+1774505783.068 10531 22653 25303 D CCodecConfig:   c2::u32 default.color.matrix = 1
+1774505783.068 10531 22653 25303 D CCodecConfig:   c2::u32 default.color.primaries = 1
+1774505783.068 10531 22653 25303 D CCodecConfig:   c2::u32 default.color.range = 2
+1774505783.068 10531 22653 25303 D CCodecConfig:   c2::u32 default.color.transfer = 3
+1774505783.068 10531 22653 25303 D CCodecConfig:   c2::u32 input.buffers.max-size.value = 2094080
+1774505783.068 10531 22653 25303 D CCodecConfig:   c2::u32 raw.max-size.height = 1280
+1774505783.068 10531 22653 25303 D CCodecConfig:   c2::u32 raw.max-size.width = 720
+1774505783.068 10531 22653 25303 D CCodecConfig:   c2::u32 raw.pixel-format.value = 34
+1774505783.068 10531 22653 25303 D CCodecConfig:   c2::u32 raw.size.height = 1280
+1774505783.068 10531 22653 25303 D CCodecConfig:   c2::u32 raw.size.width = 720
+1774505783.068 10531 22653 25303 D CCodecConfig:   c2::u32 vendor.mtk.ext.vdec.force.output.cc.value = 0
+1774505783.068 10531 22653 25303 D CCodecConfig:   c2::u32 vendor.mtk.vdec.buffer.fetch.timeout.ms.value = 1500
+1774505783.070 10531 22653 25303 D CCodec  : client requested max input size 691200, which is smaller than what component recommended (2094080); overriding with component recommendation.
+1774505783.070 10531 22653 25303 W CCodec  : This behavior is subject to change. It is recommended that app developers double check whether the requested max input size is in reasonable range.
+1774505783.070 10531 22653 25303 D CCodec  : encoding statistics level = 0
+1774505783.070 10531 22653 25303 D CCodec  : setup formats input: AMessage(what = 0x00000000) = {
+1774505783.070 10531 22653 25303 D CCodec  :   string mime = "video/avc"
+1774505783.070 10531 22653 25303 D CCodec  :   int32_t width = 720
+1774505783.070 10531 22653 25303 D CCodec  :   int32_t profile = 65536
+1774505783.070 10531 22653 25303 D CCodec  :   int32_t priority = 0
+1774505783.070 10531 22653 25303 D CCodec  :   int32_t frame-rate = 0
+1774505783.070 10531 22653 25303 D CCodec  :   int32_t height = 1280
+1774505783.070 10531 22653 25303 D CCodec  :   int32_t level = 32768
+1774505783.070 10531 22653 25303 D CCodec  :   int32_t max-input-size = 2094080
+1774505783.070 10531 22653 25303 D CCodec  :   Rect crop(0, 0, 318, 238)
+1774505783.070 10531 22653 25303 D CCodec  : }
+1774505783.070 10531 22653 25303 D CCodec  : setup formats output: AMessage(what = 0x00000000) = {
+1774505783.070 10531 22653 25303 D CCodec  :   int32_t android._color-format = 2130708361
+1774505783.070 10531 22653 25303 D CCodec  :   int32_t android._video-scaling = 1
+1774505783.070 10531 22653 25303 D CCodec  :   int32_t sar-width = 1
+1774505783.070 10531 22653 25303 D CCodec  :   int32_t color-standard = 4
+1774505783.070 10531 22653 25303 D CCodec  :   int32_t color-range = 2
+1774505783.070 10531 22653 25303 D CCodec  :   int32_t color-transfer = 3
+1774505783.070 10531 22653 25303 D CCodec  :   int32_t android._dataspace = 259
+1774505783.070 10531 22653 25303 D CCodec  :   int32_t width = 720
+1774505783.070 10531 22653 25303 D CCodec  :   int32_t rotation-degrees = 0
+1774505783.070 10531 22653 25303 D CCodec  :   int32_t sar-height = 1
+1774505783.070 10531 22653 25303 D CCodec  :   int32_t max-width = 720
+1774505783.070 10531 22653 25303 D CCodec  :   int32_t max-height = 1280
+1774505783.070 10531 22653 25303 D CCodec  :   int32_t priority = 0
+1774505783.070 10531 22653 25303 D CCodec  :   string mime = "video/raw"
+1774505783.070 10531 22653 25303 D CCodec  :   Rect crop(0, 0, 318, 238)
+1774505783.070 10531 22653 25303 D CCodec  :   Buffer hdr-static-info = {
+1774505783.070 10531 22653 25303 D CCodec  :     00000000:  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  ................
+1774505783.070 10531 22653 25303 D CCodec  :     00000010:  00 00 00 00 00 00 00 00  00                       .........
+1774505783.070 10531 22653 25303 D CCodec  :   }
+1774505783.070 10531 22653 25303 D CCodec  :   int32_t frame-rate = 0
+1774505783.070 10531 22653 25303 D CCodec  :   int32_t height = 1280
+1774505783.070 10531 22653 25303 D CCodec  :   int32_t color-format = 2130708361
+1774505783.070 10531 22653 25303 D CCodec  : }
+1774505783.071 10531 22653 25303 I CCodecConfig: query failed after returning 20 values (BAD_INDEX)
+1774505783.072 10531 22653 25303 D CCodecConfig: c2 config diff is   c2::u32 raw.color.matrix = 1
+1774505783.072 10531 22653 25303 D CCodecConfig:   c2::u32 raw.color.primaries = 1
+1774505783.072 10531 22653 25303 D CCodecConfig:   c2::u32 raw.color.range = 2
+1774505783.072 10531 22653 25303 D CCodecConfig:   c2::u32 raw.color.transfer = 3
+1774505783.076 10531 22653 25289 D MediaCodec: [0x77ccecde60] setState: 4
+1774505783.077 10531 22653 25289 I MediaCodec: [mId: 5] [video-debug-dec] setState: CONFIGURED
+1774505783.082 10531 22653 22659 I saas.i18n:stub3: Background young concurrent mark compact GC freed 11MB AllocSpace bytes, 19(2896KB) LOS objects, 17% free, 61MB/74MB, paused 2.116ms,4.868ms total 279.803ms
+1774505783.082 10531 22653 25267 D MediaCodec: keep callback message for reclaim
+1774505783.082 10531 22653 25289 D MediaCodec: [0x77ccecde60] setState: 5
+1774505783.082 10531 22653 25289 I MediaCodec: [mId: 5] [video-debug-dec] setState: STARTING
+1774505783.102 10531 22653 25303 D CCodecBufferChannel: [c2.mtk.avc.decoder#153] Created input block pool with allocatorID 16 => poolID 22 - OK (0)
+1774505783.102 10531 22653 25303 I CCodecBufferChannel: [mId: 5] [video-debug-dec] start: inputFormat: AMessage(what = 0x00000000) = {
+1774505783.102 10531 22653 25303 I CCodecBufferChannel:   string mime = "video/avc"
+1774505783.102 10531 22653 25303 I CCodecBufferChannel:   int32_t width = 720
+1774505783.102 10531 22653 25303 I CCodecBufferChannel:   int32_t profile = 65536
+1774505783.102 10531 22653 25303 I CCodecBufferChannel:   int32_t priority = 0
+1774505783.102 10531 22653 25303 I CCodecBufferChannel:   int32_t frame-rate = 0
+1774505783.102 10531 22653 25303 I CCodecBufferChannel:   int32_t height = 1280
+1774505783.102 10531 22653 25303 I CCodecBufferChannel:   int32_t level = 32768
+1774505783.102 10531 22653 25303 I CCodecBufferChannel:   int32_t max-input-size = 2094080
+1774505783.102 10531 22653 25303 I CCodecBufferChannel:   Rect crop(0, 0, 318, 238)
+1774505783.102 10531 22653 25303 I CCodecBufferChannel: }
+1774505783.104 10531 22653 25303 D CCodecBufferChannel: [c2.mtk.avc.decoder#153] Query output surface allocator returned 0 params => BAD_INDEX (6)
+1774505783.104 10531 22653 25303 D Codec2Client: GraphicBufferAllocator created
+1774505783.107 10531 22653 25303 I CCodecBufferChannel: [c2.mtk.avc.decoder#153] Created output block pool with allocatorID 18 => poolID 1458 - OK
+1774505783.108 10531 22653 25303 D CCodecBufferChannel: [c2.mtk.avc.decoder#153] Configured output block pool ids 1458 => OK
+1774505783.108 10531 22653 25303 D CCodecBufferChannel: [0x777c91de70] [c2.mtk.avc.decoder#153] start: output->outputDelay 12, output->numSlots 16
+1774505783.108 10531 22653 25303 I CCodecBufferChannel: [mId: 5] [video-debug-dec] start: outputFormat: AMessage(what = 0x00000000) = {
+1774505783.108 10531 22653 25303 I CCodecBufferChannel:   int32_t android._color-format = 2130708361
+1774505783.108 10531 22653 25303 I CCodecBufferChannel:   int32_t android._video-scaling = 1
+1774505783.108 10531 22653 25303 I CCodecBufferChannel:   int32_t sar-width = 1
+1774505783.108 10531 22653 25303 I CCodecBufferChannel:   int32_t color-standard = 1
+1774505783.108 10531 22653 25303 I CCodecBufferChannel:   int32_t color-range = 2
+1774505783.108 10531 22653 25303 I CCodecBufferChannel:   int32_t color-transfer = 3
+1774505783.108 10531 22653 25303 I CCodecBufferChannel:   int32_t android._dataspace = 260
+1774505783.108 10531 22653 25303 I CCodecBufferChannel:   int32_t width = 720
+1774505783.108 10531 22653 25303 I CCodecBufferChannel:   int32_t rotation-degrees = 0
+1774505783.108 10531 22653 25303 I CCodecBufferChannel:   int32_t sar-height = 1
+1774505783.108 10531 22653 25303 I CCodecBufferChannel:   int32_t max-width = 720
+1774505783.108 10531 22653 25303 I CCodecBufferChannel:   int32_t max-height = 1280
+1774505783.108 10531 22653 25303 I CCodecBufferChannel:   int32_t priority = 0
+1774505783.108 10531 22653 25303 I CCodecBufferChannel:   string mime = "video/raw"
+1774505783.108 10531 22653 25303 I CCodecBufferChannel:   Rect crop(0, 0, 318, 238)
+1774505783.108 10531 22653 25303 I CCodecBufferChannel:   Buffer hdr-static-info = {
+1774505783.108 10531 22653 25303 I CCodecBufferChannel:     00000000:  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  ................
+1774505783.108 10531 22653 25303 I CCodecBufferChannel:     00000010:  00 00 00 00 00 00 00 00  00                       .........
+1774505783.108 10531 22653 25303 I CCodecBufferChannel:   }
+1774505783.108 10531 22653 25303 I CCodecBufferChannel:   int32_t frame-rate = 0
+1774505783.108 10531 22653 25303 I CCodecBufferChannel:   int32_t height = 1280
+1774505783.108 10531 22653 25303 I CCodecBufferChannel:   int32_t color-format = 2130708361
+1774505783.108 10531 22653 25303 I CCodecBufferChannel: }
+1774505783.108 10531 22653 25303 D GraphicsTracker: new surface in configuration: maxDequeueRequested(0), maxDequeueCommitted(3)
+1774505783.108 10531 22653 25303 D GraphicsTracker: new surface configured with id:97293894156316 gen:23196681 maxDequeue:3
+1774505783.108 10531 22653 25303 D GraphicsTracker: maxDequeueCount committed to IGBP: 19
+1774505783.108 10531 22653 25303 D GraphicsTracker: Cache size 0 -> 0: maybe_cleared(0), dequeued(0)
+1774505783.108 10531 22653 25303 D GraphicsTracker: maxDqueueCount change 3 -> 19: pending: 0
+1774505783.113 10531 22653 25289 D MediaCodec: [0x77ccecde60] setState: 6
+1774505783.114 10531 22653 25289 I MediaCodec: [mId: 5] [video-debug-dec] setState: STARTED
+1774505783.114 10531 22653 25289 D CCodecBufferChannel: The csd Sample queue
+1774505783.114 10531 22653 25289 D CCodecBufferChannel: [c2.mtk.avc.decoder#153] send inputSlots num:4 to codec
+1774505783.114 10531 22653 25267 D RtspClient: RTSP/1.0 200 OK
+1774505783.114 10531 22653 25267 D RtspClient: CSeq: 2
+1774505783.114 10531 22653 25267 D RtspClient: Transport: RTP/AVP/TCP;unicast;interleaved=0-1
+1774505783.114 10531 22653 25267 D RtspClient: Session: 63376
+1774505783.116 10531 22653 25267 D RtspClient: PLAY rtsp://10.173.9.188:554/live RTSP/1.0
+1774505783.116 10531 22653 25267 D RtspClient: User-Agent: AndroidXMedia3/1.5.1
+1774505783.116 10531 22653 25267 D RtspClient: CSeq: 3
+1774505783.116 10531 22653 25267 D RtspClient: Session: 63376
+1774505783.116 10531 22653 25267 D RtspClient: Range: npt=0.000-
+1774505783.126 10531 22653 25267 D RtspClient: RTSP/1.0 200 OK
+1774505783.126 10531 22653 25267 D RtspClient: CSeq: 3
+1774505783.126 10531 22653 25267 D RtspClient: Range: npt=0.000-
+1774505783.126 10531 22653 25267 D RtspClient: Session: 63376; timeout=60
+1774505783.128 10531 22653 25289 W saas.i18n:stub3: AIBinder_linkToDeath is being called with a non-null cookie and no onUnlink callback set. This might not be intended. AIBinder_DeathRecipient_setOnUnlinked should be called first.
+1774505783.130 10531 22653 25289 I MiMediaCodec: The CSD is not calculated
+1774505783.130 10531 22653 25289 D CCodecBufferChannel: The csd Sample queue
+1774505783.132 10531 22653 25289 I MiMediaCodec: The CSD is not calculated
+1774505783.175 10531 22653 23448 D GraphicsTracker: [0x78cc9999d0] checkCacheBufferAndmDequeued  slotId 0, generation 23196681
+1774505783.182 10531 22653 25303 D CCodecConfig: c2 config diff is   c2::u32 input.delay.value = 4
+1774505783.182 10531 22653 25303 D CCodecConfig:   c2::u32 output.delay.value = 13
+1774505783.182 10531 22653 25303 D GraphicsTracker: maxDequeueCount committed to IGBP: 20
+1774505783.183 10531 22653 25303 D GraphicsTracker: Cache size 2 -> 2: maybe_cleared(0), dequeued(2)
+1774505783.183 10531 22653 25303 D GraphicsTracker: maxDqueueCount change 19 -> 20: pending: 0
+1774505783.312 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505783.539 10531 22653 25262 E VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Saved raw buffer to /sdcard/Download/virtucam_debug/capture_yuv_1774505783515.raw
+1774505783.539 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505783.539 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381203807250000)
+1774505783.541 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505783.556 10531 22653 25239 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505783.557 10531 22653 25239 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505783.557 10531 22653 25239 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505783.558 10531 22653 25239 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505783.577 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505783.577 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505783.577 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505783.577 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505783.579 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505783.581 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505783.582 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505783.585 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505783.586 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505783.586 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505783.587 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505783.587 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505783.590 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505783.591 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505783.591 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505783.592 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505783.592 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505783.592 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505783.596 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505783.599 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505783.599 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(1) -> Facing=0, Orient=270, HW_Level=3
+1774505783.601 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 1 supports 25 JPEG sizes. Max: 2560x1920
+1774505783.601 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505783.601 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505783.604 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505783.606 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505783.606 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505783.607 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505783.608 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505783.608 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505783.608 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505783.608 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505783.610 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505783.611 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505783.611 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505783.612 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505783.613 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelist"
+1774505783.613 10531 22653 23602 W libc    : Access denied finding property "vendor.camera.aux.packagelistext"
+1774505783.615 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505783.617 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505783.617 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics(0) -> Facing=1, Orient=90, HW_Level=3
+1774505783.618 10531 22653 23602 E VirtuCam_Hook: DIAGNOSTIC_VIRTUCAM: Camera 0 supports 25 JPEG sizes. Max: 2560x1920
+1774505783.690 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505783.691 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381203887337000)
+1774505783.691 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505783.758 10531 22653 22653 D VRI[MainActivity]: getMiuiFreeformStackInfo mTmpFrames.miuiFreeFormStackInfo: null
+1774505783.910 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505783.911 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381203967424000)
+1774505783.911 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505784.072 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505784.073 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381204047511000)
+1774505784.074 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505784.276 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505784.276 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381204117589000)
+1774505784.277 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505784.483 10531 22653 25262 E VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Saved raw buffer to /sdcard/Download/virtucam_debug/capture_yuv_1774505784445.raw
+1774505784.483 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505784.483 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381204187668000)
+1774505784.484 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505784.639 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505784.640 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381204237751000)
+1774505784.640 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505784.781 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505784.781 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381204287834000)
+1774505784.782 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505784.885 10531 22653 25264 D VirtuCam_Hook: VirtuCam_Hook: Config loaded. Enabled: true, Zoom: 1.0, TCP: true, Rot: 0, ColorSwap: false
+1774505784.917 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505784.918 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381204337917000)
+1774505784.918 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505785.056 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505785.056 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381204388000000)
+1774505785.056 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505785.215 10531 22653 25262 E VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Saved raw buffer to /sdcard/Download/virtucam_debug/capture_yuv_1774505785188.raw
+1774505785.215 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505785.216 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381204438083000)
+1774505785.216 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505785.311 10531 22653 22659 I saas.i18n:stub3: Background young concurrent mark compact GC freed 5833KB AllocSpace bytes, 9(5424KB) LOS objects, 14% free, 63MB/74MB, paused 2.336ms,5.260ms total 96.798ms
+1774505785.361 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505785.361 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381204488166000)
+1774505785.362 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505785.497 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505785.498 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381204538249000)
+1774505785.498 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505785.632 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505785.632 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381204588332000)
+1774505785.633 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505785.768 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505785.768 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381204638415000)
+1774505785.770 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505785.771 10531 22653 25285 W RtpH264Reader: Received RTP packet with unexpected sequence number. Expected: 0; received: 1. Dropping packet.
+1774505785.933 10531 22653 25262 E VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Saved raw buffer to /sdcard/Download/virtucam_debug/capture_yuv_1774505785909.raw
+1774505785.933 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505785.934 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381204688498000)
+1774505785.934 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505786.073 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505786.073 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381204738581000)
+1774505786.074 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505786.153 10531 22653 23511 D AidlBufferPool: bufferpool2 0x791ca24f98 : 0(0 size) total buffers - 0(0 size) used buffers - 5184/5193 (recycle/alloc) - 10/5193 (fetch/transfer)
+1774505786.153 10531 22653 23511 D AidlBufferPoolAcc: evictor expired: 1, evicted: 1
+1774505786.215 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505786.215 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381204788664000)
+1774505786.216 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505786.348 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505786.348 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381204838747000)
+1774505786.349 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505786.485 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505786.486 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381204888830000)
+1774505786.486 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505786.641 10531 22653 25262 E VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Saved raw buffer to /sdcard/Download/virtucam_debug/capture_yuv_1774505786618.raw
+1774505786.641 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505786.641 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381204938911000)
+1774505786.641 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505786.781 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505786.782 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381205018998000)
+1774505786.782 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505786.913 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505786.914 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381205099075000)
+1774505786.914 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505786.950 10531 22653 25264 D VirtuCam_Hook: VirtuCam_Hook: Config loaded. Enabled: true, Zoom: 1.0, TCP: true, Rot: 0, ColorSwap: false
+1774505787.053 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505787.054 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381205189159000)
+1774505787.054 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505787.153 10531 22653 23511 D AidlBufferPoolAcc: evictor expired: 1, evicted: 0
+1774505787.193 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505787.193 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381205289241000)
+1774505787.194 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505787.349 10531 22653 25262 E VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Saved raw buffer to /sdcard/Download/virtucam_debug/capture_yuv_1774505787331.raw
+1774505787.349 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505787.349 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381205389323000)
+1774505787.349 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505787.495 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505787.495 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381205489405000)
+1774505787.496 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505787.647 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505787.648 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381205589488000)
+1774505787.648 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505787.688 10531 22653 22659 I saas.i18n:stub3: Background concurrent mark compact GC freed 4545KB AllocSpace bytes, 113(22MB) LOS objects, 33% free, 48MB/72MB, paused 2.264ms,4.887ms total 342.452ms
+1774505787.691 10531 22653 22661 D BufferQueueConsumer: [ImageReader-1280x720f23m2-22653-3](id:587d0000000c,api:0,p:-1,c:22653) disconnect
+1774505787.692 10531 22653 22661 W MessageQueue: Handler (android.os.Handler) {9f91cee} sending message to a Handler on a dead thread
+1774505787.692 10531 22653 22661 W MessageQueue: java.lang.IllegalStateException: Handler (android.os.Handler) {9f91cee} sending message to a Handler on a dead thread
+1774505787.692 10531 22653 22661 W MessageQueue: 	at android.os.MessageQueue.enqueueMessage(MessageQueue.java:629)
+1774505787.692 10531 22653 22661 W MessageQueue: 	at android.os.Handler.enqueueMessage(Handler.java:787)
+1774505787.692 10531 22653 22661 W MessageQueue: 	at android.os.Handler.sendMessageAtTime(Handler.java:736)
+1774505787.692 10531 22653 22661 W MessageQueue: 	at android.os.Handler.sendMessageDelayed(Handler.java:706)
+1774505787.692 10531 22653 22661 W MessageQueue: 	at android.os.Handler.post(Handler.java:436)
+1774505787.692 10531 22653 22661 W MessageQueue: 	at android.hardware.camera2.impl.CameraDeviceImpl$CameraHandlerExecutor.execute(CameraDeviceImpl.java:2621)
+1774505787.692 10531 22653 22661 W MessageQueue: 	at android.hardware.camera2.impl.CallbackProxies$SessionStateCallbackProxy.onClosed(CallbackProxies.java:104)
+1774505787.692 10531 22653 22661 W MessageQueue: 	at android.hardware.camera2.impl.CameraCaptureSessionImpl.close(CameraCaptureSessionImpl.java:599)
+1774505787.692 10531 22653 22661 W MessageQueue: 	at android.hardware.camera2.impl.CameraCaptureSessionImpl.finalize(CameraCaptureSessionImpl.java:905)
+1774505787.692 10531 22653 22661 W MessageQueue: 	at java.lang.Daemons$FinalizerDaemon.doFinalize(Daemons.java:389)
+1774505787.692 10531 22653 22661 W MessageQueue: 	at java.lang.Daemons$FinalizerDaemon.processReference(Daemons.java:369)
+1774505787.692 10531 22653 22661 W MessageQueue: 	at java.lang.Daemons$FinalizerDaemon.runInternal(Daemons.java:341)
+1774505787.692 10531 22653 22661 W MessageQueue: 	at java.lang.Daemons$Daemon.run(Daemons.java:135)
+1774505787.692 10531 22653 22661 W MessageQueue: 	at java.lang.Thread.run(Thread.java:1563)
+1774505787.694 10531 22653 22661 D BufferQueueConsumer: [ImageReader-1280x720f23m2-22653-6](id:587d00000013,api:0,p:-1,c:22653) disconnect
+1774505787.695 10531 22653 22661 W MessageQueue: Handler (android.os.Handler) {10c201c} sending message to a Handler on a dead thread
+1774505787.695 10531 22653 22661 W MessageQueue: java.lang.IllegalStateException: Handler (android.os.Handler) {10c201c} sending message to a Handler on a dead thread
+1774505787.695 10531 22653 22661 W MessageQueue: 	at android.os.MessageQueue.enqueueMessage(MessageQueue.java:629)
+1774505787.695 10531 22653 22661 W MessageQueue: 	at android.os.Handler.enqueueMessage(Handler.java:787)
+1774505787.695 10531 22653 22661 W MessageQueue: 	at android.os.Handler.sendMessageAtTime(Handler.java:736)
+1774505787.695 10531 22653 22661 W MessageQueue: 	at android.os.Handler.sendMessageDelayed(Handler.java:706)
+1774505787.695 10531 22653 22661 W MessageQueue: 	at android.os.Handler.post(Handler.java:436)
+1774505787.695 10531 22653 22661 W MessageQueue: 	at android.hardware.camera2.impl.CameraDeviceImpl$CameraHandlerExecutor.execute(CameraDeviceImpl.java:2621)
+1774505787.695 10531 22653 22661 W MessageQueue: 	at android.hardware.camera2.impl.CallbackProxies$SessionStateCallbackProxy.onClosed(CallbackProxies.java:104)
+1774505787.695 10531 22653 22661 W MessageQueue: 	at android.hardware.camera2.impl.CameraCaptureSessionImpl.close(CameraCaptureSessionImpl.java:599)
+1774505787.695 10531 22653 22661 W MessageQueue: 	at android.hardware.camera2.impl.CameraCaptureSessionImpl.finalize(CameraCaptureSessionImpl.java:905)
+1774505787.695 10531 22653 22661 W MessageQueue: 	at java.lang.Daemons$FinalizerDaemon.doFinalize(Daemons.java:389)
+1774505787.695 10531 22653 22661 W MessageQueue: 	at java.lang.Daemons$FinalizerDaemon.processReference(Daemons.java:369)
+1774505787.695 10531 22653 22661 W MessageQueue: 	at java.lang.Daemons$FinalizerDaemon.runInternal(Daemons.java:341)
+1774505787.695 10531 22653 22661 W MessageQueue: 	at java.lang.Daemons$Daemon.run(Daemons.java:135)
+1774505787.695 10531 22653 22661 W MessageQueue: 	at java.lang.Thread.run(Thread.java:1563)
+1774505787.794 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505787.794 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381205689570000)
+1774505787.794 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505787.928 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505787.928 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381205789652000)
+1774505787.929 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505788.088 10531 22653 25262 E VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Saved raw buffer to /sdcard/Download/virtucam_debug/capture_yuv_1774505788061.raw
+1774505788.088 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505788.089 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381205889734000)
+1774505788.089 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505788.154 10531 22653 23511 D AidlBufferPool: bufferpool2 0x791ca29be8 : 8(16752640 size) total buffers - 8(16752640 size) used buffers - 2/10 (recycle/alloc) - 2/2 (fetch/transfer)
+1774505788.154 10531 22653 23511 D AidlBufferPool: bufferpool2 0x791c9d50c8 : 0(0 size) total buffers - 0(0 size) used buffers - 9/18 (recycle/alloc) - 2/2 (fetch/transfer)
+1774505788.154 10531 22653 23511 D AidlBufferPoolAcc: evictor expired: 2, evicted: 2
+1774505788.227 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505788.227 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381205989816000)
+1774505788.229 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505788.364 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505788.365 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381206590309000)
+1774505788.365 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505788.499 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505788.499 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381206690391000)
+1774505788.500 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505788.637 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505788.637 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381206790473000)
+1774505788.638 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505788.799 10531 22653 25262 E VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Saved raw buffer to /sdcard/Download/virtucam_debug/capture_yuv_1774505788773.raw
+1774505788.799 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505788.799 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381206890555000)
+1774505788.799 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505788.943 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505788.943 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381206990637000)
+1774505788.944 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505789.029 10531 22653 25264 D VirtuCam_Hook: VirtuCam_Hook: Config loaded. Enabled: true, Zoom: 1.0, TCP: true, Rot: 0, ColorSwap: false
+1774505789.082 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505789.082 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381207090720000)
+1774505789.082 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505789.214 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505789.215 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381207190802000)
+1774505789.215 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505789.356 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505789.357 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381207290884000)
+1774505789.357 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505789.502 10531 22653 25332 I MediaCodec: [mId: 5] [video-debug-dec] queueInputBuffer: index: 2 pts: 1000005700000 timediff: 0
+1774505789.503 10531 22653 25289 I MediaCodec: [mId: 5] [video-debug-dec] Stats over last 6420ms:
+1774505789.503 10531 22653 25289 I MediaCodec: [mId: 5] [video-debug-dec] ClientName: top.bienvenido.saas.i18n ComponentName: c2.mtk.avc.decoder
+1774505789.503 10531 22653 25289 I MediaCodec: [mId: 5] [video-debug-dec] Qinput: 1, DQinput: 0 success out of 0 tries
+1774505789.503 10531 22653 25289 I MediaCodec: [mId: 5] [video-debug-dec] Render: 0, Drop: 0, DQoutput: 0 success out of 0 tries
+1774505789.503 10531 22653 25289 D CCodecBufferChannel: [c2.mtk.avc.decoder#153] send inputSlots num:8 to codec
+1774505789.505 10531 22653 22678 D AidlBufferPool: Destruction - bufferpool2 0x791ca24f98 cached: 0/0M, 0/0% in use; allocs: 5193, 100% recycled; transfers: 5193, 100% unfetched
+1774505789.505 10531 22653 22678 D AidlBufferPool: Destruction - bufferpool2 0x791c9d50c8 cached: 0/0M, 0/0% in use; allocs: 18, 50% recycled; transfers: 2, 0% unfetched
+1774505789.507 10531 22653 25289 W saas.i18n:stub3: AIBinder_linkToDeath is being called with a non-null cookie and no onUnlink callback set. This might not be intended. AIBinder_DeathRecipient_setOnUnlinked should be called first.
+1774505789.522 10531 22653 25332 I MediaCodec: [mId: 5] [video-debug-dec] queueInputBuffer: index: 3 pts: 1000005733333 timediff: 19
+1774505789.525 10531 22653 25332 I MediaCodec: [mId: 5] [video-debug-dec] queueInputBuffer: index: 4 pts: 1000005766666 timediff: 2
+1774505789.551 10531 22653 25262 E VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Saved raw buffer to /sdcard/Download/virtucam_debug/capture_yuv_1774505789499.raw
+1774505789.551 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505789.551 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381207390966000)
+1774505789.551 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505789.590 10531 22653 25303 D CCodecConfig: c2 config diff is   c2::u32 raw.crop.height = 1280
+1774505789.590 10531 22653 25303 D CCodecConfig:   c2::u32 raw.crop.width = 720
+1774505789.590 10531 22653 25303 D CCodecConfig:   c2::u32 raw.pixel-format.value = 4096
+1774505789.592 10531 22653 25303 D CCodecBuffers: [c2.mtk.avc.decoder#153:2D-Output] popFromStashAndRegister: at 1000005700000us, output format changed to AMessage(what = 0x00000000) = {
+1774505789.592 10531 22653 25303 D CCodecBuffers:   int32_t android._color-format = 4096
+1774505789.592 10531 22653 25303 D CCodecBuffers:   int32_t android._video-scaling = 1
+1774505789.592 10531 22653 25303 D CCodecBuffers:   int32_t sar-width = 1
+1774505789.592 10531 22653 25303 D CCodecBuffers:   int32_t color-standard = 1
+1774505789.592 10531 22653 25303 D CCodecBuffers:   int32_t color-range = 2
+1774505789.592 10531 22653 25303 D CCodecBuffers:   int32_t color-transfer = 3
+1774505789.592 10531 22653 25303 D CCodecBuffers:   int32_t android._dataspace = 260
+1774505789.592 10531 22653 25303 D CCodecBuffers:   int32_t width = 720
+1774505789.592 10531 22653 25303 D CCodecBuffers:   int32_t rotation-degrees = 0
+1774505789.592 10531 22653 25303 D CCodecBuffers:   int32_t sar-height = 1
+1774505789.592 10531 22653 25303 D CCodecBuffers:   int32_t max-width = 720
+1774505789.592 10531 22653 25303 D CCodecBuffers:   int32_t max-height = 1280
+1774505789.592 10531 22653 25303 D CCodecBuffers:   int32_t priority = 0
+1774505789.592 10531 22653 25303 D CCodecBuffers:   string mime = "video/raw"
+1774505789.592 10531 22653 25303 D CCodecBuffers:   Rect crop(0, 0, 719, 1279)
+1774505789.592 10531 22653 25303 D CCodecBuffers:   Buffer hdr-static-info = {
+1774505789.592 10531 22653 25303 D CCodecBuffers:     00000000:  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  ................
+1774505789.592 10531 22653 25303 D CCodecBuffers:     00000010:  00 00 00 00 00 00 00 00  00                       .........
+1774505789.592 10531 22653 25303 D CCodecBuffers:   }
+1774505789.592 10531 22653 25303 D CCodecBuffers:   int32_t frame-rate = 0
+1774505789.592 10531 22653 25303 D CCodecBuffers:   int32_t height = 1280
+1774505789.592 10531 22653 25303 D CCodecBuffers:   int32_t color-format = 2130708361
+1774505789.592 10531 22653 25303 D CCodecBuffers: }
+1774505789.593 10531 22653 25289 I MediaCodec: isHDR: standard =1,transfer = 3
+1774505789.614 10531 22653 25289 I MediaCodec: [mId: 5] [video-debug-dec] onReleaseOutputBuffer index 0 pts: 1000005700000 ptsdiff: 1000005700000 timediff: 381210297 render: 1
+1774505789.615 10531 22653 25289 D CCodecBufferChannel: [c2.mtk.avc.decoder#153] first render dataSpace=260
+1774505789.622 10531 22653 25266 D StreamPlayer: Stream Video Size: 720x1280
+1774505789.622 10531 22653 25266 D StreamPlayer: First stream frame rendered!
+1774505789.623 10531 22653 25266 D StreamPlayer: Playback state changed: READY
+1774505789.627 10531 22653 25264 I saas.i18n:stub3: createIfNeeded: Recreate new EGLImage since dataspace changed
+1774505789.631 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505789.678 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505789.716 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505789.751 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505789.788 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505789.803 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505789.803 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381207491048000)
+1774505789.804 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505789.828 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505789.865 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505789.899 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505789.932 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505789.967 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505789.982 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505789.983 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381207591130000)
+1774505789.983 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505790.002 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505790.036 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505790.070 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505790.104 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505790.122 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505790.123 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381207691212000)
+1774505790.123 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505790.140 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505790.175 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505790.210 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505790.245 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505790.263 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505790.264 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381207791295000)
+1774505790.264 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505790.280 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505790.316 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505790.350 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505790.385 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505790.419 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505790.434 10531 22653 25262 E VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Saved raw buffer to /sdcard/Download/virtucam_debug/capture_yuv_1774505790401.raw
+1774505790.435 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505790.435 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381207891377000)
+1774505790.436 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505790.454 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505790.487 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505790.521 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505790.557 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505790.593 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505790.605 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505790.606 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381207991459000)
+1774505790.606 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505790.631 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505790.665 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505790.700 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505790.737 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505790.752 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505790.753 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381208091541000)
+1774505790.754 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505790.773 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505790.808 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505790.843 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505790.877 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505790.893 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505790.894 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381208191623000)
+1774505790.895 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505790.911 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505790.945 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505790.981 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505791.016 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505791.034 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505791.035 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381209092362000)
+1774505791.035 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505791.050 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505791.085 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505791.118 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505791.163 10531 22653 25264 D VirtuCam_Hook: VirtuCam_Hook: Config loaded. Enabled: true, Zoom: 1.0, TCP: true, Rot: 0, ColorSwap: false
+1774505791.166 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505791.195 10531 22653 25262 E VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Saved raw buffer to /sdcard/Download/virtucam_debug/capture_yuv_1774505791178.raw
+1774505791.195 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505791.195 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381209192444000)
+1774505791.195 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505791.201 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505791.236 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505791.270 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505791.304 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505791.328 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505791.328 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381209292527000)
+1774505791.328 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505791.339 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505791.378 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505791.414 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505791.447 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505791.481 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505791.535 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505791.546 10531 22608 22608 D BoundBrokerSvc: onBind: Intent { act=com.google.android.gms.measurement.START pkg=com.google.android.gms }
+1774505791.546 10531 22608 22608 D BoundBrokerSvc: Loading bound service for intent: Intent { act=com.google.android.gms.measurement.START pkg=com.google.android.gms }
+1774505791.575 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505791.610 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505791.611 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381209392609000)
+1774505791.611 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505791.615 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505791.652 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505791.691 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505791.698 10531 22653 22653 D VRI[MainActivity]: getMiuiFreeformStackInfo mTmpFrames.miuiFreeFormStackInfo: null
+1774505791.730 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505791.765 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505791.805 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505791.841 10531 22608 24943 D AdvertisingIdClient: AdvertisingIdClient already created.
+1774505791.846 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505791.884 10531 22608 24943 I AdvertisingIdClient: shouldSendLog -1
+1774505791.886 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505791.888 10531 22608 24943 I AdvertisingIdClient: GetInfoInternal elapse 43ms
+1774505791.928 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505791.965 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505791.989 10531 22517 22651 W NetworkScheduler: The Firebase Job Dispatcher and GmsTaskScheduler are deprecated for apps targeting API 30 or newer. Application top.bienvenido.saas.i18n has targetSdkVersion 36. Please migrate to the WorkManager or JobScheduler. [CONTEXT service_id=218 ]
+1774505791.990 10531 22517 22651 W NetworkScheduler: Running in whitelist mode. Ignoring task: top.bienvenido.saas.i18n/com.google.android.gms.measurement.PackageMeasurementTaskService{u=0 tag="Measurement.PackageMeasurementTaskService.UPLOAD_TASK_TAG" trigger=window{start=2329s,end=4660s,earliest=2328s,latest=4659s} requirements=[NET_CONNECTED,PREFERRED_NET_UNMETERED,PREFERRED_CHARGING] attributes=[PERSISTED] scheduled=0s last_run=N/A exec_window_multiplier=1.0000 jid=N/A status=UNKNOWN retries=0 client_lib=GMS_TASK_SCHEDULER-261133000} [CONTEXT service_id=218 ]
+1774505791.999 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505792.002 10531 22653 22653 D VRI[MainActivity]: getMiuiFreeformStackInfo mTmpFrames.miuiFreeFormStackInfo: null
+1774505792.033 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505792.033 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381209492691000)
+1774505792.033 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505792.034 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505792.068 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505792.101 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505792.134 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505792.167 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505792.200 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505792.232 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505792.265 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505792.276 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505792.276 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381209592773000)
+1774505792.277 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505792.298 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505792.316 10531 22653 22653 D VRI[MainActivity]: visibilityChanged oldVisibility=true newVisibility=false
+1774505792.342 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505792.379 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505792.417 10531 22653 22653 D BLASTBufferQueue: [VRI[MainActivity]#3](f:0,a:2) destructor()
+1774505792.420 10531 22653 22653 D BufferQueueConsumer: [VRI[MainActivity]#3(BLAST Consumer)3](id:587d00000012,api:0,p:-1,c:22653) disconnect
+1774505792.423 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505792.457 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505792.494 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505792.521 10531 22653 23490 E FolderObserver: CREATE:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774505792.533 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505792.567 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505792.605 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505792.636 10531 22653 25262 E VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Saved raw buffer to /sdcard/Download/virtucam_debug/capture_yuv_1774505792610.raw
+1774505792.637 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505792.637 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381209692855000)
+1774505792.637 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505792.646 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505792.650 10531 22653 23490 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774505792.683 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505792.722 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505792.774 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505792.780 10531 22653 23490 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774505792.784 10531 22653 23490 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774505792.785 10531 22653 23490 E FolderObserver: DELETE:path:6be190cb452262dd132017c350652e8a_-100thum7201548
+1774505792.791 10531 22653 23490 E FolderObserver: MOVED_FROM:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774505792.798 10531 22653 23490 E FolderObserver: MOVED_TO:path:6be190cb452262dd132017c350652e8a_-100thum7201548
+1774505792.809 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505792.862 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505792.910 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505792.952 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505792.995 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505793.033 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505793.073 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505793.111 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505793.151 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505793.193 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505793.270 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505793.310 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505793.329 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505793.334 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381209792937000)
+1774505793.334 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90
+1774505793.375 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505793.428 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505793.431 10531 22653 23218 I saas.i18n:stub3: Explicit concurrent mark compact GC freed 11MB AllocSpace bytes, 41(11MB) LOS objects, 31% free, 52MB/76MB, paused 4.477ms,11.893ms total 1.003s
+1774505793.431 10531 22653 22659 I saas.i18n:stub3: WaitForGcToComplete blocked Background on Explicit for 801.988ms
+1774505793.472 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505793.509 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505793.554 10531 22653 25264 D VirtuCam_Hook: VirtuCam_Hook: Config loaded. Enabled: true, Zoom: 1.0, TCP: true, Rot: 0, ColorSwap: false
+1774505793.558 10531 22653 24367 I FA      : Application backgrounded at: timestamp_millis: 1774505791552
+1774505793.561 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505793.598 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505793.638 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505793.673 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505793.710 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505793.743 10531 22653 25264 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=720x1280, view=1280x720, scales=1.0x1.0
+1774505793.752 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774505793.753 10531 22653 25262 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 381209893019000)
+1774505793.753 10531 22653 25262 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=90

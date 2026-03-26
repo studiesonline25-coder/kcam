@@ -82,7 +82,11 @@ object CameraHook {
     
     @Volatile
     var lastRequestedOrientation: Int = -1 // -1 = NOT_SET
-    @Volatile var cachedSensorOrientation: Int = 270 // Default for Helio G81 front cameras
+    
+    // REDMI 14C FIX: Track orientations per camera ID to prevent overwriting
+    private val cameraOrientations = mutableMapOf<String, Int>()
+    @Volatile
+    private var activeCameraId: String = "0"
 
 
     // [ONCE AND FOR ALL] Surface tracking and crash prevention structures
@@ -362,6 +366,7 @@ object CameraHook {
                 val cameraId = param.args[0] as? String
                 if (cameraId != null) {
                     lastOpenedCameraId = cameraId
+                    activeCameraId = cameraId
                     
                     // Trigger Discovery: Find all Xiaomi vendor tags supported by this specific camera sensor
                     try {
@@ -382,10 +387,10 @@ object CameraHook {
                 
                 // DIAGNOSTIC: Log key characteristics Veriff might be checking
                 val facing = char.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
-                val orientation = char.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 270
+                val orientation = char.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
                 val level = char.get(android.hardware.camera2.CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)
                 
-                cachedSensorOrientation = orientation
+                cameraOrientations[cameraId] = orientation
                 Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics($cameraId) -> Facing=$facing, Orient=$orientation, HW_Level=$level")
                 
                 val streamMap = char.get(android.hardware.camera2.CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
@@ -916,9 +921,10 @@ object CameraHook {
         
         Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Swapping OutputConfig Surface. Size=${w}x${h}, Format=$format, isPreview=$isPreview")
         
+        val currentOrient = cameraOrientations[activeCameraId] ?: 270
         val bridge = if (!isPreview) {
-            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Creating FormatConverterBridge for $w x $h (Format $format) SensorRot=$cachedSensorOrientation, RotOffset=$rotation, ColorSwap=$isColorSwapped")
-            val b = FormatConverterBridge(w, h, targetSurface, format, cachedSensorOrientation, rotation, isColorSwapped)
+            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Creating FormatConverterBridge for $w x $h (Format $format) SensorRot=$currentOrient, RotOffset=$rotation, ColorSwap=$isColorSwapped")
+            val b = FormatConverterBridge(w, h, targetSurface, format, currentOrient, rotation, isColorSwapped)
             activeBridges.add(b)
             formatBridges[android.util.Size(w, h)] = b
             b
@@ -1197,15 +1203,8 @@ object CameraHook {
     private fun startRenderThreads(targetSurfaces: List<Pair<Surface, Boolean>>) {
         val context = AndroidAppHelper.currentApplication() ?: return
         
-        var sensorOrientation = 0
-        try {
-            val cameraManager = context.getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
-            val characteristics = cameraManager.getCameraCharacteristics(lastOpenedCameraId ?: "0")
-            sensorOrientation = characteristics.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
-            Log.d(TAG, "VirtuCam_Hook: Using SENSOR_ORIENTATION $sensorOrientation for camera $lastOpenedCameraId")
-        } catch (e: Exception) {
-            Log.e(TAG, "VirtuCam_Hook: Failed to read SENSOR_ORIENTATION", e)
-        }
+        var sensorOrientation = cameraOrientations[activeCameraId] ?: 270
+        Log.d(TAG, "VirtuCam_Hook: Using SENSOR_ORIENTATION $sensorOrientation for camera $activeCameraId")
         
         if (targetSurfaces.isNotEmpty()) {
             try {
