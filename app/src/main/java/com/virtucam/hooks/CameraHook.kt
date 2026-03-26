@@ -56,11 +56,12 @@ object CameraHook {
     // Maps original surfaces to their dummy replacements for CaptureRequest consistency
     private val surfaceMap = mutableMapOf<Surface, Surface>()
     private val activeBridges = mutableListOf<FormatConverterBridge>()
-    private val cameraOrientations = mutableMapOf<String, Int>()
-    private val cameraFacings = mutableMapOf<String, Int>() // 0=BACK, 1=FRONT
-    val surfaceFormats = mutableMapOf<Surface, Int>()
     @Volatile
     private var activeCameraId: String = "0"
+    
+    // Track characteristics per cameraId
+    private val cameraOrientations = java.util.concurrent.ConcurrentHashMap<String, Int>()
+    private val cameraFacings = java.util.concurrent.ConcurrentHashMap<String, Int>() // 0=BACK, 1=FRONT
     
     // Global state for Late-Stage Storage Interception
     @Volatile var latestVirtualJpeg: ByteArray? = null
@@ -361,31 +362,60 @@ object CameraHook {
 
     private fun hookCameraManager(lpparam: XC_LoadPackage.LoadPackageParam) {
         val managerClass = XposedHelpers.findClassIfExists("android.hardware.camera2.CameraManager", lpparam.classLoader) ?: return
-        XposedBridge.hookAllMethods(managerClass, "openCamera", object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                val cameraId = param.args[0] as? String
-                if (cameraId != null) {
-                    lastOpenedCameraId = cameraId
-                    activeCameraId = cameraId
-                    
-                    // Trigger Discovery: Find all Xiaomi vendor tags supported by this specific camera sensor
-                    try {
-                        val manager = param.thisObject as android.hardware.camera2.CameraManager
-                        val characteristics = manager.getCameraCharacteristics(cameraId)
-                        discoverXiaomiVendorTags(characteristics)
 
-                        // Track camera facing
-                        val facing = characteristics.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
-                        if (facing != null) {
-                            cameraFacings[cameraId] = facing
-                            Log.d(TAG, "VirtuCam_Hook: Tracked Camera $cameraId facing: $facing")
-                        }
-                    } catch (_: Exception) {}
-                }
-                Log.d(TAG, "VirtuCam_Hook: App is opening Camera2 ID: $cameraId")
+        // 1. Hook standard openCamera(String, StateCallback, Handler)
+        XposedHelpers.findAndHookMethod(managerClass, "openCamera", String::class.java, "android.hardware.camera2.CameraDevice.StateCallback", Handler::class.java, object : XC_MethodHook() {
+            override fun beforeHookedMethod(param: MethodHookParam) {
+                try {
+                    val cameraId = param.args[0] as String
+                    activeCameraId = cameraId
+                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Tracked Camera $cameraId opening via Handler")
+                    val manager = param.thisObject as android.hardware.camera2.CameraManager
+                    val chars = manager.getCameraCharacteristics(cameraId)
+                    discoverXiaomiVendorTags(chars)
+                    val facing = chars.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
+                    if (facing != null) cameraFacings[cameraId] = if (facing == 0) 1 else 0
+                    cameraOrientations[cameraId] = chars.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
+                } catch (e: Throwable) {}
             }
         })
-        
+
+        // 2. Hook modern openCamera(String, Executor, StateCallback) - CRITICAL FOR BROWSERS
+        XposedHelpers.findAndHookMethod(managerClass, "openCamera", String::class.java, java.util.concurrent.Executor::class.java, "android.hardware.camera2.CameraDevice.StateCallback", object : XC_MethodHook() {
+            override fun beforeHookedMethod(param: MethodHookParam) {
+                try {
+                    val cameraId = param.args[0] as String
+                    activeCameraId = cameraId
+                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Tracked Camera $cameraId opening via Executor")
+                    val manager = param.thisObject as android.hardware.camera2.CameraManager
+                    val chars = manager.getCameraCharacteristics(cameraId)
+                    discoverXiaomiVendorTags(chars)
+                    val facing = chars.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
+                    if (facing != null) cameraFacings[cameraId] = if (facing == 0) 1 else 0
+                    cameraOrientations[cameraId] = chars.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
+                } catch (e: Throwable) {}
+            }
+        })
+
+        // 3. Hook extension openCamera(String, Int, Executor, StateCallback)
+        try {
+            XposedHelpers.findAndHookMethod(managerClass, "openCamera", String::class.java, Int::class.javaPrimitiveType, java.util.concurrent.Executor::class.java, "android.hardware.camera2.CameraDevice.StateCallback", object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    try {
+                        val cameraId = param.args[0] as String
+                        activeCameraId = cameraId
+                        Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Tracked Camera $cameraId opening via Extension")
+                        val manager = param.thisObject as android.hardware.camera2.CameraManager
+                        val chars = manager.getCameraCharacteristics(cameraId)
+                        discoverXiaomiVendorTags(chars)
+                        val facing = chars.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
+                        if (facing != null) cameraFacings[cameraId] = if (facing == 0) 1 else 0
+                        cameraOrientations[cameraId] = chars.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
+                    } catch (e: Throwable) {}
+                }
+            })
+        } catch (_: Throwable) {}
+
         XposedBridge.hookAllMethods(managerClass, "getCameraCharacteristics", object : XC_MethodHook() {
             override fun afterHookedMethod(param: MethodHookParam) {
                 if (!isEnabled) return
@@ -1040,13 +1070,20 @@ object CameraHook {
                             
                             stopOldPipeline()
                             
-                            // Force fetch active cameraId facing
+                            // [HARDENING] Force fetch active cameraId facing directly from the device
                             try {
+                                val cameraDevice = param.thisObject as android.hardware.camera2.CameraDevice
+                                activeCameraId = cameraDevice.id
+                                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Direct Device Sensing (createCaptureSession) - Active Camera: $activeCameraId")
+                                
                                 val manager = AndroidAppHelper.currentApplication().getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
                                 val characteristics = manager.getCameraCharacteristics(activeCameraId)
                                 val facing = characteristics.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
-                                if (facing != null) cameraFacings[activeCameraId] = facing
-                            } catch (_: Exception) {}
+                                if (facing != null) cameraFacings[activeCameraId] = if (facing == 0) 1 else 0
+                                cameraOrientations[activeCameraId] = characteristics.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
+                            } catch (e: Throwable) {
+                                Log.e(TAG, "VirtuCam_Hook: Failed direct sensing in createCaptureSession", e)
+                            }
 
                             val newSurfaces = ArrayList<Surface>()
                             val targetSurfaces = ArrayList<Pair<Surface, Boolean>>()
@@ -1115,22 +1152,38 @@ object CameraHook {
                         if (configs.isNotEmpty()) {
                             Log.d(TAG, "VirtuCam_Hook: Intercepted createCaptureSessionByOutputConfigurations - count: ${configs.size}")
                             
+                            // [HARDENING] Direct Sensing
+                            try {
+                                val cameraDevice = param.thisObject as android.hardware.camera2.CameraDevice
+                                activeCameraId = cameraDevice.id
+                                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Direct Device Sensing (OutputConfigs) - Active Camera: $activeCameraId")
+                                
+                                val manager = AndroidAppHelper.currentApplication().getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
+                                val characteristics = manager.getCameraCharacteristics(activeCameraId)
+                                val facing = characteristics.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
+                                if (facing != null) cameraFacings[activeCameraId] = if (facing == 0) 1 else 0
+                                cameraOrientations[activeCameraId] = characteristics.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
+                            } catch (e: Throwable) {
+                                Log.e(TAG, "VirtuCam_Hook: Failed direct sensing in OutputConfigs", e)
+                            }
+
                             stopOldPipeline()
                             
-                            val targetSurfaces = ArrayList<Pair<Surface, Boolean>>()
-                            
-                            for (config in configs) {
-                                if (config == null) continue
-                                
-                                val getSurfaceMethod = config.javaClass.getMethod("getSurface")
-                                val targetSurface = getSurfaceMethod.invoke(config) as? Surface
-                                
-                                if (targetSurface != null) {
-                                    val isCapture = captureSurfaces.contains(targetSurface)
-                                    val resolvedSurface = swapSurfaceInOutputConfig(config, targetSurface)
-                                    targetSurfaces.add(Pair(resolvedSurface, isCapture))
-                                }
-                            }
+                             val targetSurfaces = ArrayList<Triple<Surface, Boolean, Int>>()
+                             
+                             for (config in configs) {
+                                 if (config == null) continue
+                                 
+                                 val getSurfaceMethod = config.javaClass.getMethod("getSurface")
+                                 val targetSurface = getSurfaceMethod.invoke(config) as? Surface
+                                 
+                                 if (targetSurface != null) {
+                                     val isCapture = captureSurfaces.contains(targetSurface)
+                                     val format = surfaceFormats[targetSurface] ?: 0x1
+                                     val resolvedSurface = swapSurfaceInOutputConfig(config, targetSurface)
+                                     targetSurfaces.add(Triple(resolvedSurface, isCapture, format))
+                                 }
+                             }
                             
                             startRenderThreads(targetSurfaces)
                             obfuscateStackTrace()
@@ -1163,21 +1216,37 @@ object CameraHook {
                             if (!configs.isNullOrEmpty()) {
                                 Log.d(TAG, "VirtuCam_Hook: Intercepted SessionConfiguration - count: ${configs.size}")
                                 
+                                // [HARDENING] Direct Sensing
+                                try {
+                                    val cameraDevice = param.thisObject as android.hardware.camera2.CameraDevice
+                                    activeCameraId = cameraDevice.id
+                                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Direct Device Sensing (SessionConfig) - Active Camera: $activeCameraId")
+                                    
+                                    val manager = AndroidAppHelper.currentApplication().getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
+                                    val characteristics = manager.getCameraCharacteristics(activeCameraId)
+                                    val facing = characteristics.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
+                                    if (facing != null) cameraFacings[activeCameraId] = if (facing == 0) 1 else 0
+                                    cameraOrientations[activeCameraId] = characteristics.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
+                                } catch (e: Throwable) {
+                                    Log.e(TAG, "VirtuCam_Hook: Failed direct sensing in SessionConfig", e)
+                                }
+
                                 stopOldPipeline()
                                 
-                                val targetSurfaces = ArrayList<Pair<Surface, Boolean>>()
-                                
-                                for (config in configs) {
-                                    if (config == null) continue
-                                    val getSurfaceMethod = config.javaClass.getMethod("getSurface")
-                                    val targetSurface = getSurfaceMethod.invoke(config) as? Surface
-                                    
-                                    if (targetSurface != null) {
-                                        val isCapture = captureSurfaces.contains(targetSurface)
-                                        val resolvedSurface = swapSurfaceInOutputConfig(config, targetSurface)
-                                        targetSurfaces.add(Pair(resolvedSurface, isCapture))
-                                    }
-                                }
+                                 val targetSurfaces = ArrayList<Triple<Surface, Boolean, Int>>()
+                                 
+                                 for (config in configs) {
+                                     if (config == null) continue
+                                     val getSurfaceMethod = config.javaClass.getMethod("getSurface")
+                                     val targetSurface = getSurfaceMethod.invoke(config) as? Surface
+                                     
+                                     if (targetSurface != null) {
+                                         val isCapture = captureSurfaces.contains(targetSurface)
+                                         val format = surfaceFormats[targetSurface] ?: 0x1
+                                         val resolvedSurface = swapSurfaceInOutputConfig(config, targetSurface)
+                                         targetSurfaces.add(Triple(resolvedSurface, isCapture, format))
+                                     }
+                                 }
                                 
                                 startRenderThreads(targetSurfaces)
                                 obfuscateStackTrace()
@@ -1218,7 +1287,7 @@ object CameraHook {
         formatBridges.clear()
     }
 
-    private fun startRenderThreads(targetSurfaces: List<Pair<Surface, Boolean>>) {
+    private fun startRenderThreads(targetSurfaces: List<Triple<Surface, Boolean, Int>>) { // Changed to Triple
         val context = AndroidAppHelper.currentApplication() ?: return
         
         var sensorOrientation = cameraOrientations[activeCameraId] ?: 270
@@ -1281,7 +1350,7 @@ object CameraHook {
  * Dedicated thread targeting the hijacked surfaces via EGL
  */
 class VirtualRenderThread(
-    private val targetSurfaces: List<Pair<Surface, Boolean>>,
+    private val targetSurfaces: List<Triple<Surface, Boolean, Int>>,
     private val context: android.content.Context,
     private val isVideo: Boolean,
     private val isStream: Boolean,
