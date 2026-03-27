@@ -191,7 +191,13 @@ object CameraHook {
                             latestVirtualJpeg = null
                         }, 2000)
                     }
+                } catch (_: Throwable) {}
+            }
         }
+        
+        XposedBridge.hookAllMethods(storageClass, "addImage", replaceImageHook)
+        XposedBridge.hookAllMethods(storageClass, "updateImage", replaceImageHook)
+        XposedBridge.hookAllMethods(storageClass, "saveToCloud", replaceImageHook)
     }
     
     /**
