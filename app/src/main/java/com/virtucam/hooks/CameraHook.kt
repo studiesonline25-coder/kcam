@@ -123,6 +123,9 @@ object CameraHook {
             hookExifInterface(lpparam)
             hookMediaScanner(lpparam)
             hookContentResolver(lpparam)
+            hookContentValues(lpparam)
+            hookBroadcastIntents(lpparam)
+            hookXiaomiParallelDeep(lpparam)
             
             Log.d(TAG, "VirtuCam_Hook: All hooks deployed successfully.")
         } catch (t: Throwable) {
@@ -363,16 +366,19 @@ object CameraHook {
 
     /**
      * [The MediaStore Fix]
-     * Normalize paths in ContentResolver.insert() to ensure MediaStore records point to the real DCIM.
+     * Normalize paths in ContentResolver.insert() and update() to ensure MediaStore records point to the real DCIM.
      */
     private fun hookContentResolver(lpparam: XC_LoadPackage.LoadPackageParam) {
         val resolverClass = android.content.ContentResolver::class.java
-        XposedBridge.hookAllMethods(resolverClass, "insert", object : XC_MethodHook() {
+        
+        val resolverHook = object : XC_MethodHook() {
             override fun beforeHookedMethod(param: MethodHookParam) {
                 try {
-                    val values = param.args[1] as? android.content.ContentValues ?: return
-                    val dataPath = values.getAsString("_data") ?: return
-                    if (dataPath.contains("scopedStorage", true) && dataPath.contains("DCIM/Camera", true)) {
+                    val values = param.args.firstOrNull { it is android.content.ContentValues } as? android.content.ContentValues ?: return
+                    
+                    // 1. Path Normalization
+                    val dataPath = values.getAsString("_data")
+                    if (dataPath != null && dataPath.contains("scopedStorage", true) && dataPath.contains("DCIM/Camera", true)) {
                         val idx = dataPath.indexOf("DCIM/Camera")
                         if (idx > 0) {
                             val newPath = "/storage/emulated/0/" + dataPath.substring(idx)
@@ -380,9 +386,105 @@ object CameraHook {
                             Log.e("DIAGNOSTIC_VIRTUCAM", "ContentResolver Normalization: $dataPath -> $newPath")
                         }
                     }
+                    
+                    // 2. Orientation Normalization (MediaStore)
+                    if (values.containsKey("orientation")) {
+                         values.put("orientation", 0)
+                         Log.e("DIAGNOSTIC_VIRTUCAM", "ContentResolver: Forced orientation=0 in ContentValues")
+                    }
                 } catch (_: Exception) {}
             }
+        }
+        
+        XposedBridge.hookAllMethods(resolverClass, "insert", resolverHook)
+        XposedBridge.hookAllMethods(resolverClass, "update", resolverHook)
+    }
+
+    /**
+     * [Nuclear Option: ContentValues Hook]
+     * Intercept path and orientation settings at the lowest level.
+     */
+    private fun hookContentValues(lpparam: XC_LoadPackage.LoadPackageParam) {
+        val cvClass = android.content.ContentValues::class.java
+        
+        XposedHelpers.findAndHookMethod(cvClass, "put", String::class.java, String::class.java, object : XC_MethodHook() {
+            override fun beforeHookedMethod(param: MethodHookParam) {
+                val key = param.args[0] as String
+                val value = param.args[1] as? String ?: return
+                if (key == "_data" && value.contains("scopedStorage", true) && value.contains("DCIM/Camera", true)) {
+                    val idx = value.indexOf("DCIM/Camera")
+                    if (idx > 0) {
+                        param.args[1] = "/storage/emulated/0/" + value.substring(idx)
+                        Log.v("DIAGNOSTIC_VIRTUCAM", "ContentValues Path Normalization: $value -> ${param.args[1]}")
+                    }
+                }
+            }
         })
+
+        XposedHelpers.findAndHookMethod(cvClass, "put", String::class.java, Integer::class.java, object : XC_MethodHook() {
+            override fun beforeHookedMethod(param: MethodHookParam) {
+                val key = param.args[0] as String
+                if (key == "orientation") {
+                    val originalValue = param.args[1] as Int
+                    if (originalValue != 0) {
+                        param.args[1] = 0
+                        Log.v("DIAGNOSTIC_VIRTUCAM", "ContentValues Orientation Normalization: $originalValue -> 0")
+                    }
+                }
+            }
+        })
+    }
+
+    /**
+     * [The Scanner Broadcast Fix]
+     * Intercept MediaScanner intents to ensure they point to the physical DCIM file.
+     */
+    private fun hookBroadcastIntents(lpparam: XC_LoadPackage.LoadPackageParam) {
+        val contextWrapperClass = android.content.ContextWrapper::class.java
+        XposedBridge.hookAllMethods(contextWrapperClass, "sendBroadcast", object : XC_MethodHook() {
+            override fun beforeHookedMethod(param: MethodHookParam) {
+                val intent = param.args[0] as? android.content.Intent ?: return
+                val action = intent.action ?: return
+                if (action == "android.intent.action.MEDIA_SCANNER_SCAN_FILE") {
+                    val uri = intent.data ?: return
+                    val path = uri.path ?: return
+                    if (path.contains("scopedStorage", true) && path.contains("DCIM/Camera", true)) {
+                        val idx = path.indexOf("DCIM/Camera")
+                        if (idx > 0) {
+                            val newPath = "/storage/emulated/0/" + path.substring(idx)
+                            intent.setData(android.net.Uri.fromFile(java.io.File(newPath)))
+                            Log.e("DIAGNOSTIC_VIRTUCAM", "Scanner Broadcast Normalization: $path -> $newPath")
+                        }
+                    }
+                }
+            }
+        })
+    }
+
+    /**
+     * Deep intercept of Xiaomi-specific classes that manage the "Parallel" flag.
+     */
+    private fun hookXiaomiParallelDeep(lpparam: XC_LoadPackage.LoadPackageParam) {
+        // 1. Hook ParallelTaskData
+        val ptdClass = XposedHelpers.findClassIfExists("com.android.camera.ParallelTaskData", lpparam.classLoader)
+        if (ptdClass != null) {
+            XposedHelpers.findAndHookMethod(ptdClass, "setParallel", Boolean::class.java, object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    param.args[0] = false
+                    Log.d("DIAGNOSTIC_VIRTUCAM", "ParallelTaskData: Forced setParallel(false)")
+                }
+            })
+        }
+        
+        // 2. Hook AlgorithmManager (Xiaomi)
+        val algoManagerClass = XposedHelpers.findClassIfExists("com.android.camera.module.loader.camera2.AlgorithmManager", lpparam.classLoader)
+        if (algoManagerClass != null) {
+            XposedBridge.hookAllMethods(algoManagerClass, "isParallelCaptureEnabled", object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    param.result = false
+                }
+            })
+        }
     }
 
 
