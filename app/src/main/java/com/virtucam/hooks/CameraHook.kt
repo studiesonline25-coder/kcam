@@ -140,37 +140,57 @@ object CameraHook {
      * run its entire native Camera process. Right before the final image is committed 
      * from the cache to the permanent Gallery, we swap the payload with our spoofed JPEG.
      */
+    private var isStorageHooked = false
+    private var isPtdHooked = false
+    private var isAlgoHooked = false
+
     private fun hookLazyClasses(lpparam: XC_LoadPackage.LoadPackageParam) {
-        val classLoaderClass = ClassLoader::class.java
-        val hookedClasses = mutableSetOf<String>()
-
-        XposedBridge.hookAllMethods(classLoaderClass, "loadClass", object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam) {
-                if (!isEnabled) return
-                val className = param.args[0] as? String ?: return
-                if (hookedClasses.contains(className)) return
-
-                val clazz = param.result as? Class<*> ?: return
-
-                when (className) {
-                    "com.android.camera.storage.Storage" -> {
-                        hookedClasses.add(className)
-                        Log.e("DIAGNOSTIC_VIRTUCAM", "LAZY HOOK SUCCESS: Found com.android.camera.storage.Storage!")
-                        applyStorageHooks(clazz)
+        // In split APK environments, classes aren't available in lpparam.classLoader during init.
+        // We hook ContextWrapper.attachBaseContext to execute our hooks AFTER the full classloader is assembled.
+        try {
+            XposedHelpers.findAndHookMethod("android.content.ContextWrapper", lpparam.classLoader, "attachBaseContext", android.content.Context::class.java, object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    if (!isEnabled) return
+                    val context = param.args[0] as? android.content.Context ?: return
+                    val classLoader = context.classLoader
+                    
+                    if (!isStorageHooked) {
+                        try {
+                            val storageClass = XposedHelpers.findClassIfExists("com.android.camera.storage.Storage", classLoader)
+                            if (storageClass != null) {
+                                isStorageHooked = true
+                                Log.e("DIAGNOSTIC_VIRTUCAM", "DEFERRED HOOK SUCCESS: Found com.android.camera.storage.Storage!")
+                                applyStorageHooks(storageClass)
+                            }
+                        } catch (t: Throwable) {}
                     }
-                    "com.android.camera.ParallelTaskData" -> {
-                        hookedClasses.add(className)
-                        Log.e("DIAGNOSTIC_VIRTUCAM", "LAZY HOOK SUCCESS: Found com.android.camera.ParallelTaskData!")
-                        applyParallelTaskDataHooks(clazz)
+
+                    if (!isPtdHooked) {
+                        try {
+                            val ptdClass = XposedHelpers.findClassIfExists("com.android.camera.ParallelTaskData", classLoader)
+                            if (ptdClass != null) {
+                                isPtdHooked = true
+                                Log.e("DIAGNOSTIC_VIRTUCAM", "DEFERRED HOOK SUCCESS: Found ParallelTaskData!")
+                                applyParallelTaskDataHooks(ptdClass)
+                            }
+                        } catch (t: Throwable) {}
                     }
-                    "com.android.camera.module.loader.camera2.AlgorithmManager" -> {
-                        hookedClasses.add(className)
-                        Log.e("DIAGNOSTIC_VIRTUCAM", "LAZY HOOK SUCCESS: Found AlgorithmManager!")
-                        applyAlgorithmManagerHooks(clazz)
+
+                    if (!isAlgoHooked) {
+                        try {
+                            val algoManagerClass = XposedHelpers.findClassIfExists("com.android.camera.module.loader.camera2.AlgorithmManager", classLoader)
+                            if (algoManagerClass != null) {
+                                isAlgoHooked = true
+                                Log.e("DIAGNOSTIC_VIRTUCAM", "DEFERRED HOOK SUCCESS: Found AlgorithmManager!")
+                                applyAlgorithmManagerHooks(algoManagerClass)
+                            }
+                        } catch (t: Throwable) {}
                     }
                 }
-            }
-        })
+            })
+        } catch (t: Throwable) {
+            Log.e("DIAGNOSTIC_VIRTUCAM", "Failed to hook attachBaseContext", t)
+        }
     }
 
     private fun applyStorageHooks(storageClass: Class<*>) {
