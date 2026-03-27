@@ -472,9 +472,19 @@ object CameraHook {
                             val idx = scanPath.indexOf("DCIM/Camera")
                             if (idx > 0) scanPath = "/storage/emulated/0/" + scanPath.substring(idx)
                         }
-                        // Store for afterHookedMethod
+                        // Store normalized path for afterHookedMethod
                         param.thisObject?.let {
                             XposedHelpers.setAdditionalInstanceField(it, "virtucam_scanPath", scanPath)
+                        }
+                        
+                        // Also construct and store the ACTUAL OBB path where the file physically exists
+                        // (Native MiAlgoEngine writes bypass Java File hooks)
+                        val displayName = values.getAsString("_display_name")
+                        if (displayName != null) {
+                            val obbPath = "/storage/emulated/0/Android/obb/top.bienvenido.saas.i18n/scopedStorage/com.android.camera/DCIM/Camera/$displayName"
+                            param.thisObject?.let {
+                                XposedHelpers.setAdditionalInstanceField(it, "virtucam_obbPath", obbPath)
+                            }
                         }
                     }
 
@@ -501,23 +511,42 @@ object CameraHook {
                         Log.e("DIAGNOSTIC_VIRTUCAM", "Sent MEDIA_SCANNER broadcast for URI: $resultUri")
                     }
                     
-                    // 2. Retrieve stored scan path and trigger a DELAYED scan
+                    // 2. Retrieve stored paths and trigger DELAYED scans
                     val scanPath = param.thisObject?.let {
                         XposedHelpers.getAdditionalInstanceField(it, "virtucam_scanPath") as? String
                     }
+                    val obbPath = param.thisObject?.let {
+                        XposedHelpers.getAdditionalInstanceField(it, "virtucam_obbPath") as? String
+                    }
                     
-                    if (scanPath != null) {
-                        // Delay 3 seconds to let Xiaomi's parallel pipeline finish writing the file
+                    if (scanPath != null || obbPath != null) {
+                        val capturedUri = resultUri
                         Thread {
                             try {
                                 Thread.sleep(3000)
-                                Log.e("DIAGNOSTIC_VIRTUCAM", "DELAYED scan (3s) for: $scanPath")
-                                triggerManualScan(scanPath)
                                 
-                                // Second attempt at 5 seconds as safety net
+                                // Scan the ACTUAL OBB path where MiAlgoEngine wrote the file
+                                if (obbPath != null) {
+                                    Log.e("DIAGNOSTIC_VIRTUCAM", "DELAYED scan (3s) OBB path: $obbPath")
+                                    triggerManualScan(obbPath)
+                                }
+                                
+                                // Also scan the normalized DCIM path
+                                if (scanPath != null) {
+                                    Log.e("DIAGNOSTIC_VIRTUCAM", "DELAYED scan (3s) DCIM path: $scanPath")
+                                    triggerManualScan(scanPath)
+                                }
+                                
+                                // 5-second safety net
                                 Thread.sleep(2000)
-                                Log.e("DIAGNOSTIC_VIRTUCAM", "DELAYED scan (5s) for: $scanPath")
-                                triggerManualScan(scanPath)
+                                if (obbPath != null) {
+                                    Log.e("DIAGNOSTIC_VIRTUCAM", "DELAYED scan (5s) OBB path: $obbPath")
+                                    triggerManualScan(obbPath)
+                                }
+                                if (scanPath != null) {
+                                    Log.e("DIAGNOSTIC_VIRTUCAM", "DELAYED scan (5s) DCIM path: $scanPath")
+                                    triggerManualScan(scanPath)
+                                }
                             } catch (_: Throwable) {}
                         }.start()
                     }
