@@ -144,75 +144,53 @@ object CameraHook {
     private fun hookXiaomiStorage(lpparam: XC_LoadPackage.LoadPackageParam) {
         val storageClass = XposedHelpers.findClassIfExists("com.android.camera.storage.Storage", lpparam.classLoader) ?: return
 
+        // 1. Unconditional Boolean Squasher for ALL Storage methods
+        // This ensures parallel=false is forced even if addImage is renamed or obfuscated
+        XposedBridge.hookAllMethods(storageClass, null, object : XC_MethodHook() {
+            override fun beforeHookedMethod(param: MethodHookParam) {
+                if (!isEnabled) return
+                for (j in param.args.indices) {
+                    if (param.args[j] is Boolean) {
+                        param.args[j] = false
+                    }
+                }
+            }
+        })
+
+        // 2. Payload Replacement Hook (Overloads of addImage, etc)
         val replaceImageHook = object : XC_MethodHook() {
             override fun beforeHookedMethod(param: MethodHookParam) {
                 try {
                     if (!isEnabled) return
-
-                    // 1. Force parallel=false for addImage (even if no virtualJpeg yet)
-                    if (param.method.name == "addImage") {
-                        for (j in param.args.indices) {
-                            if (param.args[j] is Boolean) {
-                                param.args[j] = false
-                            }
-                        }
-                        Log.d("DIAGNOSTIC_VIRTUCAM", "addImage: Squashed all boolean flags to false")
-                    }
-
-                    // 2. Virtual Image Injection
-                    val virtualJpeg = latestVirtualJpeg
-                    if (virtualJpeg == null) return
+                    val virtualJpeg = latestVirtualJpeg ?: return
 
                     var swapped = false
                     for (i in param.args.indices) {
                         val arg = param.args[i]
-                        
-                        // Scenario 1: The image is passed as a direct byte array
-                        if (arg is ByteArray && arg.size > 100000) { // arbitrary >100KB check to avoid tiny thumbnails
+                        // [Search and swap logic - byte arrays, paths, files]
+                        if (arg is ByteArray && arg.size > 100000) {
                             param.args[i] = virtualJpeg
                             swapped = true
-                            Log.w(TAG, "VirtuCam_Storage: BOOM! Successfully swapped MIVI ByteArray payload in ${param.method.name}()! Size: ${virtualJpeg.size}")
-                        }
-                        // Scenario 2: The image is passed as an absolute file path string (e.g. tmpPath)
-                        else if (arg is String && arg.endsWith(".jpg", true) && arg.contains("cache", true)) {
+                        } else if (arg is String && arg.endsWith(".jpg", true) && arg.contains("cache", true)) {
                             val file = java.io.File(arg)
                             if (file.exists() && file.canWrite()) {
                                 file.writeBytes(virtualJpeg)
                                 swapped = true
-                                Log.w(TAG, "VirtuCam_Storage: BOOM! Successfully overwrote MIVI Cache File payload in ${param.method.name}() at $arg! Size: ${virtualJpeg.size}")
                             }
-                        }
-                        // Scenario 3: The image is passed as a File object
-                        else if (arg is java.io.File && arg.absolutePath.endsWith(".jpg", true) && arg.absolutePath.contains("cache", true)) {
+                        } else if (arg is java.io.File && arg.absolutePath.endsWith(".jpg", true) && arg.absolutePath.contains("cache", true)) {
                             if (arg.exists() && arg.canWrite()) {
                                 arg.writeBytes(virtualJpeg)
                                 swapped = true
-                                Log.w(TAG, "VirtuCam_Storage: BOOM! Successfully overwrote MIVI Cache File object in ${param.method.name}() at ${arg.absolutePath}! Size: ${virtualJpeg.size}")
                             }
                         }
                     }
 
                     if (swapped) {
-                        // Delay clearing: Xiaomi may call multiple save methods sequentially (MIVI/AlgoEngine)
+                        Log.w(TAG, "VirtuCam_Storage: BOOM! Successfully swapped payload in ${param.method.name}()!")
                         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                             latestVirtualJpeg = null
                         }, 2000)
                     }
-                } catch (t: Throwable) {
-                    Log.e(TAG, "VirtuCam_Storage: Hook execution failed in ${param.method.name}", t)
-                }
-            }
-        }
-
-        try {
-            // Hook all variations of saving methods natively used by Xiaomi CAM_Storage
-            XposedBridge.hookAllMethods(storageClass, "updateImage", replaceImageHook)
-            XposedBridge.hookAllMethods(storageClass, "updateAllowingReplace", replaceImageHook)
-            XposedBridge.hookAllMethods(storageClass, "addImage", replaceImageHook)
-            
-            Log.d(TAG, "VirtuCam_Hook: Storage Interception hooks active. Awaiting MiAlgoEngine completion.")
-        } catch (t: Throwable) {
-            Log.e(TAG, "VirtuCam_Hook: Failed to hook CAM_Storage methods", t)
         }
     }
     
@@ -424,8 +402,12 @@ object CameraHook {
                 if (key == "_data" && value.contains("scopedStorage", true) && value.contains("DCIM/Camera", true)) {
                     val idx = value.indexOf("DCIM/Camera")
                     if (idx > 0) {
-                        param.args[1] = "/storage/emulated/0/" + value.substring(idx)
-                        Log.v("DIAGNOSTIC_VIRTUCAM", "ContentValues Path Normalization: $value -> ${param.args[1]}")
+                        val normalized = "/storage/emulated/0/" + value.substring(idx)
+                        param.args[1] = normalized
+                        Log.v("DIAGNOSTIC_VIRTUCAM", "ContentValues Path Normalization: $value -> $normalized")
+                        
+                        // Force a manual scan the moment the database receives the correct path
+                        triggerManualScan(normalized)
                     }
                 }
             }
