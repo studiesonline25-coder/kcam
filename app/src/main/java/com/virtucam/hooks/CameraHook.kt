@@ -379,13 +379,14 @@ object CameraHook {
                     val values = param.args.firstOrNull { it is android.content.ContentValues } as? android.content.ContentValues ?: return
                     
                     // 1. Path Normalization
+                    var normalizedPath: String? = null
                     val dataPath = values.getAsString("_data")
                     if (dataPath != null && dataPath.contains("scopedStorage", true) && dataPath.contains("DCIM/Camera", true)) {
                         val idx = dataPath.indexOf("DCIM/Camera")
                         if (idx > 0) {
-                            val newPath = "/storage/emulated/0/" + dataPath.substring(idx)
-                            values.put("_data", newPath)
-                            Log.e("DIAGNOSTIC_VIRTUCAM", "ContentResolver Normalization: $dataPath -> $newPath")
+                            normalizedPath = "/storage/emulated/0/" + dataPath.substring(idx)
+                            values.put("_data", normalizedPath)
+                            Log.e("DIAGNOSTIC_VIRTUCAM", "ContentResolver Normalization: $dataPath -> $normalizedPath")
                         }
                     }
                     
@@ -396,8 +397,8 @@ object CameraHook {
                     }
 
                     // 3. Manual Gallery Force-Feed
-                    if (newPath != null) {
-                        triggerManualScan(newPath)
+                    if (normalizedPath != null) {
+                        triggerManualScan(normalizedPath)
                     }
                 } catch (_: Exception) {}
             }
