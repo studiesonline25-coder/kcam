@@ -144,20 +144,40 @@ object CameraHook {
     private fun hookXiaomiStorage(lpparam: XC_LoadPackage.LoadPackageParam) {
         val storageClass = XposedHelpers.findClassIfExists("com.android.camera.storage.Storage", lpparam.classLoader) ?: return
 
-        // 1. Unconditional Boolean Squasher for ALL Storage methods
-        // This ensures parallel=false is forced even if addImage is renamed or obfuscated
-        XposedBridge.hookAllMethods(storageClass, null, object : XC_MethodHook() {
+        // 1. Boolean Squasher + Manual Scan Trigger for addImage
+        // This is the MAIN save entry point. We squash parallel=true -> false,
+        // and trigger a manual gallery scan since Xiaomi's own scanner always fails.
+        val squashAndScanHook = object : XC_MethodHook() {
             override fun beforeHookedMethod(param: MethodHookParam) {
                 if (!isEnabled) return
+                var filePath: String? = null
                 for (j in param.args.indices) {
+                    // Squash ALL booleans (parallel, needThumbnail, etc.)
                     if (param.args[j] is Boolean) {
                         param.args[j] = false
                     }
+                    // Find the file path argument for manual scan
+                    val arg = param.args[j]
+                    if (arg is String && arg.endsWith(".jpg", true) && arg.contains("DCIM", true)) {
+                        filePath = arg
+                    }
+                }
+                Log.d("DIAGNOSTIC_VIRTUCAM", "addImage: Squashed all booleans to false")
+
+                // Trigger manual gallery scan with the normalized path
+                if (filePath != null) {
+                    val normalizedPath = if (filePath.contains("scopedStorage", true)) {
+                        val idx = filePath.indexOf("DCIM/Camera")
+                        if (idx > 0) "/storage/emulated/0/" + filePath.substring(idx) else filePath
+                    } else filePath
+                    triggerManualScan(normalizedPath)
                 }
             }
-        })
+        }
+        XposedBridge.hookAllMethods(storageClass, "addImage", squashAndScanHook)
+        XposedBridge.hookAllMethods(storageClass, "updateImage", squashAndScanHook)
 
-        // 2. Payload Replacement Hook (Overloads of addImage, etc)
+        // 2. Payload Replacement Hook
         val replaceImageHook = object : XC_MethodHook() {
             override fun beforeHookedMethod(param: MethodHookParam) {
                 try {
@@ -167,7 +187,6 @@ object CameraHook {
                     var swapped = false
                     for (i in param.args.indices) {
                         val arg = param.args[i]
-                        // [Search and swap logic - byte arrays, paths, files]
                         if (arg is ByteArray && arg.size > 100000) {
                             param.args[i] = virtualJpeg
                             swapped = true
@@ -194,11 +213,11 @@ object CameraHook {
                 } catch (_: Throwable) {}
             }
         }
-        
         XposedBridge.hookAllMethods(storageClass, "addImage", replaceImageHook)
         XposedBridge.hookAllMethods(storageClass, "updateImage", replaceImageHook)
         XposedBridge.hookAllMethods(storageClass, "saveToCloud", replaceImageHook)
     }
+
     
     /**
      * [Storage Redirection Fix]
