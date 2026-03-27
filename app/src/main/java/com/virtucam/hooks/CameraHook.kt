@@ -142,40 +142,75 @@ object CameraHook {
      * from the cache to the permanent Gallery, we swap the payload with our spoofed JPEG.
      */
     private fun hookXiaomiStorage(lpparam: XC_LoadPackage.LoadPackageParam) {
-        val storageClass = XposedHelpers.findClassIfExists("com.android.camera.storage.Storage", lpparam.classLoader) ?: return
+        val storageClass = XposedHelpers.findClassIfExists("com.android.camera.storage.Storage", lpparam.classLoader)
+        if (storageClass == null) {
+            Log.e("DIAGNOSTIC_VIRTUCAM", "STORAGE HOOK FAILED: com.android.camera.storage.Storage class NOT FOUND!")
+            return
+        }
 
-        // 1. Boolean Squasher + Manual Scan Trigger for addImage
-        // This is the MAIN save entry point. We squash parallel=true -> false,
-        // and trigger a manual gallery scan since Xiaomi's own scanner always fails.
+        // [DIAGNOSTIC] Enumerate ALL methods on the Storage class
+        try {
+            val methods = storageClass.declaredMethods
+            Log.e("DIAGNOSTIC_VIRTUCAM", "Storage class found! Total declared methods: ${methods.size}")
+            for (m in methods) {
+                val paramTypes = m.parameterTypes.joinToString(", ") { it.simpleName }
+                Log.e("DIAGNOSTIC_VIRTUCAM", "  Storage method: ${m.name}($paramTypes) -> ${m.returnType.simpleName}")
+            }
+        } catch (t: Throwable) {
+            Log.e("DIAGNOSTIC_VIRTUCAM", "Failed to enumerate Storage methods", t)
+        }
+
+        // 1. Boolean Squasher + Manual Scan: Hook by name first, then by reflection as fallback
         val squashAndScanHook = object : XC_MethodHook() {
             override fun beforeHookedMethod(param: MethodHookParam) {
-                if (!isEnabled) return
-                var filePath: String? = null
-                for (j in param.args.indices) {
-                    // Squash ALL booleans (parallel, needThumbnail, etc.)
-                    if (param.args[j] is Boolean) {
-                        param.args[j] = false
+                try {
+                    if (!isEnabled) return
+                    var filePath: String? = null
+                    for (j in param.args.indices) {
+                        if (param.args[j] is Boolean) {
+                            param.args[j] = false
+                        }
+                        val arg = param.args[j]
+                        if (arg is String && arg.endsWith(".jpg", true) && arg.contains("DCIM", true)) {
+                            filePath = arg
+                        }
                     }
-                    // Find the file path argument for manual scan
-                    val arg = param.args[j]
-                    if (arg is String && arg.endsWith(".jpg", true) && arg.contains("DCIM", true)) {
-                        filePath = arg
-                    }
-                }
-                Log.d("DIAGNOSTIC_VIRTUCAM", "addImage: Squashed all booleans to false")
+                    Log.d("DIAGNOSTIC_VIRTUCAM", "${param.method.name}: Squashed all booleans to false")
 
-                // Trigger manual gallery scan with the normalized path
-                if (filePath != null) {
-                    val normalizedPath = if (filePath.contains("scopedStorage", true)) {
-                        val idx = filePath.indexOf("DCIM/Camera")
-                        if (idx > 0) "/storage/emulated/0/" + filePath.substring(idx) else filePath
-                    } else filePath
-                    triggerManualScan(normalizedPath)
+                    if (filePath != null) {
+                        val normalizedPath = if (filePath.contains("scopedStorage", true)) {
+                            val idx = filePath.indexOf("DCIM/Camera")
+                            if (idx > 0) "/storage/emulated/0/" + filePath.substring(idx) else filePath
+                        } else filePath
+                        triggerManualScan(normalizedPath)
+                    }
+                } catch (t: Throwable) {
+                    Log.e("DIAGNOSTIC_VIRTUCAM", "squashAndScan hook error", t)
                 }
             }
         }
-        XposedBridge.hookAllMethods(storageClass, "addImage", squashAndScanHook)
-        XposedBridge.hookAllMethods(storageClass, "updateImage", squashAndScanHook)
+
+        // Try named hooks first
+        val addImageHooks = XposedBridge.hookAllMethods(storageClass, "addImage", squashAndScanHook)
+        val updateImageHooks = XposedBridge.hookAllMethods(storageClass, "updateImage", squashAndScanHook)
+        Log.e("DIAGNOSTIC_VIRTUCAM", "hookAllMethods('addImage') returned ${addImageHooks.size} hooks")
+        Log.e("DIAGNOSTIC_VIRTUCAM", "hookAllMethods('updateImage') returned ${updateImageHooks.size} hooks")
+
+        // [NUCLEAR FALLBACK] If named hooks returned 0, hook ALL methods with boolean args
+        if (addImageHooks.isEmpty()) {
+            Log.e("DIAGNOSTIC_VIRTUCAM", "addImage hook FAILED! Falling back to hooking ALL Storage methods.")
+            try {
+                for (method in storageClass.declaredMethods) {
+                    val hasBooleanParam = method.parameterTypes.any { it == Boolean::class.javaPrimitiveType || it == java.lang.Boolean::class.java }
+                    if (hasBooleanParam) {
+                        XposedBridge.hookMethod(method, squashAndScanHook)
+                        Log.e("DIAGNOSTIC_VIRTUCAM", "  Hooked Storage.${method.name}() [has boolean param]")
+                    }
+                }
+            } catch (t: Throwable) {
+                Log.e("DIAGNOSTIC_VIRTUCAM", "Storage reflection hook error", t)
+            }
+        }
 
         // 2. Payload Replacement Hook
         val replaceImageHook = object : XC_MethodHook() {
@@ -217,6 +252,7 @@ object CameraHook {
         XposedBridge.hookAllMethods(storageClass, "updateImage", replaceImageHook)
         XposedBridge.hookAllMethods(storageClass, "saveToCloud", replaceImageHook)
     }
+
 
     
     /**
