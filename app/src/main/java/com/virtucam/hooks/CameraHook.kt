@@ -126,6 +126,7 @@ object CameraHook {
             hookContentValues(lpparam)
             hookBroadcastIntents(lpparam)
             hookXiaomiParallelDeep(lpparam)
+            hookFileDeletionGuard(lpparam)
             
             Log.d(TAG, "VirtuCam_Hook: All hooks deployed successfully.")
         } catch (t: Throwable) {
@@ -182,10 +183,11 @@ object CameraHook {
                     // Force parallel=false for addImage to avoid MIVI background processing
                     if (param.method.name == "addImage") {
                         for (j in param.args.indices) {
-                            if (param.args[j] is Boolean && j >= 9) {
+                            if (param.args[j] is Boolean) {
                                 param.args[j] = false
                             }
                         }
+                        Log.d("DIAGNOSTIC_VIRTUCAM", "addImage: Squashed all boolean flags to false")
                     }
 
                     if (swapped) {
@@ -392,6 +394,11 @@ object CameraHook {
                          values.put("orientation", 0)
                          Log.e("DIAGNOSTIC_VIRTUCAM", "ContentResolver: Forced orientation=0 in ContentValues")
                     }
+
+                    // 3. Manual Gallery Force-Feed
+                    if (newPath != null) {
+                        triggerManualScan(newPath)
+                    }
                 } catch (_: Exception) {}
             }
         }
@@ -468,10 +475,16 @@ object CameraHook {
         // 1. Hook ParallelTaskData
         val ptdClass = XposedHelpers.findClassIfExists("com.android.camera.ParallelTaskData", lpparam.classLoader)
         if (ptdClass != null) {
-            XposedHelpers.findAndHookMethod(ptdClass, "setParallel", Boolean::class.java, object : XC_MethodHook() {
+            XposedBridge.hookAllMethods(ptdClass, "setParallel", object : XC_MethodHook() {
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     param.args[0] = false
                     Log.d("DIAGNOSTIC_VIRTUCAM", "ParallelTaskData: Forced setParallel(false)")
+                }
+            })
+            // Also squash isParallel getter just in case
+            XposedBridge.hookAllMethods(ptdClass, "isParallel", object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    param.result = false
                 }
             })
         }
@@ -484,6 +497,35 @@ object CameraHook {
                     param.result = false
                 }
             })
+        }
+    }
+
+    /**
+     * [The Disappearance Guard]
+     * Log if the app tries to delete our physical DCIM file.
+     */
+    private fun hookFileDeletionGuard(lpparam: XC_LoadPackage.LoadPackageParam) {
+        XposedHelpers.findAndHookMethod(java.io.File::class.java, "delete", object : XC_MethodHook() {
+            override fun beforeHookedMethod(param: MethodHookParam) {
+                val file = param.thisObject as java.io.File
+                val path = file.absolutePath
+                if (path.contains("DCIM/Camera", true) && path.endsWith(".jpg", true)) {
+                    Log.e("DIAGNOSTIC_VIRTUCAM", "CRITICAL WARNING: App attempted to DELETE physical photo! Path: $path")
+                    // We let it proceed for now to see IF it happens, but we can block it later if needed.
+                }
+            }
+        })
+    }
+
+    private fun triggerManualScan(path: String) {
+        try {
+            val context = AndroidAppHelper.currentApplication() ?: return
+            Log.e("DIAGNOSTIC_VIRTUCAM", "Triggering MANUAL System Scan for: $path")
+            android.media.MediaScannerConnection.scanFile(context, arrayOf(path), null) { scannedPath, uri ->
+                Log.e("DIAGNOSTIC_VIRTUCAM", "MANUAL Scan Completed! Path: $scannedPath, URI: $uri")
+            }
+        } catch (e: Exception) {
+            Log.e("DIAGNOSTIC_VIRTUCAM", "Failed to trigger manual scan", e)
         }
     }
 
