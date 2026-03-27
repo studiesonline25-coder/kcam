@@ -52,7 +52,6 @@ class FormatConverterBridge(
 
     init {
         try {
-        try {
             // USAGE_HW_CAMERA_WRITE (0x20000) helps masquerade as a valid hardware source for MIVI
             val usage = 0x20000L or 0x3L // HW_CAMERA_WRITE | CPU_READ_OFTEN
             imageReader = try {
