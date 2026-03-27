@@ -446,8 +446,8 @@ object CameraHook {
                     // 1b. Also normalize relative_path if present
                     val relativePath = values.getAsString("relative_path")
                     if (relativePath != null && relativePath.contains("scopedStorage", true)) {
-                        values.put("relative_path", "DCIM/Camera")
-                        Log.e("DIAGNOSTIC_VIRTUCAM", "ContentResolver: Forced relative_path=DCIM/Camera (was: $relativePath)")
+                        values.put("relative_path", "DCIM/Camera/")
+                        Log.e("DIAGNOSTIC_VIRTUCAM", "ContentResolver: Forced relative_path=DCIM/Camera/ (was: $relativePath)")
                     }
                     
                     // 2. Orientation Normalization (MediaStore)
@@ -456,26 +456,28 @@ object CameraHook {
                          Log.e("DIAGNOSTIC_VIRTUCAM", "ContentResolver: Forced orientation=0 in ContentValues")
                     }
 
-                    // 3. Construct scan path from ANY available fields
+                    // 3. Construct scan path (but DON'T scan yet — file hasn't been written)
+                    // Store the path for afterHookedMethod to use with a delay
                     var scanPath: String? = values.getAsString("_data")
                     if (scanPath == null) {
-                        // Modern Android: construct from _display_name + relative_path
                         val displayName = values.getAsString("_display_name")
-                        val relPath = values.getAsString("relative_path") ?: "DCIM/Camera"
+                        val relPath = (values.getAsString("relative_path") ?: "DCIM/Camera/").trimEnd('/')
                         if (displayName != null && displayName.endsWith(".jpg", true)) {
                             scanPath = "/storage/emulated/0/$relPath/$displayName"
                         }
                     }
                     
                     if (scanPath != null && scanPath.endsWith(".jpg", true)) {
-                        // Normalize scopedStorage from scan path
                         if (scanPath.contains("scopedStorage", true)) {
                             val idx = scanPath.indexOf("DCIM/Camera")
                             if (idx > 0) scanPath = "/storage/emulated/0/" + scanPath.substring(idx)
                         }
-                        Log.e("DIAGNOSTIC_VIRTUCAM", "ContentResolver: Triggering MANUAL scan for: $scanPath")
-                        triggerManualScan(scanPath)
+                        // Store for afterHookedMethod
+                        param.thisObject?.let {
+                            XposedHelpers.setAdditionalInstanceField(it, "virtucam_scanPath", scanPath)
+                        }
                     }
+
                 } catch (_: Exception) {}
             }
             
@@ -485,14 +487,39 @@ object CameraHook {
                     val resultUri = param.result as? android.net.Uri ?: return
                     if (!resultUri.toString().contains("images")) return
                     
-                    Log.e("DIAGNOSTIC_VIRTUCAM", "ContentResolver INSERT returned URI: $resultUri — sending MEDIA_SCANNER broadcast")
+                    Log.e("DIAGNOSTIC_VIRTUCAM", "ContentResolver INSERT returned URI: $resultUri")
+                    
                     val context = de.robv.android.xposed.XposedHelpers.callStaticMethod(
                         Class.forName("android.app.ActivityThread"),
                         "currentApplication"
                     ) as? android.content.Context
+                    
                     if (context != null) {
+                        // 1. Send broadcast immediately
                         val scanIntent = android.content.Intent(android.content.Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, resultUri)
                         context.sendBroadcast(scanIntent)
+                        Log.e("DIAGNOSTIC_VIRTUCAM", "Sent MEDIA_SCANNER broadcast for URI: $resultUri")
+                    }
+                    
+                    // 2. Retrieve stored scan path and trigger a DELAYED scan
+                    val scanPath = param.thisObject?.let {
+                        XposedHelpers.getAdditionalInstanceField(it, "virtucam_scanPath") as? String
+                    }
+                    
+                    if (scanPath != null) {
+                        // Delay 3 seconds to let Xiaomi's parallel pipeline finish writing the file
+                        Thread {
+                            try {
+                                Thread.sleep(3000)
+                                Log.e("DIAGNOSTIC_VIRTUCAM", "DELAYED scan (3s) for: $scanPath")
+                                triggerManualScan(scanPath)
+                                
+                                // Second attempt at 5 seconds as safety net
+                                Thread.sleep(2000)
+                                Log.e("DIAGNOSTIC_VIRTUCAM", "DELAYED scan (5s) for: $scanPath")
+                                triggerManualScan(scanPath)
+                            } catch (_: Throwable) {}
+                        }.start()
                     }
                 } catch (_: Throwable) {}
             }
