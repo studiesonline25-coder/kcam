@@ -425,7 +425,14 @@ object CameraHook {
                     
                     val values = param.args.firstOrNull { it is android.content.ContentValues } as? android.content.ContentValues ?: return
                     
-                    // 1. Path Normalization
+                    // [DIAGNOSTIC] Log ALL keys in ContentValues to find the path key
+                    try {
+                        val keys = values.keySet()
+                        val kvPairs = keys.joinToString(", ") { k -> "$k=${values.get(k)}" }
+                        Log.e("DIAGNOSTIC_VIRTUCAM", "ContentResolver INSERT keys: $kvPairs")
+                    } catch (_: Throwable) {}
+                    
+                    // 1. Path Normalization (try _data first)
                     val dataPath = values.getAsString("_data")
                     if (dataPath != null && dataPath.contains("scopedStorage", true) && dataPath.contains("DCIM/Camera", true)) {
                         val idx = dataPath.indexOf("DCIM/Camera")
@@ -436,30 +443,65 @@ object CameraHook {
                         }
                     }
                     
+                    // 1b. Also normalize relative_path if present
+                    val relativePath = values.getAsString("relative_path")
+                    if (relativePath != null && relativePath.contains("scopedStorage", true)) {
+                        values.put("relative_path", "DCIM/Camera")
+                        Log.e("DIAGNOSTIC_VIRTUCAM", "ContentResolver: Forced relative_path=DCIM/Camera (was: $relativePath)")
+                    }
+                    
                     // 2. Orientation Normalization (MediaStore)
                     if (values.containsKey("orientation")) {
                          values.put("orientation", 0)
                          Log.e("DIAGNOSTIC_VIRTUCAM", "ContentResolver: Forced orientation=0 in ContentValues")
                     }
 
-                    // 3. UNCONDITIONAL Manual Gallery Scan for ANY .jpg path
-                    val finalPath = values.getAsString("_data")
-                    if (finalPath != null && finalPath.endsWith(".jpg", true)) {
-                        // Ensure the path is normalized for the scanner
-                        val scanPath = if (finalPath.contains("scopedStorage", true)) {
-                            val idx = finalPath.indexOf("DCIM/Camera")
-                            if (idx > 0) "/storage/emulated/0/" + finalPath.substring(idx) else finalPath
-                        } else finalPath
+                    // 3. Construct scan path from ANY available fields
+                    var scanPath: String? = values.getAsString("_data")
+                    if (scanPath == null) {
+                        // Modern Android: construct from _display_name + relative_path
+                        val displayName = values.getAsString("_display_name")
+                        val relPath = values.getAsString("relative_path") ?: "DCIM/Camera"
+                        if (displayName != null && displayName.endsWith(".jpg", true)) {
+                            scanPath = "/storage/emulated/0/$relPath/$displayName"
+                        }
+                    }
+                    
+                    if (scanPath != null && scanPath.endsWith(".jpg", true)) {
+                        // Normalize scopedStorage from scan path
+                        if (scanPath.contains("scopedStorage", true)) {
+                            val idx = scanPath.indexOf("DCIM/Camera")
+                            if (idx > 0) scanPath = "/storage/emulated/0/" + scanPath.substring(idx)
+                        }
                         Log.e("DIAGNOSTIC_VIRTUCAM", "ContentResolver: Triggering MANUAL scan for: $scanPath")
                         triggerManualScan(scanPath)
                     }
                 } catch (_: Exception) {}
+            }
+            
+            override fun afterHookedMethod(param: MethodHookParam) {
+                try {
+                    // After insert(), get the returned URI and trigger a broadcast scan
+                    val resultUri = param.result as? android.net.Uri ?: return
+                    if (!resultUri.toString().contains("images")) return
+                    
+                    Log.e("DIAGNOSTIC_VIRTUCAM", "ContentResolver INSERT returned URI: $resultUri — sending MEDIA_SCANNER broadcast")
+                    val context = de.robv.android.xposed.XposedHelpers.callStaticMethod(
+                        Class.forName("android.app.ActivityThread"),
+                        "currentApplication"
+                    ) as? android.content.Context
+                    if (context != null) {
+                        val scanIntent = android.content.Intent(android.content.Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, resultUri)
+                        context.sendBroadcast(scanIntent)
+                    }
+                } catch (_: Throwable) {}
             }
         }
         
         XposedBridge.hookAllMethods(resolverClass, "insert", resolverHook)
         XposedBridge.hookAllMethods(resolverClass, "update", resolverHook)
     }
+
 
 
     /**
