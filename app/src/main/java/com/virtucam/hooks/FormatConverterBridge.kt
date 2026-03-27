@@ -52,7 +52,15 @@ class FormatConverterBridge(
 
     init {
         try {
-            imageReader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 2)
+        try {
+            // USAGE_HW_CAMERA_WRITE (0x20000) helps masquerade as a valid hardware source for MIVI
+            val usage = 0x20000L or 0x3L // HW_CAMERA_WRITE | CPU_READ_OFTEN
+            imageReader = try {
+                val newInstanceMethod = ImageReader::class.java.getMethod("newInstance", Int::class.java, Int::class.java, Int::class.java, Int::class.java, Long::class.javaPrimitiveType)
+                newInstanceMethod.invoke(null, width, height, PixelFormat.RGBA_8888, 2, usage) as ImageReader
+            } catch (e: Exception) {
+                ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 2)
+            }
             handlerThread = HandlerThread("VirtuCamRgbaCacheThread").apply { start() }
             handler = Handler(handlerThread!!.looper)
             
@@ -384,47 +392,12 @@ class FormatConverterBridge(
             val rgbaBuffer = ByteBuffer.wrap(rgbaBytes)
             bitmap.copyPixelsFromBuffer(rgbaBuffer)
             
-            // Extract original JPEG bytes from buffer to detect Hardware EXIF Rotation
-            val originalLimit = jpegBuffer.limit()
-            jpegBuffer.position(0)
-            val originalJpegBytes = ByteArray(originalLimit)
-            jpegBuffer.get(originalJpegBytes)
-            
-            try {
-                // Parse Hardware JPEG to read the physical sensor orientation (usually 90 or 270 on phones)
-                val exifInterface = android.media.ExifInterface(java.io.ByteArrayInputStream(originalJpegBytes))
-                val orientation = exifInterface.getAttributeInt(
-                    android.media.ExifInterface.TAG_ORIENTATION,
-                    android.media.ExifInterface.ORIENTATION_NORMAL
-                )
-                
-                val rotationDegrees = when (orientation) {
-                    android.media.ExifInterface.ORIENTATION_ROTATE_90 -> 90f
-                    android.media.ExifInterface.ORIENTATION_ROTATE_180 -> 180f
-                    android.media.ExifInterface.ORIENTATION_ROTATE_270 -> 270f
-                    else -> 0f
-                }
-                
-                // Live preview buffers strictly expect Upright frames, which VirtualRenderThread now provides natively.
-                // However, the OEM Camera App intercepts this target spoofed `ImageWriter` buffer and natively slaps its 
-                // Hardware EXIF tags onto it. For instance, if the camera physically mounts sideways, it tags `Orientation=90`.
-                // If we pass an Upright spoofed frame to the OEM, the Gallery will read `Orientation=90` and blindly double-rotate 
-                // our frame SIDEWAYS. 
-                // To prevent this, we mathematically PRE-ROTATE our Bitmap in the Exact Opposite Direction (-rotationDegrees) 
-                // perfectly mimicking the Native Hardware Sensor's sideways layout, ensuring the OEM downstream rotation 
-                // stands our captured photo perfectly back Upright!
-                if (rotationDegrees != 0f) {
-                    val matrix = android.graphics.Matrix()
-                    // INVERT the rotation direction (CCW)
-                    matrix.postRotate(-rotationDegrees)
-                    val rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
-                    bitmap.recycle()
-                    bitmap = rotatedBitmap
-                    Log.d(TAG, "FormatConverterBridge: Physically pre-rotated spoofed Bitmap by -$rotationDegrees degrees to perfectly offset Downstream OEM Hardware EXIF appending")
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "FormatConverterBridge: Failed to parse/apply Original EXIF rotation", e)
-            }
+                // --- METADATA NOTE ---
+                // We used to pre-rotate the bitmap here to counteract OEM EXIF tags.
+                // However, we now force CaptureRequest.JPEG_ORIENTATION = 0 at the system level.
+                // This means the app will no longer slap a 90/270 tag on our image.
+                // Therefore, we keep the bitmap upright (0°) as-is.
+                Log.d(TAG, "FormatConverterBridge: Keeping JPEG upright (0°). System-wide JPEG_ORIENTATION=0 override is active.")
             
             // Compress to JPEG
             val baos = ByteArrayOutputStream()

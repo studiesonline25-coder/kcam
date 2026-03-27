@@ -276,8 +276,7 @@ object CameraHook {
                         
                         override fun onCaptureCompleted(session: android.hardware.camera2.CameraCaptureSession, request: android.hardware.camera2.CaptureRequest, result: android.hardware.camera2.TotalCaptureResult) {
                             try {
-                                val isSingleCapture = !request.tag.toString().contains("Repeating") // Heuristic
-                                // On Xiaomi, repeating requests (preview) should be ignored for captureCount
+                                // 1. Intercept capture count for bridge triggering
                                 if (param.method.name == "capture") {
                                     val sensorTimestamp = result.get(android.hardware.camera2.CaptureResult.SENSOR_TIMESTAMP) ?: System.nanoTime()
                                     synchronized(CameraHook) {
@@ -286,6 +285,18 @@ object CameraHook {
                                         Log.d(TAG, "VirtuCam_Hook: Capture Event Detected! TS=$sensorTimestamp, QueueSize=${captureQueue.size}")
                                     }
                                 }
+
+                                // 2. Spoof CaptureResult Orientation to 0
+                                try {
+                                    val mResultsField = XposedHelpers.findFieldIfExists(result.javaClass, "mResults")
+                                    if (mResultsField != null) {
+                                        mResultsField.isAccessible = true
+                                        val results = mResultsField.get(result) // CameraMetadataNative
+                                        val jpegOrientationKey = android.hardware.camera2.CaptureResult.JPEG_ORIENTATION
+                                        XposedHelpers.callMethod(results, "set", jpegOrientationKey, 0)
+                                    }
+                                } catch (_: Exception) {}
+
                             } catch (e: Exception) {}
                             originalCallback.onCaptureCompleted(session, request, result)
                         }
@@ -562,15 +573,26 @@ object CameraHook {
             }
             
             val key = keyConstructor.newInstance(name, valueClass)
-            
-            // Use reflection for the .set() call to avoid Builder<T> vs Builder compile issues
             XposedHelpers.callMethod(builder, "set", key, value)
-            
-            // Helpful logging to verify which tags were accepted by the HAL
             Log.v(TAG, "XiaomiBypass: Set $name (reflected) success")
-        } catch (_: Throwable) {
-            Log.v(TAG, "XiaomiBypass: Tag $name not supported on this device")
-        }
+        } catch (_: Throwable) {}
+    }
+
+    private fun setVendorTagInternal(settings: Any, name: String, value: Any) {
+        try {
+            val keyClass = Class.forName("android.hardware.camera2.CaptureRequest\$Key")
+            val keyConstructor = keyClass.getDeclaredConstructor(String::class.java, Class::class.java)
+            keyConstructor.isAccessible = true
+            val valueClass = when(value) {
+                is Byte -> java.lang.Byte.TYPE
+                is Int -> java.lang.Integer.TYPE
+                is Boolean -> java.lang.Boolean.TYPE
+                is Long -> java.lang.Long.TYPE
+                else -> value::class.java
+            }
+            val key = keyConstructor.newInstance(name, valueClass)
+            XposedHelpers.callMethod(settings, "set", key, value)
+        } catch (_: Throwable) {}
     }
 
     private fun discoverXiaomiVendorTags(characteristics: android.hardware.camera2.CameraCharacteristics) {
@@ -651,18 +673,28 @@ object CameraHook {
                             }
                         }
 
-                        // --- METADATA EXTRACTION ---
-                        // Check if the app is explicitly requesting a rotation tag (e.g. 90, 270)
+                        // --- METADATA MUTATION ---
                         try {
-                            val jpegOrientationKey = android.hardware.camera2.CaptureRequest.JPEG_ORIENTATION
-                            val orientation = XposedHelpers.callMethod(reqObj, "get", jpegOrientationKey) as? Int
-                            if (orientation != null) {
-                                if (lastRequestedOrientation != orientation) {
-                                    Log.d(TAG, "VirtuCam_Hook: App requested JPEG_ORIENTATION = $orientation")
-                                    lastRequestedOrientation = orientation
+                            val mSettingsField = XposedHelpers.findFieldIfExists(reqClass, "mSettings")
+                            if (mSettingsField != null) {
+                                mSettingsField.isAccessible = true
+                                val settings = mSettingsField.get(reqObj) // CameraMetadataNative
+                                
+                                // 1. Force JPEG_ORIENTATION to 0 (since our EGL pixels are already upright)
+                                val jpegOrientationKey = android.hardware.camera2.CaptureRequest.JPEG_ORIENTATION
+                                XposedHelpers.callMethod(settings, "set", jpegOrientationKey, 0)
+                                
+                                // 2. Xiaomi MIVI Bypass (Force Legacy path)
+                                if (android.os.Build.MANUFACTURER.equals("Xiaomi", ignoreCase = true)) {
+                                    // Disable parallel capture and AI features
+                                    setVendorTagInternal(settings, "xiaomi.parallel.enabled", 0.toByte())
+                                    setVendorTagInternal(settings, "xiaomi.mivi.enabled", false)
+                                    setVendorTagInternal(settings, "xiaomi.algoengine.enabled", 0.toByte())
+                                    setVendorTagInternal(settings, "xiaomi.snapshot.optimize.enabled", 0.toByte())
+                                    setVendorTagInternal(settings, "xiaomi.capturepipeline.simple", 1.toByte())
                                 }
                             }
-                        } catch (_: Throwable) {}
+                        } catch (_: Exception) {}
                     }
                 } catch (t: Throwable) {
                     Log.e(TAG, "VirtuCam_Hook: Error mutating immutable CaptureRequest in submitCaptureRequest", t)
