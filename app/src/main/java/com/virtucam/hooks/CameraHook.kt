@@ -2089,7 +2089,7 @@ object CameraHook {
                                               null
                                          }
                                          
-                                         val dummySurface = createDummySurface(targetSurface, 0, 0, bridge, config)
+                                         val dummySurface = createDummySurface(targetSurface, 0, 0, bridge)
                                          surfaceMap[targetSurface] = dummySurface
                                      }
                                  }
