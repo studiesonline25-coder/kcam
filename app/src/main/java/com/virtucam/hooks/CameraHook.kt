@@ -205,7 +205,7 @@ object CameraHook {
             Log.e("DIAGNOSTIC_VIRTUCAM", "Failed to enumerate Storage methods", t)
         }
 
-        // 1. Boolean Squasher + Manual Scan: Hook by name first, then by reflection as fallback
+        // 1. Boolean Squasher + Physical Copy + Manual Scan: Hook by name first, then by reflection as fallback
         val squashAndScanHook = object : XC_MethodHook() {
             override fun beforeHookedMethod(param: MethodHookParam) {
                 try {
@@ -227,6 +227,26 @@ object CameraHook {
                             val idx = filePath.indexOf("DCIM/Camera")
                             if (idx > 0) "/storage/emulated/0/" + filePath.substring(idx) else filePath
                         } else filePath
+
+                        // PHYSICAL COPY: MiAlgoEngine writes natively to OBB, bypassing Java File hooks.
+                        // By the time updateImage or addImage occurs (if not parallel), the file should exist.
+                        // We must physically copy it to the public DCIM directory before triggering the scan.
+                        if (filePath.contains("/Android/obb/", true) || filePath.contains("/Android/data/", true)) {
+                            val originalFile = java.io.File(filePath)
+                            if (originalFile.exists() && originalFile.length() > 0) {
+                                val destFile = java.io.File(normalizedPath)
+                                destFile.parentFile?.mkdirs()
+                                try {
+                                    originalFile.copyTo(destFile, overwrite = true)
+                                    Log.e("DIAGNOSTIC_VIRTUCAM", "PHYSICAL COPY SUCCESS in ${param.method.name}: Copied OBB file to \${normalizedPath}")
+                                } catch (e: Exception) {
+                                    Log.e("DIAGNOSTIC_VIRTUCAM", "Failed to physically copy file", e)
+                                }
+                            } else {
+                                Log.e("DIAGNOSTIC_VIRTUCAM", "WARNING: OBB file does not exist or is empty at \$filePath when ${param.method.name} was called!")
+                            }
+                        }
+
                         triggerManualScan(normalizedPath)
                     }
                 } catch (t: Throwable) {
@@ -573,6 +593,19 @@ object CameraHook {
                             try {
                                 Thread.sleep(3000)
                                 
+                                // DELAYED PHYSICAL COPY: Rescue the file written natively by MiAlgoEngine
+                                try {
+                                    val obbFile = java.io.File(obbPath)
+                                    if (obbFile.exists() && obbFile.length() > 0) {
+                                        val dcimFile = java.io.File(dcimPath)
+                                        dcimFile.parentFile?.mkdirs()
+                                        obbFile.copyTo(dcimFile, overwrite = true)
+                                        Log.e("DIAGNOSTIC_VIRTUCAM", "DELAYED PHYSICAL COPY (3s): Rescued OBB file to $dcimPath")
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e("DIAGNOSTIC_VIRTUCAM", "Failed delayed physical copy (3s)", e)
+                                }
+                                
                                 // Scan ACTUAL OBB path where MiAlgoEngine wrote the file
                                 Log.e("DIAGNOSTIC_VIRTUCAM", "DELAYED scan (3s) OBB: $obbPath")
                                 triggerManualScan(obbPath)
@@ -583,6 +616,22 @@ object CameraHook {
                                 
                                 // 5-second safety net
                                 Thread.sleep(2000)
+                                
+                                // Second DELAYED PHYSICAL COPY attempt
+                                try {
+                                    val obbFile = java.io.File(obbPath)
+                                    if (obbFile.exists() && obbFile.length() > 0) {
+                                        val dcimFile = java.io.File(dcimPath)
+                                        if (!dcimFile.exists() || dcimFile.length() < obbFile.length()) {
+                                            dcimFile.parentFile?.mkdirs()
+                                            obbFile.copyTo(dcimFile, overwrite = true)
+                                            Log.e("DIAGNOSTIC_VIRTUCAM", "DELAYED PHYSICAL COPY (5s): Rescued OBB file to $dcimPath")
+                                        }
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e("DIAGNOSTIC_VIRTUCAM", "Failed delayed physical copy (5s)", e)
+                                }
+                                
                                 Log.e("DIAGNOSTIC_VIRTUCAM", "DELAYED scan (5s) OBB: $obbPath")
                                 triggerManualScan(obbPath)
                                 Log.e("DIAGNOSTIC_VIRTUCAM", "DELAYED scan (5s) DCIM: $dcimPath")
