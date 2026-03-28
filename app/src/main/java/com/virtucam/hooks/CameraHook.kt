@@ -164,6 +164,7 @@ object CameraHook {
      */
     private var isStorageHooked = false
     private var isPtdHooked = false
+    private var isZipperHooked = false
     private var isAlgoHooked = false
     private val searchedClassLoaders = java.util.Collections.newSetFromMap(java.util.concurrent.ConcurrentHashMap<ClassLoader, Boolean>())
 
@@ -194,22 +195,47 @@ object CameraHook {
 
         if (!isPtdHooked) {
             try {
-                val ptdClass = XposedHelpers.findClassIfExists("com.android.camera.ParallelTaskData", classLoader)
-                if (ptdClass != null) {
-                    isPtdHooked = true
-                    Log.e("DIAGNOSTIC_VIRTUCAM", "DEFERRED HOOK SUCCESS: Found ParallelTaskData!")
-                    applyParallelTaskDataHooks(ptdClass)
+                // Try both standard and xiaomi-branded package names
+                val names = listOf("com.android.camera.ParallelTaskData", "com.xiaomi.camera.ParallelTaskData")
+                for (name in names) {
+                    val ptdClass = XposedHelpers.findClassIfExists(name, classLoader)
+                    if (ptdClass != null) {
+                        isPtdHooked = true
+                        Log.e("DIAGNOSTIC_VIRTUCAM", "DEFERRED HOOK SUCCESS: Found $name!")
+                        applyParallelTaskDataHooks(ptdClass)
+                        break
+                    }
+                }
+            } catch (t: Throwable) {}
+        }
+
+        if (!isZipperHooked) {
+            try {
+                // Target the zipper module directly if TaskData bypasses us
+                val names = listOf("com.android.camera.ParallelDataZipper", "com.xiaomi.camera.ParallelDataZipper")
+                for (name in names) {
+                    val zipperClass = XposedHelpers.findClassIfExists(name, classLoader)
+                    if (zipperClass != null) {
+                        isZipperHooked = true
+                        Log.e("DIAGNOSTIC_VIRTUCAM", "DEFERRED HOOK SUCCESS: Found $name!")
+                        applyParallelDataZipperHooks(zipperClass)
+                        break
+                    }
                 }
             } catch (t: Throwable) {}
         }
 
         if (!isAlgoHooked) {
             try {
-                val algoManagerClass = XposedHelpers.findClassIfExists("com.android.camera.module.loader.camera2.AlgorithmManager", classLoader)
-                if (algoManagerClass != null) {
-                    isAlgoHooked = true
-                    Log.e("DIAGNOSTIC_VIRTUCAM", "DEFERRED HOOK SUCCESS: Found AlgorithmManager!")
-                    applyAlgorithmManagerHooks(algoManagerClass)
+                val names = listOf("com.android.camera.module.loader.camera2.AlgorithmManager", "com.xiaomi.camera.module.loader.camera2.AlgorithmManager")
+                for (name in names) {
+                    val algoManagerClass = XposedHelpers.findClassIfExists(name, classLoader)
+                    if (algoManagerClass != null) {
+                        isAlgoHooked = true
+                        Log.e("DIAGNOSTIC_VIRTUCAM", "DEFERRED HOOK SUCCESS: Found $name!")
+                        applyAlgorithmManagerHooks(algoManagerClass)
+                        break
+                    }
                 }
             } catch (t: Throwable) {}
         }
@@ -614,25 +640,38 @@ object CameraHook {
                         Thread {
                             try {
                                 // Polling Physical Rescue: MiAlgoEngine can take several seconds to write
-                                for (attempt in 1..5) {
+                                // Search both OBB and potential DATA paths in Meta Wolf sandbox
+                                val searchPaths = listOf(
+                                    obbPath,
+                                    "/storage/emulated/0/Android/data/top.bienvenido.saas.i18n/files/DCIM/Camera/$displayName",
+                                    "/storage/emulated/0/Android/data/top.bienvenido.saas.i18n/files/$displayName",
+                                    "/data/user/0/top.bienvenido.saas.i18n/files/$displayName"
+                                )
+                                
+                                for (attempt in 1..8) { // Increase to 8 attempts (16s)
                                     Thread.sleep(2000)
-                                    try {
-                                        val obbFile = java.io.File(obbPath)
-                                        if (obbFile.exists() && obbFile.length() > 1024) { // Ignore tiny/empty files
+                                    var foundFile: File? = null
+                                    for (p in searchPaths) {
+                                        val f = java.io.File(p)
+                                        if (f.exists() && f.length() > 1024) {
+                                            foundFile = f
+                                            break
+                                        }
+                                    }
+                                    
+                                    if (foundFile != null) {
+                                        try {
                                             val dcimFile = java.io.File(dcimPath)
                                             dcimFile.parentFile?.mkdirs()
-                                            obbFile.copyTo(dcimFile, overwrite = true)
-                                            Log.e("DIAGNOSTIC_VIRTUCAM", "PHYSICAL RESCUE SUCCESS (Attempt $attempt): Copied OBB file to $dcimPath")
-                                            
-                                            // Scan both paths to be sure
-                                            triggerManualScan(obbPath)
+                                            foundFile.copyTo(dcimFile, overwrite = true)
+                                            Log.e("DIAGNOSTIC_VIRTUCAM", "PHYSICAL RESCUE SUCCESS (Attempt $attempt): Found at ${foundFile.absolutePath}, copied to $dcimPath")
                                             triggerManualScan(dcimPath)
-                                            break // Success!
-                                        } else {
-                                            Log.e("DIAGNOSTIC_VIRTUCAM", "Physical Rescue Attempt $attempt: OBB file not ready yet... ($obbPath)")
+                                            break 
+                                        } catch (e: Exception) {
+                                            Log.e("DIAGNOSTIC_VIRTUCAM", "Physical Rescue Copy Error", e)
                                         }
-                                    } catch (e: Exception) {
-                                        Log.e("DIAGNOSTIC_VIRTUCAM", "Physical Rescue Attempt $attempt Error", e)
+                                    } else {
+                                        Log.e("DIAGNOSTIC_VIRTUCAM", "Physical Rescue Attempt $attempt: File not found in sandbox yet.")
                                     }
                                 }
                             } catch (_: Throwable) {}
@@ -737,6 +776,34 @@ object CameraHook {
             })
         } catch (t: Throwable) {
             Log.e("DIAGNOSTIC_VIRTUCAM", "Failed to apply ParallelTaskData hooks", t)
+        }
+    }
+
+    private fun applyParallelDataZipperHooks(zipperClass: Class<*>) {
+        try {
+            // Hook the final assembly of parallel results
+            XposedBridge.hookAllMethods(zipperClass, "setResult", object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    // Try to force the zipper to THINK it's not parallel anymore
+                    // This is aggressive and might crash, but it's our best bet to stop the redirect
+                    Log.d("DIAGNOSTIC_VIRTUCAM", "ParallelDataZipper: Intercepted setResult")
+                }
+            })
+            
+            // Hook any method that returns a ParallelTaskData object to squash its "isParallel" flag
+            XposedBridge.hookAllMethods(zipperClass, "getParallelTaskData", object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val ptd = param.result
+                    if (ptd != null) {
+                        try {
+                            XposedHelpers.setBooleanField(ptd, "mIsParallel", false)
+                            Log.d("DIAGNOSTIC_VIRTUCAM", "ParallelDataZipper: Squashed mIsParallel in returned PTD object")
+                        } catch (_: Exception) {}
+                    }
+                }
+            })
+        } catch (t: Throwable) {
+            Log.e("DIAGNOSTIC_VIRTUCAM", "Failed to apply ParallelDataZipper hooks", t)
         }
     }
 
