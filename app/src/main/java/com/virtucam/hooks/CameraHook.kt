@@ -126,10 +126,32 @@ object CameraHook {
             hookContentValues(lpparam)
             hookBroadcastIntents(lpparam)
             hookFileDeletionGuard(lpparam)
+            hookContextWrapper(lpparam)
             
             Log.d(TAG, "VirtuCam_Hook: All hooks deployed successfully.")
         } catch (t: Throwable) {
             Log.e(TAG, "VirtuCam_Hook: CRITICAL failure in $targetPackage", t)
+        }
+    }
+
+    /**
+     * [The ClassLoader Rescue]
+     * In sandbox environments like Meta Wolf, the Thread.currentThread().contextClassLoader 
+     * often remains the Host's PathClassLoader. By hooking ContextWrapper, we can capture 
+     * the actual plugin/guest Application context and its dedicated ClassLoader.
+     */
+    private fun hookContextWrapper(lpparam: XC_LoadPackage.LoadPackageParam) {
+        try {
+            XposedBridge.hookAllMethods(android.content.ContextWrapper::class.java, "attachBaseContext", object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    try {
+                        val ctx = param.thisObject as? android.content.Context ?: return
+                        applyDeferredHooksToClassLoader(ctx.classLoader)
+                    } catch (_: Throwable) {}
+                }
+            })
+        } catch (e: Throwable) {
+            Log.e("DIAGNOSTIC_VIRTUCAM", "Failed to hook ContextWrapper", e)
         }
     }
 
@@ -591,51 +613,28 @@ object CameraHook {
                         
                         Thread {
                             try {
-                                Thread.sleep(3000)
-                                
-                                // DELAYED PHYSICAL COPY: Rescue the file written natively by MiAlgoEngine
-                                try {
-                                    val obbFile = java.io.File(obbPath)
-                                    if (obbFile.exists() && obbFile.length() > 0) {
-                                        val dcimFile = java.io.File(dcimPath)
-                                        dcimFile.parentFile?.mkdirs()
-                                        obbFile.copyTo(dcimFile, overwrite = true)
-                                        Log.e("DIAGNOSTIC_VIRTUCAM", "DELAYED PHYSICAL COPY (3s): Rescued OBB file to $dcimPath")
-                                    }
-                                } catch (e: Exception) {
-                                    Log.e("DIAGNOSTIC_VIRTUCAM", "Failed delayed physical copy (3s)", e)
-                                }
-                                
-                                // Scan ACTUAL OBB path where MiAlgoEngine wrote the file
-                                Log.e("DIAGNOSTIC_VIRTUCAM", "DELAYED scan (3s) OBB: $obbPath")
-                                triggerManualScan(obbPath)
-                                
-                                // Also scan normalized DCIM path
-                                Log.e("DIAGNOSTIC_VIRTUCAM", "DELAYED scan (3s) DCIM: $dcimPath")
-                                triggerManualScan(dcimPath)
-                                
-                                // 5-second safety net
-                                Thread.sleep(2000)
-                                
-                                // Second DELAYED PHYSICAL COPY attempt
-                                try {
-                                    val obbFile = java.io.File(obbPath)
-                                    if (obbFile.exists() && obbFile.length() > 0) {
-                                        val dcimFile = java.io.File(dcimPath)
-                                        if (!dcimFile.exists() || dcimFile.length() < obbFile.length()) {
+                                // Polling Physical Rescue: MiAlgoEngine can take several seconds to write
+                                for (attempt in 1..5) {
+                                    Thread.sleep(2000)
+                                    try {
+                                        val obbFile = java.io.File(obbPath)
+                                        if (obbFile.exists() && obbFile.length() > 1024) { // Ignore tiny/empty files
+                                            val dcimFile = java.io.File(dcimPath)
                                             dcimFile.parentFile?.mkdirs()
                                             obbFile.copyTo(dcimFile, overwrite = true)
-                                            Log.e("DIAGNOSTIC_VIRTUCAM", "DELAYED PHYSICAL COPY (5s): Rescued OBB file to $dcimPath")
+                                            Log.e("DIAGNOSTIC_VIRTUCAM", "PHYSICAL RESCUE SUCCESS (Attempt $attempt): Copied OBB file to $dcimPath")
+                                            
+                                            // Scan both paths to be sure
+                                            triggerManualScan(obbPath)
+                                            triggerManualScan(dcimPath)
+                                            break // Success!
+                                        } else {
+                                            Log.e("DIAGNOSTIC_VIRTUCAM", "Physical Rescue Attempt $attempt: OBB file not ready yet... ($obbPath)")
                                         }
+                                    } catch (e: Exception) {
+                                        Log.e("DIAGNOSTIC_VIRTUCAM", "Physical Rescue Attempt $attempt Error", e)
                                     }
-                                } catch (e: Exception) {
-                                    Log.e("DIAGNOSTIC_VIRTUCAM", "Failed delayed physical copy (5s)", e)
                                 }
-                                
-                                Log.e("DIAGNOSTIC_VIRTUCAM", "DELAYED scan (5s) OBB: $obbPath")
-                                triggerManualScan(obbPath)
-                                Log.e("DIAGNOSTIC_VIRTUCAM", "DELAYED scan (5s) DCIM: $dcimPath")
-                                triggerManualScan(dcimPath)
                             } catch (_: Throwable) {}
                         }.start()
                     }
@@ -1073,7 +1072,12 @@ object CameraHook {
      * proprietary background processing features that reject virtual buffers.
      */
     private fun hookXiaomiBypass(lpparam: XC_LoadPackage.LoadPackageParam) {
-        if (!android.os.Build.MANUFACTURER.equals("Xiaomi", ignoreCase = true)) return
+        val manufacturer = android.os.Build.MANUFACTURER ?: ""
+        if (!manufacturer.equals("Xiaomi", ignoreCase = true) &&
+            !manufacturer.equals("POCO", ignoreCase = true) &&
+            !manufacturer.equals("Redmi", ignoreCase = true)) {
+            return
+        }
 
         try {
             val builderClass = XposedHelpers.findClassIfExists(
@@ -1278,7 +1282,10 @@ object CameraHook {
                                 XposedHelpers.callMethod(settings, "set", jpegOrientationKey, 0)
                                 
                                 // 2. NUCLEAR SWEEP: Disable parallel capture and AI features in the metadata directly
-                                if (android.os.Build.MANUFACTURER.equals("Xiaomi", ignoreCase = true)) {
+                                val manufacturer = android.os.Build.MANUFACTURER ?: ""
+                                if (manufacturer.equals("Xiaomi", ignoreCase = true) ||
+                                    manufacturer.equals("POCO", ignoreCase = true) ||
+                                    manufacturer.equals("Redmi", ignoreCase = true)) {
                                     val context = android.app.AndroidAppHelper.currentApplication()
                                     val chars = try {
                                         val manager = context?.getSystemService(android.content.Context.CAMERA_SERVICE) as? android.hardware.camera2.CameraManager
