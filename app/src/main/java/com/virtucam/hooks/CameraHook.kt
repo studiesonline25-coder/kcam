@@ -656,15 +656,72 @@ object CameraHook {
                         Log.e("DIAGNOSTIC_VIRTUCAM", "Sent MEDIA_SCANNER broadcast for URI: $resultUri")
                     }
                     
-                    // 2. Build paths and trigger DELAYED scans
+                    // 2. URI DIRECT WRITE RESCUE
+                    // In Meta Wolf sandbox, MiAlgoEngine never writes to disk (writeFile cost_ms = 0).
+                    // Instead of polling for a file that will never appear, we write the JPEG ourselves.
                     if (displayName != null && displayName.endsWith(".jpg", true)) {
                         val dcimPath = "/storage/emulated/0/DCIM/Camera/$displayName"
-                        val obbPath = "/storage/emulated/0/Android/obb/top.bienvenido.saas.i18n/scopedStorage/com.android.camera/DCIM/Camera/$displayName"
+                        val capturedUri = resultUri // Capture for thread
                         
                         Thread {
                             try {
-                                // Polling Physical Rescue: MiAlgoEngine can take several seconds to write
-                                // Search OBB, DATA, and "Data Anon" paths in Meta Wolf sandbox
+                                // Give MiAlgoEngine a moment (it may populate latestVirtualJpeg via FormatConverterBridge)
+                                Thread.sleep(1500)
+                                
+                                val jpegData = latestVirtualJpeg
+                                
+                                if (jpegData != null && jpegData.size > 1024) {
+                                    // === PRIMARY RESCUE: Write directly into MediaStore URI ===
+                                    var uriWriteSuccess = false
+                                    try {
+                                        val resolver = context?.contentResolver
+                                        if (resolver != null) {
+                                            val os = resolver.openOutputStream(capturedUri)
+                                            if (os != null) {
+                                                os.write(jpegData)
+                                                os.flush()
+                                                os.close()
+                                                uriWriteSuccess = true
+                                                Log.e("DIAGNOSTIC_VIRTUCAM", "URI DIRECT WRITE SUCCESS: Wrote ${jpegData.size} bytes to $capturedUri")
+                                                
+                                                // Clear is_pending flag so gallery can see it
+                                                val updateValues = android.content.ContentValues()
+                                                updateValues.put("is_pending", 0)
+                                                try {
+                                                    resolver.update(capturedUri, updateValues, null, null)
+                                                    Log.e("DIAGNOSTIC_VIRTUCAM", "Cleared is_pending flag for $capturedUri")
+                                                } catch (_: Throwable) {}
+                                            }
+                                        }
+                                    } catch (e: Throwable) {
+                                        Log.e("DIAGNOSTIC_VIRTUCAM", "URI Direct Write failed: ${e.message}")
+                                    }
+                                    
+                                    // === SECONDARY: Also write physical backup to DCIM ===
+                                    try {
+                                        val dcimFile = java.io.File(dcimPath)
+                                        dcimFile.parentFile?.mkdirs()
+                                        java.io.FileOutputStream(dcimFile).use { fos ->
+                                            fos.write(jpegData)
+                                            fos.flush()
+                                        }
+                                        Log.e("DIAGNOSTIC_VIRTUCAM", "PHYSICAL BACKUP SUCCESS: Wrote ${jpegData.size} bytes to $dcimPath")
+                                        triggerManualScan(dcimPath)
+                                    } catch (e: Throwable) {
+                                        Log.e("DIAGNOSTIC_VIRTUCAM", "Physical backup write failed: ${e.message}")
+                                    }
+                                    
+                                    if (uriWriteSuccess) {
+                                        // Trigger final scan
+                                        triggerManualScan(dcimPath)
+                                        return@Thread // Success! No need for file polling
+                                    }
+                                } else {
+                                    Log.e("DIAGNOSTIC_VIRTUCAM", "URI Direct Write: No latestVirtualJpeg available (${jpegData?.size ?: 0} bytes). Falling back to file polling...")
+                                }
+                                
+                                // === TERTIARY FALLBACK: Original file polling (reduced) ===
+                                val obbPath = "/storage/emulated/0/Android/obb/top.bienvenido.saas.i18n/scopedStorage/com.android.camera/DCIM/Camera/$displayName"
                                 val searchPaths = listOf(
                                     obbPath,
                                     "/storage/emulated/0/Android/data/top.bienvenido.saas.i18n/files/DCIM/Camera/$displayName",
@@ -675,7 +732,7 @@ object CameraHook {
                                     "/sdcard/Android/data/top.bienvenido.saas.i18n/app_data_anon/storage/emulated/0/DCIM/Camera/$displayName"
                                 )
                                 
-                                for (attempt in 1..10) { // Increase to 10 attempts (20s)
+                                for (attempt in 1..5) {
                                     Thread.sleep(2000)
                                     var foundFile: java.io.File? = null
                                     for (p in searchPaths) {
@@ -691,7 +748,6 @@ object CameraHook {
                                             val dcimFile = java.io.File(dcimPath)
                                             dcimFile.parentFile?.mkdirs()
                                             
-                                            // [HARDENED] Use a temporary copy to ensure VFS buffer completion
                                             val tempFile = java.io.File(context?.cacheDir, "rescue_temp.jpg")
                                             foundFile.copyTo(tempFile, overwrite = true)
                                             tempFile.copyTo(dcimFile, overwrite = true)
@@ -712,6 +768,7 @@ object CameraHook {
                     }
                 } catch (_: Throwable) {}
             }
+
 
         }
         
