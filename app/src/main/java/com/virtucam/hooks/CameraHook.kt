@@ -2364,4 +2364,5 @@ class VirtualRenderThread(
         isRunning = false
     }
 }
+}
 

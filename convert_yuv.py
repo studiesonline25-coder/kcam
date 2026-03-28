@@ -50,8 +50,8 @@ def convert_yuv_to_png(raw_path, width, height, output_path):
     print(f"Saved to {output_path}")
 
 if __name__ == "__main__":
-    raw_file = r"c:\Users\kevin\Downloads\secproject\capture_yuv_1774477310453.raw"
+    raw_file = r"c:\Users\kevin\Downloads\capture_yuv_1774641317702.raw"
     if os.path.exists(raw_file):
-        convert_yuv_to_png(raw_file, 1280, 960, r"c:\Users\kevin\Downloads\secproject\debug_preview.png")
+        convert_yuv_to_png(raw_file, 1280, 960, r"c:\Users\kevin\Downloads\secproject\debug_preview2.png")
     else:
         print("File not found")
