@@ -1521,8 +1521,7 @@ object CameraHook {
                 val h = XposedHelpers.callMethod(reader, "getHeight") as? Int ?: 0
                 
                 surfaceFormats[surface] = format
-                // Do NOT add to captureSurfaces here, it's for Photo/JPEG path
-                // captureSurfaces.add(surface) 
+                captureSurfaces.add(surface) 
                 
                 if (w > 0 && h > 0) {
                     surfaceSizes[surface] = Pair(w, h)
@@ -1926,21 +1925,20 @@ object CameraHook {
                                 val isPreview = (format == 0x22 || format == 0x1)
                                 
                                 val bridge = if (!isPreview && !isVideoSurface) {
-                                    // sensorOrientation=0: EGL render handles rotation
-                                    val b = FormatConverterBridge(w, h, targetSurface, format, 0) // Changed sensorOrientation to 0
+                                    val b = FormatConverterBridge(w, h, targetSurface, format, 0)
                                     activeBridges.add(b)
                                     formatBridges[android.util.Size(w, h)] = b
-                                    targetSurfaces.add(Triple(b.inputSurface ?: targetSurface, isCapture, format))
                                     b
                                 } else {
-                                    // Previews AND VideoSurfaces get original surface for direct render
-                                    targetSurfaces.add(Triple(targetSurface, isCapture, format))
                                     null
                                 }
                                 
                                 val dummySurface = createDummySurface(targetSurface, w, h, bridge)
                                 surfaceMap[targetSurface] = dummySurface
                                 newSurfaces.add(dummySurface)
+                                
+                                val resolvedSurface = bridge?.inputSurface ?: targetSurface
+                                targetSurfaces.add(Triple(resolvedSurface, isCapture, format))
                             }
                             
                             param.args[0] = newSurfaces
@@ -2065,34 +2063,17 @@ object CameraHook {
                                  val targetSurfaces = ArrayList<Triple<Surface, Boolean, Int>>()
                                  
                                  for (config in configs) {
-                                     if (config == null) continue
-                                     val getSurfaceMethod = config.javaClass.getMethod("getSurface")
-                                     val targetSurface = getSurfaceMethod.invoke(config) as? Surface
-                                     
-                                     if (targetSurface != null) {
-                                         val isCapture = captureSurfaces.contains(targetSurface)
-                                         val isVideoSurface = videoSurfaces.contains(targetSurface)
-                                         val format = surfaceFormats[targetSurface] ?: 0x1
-                                         
-                                         // Previews are usually 0x22 (PRIVATE) or 0x1 (RGBA)
-                                         val isPreview = (format == 0x22 || format == 0x1)
-                                         
-                                         val bridge = if (!isPreview && !isVideoSurface) {
-                                              val (w, h) = getSizeFromOutputConfig(config)
-                                              val b = FormatConverterBridge(w, h, targetSurface, format, 0)
-                                              activeBridges.add(b)
-                                              formatBridges[android.util.Size(w, h)] = b
-                                              targetSurfaces.add(Triple(b.inputSurface ?: targetSurface, isCapture, format))
-                                              b
-                                         } else {
-                                              targetSurfaces.add(Triple(targetSurface, isCapture, format))
-                                              null
-                                         }
-                                         
-                                         val dummySurface = createDummySurface(targetSurface, 0, 0, bridge)
-                                         surfaceMap[targetSurface] = dummySurface
-                                     }
-                                 }
+                                      if (config == null) continue
+                                      val getSurfaceMethod = config.javaClass.getMethod("getSurface")
+                                      val targetSurface = getSurfaceMethod.invoke(config) as? Surface
+                                      
+                                      if (targetSurface != null) {
+                                          val isCapture = captureSurfaces.contains(targetSurface)
+                                          val format = SurfaceUtils.getSurfaceFormat(targetSurface)
+                                          val resolvedSurface = swapSurfaceInOutputConfig(config, targetSurface)
+                                          targetSurfaces.add(Triple(resolvedSurface, isCapture, format))
+                                      }
+                                  }
                                 
                                 startRenderThreads(targetSurfaces)
                                 obfuscateStackTrace()
