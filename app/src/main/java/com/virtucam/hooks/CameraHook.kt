@@ -95,6 +95,7 @@ object CameraHook {
     // [ONCE AND FOR ALL] Surface tracking and crash prevention structures
     private val hookedListenerClasses = java.util.Collections.newSetFromMap(java.util.WeakHashMap<Class<*>, Boolean>())
     private val captureSurfaces = java.util.Collections.newSetFromMap(java.util.WeakHashMap<Surface, Boolean>())
+    private val videoSurfaces = java.util.Collections.newSetFromMap(java.util.WeakHashMap<Surface, Boolean>())
 
     /**
      * Initialize all camera hooks
@@ -127,6 +128,8 @@ object CameraHook {
             hookBroadcastIntents(lpparam)
             hookFileDeletionGuard(lpparam)
             hookContextWrapper(lpparam)
+            hookMediaRecorderOrientation(lpparam)
+            hookMediaFormatRotation(lpparam)
             
             Log.d(TAG, "VirtuCam_Hook: All hooks deployed successfully.")
         } catch (t: Throwable) {
@@ -1095,6 +1098,7 @@ object CameraHook {
                     override fun afterHookedMethod(param: MethodHookParam) {
                         val s = param.result as? Surface ?: return
                         captureSurfaces.add(s)
+                        videoSurfaces.add(s)
                         Log.d(TAG, "VirtuCam_Hook: Tracked MediaCodec Capture Surface")
                     }
                 })
@@ -1106,6 +1110,7 @@ object CameraHook {
                     override fun afterHookedMethod(param: MethodHookParam) {
                         val s = param.result as? Surface ?: return
                         captureSurfaces.add(s)
+                        videoSurfaces.add(s)
                         Log.d(TAG, "VirtuCam_Hook: Tracked MediaRecorder Capture Surface")
                     }
                 })
@@ -1516,7 +1521,9 @@ object CameraHook {
                 val h = XposedHelpers.callMethod(reader, "getHeight") as? Int ?: 0
                 
                 surfaceFormats[surface] = format
-                captureSurfaces.add(surface)
+                // Do NOT add to captureSurfaces here, it's for Photo/JPEG path
+                // captureSurfaces.add(surface) 
+                
                 if (w > 0 && h > 0) {
                     surfaceSizes[surface] = Pair(w, h)
                     Log.d(TAG, "VirtuCam_Hook: Tracked ImageReader surface ${w}x${h} format=$format")
@@ -1776,7 +1783,9 @@ object CameraHook {
         
         Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Swapping OutputConfig Surface. Size=${w}x${h}, Format=$format, isPreview=$isPreview")
         
-        val bridge = if (!isPreview) {
+        val isVideoSurface = videoSurfaces.contains(targetSurface)
+        
+        val bridge = if (!isPreview && !isVideoSurface) {
             // sensorOrientation=0: EGL render already applies rotation in drawToAllSurfaces.
             // Bridge only handles user rotationOffset + app JPEG_ORIENTATION.
             Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Creating FormatConverterBridge for $w x $h (Format $format) SensorRot=0(EGL-handled), RotOffset=$rotation, ColorSwap=$isColorSwapped")
@@ -1785,6 +1794,7 @@ object CameraHook {
             formatBridges[android.util.Size(w, h)] = b
             b
         } else {
+            if (isVideoSurface) Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Identified Video Surface - Bypassing FormatBridge for Direct OpenGL Render")
             null
         }
 
@@ -1911,10 +1921,11 @@ object CameraHook {
                                 val h = size.second
                                 
                                 val isCapture = captureSurfaces.contains(targetSurface)
+                                val isVideoSurface = videoSurfaces.contains(targetSurface)
                                 val format = SurfaceUtils.getSurfaceFormat(targetSurface)
                                 val isPreview = (format == 0x22 || format == 0x1)
                                 
-                                val bridge = if (!isPreview) {
+                                val bridge = if (!isPreview && !isVideoSurface) {
                                     // sensorOrientation=0: EGL render handles rotation
                                     val b = FormatConverterBridge(w, h, targetSurface, format, 0) // Changed sensorOrientation to 0
                                     activeBridges.add(b)
@@ -1922,6 +1933,7 @@ object CameraHook {
                                     targetSurfaces.add(Triple(b.inputSurface ?: targetSurface, isCapture, format))
                                     b
                                 } else {
+                                    // Previews AND VideoSurfaces get original surface for direct render
                                     targetSurfaces.add(Triple(targetSurface, isCapture, format))
                                     null
                                 }
@@ -2059,9 +2071,26 @@ object CameraHook {
                                      
                                      if (targetSurface != null) {
                                          val isCapture = captureSurfaces.contains(targetSurface)
+                                         val isVideoSurface = videoSurfaces.contains(targetSurface)
                                          val format = surfaceFormats[targetSurface] ?: 0x1
-                                         val resolvedSurface = swapSurfaceInOutputConfig(config, targetSurface)
-                                         targetSurfaces.add(Triple(resolvedSurface, isCapture, format))
+                                         
+                                         // Previews are usually 0x22 (PRIVATE) or 0x1 (RGBA)
+                                         val isPreview = (format == 0x22 || format == 0x1)
+                                         
+                                         val bridge = if (!isPreview && !isVideoSurface) {
+                                              val (w, h) = getSizeFromOutputConfig(config)
+                                              val b = FormatConverterBridge(w, h, targetSurface, format, 0)
+                                              activeBridges.add(b)
+                                              formatBridges[android.util.Size(w, h)] = b
+                                              targetSurfaces.add(Triple(b.inputSurface ?: targetSurface, isCapture, format))
+                                              b
+                                         } else {
+                                              targetSurfaces.add(Triple(targetSurface, isCapture, format))
+                                              null
+                                         }
+                                         
+                                         val dummySurface = createDummySurface(targetSurface, 0, 0, bridge, config)
+                                         surfaceMap[targetSurface] = dummySurface
                                      }
                                  }
                                 
@@ -2421,5 +2450,35 @@ class VirtualRenderThread(
         isRunning = false
     }
 }
+    private fun hookMediaRecorderOrientation(lpparam: XC_LoadPackage.LoadPackageParam) {
+        try {
+            val mrClass = XposedHelpers.findClassIfExists("android.media.MediaRecorder", lpparam.classLoader) ?: return
+            XposedHelpers.findAndHookMethod(mrClass, "setOrientationHint", Int::class.javaPrimitiveType, object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    if (!isEnabled) return
+                    val original = param.args[0] as Int
+                    param.args[0] = 0
+                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: MediaRecorder.setOrientationHint Spoofed $original -> 0")
+                }
+            })
+        } catch (_: Throwable) {}
+    }
+
+    private fun hookMediaFormatRotation(lpparam: XC_LoadPackage.LoadPackageParam) {
+        try {
+            val formatClass = XposedHelpers.findClassIfExists("android.media.MediaFormat", lpparam.classLoader) ?: return
+            XposedHelpers.findAndHookMethod(formatClass, "setInteger", String::class.java, Int::class.javaPrimitiveType, object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    if (!isEnabled) return
+                    val key = param.args[0] as String
+                    if (key == "rotation-degrees" || key == "rotation") {
+                        val original = param.args[1] as Int
+                        param.args[1] = 0
+                        Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: MediaFormat Rotation Spoofed $original -> 0")
+                    }
+                }
+            })
+        } catch (_: Throwable) {}
+    }
 }
 
