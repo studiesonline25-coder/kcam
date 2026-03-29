@@ -130,7 +130,7 @@ object CameraHook {
             hookContextWrapper(lpparam)
             hookMediaRecorderOrientation(lpparam)
             hookMediaFormatRotation(lpparam)
-            
+            hookMediaMuxerOrientation(lpparam)
             Log.d(TAG, "VirtuCam_Hook: All hooks deployed successfully.")
         } catch (t: Throwable) {
             Log.e(TAG, "VirtuCam_Hook: CRITICAL failure in $targetPackage", t)
@@ -1673,14 +1673,26 @@ object CameraHook {
         
         val originalFormat = if (targetSurface != null) SurfaceUtils.getSurfaceFormat(targetSurface) else 0x22 // PRIVATE fallback
         
-        Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Creating Dummy Sink Surface. Width=$width, Height=$height, Format=$originalFormat")
+        // --- PHASE 15 STABILITY FIX ---
+        // Android's ImageReader throws UnsupportedOperationException in `ir.acquireNextImage()` 
+        // if the format is PRIVATE (34 / 0x22). This crashes our dummy sink listener and blocks
+        // the camera processing pipeline (e.g. MiAlgoEngine memoryMonitor timeouts).
+        // By changing it to YUV_420_888 (35), we ensure we can safely consume and discard frames.
+        val readerFormat = if (originalFormat == 34 || originalFormat == 0x22) {
+            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Converting PRIVATE format ($originalFormat) to YUV_420_888 (35) for safe draining.")
+            android.graphics.ImageFormat.YUV_420_888
+        } else {
+            originalFormat
+        }
+
+        Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Creating Dummy Sink Surface. Width=$width, Height=$height, Format=$readerFormat (Orig=$originalFormat)")
 
         // [STABILITY FIX] Use maxImages=5 to give the Camera HAL plenty of breathing room during bursts. 
         // A value of 1 crashes the HAL if our encoder blocks the queue even for a few milliseconds (Error 4).
         val reader = try {
-            ImageReader.newInstance(width, height, originalFormat, 5)
+            ImageReader.newInstance(width, height, readerFormat, 5)
         } catch (e: Exception) {
-            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Failed to create ImageReader with $width x $height format $originalFormat! Trying YUV fallback...", e)
+            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Failed to create ImageReader with $width x $height format $readerFormat! Trying YUV fallback...", e)
             ImageReader.newInstance(width, height, android.graphics.ImageFormat.YUV_420_888, 5)
         }
         
@@ -2457,6 +2469,20 @@ class VirtualRenderThread(
                         param.args[1] = 0
                         Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: MediaFormat Rotation Spoofed $original -> 0")
                     }
+                }
+            })
+        } catch (_: Throwable) {}
+    }
+
+    private fun hookMediaMuxerOrientation(lpparam: XC_LoadPackage.LoadPackageParam) {
+        try {
+            val muxerClass = XposedHelpers.findClassIfExists("android.media.MediaMuxer", lpparam.classLoader) ?: return
+            XposedHelpers.findAndHookMethod(muxerClass, "setOrientationHint", Int::class.javaPrimitiveType, object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    if (!isEnabled) return
+                    val original = param.args[0] as Int
+                    param.args[0] = 0
+                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: MediaMuxer.setOrientationHint Spoofed $original -> 0")
                 }
             })
         } catch (_: Throwable) {}

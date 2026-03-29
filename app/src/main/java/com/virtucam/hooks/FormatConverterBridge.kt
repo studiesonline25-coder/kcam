@@ -127,11 +127,48 @@ class FormatConverterBridge(
     }
 
     /**
+     * Extracts RGBA cache, converts to Bitmap, compresses to JPEG, and stores in CameraHook.
+     * Required for URI Direct Write bypass because native camera often uses YUV buffers 
+     * but writes JPEGs to the sandboxed disk later.
+     */
+    private fun generateAndStoreSpoofedJpeg(): ByteArray? {
+        val rgbaBytes = cachedRgbaData
+        if (rgbaBytes == null || !checkDataIntegrity(rgbaBytes)) return null
+        
+        val expectedSize = width * height * 4
+        if (rgbaBytes.size < expectedSize) return null
+        
+        try {
+            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            val rgbaBuffer = ByteBuffer.wrap(rgbaBytes)
+            bitmap.copyPixelsFromBuffer(rgbaBuffer)
+            
+            val baos = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 85, baos)
+            bitmap.recycle()
+            
+            val jpegBytes = baos.toByteArray()
+            CameraHook.latestVirtualJpeg = jpegBytes
+            Log.d(TAG, "FormatConverterBridge: Generated and stored Virtual JPEG (${jpegBytes.size} bytes) for late-stage interception")
+            return jpegBytes
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to generate spoofed JPEG", e)
+            return null
+        }
+    }
+
+    /**
      * Synchronously overwrites the target image with our RGBA data converted to YUV.
      * Engineered for Xiaomi MiAlgoEngine (Parallel Service) compatibility.
      * Strict NV21 (V before U) layout for 2-plane semi-planar buffers.
      */
     fun overwriteImageWithLatestYuv(targetImage: Image, timestamp: Long) {
+        // [PHASE 15 STABILITY] Unconditionally generate the JPEG payload anyway.
+        // Even though the camera requested YUV, Xiaomi's algorithm engine will 
+        // eventually ask the Android file system to save a JPEG. When it does,
+        // our URI Direct Write needs this JPEG ready!
+        generateAndStoreSpoofedJpeg()
+        
         val rgbaBytes = cachedRgbaData
         if (rgbaBytes == null || !checkDataIntegrity(rgbaBytes)) {
             Log.e(TAG, "FormatConverterBridge: Cannot overwrite YUV - source data is missing or blank (all zeros)!")
@@ -378,39 +415,11 @@ class FormatConverterBridge(
             
             val tW = targetImage.width
             val tH = targetImage.height
-            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Overwriting JPEG: Target=${tW}x${tH}, Bridge=${width}x${height}, capacity=${jpegBuffer.capacity()}")
-            
-            val expectedSize = width * height * 4
-            if (rgbaBytes.size < expectedSize) {
-                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: rgbaBytes too small! expected $expectedSize, got ${rgbaBytes.size}")
-                throw IllegalStateException("FormatConverterBridge: rgbaBytes too small! expected $expectedSize, got ${rgbaBytes.size}")
+            val jpegBytes = generateAndStoreSpoofedJpeg()
+            if (jpegBytes == null) {
+                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Failed to generate Virtual JPEG.")
+                return
             }
-            
-            // Create Bitmap from cached RGBA
-            var bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-            val rgbaBuffer = ByteBuffer.wrap(rgbaBytes)
-            bitmap.copyPixelsFromBuffer(rgbaBuffer)
-            
-                // --- METADATA NOTE ---
-                // We used to pre-rotate the bitmap here to counteract OEM EXIF tags.
-                // However, we now force CaptureRequest.JPEG_ORIENTATION = 0 at the system level.
-                // This means the app will no longer slap a 90/270 tag on our image.
-                // Therefore, we keep the bitmap upright (0°) as-is.
-                Log.d(TAG, "FormatConverterBridge: Keeping JPEG upright (0°). System-wide JPEG_ORIENTATION=0 override is active.")
-            
-            // Compress to JPEG
-            val baos = ByteArrayOutputStream()
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 85, baos)
-            bitmap.recycle()
-            
-            val jpegBytes = baos.toByteArray()
-            
-            // NEW: Late-Stage Storage Interception Bypass!
-            // Store the perfectly spoofed JPEG in a global variable. When Xiaomi completes its Native 
-            // AlgoEngine processing, it will attempt to save its (likely corrupted) image to the disk.
-            // Our storage hook will decisively swap it out with this payload at the very last millisecond!
-            CameraHook.latestVirtualJpeg = jpegBytes
-            Log.d(TAG, "FormatConverterBridge: Captured and stored Virtual JPEG (${jpegBytes.size} bytes) for late-stage interception")
             
             // Write Spoofed JPEG into the image buffer (just in case the pipeline uses it directly)
             jpegBuffer.clear()
