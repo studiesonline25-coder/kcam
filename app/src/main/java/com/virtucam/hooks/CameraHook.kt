@@ -462,6 +462,7 @@ object CameraHook {
                         val virtualJpeg = latestVirtualJpeg ?: return
                         val file = if (arg is java.io.File) arg else if (arg is String) java.io.File(arg) else return
                         val path = file.absolutePath
+                        XposedHelpers.setAdditionalInstanceField(param.thisObject, "vcPath", path)
                         
                         // Only intercept if it looks like a camera capture artifact
                         if (path.endsWith(".jpg", true) && (path.contains("dcim", true) || path.contains("camera", true) || path.contains("cache", true))) {
@@ -484,6 +485,7 @@ object CameraHook {
                         if (!isEnabled) return
                         val virtualJpeg = latestVirtualJpeg ?: return
                         val data = param.args[0] as? ByteArray ?: return
+                        val path = XposedHelpers.getAdditionalInstanceField(param.thisObject, "vcPath") as? String ?: ""
                         
                         // Overwrite writes that likely represent the full image payload or thumbnails
                         // JPEG Magic Bytes: FF D8 FF
@@ -512,6 +514,7 @@ object CameraHook {
                         val virtualJpeg = latestVirtualJpeg ?: return
                         val data = param.args[0] as? ByteArray ?: return
                         val len = param.args[2] as Int
+                        val path = XposedHelpers.getAdditionalInstanceField(param.thisObject, "vcPath") as? String ?: ""
                         
                         val isJpeg = data.size > 3 && data[0] == 0xFF.toByte() && data[1] == 0xD8.toByte() && data[2] == 0xFF.toByte()
                         
