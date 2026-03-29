@@ -148,8 +148,18 @@ class FormatConverterBridge(
             bitmap.recycle()
             
             val jpegBytes = baos.toByteArray()
-            CameraHook.latestVirtualJpeg = jpegBytes
-            Log.d(TAG, "FormatConverterBridge: Generated and stored Virtual JPEG (${jpegBytes.size} bytes) for late-stage interception")
+            
+            val area = width * height
+            synchronized(CameraHook) {
+                if (area >= CameraHook.latestVirtualJpegArea) {
+                    CameraHook.latestVirtualJpeg = jpegBytes
+                    CameraHook.latestVirtualJpegArea = area
+                    Log.d(TAG, "FormatConverterBridge: Stored Virtual JPEG (${jpegBytes.size} bytes) for late-stage interception (Area: $area)")
+                } else {
+                    Log.d(TAG, "FormatConverterBridge: Discarding ${width}x${height} JPEG, a larger capture already won the race.")
+                }
+            }
+            
             return jpegBytes
         } catch (e: Exception) {
             Log.e(TAG, "Failed to generate spoofed JPEG", e)

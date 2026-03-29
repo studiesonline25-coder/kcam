@@ -1,0 +1,758 @@
+1774555230.746 10531 26297 31019 D VirtuCam_Hook: VirtuCam_Hook: Config loaded. Enabled: true, Zoom: 1.0, TCP: true, Rot: 0, ColorSwap: false
+1774555230.750 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555230.790 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555230.826 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555230.827 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430624355205000)
+1774555230.827 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555230.827 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555230.864 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555230.908 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555230.942 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555230.943 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430624455287000)
+1774555230.943 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555230.958 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555230.997 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555231.025 10531 26297 31055 D AidlBufferPool: bufferpool2 0x791c9660c8 : 9(18846720 size) total buffers - 8(16752640 size) used buffers - 792/801 (recycle/alloc) - 9/786 (fetch/transfer)
+1774555231.040 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555231.061 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555231.062 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430624555369000)
+1774555231.062 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555231.074 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555231.109 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555231.144 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555231.184 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555231.226 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555231.227 10531 26297 31018 E VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Saved raw buffer to /sdcard/Download/virtucam_debug/capture_yuv_1774555231170.raw
+1774555231.228 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555231.228 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430624655451000)
+1774555231.230 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555231.289 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555231.348 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555231.385 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555231.419 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555231.422 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430624755534000)
+1774555231.422 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555231.429 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555231.470 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555231.506 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555231.544 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555231.575 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555231.575 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430624855616000)
+1774555231.576 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555231.587 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555231.650 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555231.704 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555231.742 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555231.754 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555231.755 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430624955698000)
+1774555231.755 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555231.779 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555231.812 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555231.849 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555231.875 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555231.877 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430625055780000)
+1774555231.877 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555231.889 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555231.926 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555231.962 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555232.000 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555232.018 10531 26297 31018 E VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Saved raw buffer to /sdcard/Download/virtucam_debug/capture_yuv_1774555231991.raw
+1774555232.019 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555232.019 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430625155862000)
+1774555232.019 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555232.035 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555232.074 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555232.109 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555232.126 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555232.127 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430625255944000)
+1774555232.127 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555232.143 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555232.178 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555232.213 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555232.224 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555232.224 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430625356026000)
+1774555232.225 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555232.249 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555232.289 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555232.326 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555232.335 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555232.336 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430625456109000)
+1774555232.338 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555232.362 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555232.398 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555232.433 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555232.457 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555232.459 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430625856437000)
+1774555232.460 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555232.469 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555232.507 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555232.542 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555232.577 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555232.612 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555232.650 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555232.671 10531 26297 31018 E VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Saved raw buffer to /sdcard/Download/virtucam_debug/capture_yuv_1774555232629.raw
+1774555232.671 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555232.672 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430625956519000)
+1774555232.673 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555232.687 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555232.728 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555232.763 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555232.807 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555232.842 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555232.851 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555232.855 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430626056601000)
+1774555232.856 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555232.879 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555232.919 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555232.957 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555232.994 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555233.031 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555233.031 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430626156684000)
+1774555233.032 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555233.032 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555233.075 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555233.110 10531 26297 31019 D VirtuCam_Hook: VirtuCam_Hook: Config loaded. Enabled: true, Zoom: 1.0, TCP: true, Rot: 0, ColorSwap: false
+1774555233.113 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555233.149 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555233.173 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555233.175 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430626256766000)
+1774555233.177 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555233.191 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555233.231 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555233.266 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555233.307 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555233.346 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555233.373 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555233.373 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430626356848000)
+1774555233.374 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555233.386 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555233.438 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555233.476 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555233.518 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555233.559 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555233.598 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555233.636 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555233.637 10531 26297 31018 E VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Saved raw buffer to /sdcard/Download/virtucam_debug/capture_yuv_1774555233583.raw
+1774555233.637 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555233.638 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430626456930000)
+1774555233.639 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555233.675 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555233.713 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555233.748 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555233.785 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555233.811 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555233.812 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430626557012000)
+1774555233.812 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555233.821 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555233.858 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555233.896 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555233.920 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555233.920 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430626657094000)
+1774555233.921 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555233.931 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555233.946 10531 26297 26297 I MIUIInput: [MotionEvent] ViewRootImpl windowName 'com.transsion.phoenix/com.tencent.mtt.MainActivity', { action=ACTION_UP, id[0]=0, pointerCount=1, eventTime=430629652, downTime=430626042, phoneEventTime=23:00:33.943 } moveCount:113
+1774555233.970 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555234.008 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555234.033 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555234.033 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430626757176000)
+1774555234.034 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555234.045 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555234.081 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555234.118 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555234.138 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555234.138 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430626857258000)
+1774555234.139 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555234.154 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555234.191 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555234.230 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555234.266 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555234.305 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555234.306 10531 26297 31018 E VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Saved raw buffer to /sdcard/Download/virtucam_debug/capture_yuv_1774555234249.raw
+1774555234.307 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555234.309 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430626957341000)
+1774555234.310 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555234.343 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555234.381 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555234.419 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555234.458 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555234.477 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555234.477 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430627057423000)
+1774555234.478 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555234.497 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555234.536 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555234.575 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555234.612 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555234.623 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555234.623 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430627157505000)
+1774555234.624 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555234.654 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555234.710 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555234.748 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555234.785 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555234.786 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430627257587000)
+1774555234.786 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555234.788 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555234.838 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555234.878 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555234.886 10531 26297 26308 I saas.i18n:stub5: Background concurrent mark compact GC freed 2177KB AllocSpace bytes, 40(21MB) LOS objects, 33% free, 47MB/71MB, paused 4.624ms,6.025ms total 587.736ms
+1774555234.917 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555234.956 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555234.966 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555234.971 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430627357669000)
+1774555234.972 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555234.999 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555235.036 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555235.087 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555235.139 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555235.181 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555235.210 10531 26297 28849 W CameraDevice-JV-1: Device error received, code 3, frame number 238, request ID 0, subseq ID 0
+1774555235.210 10531 26297 28849 W CameraDevice-JV-1: got error frame 238
+1774555235.218 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555235.224 10531 26297 31018 E VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Saved raw buffer to /sdcard/Download/virtucam_debug/capture_yuv_1774555235146.raw
+1774555235.225 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555235.226 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430627457751000)
+1774555235.233 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555235.261 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555235.306 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555235.342 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555235.380 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555235.394 10531 26297 26297 W Activity: PerfMonitor: Slow Operation: Activity com.transsion.phoenix/com.tencent.mtt.MainActivity onPause took 61ms
+1774555235.418 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555235.423 10531 26297 31055 I MediaCodec: [mId: 11] [video-debug-dec] Stats over last 5001ms:
+1774555235.423 10531 26297 31055 I MediaCodec: [mId: 11] [video-debug-dec] ClientName: top.bienvenido.saas.i18n ComponentName: c2.mtk.avc.decoder
+1774555235.423 10531 26297 31055 I MediaCodec: [mId: 11] [video-debug-dec] Qinput: 150, DQinput: 150 success out of 150 tries
+1774555235.423 10531 26297 31055 I MediaCodec: [mId: 11] [video-debug-dec] Render: 150, Drop: 0, DQoutput: 150 success out of 150 tries
+1774555235.423 10531 26297 31055 I MediaCodec: [mId: 11] [video-debug-dec] Avg Input Interval: 33ms, Avg Render Interval: 33ms
+1774555235.456 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555235.490 10531 26125 26125 D BoundBrokerSvc: onBind: Intent { act=com.google.android.gms.measurement.START pkg=com.google.android.gms }
+1774555235.490 10531 26125 26125 D BoundBrokerSvc: Loading bound service for intent: Intent { act=com.google.android.gms.measurement.START pkg=com.google.android.gms }
+1774555235.505 10531 26297 31019 D VirtuCam_Hook: VirtuCam_Hook: Config loaded. Enabled: true, Zoom: 1.0, TCP: true, Rot: 0, ColorSwap: false
+1774555235.510 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555235.550 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555235.585 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555235.588 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555235.589 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430628158326000)
+1774555235.589 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555235.622 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555235.639 10531 26297 26297 D UserSceneDetector: invoke error.
+1774555235.641 10531 26297 26297 D VRI[MainActivity]: getMiuiFreeformStackInfo mTmpFrames.miuiFreeFormStackInfo: null
+1774555235.660 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555235.695 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555235.729 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555235.752 10531 26125 31540 D AdvertisingIdClient: AdvertisingIdClient already created.
+1774555235.753 10531 26125 31540 D AdvertisingIdClient: AdvertisingIdClient is not bounded. Starting to bind it...
+1774555235.772 10531 26125 31540 D AdvertisingIdClient: AdvertisingIdClient is bounded
+1774555235.781 10531 26125 31540 I AdvertisingIdClient: shouldSendLog -1
+1774555235.783 10531 26125 31540 I AdvertisingIdClient: GetInfoInternal elapse 28ms
+1774555235.786 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555235.799 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555235.806 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430628258408000)
+1774555235.807 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555235.859 10531 25867 25867 D BoundBrokerSvc: onBind: Intent { act=com.google.android.gms.presencemanager.service.START dat=chimera-action:/... cmp=com.google.android.gms/.chimera.PersistentApiService }
+1774555235.860 10531 25867 25867 D BoundBrokerSvc: Loading bound service for intent: Intent { act=com.google.android.gms.presencemanager.service.START dat=chimera-action:/... cmp=com.google.android.gms/.chimera.PersistentApiService }
+1774555235.875 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555235.886 10531 25867 25867 D BoundBrokerSvc: onBind: Intent { act=com.google.android.gms.presencemanager.service.INTERNAL_IDENTITY dat=chimera-action:/... cmp=com.google.android.gms/.chimera.PersistentApiService }
+1774555235.886 10531 25867 25867 D BoundBrokerSvc: Loading bound service for intent: Intent { act=com.google.android.gms.presencemanager.service.INTERNAL_IDENTITY dat=chimera-action:/... cmp=com.google.android.gms/.chimera.PersistentApiService }
+1774555235.896 10531 26297 26297 D VRI[MainActivity]: getMiuiFreeformStackInfo mTmpFrames.miuiFreeFormStackInfo: null
+1774555235.908 10531 25867 25867 D BoundBrokerSvc: onBind: Intent { act=com.google.android.gms.scheduler.ACTION_PROXY_SCHEDULE dat=chimera-action:/... cmp=com.google.android.gms/.chimera.PersistentDirectBootAwareApiService }
+1774555235.908 10531 25867 25867 D BoundBrokerSvc: Loading bound service for intent: Intent { act=com.google.android.gms.scheduler.ACTION_PROXY_SCHEDULE dat=chimera-action:/... cmp=com.google.android.gms/.chimera.PersistentDirectBootAwareApiService }
+1774555235.915 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555235.939 10531 25867 27090 W NetworkScheduler: The Firebase Job Dispatcher and GmsTaskScheduler are deprecated for apps targeting API 30 or newer. Application top.bienvenido.saas.i18n has targetSdkVersion 36. Please migrate to the WorkManager or JobScheduler. [CONTEXT service_id=218 ]
+1774555235.940 10531 25867 27090 W NetworkScheduler: Running in whitelist mode. Ignoring task: top.bienvenido.saas.i18n/com.google.android.gms.measurement.PackageMeasurementTaskService{u=0 tag="Measurement.PackageMeasurementTaskService.UPLOAD_TASK_TAG" trigger=window{start=3427s,end=6856s,earliest=3426s,latest=6855s} requirements=[NET_CONNECTED,PREFERRED_NET_UNMETERED,PREFERRED_CHARGING] attributes=[PERSISTED] scheduled=0s last_run=N/A exec_window_multiplier=1.0000 jid=N/A status=UNKNOWN retries=0 client_lib=GMS_TASK_SCHEDULER-261133000} [CONTEXT service_id=218 ]
+1774555235.957 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555236.001 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555236.044 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555236.088 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555236.093 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555236.093 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430628358491000)
+1774555236.094 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555236.103 10531 26297 31055 D AidlBufferPool: bufferpool2 0x791c9660c8 : 9(18846720 size) total buffers - 8(16752640 size) used buffers - 946/955 (recycle/alloc) - 9/940 (fetch/transfer)
+1774555236.123 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555236.168 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555236.204 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555236.244 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555236.272 10531 26297 26297 D VRI[MainActivity]: visibilityChanged oldVisibility=true newVisibility=false
+1774555236.281 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555236.311 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555236.314 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430628458573000)
+1774555236.314 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555236.320 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555236.361 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555236.401 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555236.442 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555236.470 10531 26297 26297 D BLASTBufferQueue: [VRI[MainActivity]#2](f:0,a:2) destructor()
+1774555236.472 10531 26297 26297 D BufferQueueConsumer: [VRI[MainActivity]#2(BLAST Consumer)2](id:66b900000014,api:0,p:-1,c:26297) disconnect
+1774555236.477 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555236.517 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555236.555 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555236.593 10531 26297 31018 E VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Saved raw buffer to /sdcard/Download/virtucam_debug/capture_yuv_1774555236548.raw
+1774555236.593 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555236.596 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430628558655000)
+1774555236.597 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555236.599 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555236.642 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555236.678 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555236.714 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555236.717 10531 26297 27466 E FolderObserver: CREATE:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555236.757 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555236.787 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555236.788 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555236.789 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555236.794 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555236.817 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555236.835 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555236.839 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555236.841 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555236.842 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555236.843 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555236.843 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430628658737000)
+1774555236.843 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555236.844 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555236.855 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555236.867 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555236.868 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555236.868 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555236.877 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555236.887 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555236.921 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555236.933 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555236.933 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555236.964 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555236.971 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555236.985 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555236.986 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.001 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.001 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.002 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.011 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555237.022 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.038 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.040 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.040 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.060 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555237.066 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.067 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.097 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.105 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.117 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555237.118 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555237.127 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.132 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430628758819000)
+1774555237.132 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555237.146 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.166 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.176 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555237.180 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.195 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.196 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.214 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.218 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555237.219 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.238 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.239 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.243 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.264 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555237.265 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.266 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.266 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.295 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.306 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555237.319 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.321 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.321 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.322 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.359 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555237.398 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.401 10531 26297 27466 E FolderObserver: MODIFY:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.402 10531 26297 27466 E FolderObserver: DELETE:path:6be190cb452262dd132017c350652e8a_-100thum7201548
+1774555237.410 10531 26297 27466 E FolderObserver: MOVED_FROM:path:6be190cb452262dd132017c350652e8atemp_-100thum7201548
+1774555237.411 10531 26297 27466 E FolderObserver: MOVED_TO:path:6be190cb452262dd132017c350652e8a_-100thum7201548
+1774555237.411 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555237.458 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555237.499 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555237.500 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555237.501 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430628858901000)
+1774555237.504 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555237.544 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555237.548 10531 26297 31534 I FA      : Application backgrounded at: timestamp_millis: 1774555235505
+1774555237.588 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555237.633 10531 26297 27550 I saas.i18n:stub5: Explicit concurrent mark compact GC freed 3388KB AllocSpace bytes, 17(4252KB) LOS objects, 34% free, 46MB/70MB, paused 4.886ms,8.136ms total 1.131s
+1774555237.640 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555237.683 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555237.721 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555237.765 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555237.805 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555237.818 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555237.819 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430628958983000)
+1774555237.820 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555237.843 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555237.889 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555237.936 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555237.975 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555238.022 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555238.065 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555238.106 10531 26297 28856 W CameraDevice-JV-1: Device error received, code 3, frame number 256, request ID 0, subseq ID 0
+1774555238.106 10531 26297 28856 W CameraDevice-JV-1: got error frame 256
+1774555238.121 10531 26297 31019 D VirtuCam_Hook: VirtuCam_Hook: Config loaded. Enabled: true, Zoom: 1.0, TCP: true, Rot: 0, ColorSwap: false
+1774555238.129 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555238.169 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555238.206 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555238.253 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555238.293 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555238.320 10531 26297 31018 E VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Saved raw buffer to /sdcard/Download/virtucam_debug/capture_yuv_1774555238186.raw
+1774555238.320 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555238.321 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430629059065000)
+1774555238.321 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555238.339 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555238.382 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555238.428 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555238.470 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555238.507 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555238.551 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555238.586 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555238.587 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555238.589 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430629159148000)
+1774555238.589 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555238.631 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555238.671 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555238.708 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555238.753 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555238.793 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555238.828 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555238.872 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555238.878 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555238.883 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430629259230000)
+1774555238.884 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555238.906 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555238.945 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555238.982 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555239.024 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555239.061 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555239.087 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555239.088 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430629359312000)
+1774555239.089 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555239.096 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555239.103 10531 26297 28849 W CameraDevice-JV-1: Device error received, code 3, frame number 257, request ID 0, subseq ID 0
+1774555239.103 10531 26297 28849 W CameraDevice-JV-1: got error frame 257
+1774555239.132 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555239.169 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555239.209 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555239.246 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555239.283 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555239.287 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555239.290 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430629459394000)
+1774555239.290 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555239.319 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555239.354 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555239.388 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555239.424 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555239.462 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555239.497 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555239.498 10531 26297 31018 E VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Saved raw buffer to /sdcard/Download/virtucam_debug/capture_yuv_1774555239473.raw
+1774555239.498 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555239.499 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430629559476000)
+1774555239.500 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555239.533 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555239.570 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555239.606 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555239.641 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555239.678 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555239.679 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430629659558000)
+1774555239.680 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555239.684 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555239.721 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555239.760 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555239.804 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555239.840 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555239.863 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555239.864 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430629759640000)
+1774555239.866 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555239.876 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555239.913 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555239.948 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555239.982 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555240.017 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555240.045 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555240.046 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430631060708000)
+1774555240.046 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555240.052 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555240.096 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555240.132 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555240.179 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555240.220 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555240.233 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555240.234 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430631160790000)
+1774555240.234 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555240.265 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555240.306 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555240.345 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555240.381 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555240.416 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555240.424 10531 26297 31055 I MediaCodec: [mId: 11] [video-debug-dec] Stats over last 5001ms:
+1774555240.424 10531 26297 31055 I MediaCodec: [mId: 11] [video-debug-dec] ClientName: top.bienvenido.saas.i18n ComponentName: c2.mtk.avc.decoder
+1774555240.425 10531 26297 31055 I MediaCodec: [mId: 11] [video-debug-dec] Qinput: 154, DQinput: 154 success out of 154 tries
+1774555240.425 10531 26297 31055 I MediaCodec: [mId: 11] [video-debug-dec] Render: 151, Drop: 0, DQoutput: 150 success out of 153 tries
+1774555240.425 10531 26297 31055 I MediaCodec: [mId: 11] [video-debug-dec] Avg Input Interval: 32ms, Avg Render Interval: 33ms
+1774555240.460 10531 26297 31019 D VirtuCam_Hook: VirtuCam_Hook: Config loaded. Enabled: true, Zoom: 1.0, TCP: true, Rot: 0, ColorSwap: false
+1774555240.465 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555240.501 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555240.539 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555240.541 10531 26297 31018 E VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Saved raw buffer to /sdcard/Download/virtucam_debug/capture_yuv_1774555240499.raw
+1774555240.542 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555240.542 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430631260872000)
+1774555240.544 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555240.576 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555240.612 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555240.652 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555240.695 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555240.738 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555240.782 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555240.819 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555240.820 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430631360955000)
+1774555240.821 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555240.824 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555240.869 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555240.918 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555240.964 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555241.008 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555241.044 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555241.081 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555241.121 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555241.157 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555241.162 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555241.163 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430631461037000)
+1774555241.164 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555241.200 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555241.225 10531 26297 31055 D AidlBufferPool: bufferpool2 0x791c9660c8 : 9(18846720 size) total buffers - 8(16752640 size) used buffers - 1101/1110 (recycle/alloc) - 9/1095 (fetch/transfer)
+1774555241.246 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555241.289 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555241.330 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555241.372 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555241.414 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555241.454 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555241.464 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555241.474 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430631561119000)
+1774555241.474 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555241.494 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555241.531 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555241.570 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555241.607 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555241.643 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555241.679 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555241.715 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555241.742 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555241.743 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430631661201000)
+1774555241.744 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555241.754 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555241.792 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555241.833 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555241.870 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555241.907 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555241.943 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555241.980 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555242.020 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555242.061 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555242.079 10531 26297 31018 E VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Saved raw buffer to /sdcard/Download/virtucam_debug/capture_yuv_1774555242013.raw
+1774555242.079 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555242.079 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430631761283000)
+1774555242.080 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555242.096 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555242.133 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555242.169 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555242.204 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555242.241 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555242.276 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555242.312 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555242.343 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555242.344 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430631861365000)
+1774555242.345 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555242.348 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555242.384 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555242.421 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555242.457 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555242.493 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555242.530 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555242.567 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555242.604 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555242.604 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430631961447000)
+1774555242.605 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555242.605 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555242.642 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555242.678 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555242.714 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555242.749 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555242.787 10531 26297 31019 D VirtuCam_Hook: VirtuCam_Hook: Config loaded. Enabled: true, Zoom: 1.0, TCP: true, Rot: 0, ColorSwap: false
+1774555242.790 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555242.809 10531 26297 29062 W CameraDevice-JV-1: Device error received, code 3, frame number 275, request ID 0, subseq ID 0
+1774555242.810 10531 26297 29062 W CameraDevice-JV-1: got error frame 275
+1774555242.827 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555242.864 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555242.865 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555242.866 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430632061530000)
+1774555242.868 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555242.901 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555242.938 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555242.974 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555243.010 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555243.046 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555243.085 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555243.121 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555243.130 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555243.131 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430632161612000)
+1774555243.131 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555243.157 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555243.194 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555243.232 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555243.268 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555243.305 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555243.340 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555243.376 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555243.412 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555243.425 10531 26297 31018 E VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Saved raw buffer to /sdcard/Download/virtucam_debug/capture_yuv_1774555243390.raw
+1774555243.425 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555243.426 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430632261694000)
+1774555243.426 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555243.448 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555243.484 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555243.522 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555243.560 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555243.596 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555243.633 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555243.671 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555243.686 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555243.687 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430632361776000)
+1774555243.687 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555243.708 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555243.744 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555243.780 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555243.811 10531 26297 28843 W CameraDevice-JV-1: Device error received, code 3, frame number 276, request ID 0, subseq ID 0
+1774555243.811 10531 26297 28843 W CameraDevice-JV-1: got error frame 276
+1774555243.817 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555243.853 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555243.890 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555243.927 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555243.947 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555243.948 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430632461858000)
+1774555243.948 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555243.963 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555243.999 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555244.035 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555244.070 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555244.107 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555244.142 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555244.177 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555244.207 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555244.208 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430632561940000)
+1774555244.208 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555244.213 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555244.248 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555244.285 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555244.323 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555244.359 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555244.402 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555244.440 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555244.477 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555244.510 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555244.510 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430632662022000)
+1774555244.511 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555244.516 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555244.548 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555244.583 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555244.618 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555244.652 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555244.687 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555244.722 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555244.756 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555244.794 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555244.830 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555244.835 10531 26297 31018 E VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Saved raw buffer to /sdcard/Download/virtucam_debug/capture_yuv_1774555244799.raw
+1774555244.835 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555244.836 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430635764569000)
+1774555244.836 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555244.866 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555244.901 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555244.937 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555244.973 10531 26297 31019 D VirtuCam_Hook: VirtuCam_Hook: Config loaded. Enabled: true, Zoom: 1.0, TCP: true, Rot: 0, ColorSwap: false
+1774555244.976 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555245.012 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555245.048 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555245.084 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555245.123 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555245.123 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555245.124 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430635864651000)
+1774555245.124 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555245.165 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555245.200 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555245.236 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555245.271 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555245.308 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555245.346 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555245.381 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555245.399 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555245.399 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430635964733000)
+1774555245.400 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555245.417 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555245.425 10531 26297 31055 I MediaCodec: [mId: 11] [video-debug-dec] Stats over last 5001ms:
+1774555245.425 10531 26297 31055 I MediaCodec: [mId: 11] [video-debug-dec] ClientName: top.bienvenido.saas.i18n ComponentName: c2.mtk.avc.decoder
+1774555245.425 10531 26297 31055 I MediaCodec: [mId: 11] [video-debug-dec] Qinput: 150, DQinput: 150 success out of 150 tries
+1774555245.426 10531 26297 31055 I MediaCodec: [mId: 11] [video-debug-dec] Render: 150, Drop: 0, DQoutput: 150 success out of 151 tries
+1774555245.426 10531 26297 31055 I MediaCodec: [mId: 11] [video-debug-dec] Avg Input Interval: 33ms, Avg Render Interval: 33ms
+1774555245.452 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555245.488 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555245.523 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555245.560 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555245.598 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555245.637 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555245.666 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555245.667 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430636064815000)
+1774555245.667 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555245.675 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555245.713 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555245.748 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555245.783 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555245.822 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555245.859 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555245.897 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555245.933 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555245.934 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430636164897000)
+1774555245.935 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555245.936 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555245.973 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555246.008 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555246.044 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555246.080 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555246.115 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555246.151 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555246.187 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555246.223 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555246.232 10531 26297 31018 E VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Saved raw buffer to /sdcard/Download/virtucam_debug/capture_yuv_1774555246199.raw
+1774555246.232 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555246.232 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430636264979000)
+1774555246.233 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555246.260 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555246.295 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555246.331 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555246.358 10531 26297 31055 D AidlBufferPool: bufferpool2 0x791c9660c8 : 9(18846720 size) total buffers - 8(16752640 size) used buffers - 1255/1264 (recycle/alloc) - 9/1249 (fetch/transfer)
+1774555246.367 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555246.403 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555246.439 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555246.474 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555246.493 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555246.494 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430636365061000)
+1774555246.494 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555246.510 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555246.544 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555246.581 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555246.617 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555246.652 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555246.687 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555246.723 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555246.754 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Captured frame (1280x720) rewritten successfully. Format=35
+1774555246.755 10531 26297 31018 D VirtuCam_Bridge: FormatConverterBridge: Successfully pushed captured frame (1280x720) to ImageWriter (Format: 35, TS: 430636465144000)
+1774555246.755 10531 26297 31018 D VirtuCam_Bridge: DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=1280x720, Format=35, Bridge=1280x720, SensorRot=0
+1774555246.762 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555246.800 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555246.837 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555246.873 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555246.909 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0
+1774555246.956 10531 26297 31019 D VirtuCam_Render: TextureRenderer.draw: rot=270, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=1.0x1.0

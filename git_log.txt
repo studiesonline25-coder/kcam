@@ -1,0 +1,30 @@
+1fc2d3b Fix photo rescue: URI Direct Write bypasses MiAlgoEngine native write failure in Meta Wolf sandbox
+0d92a74 Stabilize VirtualCam capture pipeline and resolve brace mismatch in CameraHook.kt
+e4f8536 Fix: compilation errors (syntax, null-safety, and Xposed types)
+2621f95 Meta Wolf: Hardened FileOutputStream and expanded rescue (Data Anon search)
+b2bb6eb Fix: Unresolved reference File in CameraHook.kt
+646d819 Xiaomi: Hardened hooks (ParallelDataZipper support) and expanded physical rescue (multi-path polling)
+a2b297b Xiaomi: Stabilize capture pipeline (ClassLoader rescue, POCO/Redmi support, polling physical rescue)
+c6196a7 Phase 9.9: Implement Physical File Rescue from OBB Sandbox
+65ed54e Phase 9.8: Add missing isEnabled safety checks to all storage and metadata hooks
+a095276 Phase 9.7: Use Thread ContextClassLoader inside openCamera, submitCaptureRequest, and ImageReader to trap split APK storage classes regardless of when they are instantiated
+622ab3d Phase 9.6: Fix Xiaomi missing classes error by hooking ContextWrapper.attachBaseContext instead of ClassLoader to catch classes loaded by Split APKs
+8aec46b Phase 9.5: Implement dynamic ClassLoader hooks to reliably disable Xiaomi Parallel Engine, fixing missing OBB files due to aborted native zipper writes
+f2cc63e Phase 9.3: Scan actual OBB path where file physically exists (MiAlgoEngine native bypass)
+5639f69 Phase 9.2: Fix double-slash in scan path + delayed scan (3s/5s) after file write
+0107c6f Phase 9.1: Fix scan trigger for modern Android (_display_name + relative_path + URI broadcast)
+956ac39 Phase 9: Unconditional gallery scan in ContentResolver hook (Storage class NOT FOUND fix)
+a4bce7e Phase 8.4: Diagnostic reflection + nuclear fallback for Storage hooks
+90a7e0f Phase 8.3: Fix boolean squasher (null method invalid) + addImage-level scan trigger
+d66f03c Phase 8.2 Recovery: Fixed missing braces in hookXiaomiStorage
+2127ef3 Phase 8.2: Global Boolean Squasher & Nuclear ContentValue Normalization
+308b7b0 Phase 8.1: Logic Fix for Parallel Suppression & Hardened Scan Trigger
+4a92377 Fix: Unresolved reference newPath in hookContentResolver
+8a89ef1 Phase 8: Gallery Force-Feed, Deletion Guard & Hardened Sync
+7c8635b Phase 7 Hardening: Nuclear ContentValues & Broadcast Interception
+d54f1a0 Phase 6 Final: MediaScanner & ContentResolver Normalization
+50ab259 Phase 6: Storage Normalization & ExifInterface Hardening
+323b04a Nuclear Xiaomi Bypass & Log Redirection (Phase 5)
+991c72c Fix syntax error in FormatConverterBridge.kt (Phase 4 Recovery)
+ee30c14 Capture Orientation & Xiaomi MIVI Bypass (Phase 4)
+1d2c361 Fix final typo: targetPair to targetTriple in VirtualRenderThread log

@@ -172,13 +172,13 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             var scaleX: Float
             var scaleY: Float
             
-            // FIT_CENTER logic based on effective (rotated) video ratio
+            // CENTER_CROP logic based on effective (rotated) video ratio
             if (effectiveVideoRatio > viewRatio) {
-                scaleX = 1f
-                scaleY = viewRatio / effectiveVideoRatio
-            } else {
                 scaleX = effectiveVideoRatio / viewRatio
                 scaleY = 1f
+            } else {
+                scaleX = 1f
+                scaleY = viewRatio / effectiveVideoRatio
             }
 
             // Apply global zoom factor

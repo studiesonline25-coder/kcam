@@ -1,0 +1,725 @@
+1774556833.989 10531 19564 21948 D CCodecBufferChannel: mBufferCountDebug=0 mIsUserLoad=1
+1774556833.991 10531 19564 21948 D MBrainDateManager: MBrainDataManager Constructor caller
+1774556833.991 10531 19564 21948 D MBrainManager: mMBrainSupport 0, return NULL
+1774556833.991 10531 19564 21948 D MBrainDateManager: mMBrainManager = nullptr
+1774556833.991 10531 19564 21948 D CCodecBufferChannel: new MBrainDataManager() fail
+1774556833.991 10531 19564 21948 D MBrainDateManager: MBrainDataManager Constructor clear
+1774556833.991 10531 19564 21948 D MediaCodec: [0x77ccc35e00] init: CCodec 0x791c978610, CCodecBufferChannel 0x777c9a2460
+1774556833.991 10531 19564 21948 I MediaCodec: init video box disabled for codec not supported
+1774556834.005 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556834.040 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556834.074 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556834.079 10531 19564 21973 D MediaCodec: [0x77ccc35e00] setState: 1
+1774556834.079 10531 19564 21973 I MediaCodec: [mId: 0] [video-debug-dec] setState: INITIALIZING
+1774556834.081 10531 19564 21981 D CCodec  : allocate(c2.mtk.avc.decoder)
+1774556834.095 10531 19564 21981 I Codec2Client: Available Codec2 services: "default" "software"
+1774556834.110 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556834.123 10531 19564 21981 I CCodec  : setting up 'default' as default (vendor) store
+1774556834.147 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556834.180 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556834.214 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556834.248 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556834.281 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556834.284 10531 19564 21981 I CCodec  : Created component [c2.mtk.avc.decoder]
+1774556834.285 10531 19564 21981 D CCodecBufferChannel: [0x777c9a2460] setComponent: mName c2.mtk.avc.decoder#877, mPipelineWatcher 0x777c9a2948
+1774556834.285 10531 19564 21981 D CCodecBufferChannel: PipelineWatcher debug info [c2.mtk.avc.decoder#877] enable=0
+1774556834.292 10531 19564 21981 D CCodecConfig: read media type: video/avc
+1774556834.301 10531 19564 21981 D ReflectedParamUpdater: extent() != 1 for single value type: algo.buffers.max-count.values
+1774556834.301 10531 19564 21981 D ReflectedParamUpdater: extent() != 1 for single value type: output.subscribed-indices.values
+1774556834.302 10531 19564 21981 D ReflectedParamUpdater: extent() != 1 for single value type: input.buffers.allocator-ids.values
+1774556834.302 10531 19564 21981 D ReflectedParamUpdater: extent() != 1 for single value type: output.buffers.allocator-ids.values
+1774556834.302 10531 19564 21981 D ReflectedParamUpdater: extent() != 1 for single value type: algo.buffers.allocator-ids.values
+1774556834.302 10531 19564 21981 D ReflectedParamUpdater: extent() != 1 for single value type: output.buffers.pool-ids.values
+1774556834.302 10531 19564 21981 D ReflectedParamUpdater: extent() != 1 for single value type: algo.buffers.pool-ids.values
+1774556834.310 10531 19564 21981 D ReflectedParamUpdater: ignored struct field coded.color-format.locations
+1774556834.315 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556834.323 10531 19564 21981 D CCodecConfig: ignoring local param raw.size (0xd2001800) as it is already supported
+1774556834.323 10531 19564 21981 D CCodecConfig: ignoring local param raw.crop (0xd2001801) as it is already supported
+1774556834.324 10531 19564 21981 D CCodecConfig: ignoring local param default.color (0x5200180b) as it is already supported
+1774556834.324 10531 19564 21981 D CCodecConfig: ignoring local param raw.hdr-static-info (0xd200180a) as it is already supported
+1774556834.333 10531 19564 21981 I CCodecConfig: query failed after returning 18 values (BAD_INDEX)
+1774556834.333 10531 19564 21981 D CCodecConfig: c2 config diff is Dict {
+1774556834.333 10531 19564 21981 D CCodecConfig:   c2::u32 algo.low-latency.value = 0
+1774556834.333 10531 19564 21981 D CCodecConfig:   c2::i32 algo.priority.value = 1
+1774556834.333 10531 19564 21981 D CCodecConfig:   c2::float algo.rate.value = 0
+1774556834.333 10531 19564 21981 D CCodecConfig:   c2::float coded.frame-rate.value = 0
+1774556834.333 10531 19564 21981 D CCodecConfig:   c2::u32 coded.pl.level = 20495
+1774556834.333 10531 19564 21981 D CCodecConfig:   c2::u32 coded.pl.profile = 20481
+1774556834.333 10531 19564 21981 D CCodecConfig:   c2::u32 coded.vui.color.matrix = 0
+1774556834.333 10531 19564 21981 D CCodecConfig:   c2::u32 coded.vui.color.primaries = 0
+1774556834.333 10531 19564 21981 D CCodecConfig:   c2::u32 coded.vui.color.range = 0
+1774556834.333 10531 19564 21981 D CCodecConfig:   c2::u32 coded.vui.color.transfer = 0
+1774556834.333 10531 19564 21981 D CCodecConfig:   c2::u32 default.color.matrix = 0
+1774556834.333 10531 19564 21981 D CCodecConfig:   c2::u32 default.color.primaries = 0
+1774556834.333 10531 19564 21981 D CCodecConfig:   c2::u32 default.color.range = 0
+1774556834.333 10531 19564 21981 D CCodecConfig:   c2::u32 default.color.transfer = 0
+1774556834.333 10531 19564 21981 D CCodecConfig:   c2::u32 input.buffers.max-size.value = 2097152
+1774556834.333 10531 19564 21981 D CCodecConfig:   c2::u32 input.delay.value = 0
+1774556834.333 10531 19564 21981 D CCodecConfig:   string input.media-type.value = "video/avc"
+1774556834.333 10531 19564 21981 D CCodecConfig:   c2::u32 output.delay.value = 12
+1774556834.333 10531 19564 21981 D CCodecConfig:   string output.media-type.value = "video/raw"
+1774556834.333 10531 19564 21981 D CCodecConfig:   c2::u32 raw.color.matrix = 0
+1774556834.333 10531 19564 21981 D CCodecConfig:   c2::u32 raw.color.primaries = 0
+1774556834.333 10531 19564 21981 D CCodecConfig:   c2::u32 raw.color.range = 0
+1774556834.333 10531 19564 21981 D CCodecConfig:   c2::u32 raw.color.transfer = 0
+1774556834.333 10531 19564 21981 D CCodecConfig:   c2::u32 raw.crop.height = 239
+1774556834.333 10531 19564 21981 D CCodecConfig:   c2::u32 raw.crop.left = 0
+1774556834.333 10531 19564 21981 D CCodecConfig:   c2::u32 raw.crop.top = 0
+1774556834.333 10531 19564 21981 D CCodecConfig:   c2::u32 raw.crop.width = 319
+1774556834.333 10531 19564 21981 D CCodecConfig:   c2::float raw.hdr-static-info.master
+1774556834.336 10531 19564 21981 W ColorUtils: expected specified color aspects (0:0:0:0)
+1774556834.337 10531 19564 21973 D MediaCodec: [0x77ccc35e00] setState: 2
+1774556834.337 10531 19564 21973 I MediaCodec: [mId: 0] [video-debug-dec] setState: INITIALIZED
+1774556834.350 10531 19564 21948 D MediaCodec: [0x77ccc35e00] [c2.mtk.avc.decoder] configure
+1774556834.350 10531 19564 21948 D AppSceneRecognizer: AppUsageScene: Unspecified
+1774556834.350 10531 19564 21948 I MediaCodec: [mId: 0] [video-debug-dec] configure: ClientName: top.bienvenido.saas.i18n ComponentName: c2.mtk.avc.decoder
+1774556834.350 10531 19564 21948 I MediaCodec: [mId: 0] [video-debug-dec] configure: ClientFormat: AMessage(what = 0x00000000) = {
+1774556834.350 10531 19564 21948 I MediaCodec:   int32_t max-bitrate = 777379
+1774556834.350 10531 19564 21948 I MediaCodec:   int32_t sar-width = 1
+1774556834.350 10531 19564 21948 I MediaCodec:   int32_t track-id = 2
+1774556834.350 10531 19564 21948 I MediaCodec:   int32_t level = 512
+1774556834.350 10531 19564 21948 I MediaCodec:   string mime = "video/avc"
+1774556834.350 10531 19564 21948 I MediaCodec:   int32_t frame-count = 3645
+1774556834.350 10531 19564 21948 I MediaCodec:   int32_t profile = 8
+1774556834.350 10531 19564 21948 I MediaCodec:   int32_t bitrate = 777379
+1774556834.350 10531 19564 21948 I MediaCodec:   string language = "und"
+1774556834.350 10531 19564 21948 I MediaCodec:   int32_t color-standard = 1
+1774556834.350 10531 19564 21948 I MediaCodec:   int32_t display-width = 576
+1774556834.350 10531 19564 21948 I MediaCodec:   Buffer csd-1 = {
+1774556834.350 10531 19564 21948 I MediaCodec:     00000000:  00 00 00 01 68 eb e2 cb  22 c0                    ....h...".
+1774556834.350 10531 19564 21948 I MediaCodec:   }
+1774556834.350 10531 19564 21948 I MediaCodec:   int32_t color-transfer = 3
+1774556834.350 10531 19564 21948 I MediaCodec:   int32_t sar-height = 1
+1774556834.350 10531 19564 21948 I MediaCodec:   int64_t durationUs = 121500000
+1774556834.350 10531 19564 21948 I MediaCodec:   int32_t display-height = 1024
+1774556834.350 10531 19564 21948 I MediaCodec:   int32_t width = 576
+1774556834.350 10531 19564 21948 I MediaCodec:   int32_t color-range = 2
+1774556834.350 10531 19564 21948 I MediaCodec:   int32_t max-input-size = 80812
+1774556834.350 10531 19564 21948 I MediaCodec:   int32_t frame-rate = 30
+1774556834.350 10531 19564 21948 I MediaCodec:   int32_t height = 1024
+1774556834.350 10531 19564 21948 I MediaCodec:   Buffer csd-0 = {
+1774556834.350 10531 19564 21948 I MediaCodec:     00000000:  00 00 00 01 67 64 00 1f  ac d9 40 90 08 1b 01 6a  ....gd....@....j
+1774556834.350 10531 19564 21948 I MediaCodec:     00000010:  02 02 02 80 00 00 03 00  80 00 00 1e 07 8c 18 cb  ................
+1774556834.350 10531 19564 21948 I MediaCodec:   }
+1774556834.350 10531 19564 21948 I MediaCodec: }
+1774556834.351 10531 19564 21948 I MediaCodec: MediaStub sendFrameRate
+1774556834.351 10531 19564 21948 D MediaImpl: MediaImpl::sendFrameRate: -1
+1774556834.351 10531 19564 21948 I MediaCodec: MediaStub sendWidth/sendHeight
+1774556834.351 10531 19564 21948 I MediaCodec: MediaStub sendMine
+1774556834.351 10531 19564 21948 D MediaImpl: MediaImpl::sendMine: video/avc
+1774556834.351 10531 19564 21948 I MediaCodec: MediaStub sendDolbyVision
+1774556834.351 10531 19564 21948 I MediaCodec: MediaStub sendPackageName
+1774556834.351 10531 19564 21948 D MediaImpl: MediaImpl::sendPackageName: top.bienvenido.saas.i18n
+1774556834.351 10531 19564 21948 I MiMediaCodec: fps video to display enabled
+1774556834.351 10531 19564 21948 I MiMediaCodec: The Fps from player is 30.000000  frameRateFloat 30.000000 frameRateInt 30
+1774556834.351 10531 19564 21948 I MediaCodec: configure : init video box disabled
+1774556834.352 10531 19564 21973 I MediaCodec: [mId: 0] [video-debug-dec] connectToSurface: surface 0x789ca3e4f0, mSurface 0x0
+1774556834.352 10531 19564 21973 D MediaCodec: [0x77ccc35e00] [c2.mtk.avc.decoder] connectToSurface: surface 0x789ca3e4f0, mSurface 0x0
+1774556834.352 10531 19564 21973 D SurfaceUtils: connecting to surface 0x789ca3e500, reason connectToSurface
+1774556834.352 10531 19564 21973 I MediaCodec: [c2.mtk.avc.decoder] setting surface generation to 20033537
+1774556834.352 10531 19564 21973 D SurfaceUtils: disconnecting from surface 0x789ca3e500, reason connectToSurface(reconnect)
+1774556834.352 10531 19564 21973 D SurfaceUtils: connecting to surface 0x789ca3e4f0, reason connectToSurface(reconnect-with-listener)
+1774556834.352 10531 19564 21973 D MediaCodec: [0x77ccc35e00] setState: 3
+1774556834.352 10531 19564 21973 I MediaCodec: [mId: 0] [video-debug-dec] setState: CONFIGURING
+1774556834.352 10531 19564 21973 D MediaCodec: [c2.mtk.avc.decoder] config set c2 sleep timeout 1500 kC2SleepTimeoutMs=1500
+1774556834.352 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556834.352 10531 19564 21981 D CCodec  : [c2.mtk.avc.decoder] buffers are bound to CCodec for this session
+1774556834.353 10531 19564 21981 D CCodecConfig: no c2 equivalents for track-id
+1774556834.353 10531 19564 21981 D CCodecConfig: no c2 equivalents for frame-count
+1774556834.353 10531 19564 21981 D CCodecConfig: no c2 equivalents for language
+1774556834.353 10531 19564 21981 D CCodecConfig: no c2 equivalents for color-standard
+1774556834.353 10531 19564 21981 D CCodecConfig: no c2 equivalents for display-width
+1774556834.353 10531 19564 21981 D CCodecConfig: no c2 equivalents for csd-1
+1774556834.353 10531 19564 21981 D CCodecConfig: no c2 equivalents for durationUs
+1774556834.353 10531 19564 21981 D CCodecConfig: no c2 equivalents for display-height
+1774556834.353 10531 19564 21981 D CCodecConfig: no c2 equivalents for native-window
+1774556834.353 10531 19564 21981 D CCodecConfig: no c2 equivalents for native-window-generation
+1774556834.353 10531 19564 21981 D CCodecConfig: no c2 equivalents for flags
+1774556834.356 10531 19564 21981 D CCodecConfig: c2 config diff is   c2::float coded.frame-rate.value = 30
+1774556834.356 10531 19564 21981 D CCodecConfig:   c2::u32 coded.pl.level = 20489
+1774556834.356 10531 19564 21981 D CCodecConfig:   c2::u32 coded.pl.profile = 20484
+1774556834.356 10531 19564 21981 D CCodecConfig:   c2::u32 default.color.matrix = 1
+1774556834.356 10531 19564 21981 D CCodecConfig:   c2::u32 default.color.primaries = 1
+1774556834.356 10531 19564 21981 D CCodecConfig:   c2::u32 default.color.range = 2
+1774556834.356 10531 19564 21981 D CCodecConfig:   c2::u32 default.color.transfer = 3
+1774556834.356 10531 19564 21981 D CCodecConfig:   c2::u32 input.buffers.max-size.value = 2094080
+1774556834.356 10531 19564 21981 D CCodecConfig:   c2::u32 raw.pixel-format.value = 34
+1774556834.356 10531 19564 21981 D CCodecConfig:   c2::u32 raw.size.height = 1024
+1774556834.356 10531 19564 21981 D CCodecConfig:   c2::u32 raw.size.width = 576
+1774556834.356 10531 19564 21981 D CCodecConfig:   c2::u32 vendor.mtk.ext.vdec.force.output.cc.value = 0
+1774556834.356 10531 19564 21981 D CCodecConfig:   c2::u32 vendor.mtk.vdec.buffer.fetch.timeout.ms.value = 1500
+1774556834.358 10531 19564 21981 D CCodec  : client requested max input size 80812, which is smaller than what component recommended (2094080); overriding with component recommendation.
+1774556834.358 10531 19564 21981 W CCodec  : This behavior is subject to change. It is recommended that app developers double check whether the requested max input size is in reasonable range.
+1774556834.358 10531 19564 21981 D CCodec  : encoding statistics level = 0
+1774556834.358 10531 19564 21981 D CCodec  : setup formats input: AMessage(what = 0x00000000) = {
+1774556834.358 10531 19564 21981 D CCodec  :   string mime = "video/avc"
+1774556834.358 10531 19564 21981 D CCodec  :   int32_t width = 576
+1774556834.358 10531 19564 21981 D CCodec  :   int32_t profile = 8
+1774556834.358 10531 19564 21981 D CCodec  :   int32_t priority = -1
+1774556834.358 10531 19564 21981 D CCodec  :   int32_t frame-rate = 30
+1774556834.358 10531 19564 21981 D CCodec  :   int32_t height = 1024
+1774556834.358 10531 19564 21981 D CCodec  :   int32_t level = 512
+1774556834.358 10531 19564 21981 D CCodec  :   int32_t max-input-size = 2094080
+1774556834.358 10531 19564 21981 D CCodec  :   Rect crop(0, 0, 318, 238)
+1774556834.358 10531 19564 21981 D CCodec  : }
+1774556834.358 10531 19564 21981 D CCodec  : setup formats output: AMessage(what = 0x00000000) = {
+1774556834.358 10531 19564 21981 D CCodec  :   int32_t android._color-format = 2130708361
+1774556834.358 10531 19564 21981 D CCodec  :   int32_t android._video-scaling = 1
+1774556834.358 10531 19564 21981 D CCodec  :   int32_t sar-width = 1
+1774556834.358 10531 19564 21981 D CCodec  :   int32_t color-standard = 4
+1774556834.358 10531 19564 21981 D CCodec  :   int32_t color-range = 2
+1774556834.358 10531 19564 21981 D CCodec  :   int32_t color-transfer = 3
+1774556834.358 10531 19564 21981 D CCodec  :   int32_t android._dataspace = 259
+1774556834.358 10531 19564 21981 D CCodec  :   int32_t width = 576
+1774556834.358 10531 19564 21981 D CCodec  :   int32_t rotation-degrees = 0
+1774556834.358 10531 19564 21981 D CCodec  :   int32_t sar-height = 1
+1774556834.358 10531 19564 21981 D CCodec  :   int32_t max-width = 320
+1774556834.358 10531 19564 21981 D CCodec  :   int32_t max-height = 240
+1774556834.358 10531 19564 21981 D CCodec  :   int32_t priority = -1
+1774556834.358 10531 19564 21981 D CCodec  :   string mime = "video/raw"
+1774556834.358 10531 19564 21981 D CCodec  :   Rect crop(0, 0, 318, 238)
+1774556834.358 10531 19564 21981 D CCodec  :   Buffer hdr-static-info = {
+1774556834.358 10531 19564 21981 D CCodec  :     00000000:  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  ................
+1774556834.358 10531 19564 21981 D CCodec  :     00000010:  00 00 00 00 00 00 00 00  00                       .........
+1774556834.358 10531 19564 21981 D CCodec  :   }
+1774556834.358 10531 19564 21981 D CCodec  :   int32_t frame-rate = 30
+1774556834.358 10531 19564 21981 D CCodec  :   int32_t height = 1024
+1774556834.358 10531 19564 21981 D CCodec  :   int32_t color-format = 2130708361
+1774556834.358 10531 19564 21981 D CCodec  : }
+1774556834.360 10531 19564 21981 I CCodecConfig: query failed after returning 20 values (BAD_INDEX)
+1774556834.360 10531 19564 21981 D CCodecConfig: c2 config diff is   c2::u32 raw.color.matrix = 1
+1774556834.360 10531 19564 21981 D CCodecConfig:   c2::u32 raw.color.primaries = 1
+1774556834.360 10531 19564 21981 D CCodecConfig:   c2::u32 raw.color.range = 2
+1774556834.360 10531 19564 21981 D CCodecConfig:   c2::u32 raw.color.transfer = 3
+1774556834.360 10531 19564 21981 D CCodecConfig:   c2::u32 raw.max-size.height = 1024
+1774556834.360 10531 19564 21981 D CCodecConfig:   c2::u32 raw.max-size.width = 576
+1774556834.363 10531 19564 21973 D MediaCodec: [0x77ccc35e00] setState: 4
+1774556834.363 10531 19564 21973 I MediaCodec: [mId: 0] [video-debug-dec] setState: CONFIGURED
+1774556834.363 10531 19564 21973 D MediaCodec: [0x77ccc35e00] setState: 5
+1774556834.363 10531 19564 21973 I MediaCodec: [mId: 0] [video-debug-dec] setState: STARTING
+1774556834.385 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556834.389 10531 19564 21981 D C2Store : Using DMABUF Heaps
+1774556834.393 10531 19564 21981 D CCodecBufferChannel: [c2.mtk.avc.decoder#877] Created input block pool with allocatorID 16 => poolID 17 - OK (0)
+1774556834.393 10531 19564 21981 I CCodecBufferChannel: [mId: 0] [video-debug-dec] start: inputFormat: AMessage(what = 0x00000000) = {
+1774556834.393 10531 19564 21981 I CCodecBufferChannel:   string mime = "video/avc"
+1774556834.393 10531 19564 21981 I CCodecBufferChannel:   int32_t width = 576
+1774556834.393 10531 19564 21981 I CCodecBufferChannel:   int32_t profile = 8
+1774556834.393 10531 19564 21981 I CCodecBufferChannel:   int32_t priority = -1
+1774556834.393 10531 19564 21981 I CCodecBufferChannel:   int32_t frame-rate = 30
+1774556834.393 10531 19564 21981 I CCodecBufferChannel:   int32_t height = 1024
+1774556834.393 10531 19564 21981 I CCodecBufferChannel:   int32_t level = 512
+1774556834.393 10531 19564 21981 I CCodecBufferChannel:   int32_t max-input-size = 2094080
+1774556834.393 10531 19564 21981 I CCodecBufferChannel:   Rect crop(0, 0, 318, 238)
+1774556834.393 10531 19564 21981 I CCodecBufferChannel: }
+1774556834.394 10531 19564 21981 D CCodecBufferChannel: [c2.mtk.avc.decoder#877] Query output surface allocator returned 0 params => BAD_INDEX (6)
+1774556834.394 10531 19564 21981 D Codec2Client: GraphicBufferAllocator created
+1774556834.396 10531 19564 21981 I CCodecBufferChannel: [c2.mtk.avc.decoder#877] Created output block pool with allocatorID 18 => poolID 1605 - OK
+1774556834.396 10531 19564 21981 D CCodecBufferChannel: [c2.mtk.avc.decoder#877] Configured output block pool ids 1605 => OK
+1774556834.397 10531 19564 21981 D CCodecBufferChannel: [0x777c9a2460] [c2.mtk.avc.decoder#877] start: output->outputDelay 12, output->numSlots 16
+1774556834.397 10531 19564 21981 I CCodecBufferChannel: [mId: 0] [video-debug-dec] start: outputFormat: AMessage(what = 0x00000000) = {
+1774556834.397 10531 19564 21981 I CCodecBufferChannel:   int32_t android._color-format = 2130708361
+1774556834.397 10531 19564 21981 I CCodecBufferChannel:   int32_t android._video-scaling = 1
+1774556834.397 10531 19564 21981 I CCodecBufferChannel:   int32_t sar-width = 1
+1774556834.397 10531 19564 21981 I CCodecBufferChannel:   int32_t color-standard = 1
+1774556834.397 10531 19564 21981 I CCodecBufferChannel:   int32_t color-range = 2
+1774556834.397 10531 19564 21981 I CCodecBufferChannel:   int32_t color-transfer = 3
+1774556834.397 10531 19564 21981 I CCodecBufferChannel:   int32_t android._dataspace = 260
+1774556834.397 10531 19564 21981 I CCodecBufferChannel:   int32_t width = 576
+1774556834.397 10531 19564 21981 I CCodecBufferChannel:   int32_t rotation-degrees = 0
+1774556834.397 10531 19564 21981 I CCodecBufferChannel:   int32_t sar-height = 1
+1774556834.397 10531 19564 21981 I CCodecBufferChannel:   int32_t max-width = 576
+1774556834.397 10531 19564 21981 I CCodecBufferChannel:   int32_t max-height = 1024
+1774556834.397 10531 19564 21981 I CCodecBufferChannel:   int32_t priority = -1
+1774556834.397 10531 19564 21981 I CCodecBufferChannel:   string mime = "video/raw"
+1774556834.397 10531 19564 21981 I CCodecBufferChannel:   Rect crop(0, 0, 318, 238)
+1774556834.397 10531 19564 21981 I CCodecBufferChannel:   Buffer hdr-static-info = {
+1774556834.397 10531 19564 21981 I CCodecBufferChannel:     00000000:  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  ................
+1774556834.397 10531 19564 21981 I CCodecBufferChannel:     00000010:  00 00 00 00 00 00 00 00  00                       .........
+1774556834.397 10531 19564 21981 I CCodecBufferChannel:   }
+1774556834.397 10531 19564 21981 I CCodecBufferChannel:   int32_t frame-rate = 30
+1774556834.397 10531 19564 21981 I CCodecBufferChannel:   int32_t height = 1024
+1774556834.397 10531 19564 21981 I CCodecBufferChannel:   int32_t color-format = 2130708361
+1774556834.397 10531 19564 21981 I CCodecBufferChannel: }
+1774556834.397 10531 19564 21981 D GraphicsTracker: new surface in configuration: maxDequeueRequested(0), maxDequeueCommitted(3)
+1774556834.397 10531 19564 21981 D GraphicsTracker: new surface configured with id:84026740178949 gen:20033537 maxDequeue:3
+1774556834.397 10531 19564 21981 D GraphicsTracker: maxDequeueCount committed to IGBP: 19
+1774556834.397 10531 19564 21981 D GraphicsTracker: Cache size 0 -> 0: maybe_cleared(0), dequeued(0)
+1774556834.397 10531 19564 21981 D GraphicsTracker: maxDqueueCount change 3 -> 19: pending: 0
+1774556834.400 10531 19564 21981 I DMABUFHEAPS: Using DMA-BUF heap named: mtk_mm
+1774556834.418 10531 19564 21973 D MediaCodec: [0x77ccc35e00] setState: 6
+1774556834.418 10531 19564 21973 I MediaCodec: [mId: 0] [video-debug-dec] setState: STARTED
+1774556834.418 10531 19564 21973 D CCodecBufferChannel: The csd Sample queue
+1774556834.418 10531 19564 21973 D CCodecBufferChannel: [c2.mtk.avc.decoder#877] send inputSlots num:4 to codec
+1774556834.419 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556834.430 10531 19564 21973 W saas.i18n:stub9: AIBinder_linkToDeath is being called with a non-null cookie and no onUnlink callback set. This might not be intended. AIBinder_DeathRecipient_setOnUnlinked should be called first.
+1774556834.433 10531 19564 21973 I MiMediaCodec: send fps to display with mFpsFromPlayer:30.000000 state:1 id:0
+1774556834.451 10531 19564 21973 D CCodecBufferChannel: The csd Sample queue
+1774556834.453 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556834.475 10531 19564 21948 I MediaCodec: [mId: 0] [video-debug-dec] queueInputBuffer: index: 2 pts: 0 timediff: 0
+1774556834.487 10531 19564 19574 D GraphicsTracker: [0x78cc992710] checkCacheBufferAndmDequeued  slotId 0, generation 20033537
+1774556834.489 10531 19564 21948 I MediaCodec: [mId: 0] [video-debug-dec] queueInputBuffer: index: 3 pts: 133333 timediff: 13
+1774556834.489 10531 19564 19574 D GraphicsTracker: [0x78cc992710] checkCacheBufferAndmDequeued  slotId 1, generation 20033537
+1774556834.496 10531 19564 21981 D CCodecConfig: c2 config diff is   c2::u32 input.delay.value = 4
+1774556834.496 10531 19564 21981 D CCodecConfig:   c2::u32 output.delay.value = 14
+1774556834.497 10531 19564 21981 D GraphicsTracker: maxDequeueCount committed to IGBP: 21
+1774556834.498 10531 19564 21981 D GraphicsTracker: Cache size 2 -> 2: maybe_cleared(0), dequeued(2)
+1774556834.499 10531 19564 21981 D GraphicsTracker: maxDqueueCount change 19 -> 21: pending: 0
+1774556834.504 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556834.505 10531 19564 20299 D CCodecBufferChannel: [c2.mtk.avc.decoder#877] Ignoring stale input buffer done callback: last flush index = 0, frameIndex = 0
+1774556834.512 10531 19564 21948 I MediaCodec: [mId: 0] [video-debug-dec] queueInputBuffer: index: 4 pts: 66666 timediff: 24
+1774556834.514 10531 19564 21973 D CCodecBufferChannel: [c2.mtk.avc.decoder#877] send inputSlots num:8 to codec
+1774556834.536 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556834.569 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556834.603 10531 19564 21981 D CCodecConfig: c2 config diff is   c2::u32 raw.crop.height = 1024
+1774556834.603 10531 19564 21981 D CCodecConfig:   c2::u32 raw.crop.width = 576
+1774556834.603 10531 19564 21981 D CCodecConfig:   c2::u32 raw.pixel-format.value = 4096
+1774556834.604 10531 19564 21981 D CCodecBuffers: [c2.mtk.avc.decoder#877:2D-Output] popFromStashAndRegister: at 0us, output format changed to AMessage(what = 0x00000000) = {
+1774556834.604 10531 19564 21981 D CCodecBuffers:   int32_t android._color-format = 4096
+1774556834.604 10531 19564 21981 D CCodecBuffers:   int32_t android._video-scaling = 1
+1774556834.604 10531 19564 21981 D CCodecBuffers:   int32_t sar-width = 1
+1774556834.604 10531 19564 21981 D CCodecBuffers:   int32_t color-standard = 1
+1774556834.604 10531 19564 21981 D CCodecBuffers:   int32_t color-range = 2
+1774556834.604 10531 19564 21981 D CCodecBuffers:   int32_t color-transfer = 3
+1774556834.604 10531 19564 21981 D CCodecBuffers:   int32_t android._dataspace = 260
+1774556834.604 10531 19564 21981 D CCodecBuffers:   int32_t width = 576
+1774556834.604 10531 19564 21981 D CCodecBuffers:   int32_t rotation-degrees = 0
+1774556834.604 10531 19564 21981 D CCodecBuffers:   int32_t sar-height = 1
+1774556834.604 10531 19564 21981 D CCodecBuffers:   int32_t max-width = 576
+1774556834.604 10531 19564 21981 D CCodecBuffers:   int32_t max-height = 1024
+1774556834.604 10531 19564 21981 D CCodecBuffers:   int32_t priority = -1
+1774556834.604 10531 19564 21981 D CCodecBuffers:   string mime = "video/raw"
+1774556834.604 10531 19564 21981 D CCodecBuffers:   Rect crop(0, 0, 575, 1023)
+1774556834.604 10531 19564 21981 D CCodecBuffers:   Buffer hdr-static-info = {
+1774556834.604 10531 19564 21981 D CCodecBuffers:     00000000:  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  ................
+1774556834.604 10531 19564 21981 D CCodecBuffers:     00000010:  00 00 00 00 00 00 00 00  00                       .........
+1774556834.604 10531 19564 21981 D CCodecBuffers:   }
+1774556834.604 10531 19564 21981 D CCodecBuffers:   int32_t frame-rate = 30
+1774556834.604 10531 19564 21981 D CCodecBuffers:   int32_t height = 1024
+1774556834.604 10531 19564 21981 D CCodecBuffers:   int32_t color-format = 2130708361
+1774556834.604 10531 19564 21981 D CCodecBuffers: }
+1774556834.604 10531 19564 21973 I MediaCodec: isHDR: standard =1,transfer = 3
+1774556834.605 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556834.605 10531 19564 21948 D VideoPlayer: Format changed
+1774556834.610 10531 19564 21973 I MediaCodec: [mId: 0] [video-debug-dec] onReleaseOutputBuffer index 0 pts: 0 ptsdiff: 0 timediff: 432230319 render: 1
+1774556834.611 10531 19564 21973 D CCodecBufferChannel: [c2.mtk.avc.decoder#877] first render dataSpace=260
+1774556834.615 10531 19564 21973 I MediaCodec: [mId: 0] [video-debug-dec] onReleaseOutputBuffer index 1 pts: 33333 ptsdiff: 33333 timediff: 4 render: 1
+1774556834.626 10531 19564 21973 I MediaCodec: [mId: 0] [video-debug-dec] onReleaseOutputBuffer index 0 pts: 66666 ptsdiff: 33333 timediff: 11 render: 1
+1774556834.643 10531 19564 21931 I saas.i18n:stub9: createIfNeeded: Recreate new EGLImage since dataspace changed
+1774556834.654 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556834.685 10531 19564 21931 I saas.i18n:stub9: createIfNeeded: Recreate new EGLImage since dataspace changed
+1774556834.688 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556834.720 10531 19564 21931 I saas.i18n:stub9: createIfNeeded: Recreate new EGLImage since dataspace changed
+1774556834.724 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556834.756 10531 19564 21931 I saas.i18n:stub9: createIfNeeded: Recreate new EGLImage since dataspace changed
+1774556834.759 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556834.792 10531 19564 21931 I saas.i18n:stub9: createIfNeeded: Recreate new EGLImage since dataspace changed
+1774556834.795 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556834.829 10531 19564 21931 I saas.i18n:stub9: createIfNeeded: Recreate new EGLImage since dataspace changed
+1774556834.832 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556834.865 10531 19564 21931 I saas.i18n:stub9: createIfNeeded: Recreate new EGLImage since dataspace changed
+1774556834.869 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556834.901 10531 19564 21931 I saas.i18n:stub9: createIfNeeded: Recreate new EGLImage since dataspace changed
+1774556834.906 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556834.939 10531 19564 21931 I saas.i18n:stub9: createIfNeeded: Recreate new EGLImage since dataspace changed
+1774556834.943 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556834.975 10531 19564 21931 I saas.i18n:stub9: createIfNeeded: Recreate new EGLImage since dataspace changed
+1774556834.978 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556835.012 10531 19564 21931 I saas.i18n:stub9: createIfNeeded: Recreate new EGLImage since dataspace changed
+1774556835.017 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556835.051 10531 19564 21931 I saas.i18n:stub9: createIfNeeded: Recreate new EGLImage since dataspace changed
+1774556835.058 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556835.093 10531 19564 21931 I saas.i18n:stub9: createIfNeeded: Recreate new EGLImage since dataspace changed
+1774556835.096 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556835.130 10531 19564 21931 I saas.i18n:stub9: createIfNeeded: Recreate new EGLImage since dataspace changed
+1774556835.136 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556835.169 10531 19564 21931 I saas.i18n:stub9: createIfNeeded: Recreate new EGLImage since dataspace changed
+1774556835.172 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556835.204 10531 19564 21931 I saas.i18n:stub9: createIfNeeded: Recreate new EGLImage since dataspace changed
+1774556835.206 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556835.238 10531 19564 21931 I saas.i18n:stub9: createIfNeeded: Recreate new EGLImage since dataspace changed
+1774556835.240 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556835.242 10531 19564 21931 E LB      : fail to open file: No such file or directory
+1774556835.242 10531 19564 21931 E LB      : fail to open node: No such file or directory
+1774556835.243 10531 19564 21931 E LB      : fail to open node: No such file or directory
+1774556835.276 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556835.310 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556835.345 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556835.377 10531 19564 21931 I saas.i18n:stub9: createIfNeeded: Recreate new EGLImage since dataspace changed
+1774556835.379 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556835.414 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556835.449 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556835.483 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556835.522 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556835.557 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556835.592 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556835.632 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556835.674 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556835.701 10531 19564 21881 I org.webrtc.Logging: CameraStatistics: Camera fps: 24.
+1774556835.708 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556835.742 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556835.774 10531 19564 21931 I saas.i18n:stub9: createIfNeeded: Recreate new EGLImage since dataspace changed
+1774556835.780 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556835.817 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556835.853 10531 19564 21931 D VirtuCam_Hook: VirtuCam_Hook: Config loaded. Enabled: true, Zoom: 1.0, TCP: true, Rot: 0, ColorSwap: false
+1774556835.856 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556835.894 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556835.931 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556835.967 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556836.001 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556836.037 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556836.072 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556836.106 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556836.139 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556836.173 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556836.208 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556836.246 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556836.280 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556836.314 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556836.348 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556836.383 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556836.417 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556836.452 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556836.486 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556836.520 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556836.555 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556836.592 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556836.627 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556836.666 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556836.700 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556836.735 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556836.770 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556836.804 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556836.839 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556836.872 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556836.907 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556836.930 10531 19564 19564 I LogMiddleware - BrowserStore: mozilla.components.browser.state.action.EngineAction$UpdateEngineSessionStateAction
+1774556836.932 10531 19564 19564 I LogMiddleware - BrowserStore: mozilla.components.browser.state.action.ContentAction$UpdateHistoryStateAction
+1774556836.942 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556836.979 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556837.016 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556837.051 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556837.088 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556837.121 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556837.157 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556837.193 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556837.228 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556837.262 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556837.297 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556837.332 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556837.368 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556837.402 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556837.436 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556837.469 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556837.506 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556837.542 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556837.581 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556837.615 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556837.650 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556837.684 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556837.710 10531 19564 21881 I org.webrtc.Logging: CameraStatistics: Camera fps: 29.
+1774556837.719 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556837.755 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556837.788 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556837.806 10531 19564 19564 I MIUIInput: [MotionEvent] ViewRootImpl windowName 'org.mozilla.firefox/org.mozilla.firefox.App', { action=ACTION_DOWN, id[0]=0, pointerCount=1, eventTime=432233510, downTime=432233510, phoneEventTime=23:27:17.802 } moveCount:0
+1774556837.814 10531 19564 19957 D GeckoIdleService: next timeout 5000 msec from now
+1774556837.814 10531 19564 19957 D GeckoIdleService: SetTimerExpiryIfBefore: next timeout 5000 msec from now
+1774556837.814 10531 19564 19957 D GeckoIdleService: reset timer expiry to 5010 msec from now
+1774556837.814 10531 19564 19957 D GeckoIdleService: Reset idle timeout: tell observer 0x74ec479dc8 user is back
+1774556837.821 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556837.853 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556837.888 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556837.921 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556837.947 10531 19564 19564 I LogMiddleware - BrowserStore: mozilla.components.browser.state.action.ReaderAction$UpdateReaderScrollYAction
+1774556837.956 10531 19564 21931 D VirtuCam_Hook: VirtuCam_Hook: Config loaded. Enabled: true, Zoom: 1.0, TCP: true, Rot: 0, ColorSwap: false
+1774556837.959 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556837.981 10531 19564 19564 I LogMiddleware - BrowserStore: mozilla.components.browser.state.action.ReaderAction$UpdateReaderScrollYAction
+1774556837.993 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556838.025 10531 19564 19564 I LogMiddleware - BrowserStore: mozilla.components.browser.state.action.ReaderAction$UpdateReaderScrollYAction
+1774556838.030 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556838.061 10531 19564 19564 I LogMiddleware - BrowserStore: mozilla.components.browser.state.action.ReaderAction$UpdateReaderScrollYAction
+1774556838.066 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556838.096 10531 19564 19564 I LogMiddleware - BrowserStore: mozilla.components.browser.state.action.ReaderAction$UpdateReaderScrollYAction
+1774556838.104 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556838.122 10531 19564 19564 I LogMiddleware - BrowserStore: mozilla.components.browser.state.action.ReaderAction$UpdateReaderScrollYAction
+1774556838.138 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556838.148 10531 19564 19564 I LogMiddleware - BrowserStore: mozilla.components.browser.state.action.ReaderAction$UpdateReaderScrollYAction
+1774556838.176 10531 19564 19564 I MiInputConsumer: optimized resample latency: 2120087 ns
+1774556838.176 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556838.178 10531 19564 19564 I LogMiddleware - BrowserStore: mozilla.components.browser.state.action.ReaderAction$UpdateReaderScrollYAction
+1774556838.204 10531 19564 19564 I LogMiddleware - BrowserStore: mozilla.components.browser.state.action.ReaderAction$UpdateReaderScrollYAction
+1774556838.215 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556838.241 10531 19564 19564 I LogMiddleware - BrowserStore: mozilla.components.browser.state.action.ReaderAction$UpdateReaderScrollYAction
+1774556838.248 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556838.265 10531 19564 19564 I LogMiddleware - BrowserStore: mozilla.components.browser.state.action.ReaderAction$UpdateReaderScrollYAction
+1774556838.280 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556838.296 10531 19564 19564 I LogMiddleware - BrowserStore: mozilla.components.browser.state.action.ReaderAction$UpdateReaderScrollYAction
+1774556838.305 10531 19564 19564 I MIUIInput: [MotionEvent] ViewRootImpl windowName 'org.mozilla.firefox/org.mozilla.firefox.App', { action=ACTION_UP, id[0]=0, pointerCount=1, eventTime=432234008, downTime=432233510, phoneEventTime=23:27:18.299 } moveCount:27
+1774556838.314 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556838.348 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556838.381 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556838.416 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556838.449 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556838.484 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556838.518 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556838.553 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556838.588 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556838.622 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556838.627 10531 20685 22008 D ProfileInstaller: Installing profile for com.virtucam
+1774556838.657 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556838.691 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556838.728 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556838.763 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556838.797 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556838.831 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556838.865 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556838.899 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556838.933 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556838.968 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556839.001 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556839.036 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556839.071 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556839.108 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556839.147 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556839.188 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556839.229 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556839.270 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556839.312 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556839.361 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556839.365 10531 19564 21973 I MediaCodec: [mId: 0] [video-debug-dec] Stats over last 5002ms:
+1774556839.365 10531 19564 21973 I MediaCodec: [mId: 0] [video-debug-dec] ClientName: top.bienvenido.saas.i18n ComponentName: c2.mtk.avc.decoder
+1774556839.365 10531 19564 21973 I MediaCodec: [mId: 0] [video-debug-dec] Qinput: 158, DQinput: 158 success out of 158 tries
+1774556839.365 10531 19564 21973 I MediaCodec: [mId: 0] [video-debug-dec] Render: 149, Drop: 0, DQoutput: 149 success out of 157 tries
+1774556839.365 10531 19564 21973 I MediaCodec: [mId: 0] [video-debug-dec] Avg Input Interval: 31ms, Avg Render Interval: 33ms
+1774556839.367 10531 19564 19564 I ImeTracker: org.mozilla.firefox:1b1ae9d4: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser false
+1774556839.399 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556839.437 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556839.481 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556839.500 10531 19564 19575 D AidlBufferPool: bufferpool2 0x791c978d68 : 9(18846720 size) total buffers - 9(18846720 size) used buffers - 163/172 (recycle/alloc) - 9/164 (fetch/transfer)
+1774556839.519 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556839.561 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556839.616 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556839.686 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556839.720 10531 19564 21881 I org.webrtc.Logging: CameraStatistics: Camera fps: 27.
+1774556839.745 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556839.781 10531 19564 21931 I saas.i18n:stub9: createIfNeeded: Recreate new EGLImage since dataspace changed
+1774556839.785 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556839.848 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556839.888 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556839.929 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556839.964 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556840.002 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556840.043 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556840.070 10531 19564 19564 I LogMiddleware - AppStore: org.mozilla.fenix.components.appstate.AppAction$AppLifecycleAction$PauseAction
+1774556840.078 10531 19564 19564 I LogMiddleware - BrowserStore: mozilla.components.browser.state.action.AppLifecycleAction$PauseAction
+1774556840.117 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556840.284 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556840.307 10531 19564 21973 W MediaCodec: [mId: 0] [video-debug-dec] onReleaseOutputBuffer: Render time interval reaches 169ms before pts: 5733333
+1774556840.308 10531 19564 21973 I MediaCodec: [mId: 0] [video-debug-dec] onReleaseOutputBuffer index 0 pts: 5733333 ptsdiff: 33333 timediff: 169 render: 1
+1774556840.317 10531 20486 20486 I ServiceChildProcess: Destroying GeckoServiceChildProcess
+1774556840.326 10531 19564 21948 I MediaCodec: [mId: 0] [video-debug-dec] queueInputBuffer: index: 7 pts: 6000000 timediff: 170
+1774556840.355 10531 20486 20486 I saas.i18n:stub7: System.exit called, status: 0
+1774556840.357 10531 20486 20486 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+1774556840.439 10531 19564 21973 W MediaCodec: [mId: 0] [video-debug-dec] onReleaseOutputBuffer: Render time interval reaches 131ms before pts: 5766666
+1774556840.439 10531 19564 21973 I MediaCodec: [mId: 0] [video-debug-dec] onReleaseOutputBuffer index 1 pts: 5766666 ptsdiff: 33333 timediff: 132 render: 1
+1774556840.468 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556840.473 10531 19564 21948 I MediaCodec: [mId: 0] [video-debug-dec] queueInputBuffer: index: 0 pts: 6100000 timediff: 146
+1774556840.482 10531 19564 21973 I MediaCodec: [mId: 0] [video-debug-dec] onReleaseOutputBuffer index 2 pts: 5800000 ptsdiff: 33334 timediff: 43 render: 1
+1774556840.501 10531 19564 21948 I MediaCodec: [mId: 0] [video-debug-dec] queueInputBuffer: index: 1 pts: 6066666 timediff: 28
+1774556840.578 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556840.627 10531 19564 19564 I LogMiddleware - BrowserStore: mozilla.components.browser.state.action.ContentAction$SetRecordingDevices
+1774556840.638 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556840.642 10531 19564 19564 I LogMiddleware - BrowserStore: mozilla.components.browser.state.action.ContentAction$UpdateHasFormDataAction
+1774556840.764 10531 20623 20623 D VRI[MainAbility]: visibilityChanged oldVisibility=true newVisibility=false
+1774556840.809 10531 19564 19564 D VRI[App]: visibilityChanged oldVisibility=true newVisibility=false
+1774556840.871 10531 19564 19564 D BLASTBufferQueue: [SurfaceView[org.mozilla.firefox/org.mozilla.firefox.App]#1](f:0,a:2) destructor()
+1774556840.883 10531 19564 19564 D BufferQueueConsumer: [SurfaceView[org.mozilla.firefox/org.mozilla.firefox.App]#1(BLAST Consumer)1](id:4c6c00000001,api:0,p:-1,c:19564) disconnect
+1774556840.885 10531 19564 21931 D VirtuCam_Hook: VirtuCam_Hook: Config loaded. Enabled: true, Zoom: 1.0, TCP: true, Rot: 0, ColorSwap: false
+1774556840.899 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556840.948 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556840.961 10531 20623 20623 D BLASTBufferQueue: [VRI[MainAbility]#28](f:0,a:4) destructor()
+1774556840.962 10531 20623 20623 D BufferQueueConsumer: [VRI[MainAbility]#28(BLAST Consumer)28](id:508f0000001c,api:0,p:-1,c:20623) disconnect
+1774556840.985 10531 19564 19564 D BLASTBufferQueue: [VRI[App]#0](f:0,a:4) destructor()
+1774556840.988 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556840.989 10531 19564 19564 D BufferQueueConsumer: [VRI[App]#0(BLAST Consumer)0](id:4c6c00000000,api:0,p:-1,c:19564) disconnect
+1774556841.027 10531 19564 19564 I MemoryController: onTrimMemory(20)
+1774556841.027 10531 19564 19564 I MemoryController: onTrimMemory(20)
+1774556841.032 10531 19564 19564 I FenixApplication: onTrimMemory(), level=20, main=true
+1774556841.040 10531 19564 19564 I LogMiddleware - BrowserStore: mozilla.components.browser.state.action.SystemAction$LowMemoryAction
+1774556841.040 10531 20623 20623 D EditorStubImpl: Type = 2, RectF = RectF(36.0, 276.0, 116.0, 356.0), mInsertionHandleData = [HandleData{mIsShow=false, mPosition=RectF(36.0, 276.0, 116.0, 356.0)}]
+1774556841.049 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556841.095 10531 19564 19564 I SessionStorage/AutoSave: Save: Background
+1774556841.105 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556841.125 10531 19564 19992 I libglean_ffi: glean_core::ping: Collecting baseline
+1774556841.156 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556841.170 10531 19564 19564 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=androidx.navigationevent.OnBackInvokedInput$createOnBackAnimationCallback$1@63da53a
+1774556841.177 10531 19564 19992 I libglean_ffi: glean_core::upload::directory: Processing ping at: /data/user/0/top.bienvenido.saas.i18n/app_split/org.mozilla.firefox/0/glean_data/pending_pings/dcd8e3c9-33b8-4a43-b790-e986ebb39f14
+1774556841.178 10531 19564 19992 I libglean_ffi: glean_core::metrics::ping: The ping 'baseline' was submitted and will be sent as soon as possible
+1774556841.178 10531 19564 19992 I libglean_ffi: glean_core::ping: Collecting events
+1774556841.217 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556841.233 10531 19564 19992 I libglean_ffi: glean_core::upload::directory: Processing ping at: /data/user/0/top.bienvenido.saas.i18n/app_split/org.mozilla.firefox/0/glean_data/pending_pings/4ebf4c99-f102-4243-80c5-7d02ac8af248
+1774556841.234 10531 19564 19992 I libglean_ffi: glean_core::metrics::ping: The ping 'events' was submitted and will be sent as soon as possible
+1774556841.257 10531 19564 19992 I libglean_ffi: glean_core::ping: Collecting usage-reporting
+1774556841.262 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556841.264 10531 19564 19992 I libglean_ffi: glean_core::upload::directory: Processing ping at: /data/user/0/top.bienvenido.saas.i18n/app_split/org.mozilla.firefox/0/glean_data/pending_pings/2740ac24-2b0e-45c4-8518-00f4e8bb7cb5
+1774556841.265 10531 19564 19992 I libglean_ffi: glean_core::metrics::ping: The ping 'usage-reporting' was submitted and will be sent as soon as possible
+1774556841.306 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556841.321 10531 19564 19564 W Activity: PerfMonitor: Slow Operation: Activity org.mozilla.firefox/.App onStop took 238ms
+1774556841.348 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556841.357 10531 19564 19564 I Choreographer: Skipped 47 frames!  The application may be doing too much work on its main thread.
+1774556841.359 10531 19564 19564 D UserSceneDetector: invoke error.
+1774556841.402 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556841.424 10531 19564 20049 W WM-SystemJobScheduler: Unable to schedule work ID c5229106-6a35-46e1-b1cd-a1ac93fcc039
+1774556841.437 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556841.472 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556841.515 10531 19564 19564 I LogMiddleware - BrowserStore: mozilla.components.browser.state.action.EngineAction$UpdateEngineSessionStateAction
+1774556841.516 10531 19564 19564 I LogMiddleware - BrowserStore: mozilla.components.browser.state.action.ContentAction$UpdateHistoryStateAction
+1774556841.525 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556841.530 10531 19564 22080 I libglean_ffi: glean_core::upload: New upload task with id dcd8e3c9-33b8-4a43-b790-e986ebb39f14 (path: /submit/org-mozilla-firefox/baseline/1/dcd8e3c9-33b8-4a43-b790-e986ebb39f14)
+1774556841.574 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556841.608 10531 19854 20137 W NetworkScheduler: The Firebase Job Dispatcher and GmsTaskScheduler are deprecated for apps targeting API 30 or newer. Application top.bienvenido.saas.i18n has targetSdkVersion 36. Please migrate to the WorkManager or JobScheduler. [CONTEXT service_id=218 ]
+1774556841.616 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556841.630 10531 19854 20137 W NetworkScheduler: Running in whitelist mode. Ignoring task: top.bienvenido.saas.i18n/com.google.android.gms.common.systemhealthutils.restart.GmsRestartPersistentService{u=0 tag="scheduled-restart-persistent" trigger=window{start=43200s,end=172800s,earliest=43199s,latest=172799s} requirements=[NET_ANY,PREFERRED_DEVICE_IDLE,PREFERRED_CHARGING] attributes=[] scheduled=0s last_run=N/A exec_window_multiplier=1.0000 jid=N/A status=UNKNOWN retries=0 client_lib=GMS_TASK_SCHEDULER-261133000} [CONTEXT service_id=218 ]
+1774556841.653 10531 19564 21931 I saas.i18n:stub9: createIfNeeded: Recreate new EGLImage since dataspace changed
+1774556841.663 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556841.706 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556841.737 10531 19564 21881 I org.webrtc.Logging: CameraStatistics: Camera fps: 14.
+1774556841.743 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556841.778 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556841.815 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556841.816 10531 19564 19570 W saas.i18n:stub9: Cleared Reference was only reachable from finalizer (only reported once)
+1774556841.851 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556841.886 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556841.928 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556841.933 10531 19564 19570 I saas.i18n:stub9: Background concurrent mark compact GC freed 8163KB AllocSpace bytes, 18(552KB) LOS objects, 49% free, 12MB/24MB, paused 2.016ms,3.943ms total 456.383ms
+1774556841.963 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556842.000 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556842.036 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556842.073 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556842.107 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556842.148 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556842.160 10531 19564 22080 I libglean_ffi: glean_core::upload: Ping dcd8e3c9-33b8-4a43-b790-e986ebb39f14 successfully sent 200.
+1774556842.160 10531 19564 22080 I libglean_ffi: glean_core::upload::directory: File was deleted /data/user/0/top.bienvenido.saas.i18n/app_split/org.mozilla.firefox/0/glean_data/pending_pings/dcd8e3c9-33b8-4a43-b790-e986ebb39f14
+1774556842.163 10531 19564 22080 I libglean_ffi: glean_core::upload: New upload task with id 4ebf4c99-f102-4243-80c5-7d02ac8af248 (path: /submit/org-mozilla-firefox/events/1/4ebf4c99-f102-4243-80c5-7d02ac8af248)
+1774556842.190 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556842.227 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556842.268 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556842.308 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556842.349 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556842.394 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556842.440 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556842.477 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556842.529 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556842.566 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556842.571 10531 19564 22080 I libglean_ffi: glean_core::upload: Ping 4ebf4c99-f102-4243-80c5-7d02ac8af248 successfully sent 200.
+1774556842.571 10531 19564 22080 I libglean_ffi: glean_core::upload::directory: File was deleted /data/user/0/top.bienvenido.saas.i18n/app_split/org.mozilla.firefox/0/glean_data/pending_pings/4ebf4c99-f102-4243-80c5-7d02ac8af248
+1774556842.575 10531 19564 22080 I libglean_ffi: glean_core::upload: New upload task with id 2740ac24-2b0e-45c4-8518-00f4e8bb7cb5 (path: /submit/org-mozilla-firefox/usage-reporting/1/2740ac24-2b0e-45c4-8518-00f4e8bb7cb5)
+1774556842.614 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556842.656 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556842.704 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556842.751 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556842.792 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556842.826 10531 19564 19957 D GeckoIdleService: Get idle time: time since reset 4518 msec
+1774556842.826 10531 19564 19957 D GeckoIdleService: Idle timer callback: current idle time 4518 msec
+1774556842.826 10531 19564 19957 D GeckoIdleService: next timeout 481 msec from now
+1774556842.826 10531 19564 19957 D GeckoIdleService: SetTimerExpiryIfBefore: next timeout 481 msec from now
+1774556842.826 10531 19564 19957 D GeckoIdleService: reset timer expiry to 491 msec from now
+1774556842.832 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556842.868 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556842.908 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556842.944 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556842.973 10531 19564 22080 I libglean_ffi: glean_core::upload: Ping 2740ac24-2b0e-45c4-8518-00f4e8bb7cb5 successfully sent 200.
+1774556842.986 10531 19564 22080 I libglean_ffi: glean_core::upload::directory: File was deleted /data/user/0/top.bienvenido.saas.i18n/app_split/org.mozilla.firefox/0/glean_data/pending_pings/2740ac24-2b0e-45c4-8518-00f4e8bb7cb5
+1774556842.993 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556842.995 10531 19564 22080 I libglean_ffi: glean_core::upload: No more pings to upload! You are done.
+1774556843.019 10531 19564 20050 I WM-WorkerWrapper: Worker result SUCCESS for Work [ id=c5229106-6a35-46e1-b1cd-a1ac93fcc039, tags={ mozilla.telemetry.glean.scheduler.PingUploadWorker,mozac_service_glean_ping_upload_worker } ]
+1774556843.040 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556843.084 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556843.124 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556843.172 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556843.214 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556843.256 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556843.298 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556843.316 10531 19564 19957 D GeckoIdleService: Get idle time: time since reset 5009 msec
+1774556843.316 10531 19564 19957 D GeckoIdleService: Idle timer callback: current idle time 5009 msec
+1774556843.316 10531 19564 19957 D GeckoIdleService: next timeout 4294967289990 msec from now
+1774556843.316 10531 19564 19957 D GeckoIdleService: SetTimerExpiryIfBefore: next timeout 4294967289990 msec from now
+1774556843.316 10531 19564 19957 D GeckoIdleService: reset timer expiry to 4294967290000 msec from now
+1774556843.316 10531 19564 19957 D GeckoIdleService: Idle timer callback: tell observer 0x74ec479dc8 user is idle
+1774556843.346 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556843.387 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556843.439 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556843.482 10531 19564 21931 D VirtuCam_Hook: VirtuCam_Hook: Config loaded. Enabled: true, Zoom: 1.0, TCP: true, Rot: 0, ColorSwap: false
+1774556843.494 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556843.540 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556843.577 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556843.584 10531 19854 19854 D BoundBrokerSvc: onBind: Intent { act=com.google.android.gms.scheduler.ACTION_PROXY_SCHEDULE dat=chimera-action:/... cmp=com.google.android.gms/.chimera.PersistentDirectBootAwareApiService }
+1774556843.584 10531 19854 19854 D BoundBrokerSvc: Loading bound service for intent: Intent { act=com.google.android.gms.scheduler.ACTION_PROXY_SCHEDULE dat=chimera-action:/... cmp=com.google.android.gms/.chimera.PersistentDirectBootAwareApiService }
+1774556843.612 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556843.648 10531 20100 20342 W TracingHelper: No RequestContext found in the trace or trace not available. [CONTEXT service_id=259 ratelimit_count=100000 ]
+1774556843.653 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556843.683 10531 19854 20137 W NetworkScheduler: The Firebase Job Dispatcher and GmsTaskScheduler are deprecated for apps targeting API 30 or newer. Application top.bienvenido.saas.i18n has targetSdkVersion 36. Please migrate to the WorkManager or JobScheduler. [CONTEXT service_id=218 ]
+1774556843.685 10531 19854 20137 W NetworkScheduler: Running in whitelist mode. Ignoring task: top.bienvenido.saas.i18n/com.google.android.gms.common.systemhealthutils.restart.GmsRestartGmsService{u=0 tag="scheduled-restart-gms" trigger=window{start=43200s,end=172800s,earliest=43199s,latest=172799s} requirements=[NET_ANY,PREFERRED_DEVICE_IDLE,PREFERRED_CHARGING] attributes=[] scheduled=0s last_run=N/A exec_window_multiplier=1.0000 jid=N/A status=UNKNOWN retries=0 client_lib=GMS_TASK_SCHEDULER-261133000} [CONTEXT service_id=218 ]
+1774556843.695 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556843.734 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556843.739 10531 19564 21881 I org.webrtc.Logging: CameraStatistics: Camera fps: 24.
+1774556843.774 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556843.810 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556843.847 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556843.884 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556843.925 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556843.965 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556844.001 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556844.037 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556844.071 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556844.105 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556844.140 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556844.174 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556844.208 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556844.242 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556844.277 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556844.314 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556844.349 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556844.367 10531 19564 21973 I MediaCodec: [mId: 0] [video-debug-dec] Stats over last 5002ms:
+1774556844.367 10531 19564 21973 I MediaCodec: [mId: 0] [video-debug-dec] ClientName: top.bienvenido.saas.i18n ComponentName: c2.mtk.avc.decoder
+1774556844.367 10531 19564 21973 I MediaCodec: [mId: 0] [video-debug-dec] Qinput: 153, DQinput: 153 success out of 153 tries
+1774556844.367 10531 19564 21973 I MediaCodec: [mId: 0] [video-debug-dec] Render: 150, Drop: 0, DQoutput: 151 success out of 154 tries
+1774556844.367 10531 19564 21973 I MediaCodec: [mId: 0] [video-debug-dec] Avg Input Interval: 32ms, Avg Render Interval: 33ms
+1774556844.384 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556844.418 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556844.454 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556844.491 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556844.527 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556844.561 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556844.594 10531 19564 19574 D AidlBufferPool: bufferpool2 0x791c978d68 : 9(18846720 size) total buffers - 9(18846720 size) used buffers - 319/328 (recycle/alloc) - 9/320 (fetch/transfer)
+1774556844.597 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556844.633 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556844.668 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556844.704 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556844.741 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556844.776 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556844.814 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556844.850 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556844.885 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556844.930 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556844.977 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556845.024 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556845.065 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556845.108 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556845.150 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556845.188 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556845.225 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556845.262 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556845.300 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556845.338 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556845.375 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556845.411 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556845.452 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556845.489 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556845.536 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556845.573 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556845.616 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556845.628 10531 19564 19579 W saas.i18n:stub9: Failed to create temp profile file for /data/misc/profiles/cur/0/org.mozilla.firefox/primary.prof: No such file or directory
+1774556845.628 10531 19564 19579 W saas.i18n:stub9: Could not save profiling info to /data/misc/profiles/cur/0/org.mozilla.firefox/primary.prof
+1774556845.655 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556845.693 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0
+1774556845.729 10531 19564 21931 D VirtuCam_Render: TextureRenderer.draw: rot=0, zoom=1.0, mirror=false, flipX=false, flipY=false, video=576x1024, view=1280x720, scales=0.7692308x1.0

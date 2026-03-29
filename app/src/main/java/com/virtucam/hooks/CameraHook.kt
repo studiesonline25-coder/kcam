@@ -68,6 +68,7 @@ object CameraHook {
     
     // Global state for Late-Stage Storage Interception
     @Volatile var latestVirtualJpeg: ByteArray? = null
+    @Volatile var latestVirtualJpegArea: Int = 0
     
     // global capture state for render threads
     @Volatile var captureCount = 0
@@ -2367,6 +2368,8 @@ class VirtualRenderThread(
                 while (CameraHook.captureCount > 0) {
                     val capture = CameraHook.captureQueue.poll()
                     val timestamp = capture?.first ?: System.nanoTime()
+                    
+                    CameraHook.latestVirtualJpegArea = 0
                     
                     CameraHook.formatBridges.values.forEach { 
                         it.pushLatestFrameToWriter(timestamp) 
