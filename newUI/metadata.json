@@ -1,0 +1,8 @@
+{
+  "name": "VirtualCam",
+  "description": "Advanced media virtualization and AI generation studio with real-time frame control and network streaming.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
