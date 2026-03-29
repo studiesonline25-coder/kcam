@@ -138,6 +138,10 @@ class TextureRenderer(private val isVideo: Boolean = true) {
      * Draw the texture to currently bound frame buffer
      */
     fun draw(transformMatrix: FloatArray, videoWidth: Int = 0, videoHeight: Int = 0, viewWidth: Int = 0, viewHeight: Int = 0, targetRatio: Float = 0f, rotationDegrees: Int = 0, userRotation: Int = 0, isMirrored: Boolean = false, zoomFactor: Float = 1.0f) {
+        if (viewWidth > 0 && viewHeight > 0) {
+            GLES20.glViewport(0, 0, viewWidth, viewHeight)
+        }
+        
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
 
