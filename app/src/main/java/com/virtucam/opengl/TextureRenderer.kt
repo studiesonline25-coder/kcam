@@ -166,22 +166,23 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             val viewRatio = if (targetRatio > 0f) targetRatio else (viewWidth.toFloat() / viewHeight.toFloat())
             
             // If we rotated 90 or 270, the effective video dimensions are swapped for ratio calc
+            val videoRatioFallback = if (videoWidth > 0 && videoHeight > 0) videoWidth.toFloat() / videoHeight.toFloat() else (16f/9f)
             val effectiveVideoRatio = if (totalRotation == 90 || totalRotation == 270 || totalRotation == -90 || totalRotation == -270) {
-                videoHeight.toFloat() / videoWidth.toFloat()
+                1.0f / videoRatioFallback
             } else {
-                videoWidth.toFloat() / videoHeight.toFloat()
+                videoRatioFallback
             }
             
             var scaleX: Float
             var scaleY: Float
             
-            // CENTER_CROP logic based on effective (rotated) video ratio
+            // FIT_CENTER logic: Show full video with black bars by default
             if (effectiveVideoRatio > viewRatio) {
-                scaleX = effectiveVideoRatio / viewRatio
-                scaleY = 1f
-            } else {
                 scaleX = 1f
                 scaleY = viewRatio / effectiveVideoRatio
+            } else {
+                scaleX = effectiveVideoRatio / viewRatio
+                scaleY = 1f
             }
 
             // Apply global zoom factor
