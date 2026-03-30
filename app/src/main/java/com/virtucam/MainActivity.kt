@@ -59,12 +59,29 @@ class MainActivity : AppCompatActivity() {
             domStorageEnabled = true
             allowFileAccess = true
             allowContentAccess = true
+            // Fix for file:/// URLs loading scripts on some devices
+            allowFileAccessFromFileURLs = true
+            allowUniversalAccessFromFileURLs = true
+            
+            // Modern WebViews might need these too
+            databaseEnabled = true
+            setSupportMultipleWindows(false)
         }
 
-        webView.webChromeClient = WebChromeClient()
+        webView.webChromeClient = object : WebChromeClient() {
+            override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
+                android.util.Log.d("VirtuCam_Web", "[${consoleMessage.messageLevel()}] ${consoleMessage.message()} -- From line ${consoleMessage.lineNumber()} of ${consoleMessage.sourceId()}")
+                return true
+            }
+        }
+        
         webView.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 syncConfigToWeb()
+            }
+            
+            override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
+                android.util.Log.e("VirtuCam_Web", "WebView Error: ${error?.description}")
             }
         }
 
