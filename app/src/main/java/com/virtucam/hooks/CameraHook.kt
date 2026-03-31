@@ -2230,16 +2230,13 @@ class VirtualRenderThread(
 
     private fun getTargetRatio(vW: Int, vH: Int, isCapture: Boolean, mediaW: Int, mediaH: Int): Float {
         return try {
-            if (isCapture) {
-                // [WYSIWYG Fix] For final captures, use authentic surface dimensions.
-                // This prevents 'vertical flattening' caused by forcing 16:9 on 4:3 surfaces.
-                (vW.toFloat() / vH.toFloat()) * CameraHook.compensationFactor
-            } else {
-                // [Regression Restore] For PREVIEW, use fixed baselines based on MEDIA orientation.
-                val isMediaPortrait = mediaH > mediaW
-                val baseRatio = if (isMediaPortrait) (9.0f / 16.0f) else (16.0f / 9.0f)
-                baseRatio * CameraHook.compensationFactor
-            }
+            // [WYSIWYG Framing Parity]
+            // We use the SAME mathematical baseline for both preview and capture.
+            // This ensures the letterboxing seen in the viewfinder is preserved in the JPG.
+            val isMediaPortrait = mediaH > mediaW
+            val baseRatio = if (isMediaPortrait) (9.0f / 16.0f) else (16.0f / 9.0f)
+            
+            baseRatio * CameraHook.compensationFactor
         } catch (e: Exception) {
             (vW.toFloat() / vH.toFloat()) * CameraHook.compensationFactor
         }
@@ -2415,10 +2412,9 @@ class VirtualRenderThread(
                  // [WYSIWYG Fix] For com.android.camera, we use 0 rotation for everything (YUV/JPEG/Preview).
                  // For others (Veriff), YUV/PRIVATE follows physical sensor orientation.
                  val isXiaomiCam = (CameraHook.targetPackage == "com.android.camera" || CameraHook.targetPackage == "com.xiaomi.camera")
-                 val applyRotation = if (isXiaomiCam) {
-                     0
-                 } else if (isCapture) {
-                     if (format == 0x100 || format == 0) 0 else sensorOrientation
+                 val applyRotation = if (isCapture) {
+                     // [Rotation Fix] Apply sensor orientation to captures to fix 270-degree thumbnail tilt
+                     sensorOrientation
                  } else {
                      0
                  }

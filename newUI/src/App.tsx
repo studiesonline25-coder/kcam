@@ -55,6 +55,16 @@ const FrameControl = () => {
   const [zoom, setZoom] = useState(1.0);
   const [stretch, setStretch] = useState(1.0);
 
+  useEffect(() => {
+    const handleSync = (e: any) => {
+      const data = typeof e.detail === 'string' ? JSON.parse(e.detail) : e.detail;
+      if (data.zoom !== undefined) setZoom(data.zoom);
+      if (data.stretch !== undefined) setStretch(data.stretch);
+    };
+    window.addEventListener('android-sync', handleSync as any);
+    return () => window.removeEventListener('android-sync', handleSync as any);
+  }, []);
+
   const updateZoom = (val: number) => {
     setZoom(val);
     (window as any).Android?.updateZoom(val);
@@ -76,12 +86,12 @@ const FrameControl = () => {
         <div className="space-y-3">
           <div className="flex justify-between text-[10px] uppercase tracking-wider font-bold text-gray-500">
             <span>Zoom Scale</span>
-            <span className="text-emerald-neon">{zoom.toFixed(1)}x</span>
+            <span className="text-emerald-neon">{zoom.toFixed(2)}x</span>
           </div>
           <input 
             type="range" 
             min="0.5" 
-            max="2.0" 
+            max="3.0" 
             step="0.01" 
             value={zoom} 
             onChange={(e) => updateZoom(parseFloat(e.target.value))}
@@ -93,12 +103,12 @@ const FrameControl = () => {
         <div className="space-y-3">
           <div className="flex justify-between text-[10px] uppercase tracking-wider font-bold text-gray-500">
             <span>Stretch Factor</span>
-            <span className="text-emerald-neon">{stretch.toFixed(1)}</span>
+            <span className="text-emerald-neon">{stretch.toFixed(2)}</span>
           </div>
           <input 
             type="range" 
             min="0.5" 
-            max="2.0" 
+            max="2.5" 
             step="0.01" 
             value={stretch} 
             onChange={(e) => updateStretch(parseFloat(e.target.value))}
@@ -116,6 +126,18 @@ const AdvancedControl = () => {
   const [mirrored, setMirrored] = useState(false);
   const [colorSwap, setColorSwap] = useState(false);
   const [tcpMode, setTcpMode] = useState(false);
+
+  useEffect(() => {
+    const handleSync = (e: any) => {
+      const data = typeof e.detail === 'string' ? JSON.parse(e.detail) : e.detail;
+      if (data.rotation !== undefined) setRotation(data.rotation);
+      if (data.mirrored !== undefined) setMirrored(data.mirrored);
+      if (data.colorSwap !== undefined) setColorSwap(data.colorSwap);
+      if (data.tcpMode !== undefined) setTcpMode(data.tcpMode);
+    };
+    window.addEventListener('android-sync', handleSync as any);
+    return () => window.removeEventListener('android-sync', handleSync as any);
+  }, []);
 
   const toggleRotation = () => {
     const next = (rotation + 90) % 360;
@@ -188,19 +210,17 @@ const AdvancedControl = () => {
 const PanelScreen = () => {
   const [subTab, setSubTab] = useState<PanelSubTab>('media');
   const [isActive, setIsActive] = useState(false);
-  const [mediaUri, setMediaUri] = useState<string | null>(null);
-  const [isVideo, setIsVideo] = useState(false);
+  const [mediaPreview, setMediaPreview] = useState<string | null>(null);
   const [streamUrl, setStreamUrl] = useState<string>('');
   const [isStreamActive, setIsStreamActive] = useState(false);
 
   useEffect(() => {
     const handleSync = (e: any) => {
       const data = typeof e.detail === 'string' ? JSON.parse(e.detail) : e.detail;
-      setIsActive(data.isEnabled || false);
-      setMediaUri(data.mediaUri || null);
-      setIsVideo(data.isSpoofVideo || false);
-      setStreamUrl(data.streamUrl || '');
-      setIsStreamActive(data.isStream || false);
+      if (data.isEnabled !== undefined) setIsActive(data.isEnabled);
+      if (data.mediaPreview !== undefined) setMediaPreview(data.mediaPreview || null);
+      if (data.streamUrl !== undefined) setStreamUrl(data.streamUrl || '');
+      if (data.isStream !== undefined) setIsStreamActive(data.isStream || false);
     };
     window.addEventListener('android-sync', handleSync as any);
     return () => window.removeEventListener('android-sync', handleSync as any);
@@ -238,7 +258,7 @@ const PanelScreen = () => {
             exit={{ opacity: 0, scale: 0.95 }}
             className="space-y-4"
           >
-            {!mediaUri ? (
+            {!mediaPreview ? (
               <div 
                 onClick={() => (window as any).Android?.pickMedia()}
                 className="bg-card-dark/50 border border-dashed border-border-dark rounded-3xl p-10 flex flex-col items-center justify-center gap-4 group hover:border-emerald-neon/30 transition-colors cursor-pointer"
@@ -248,19 +268,18 @@ const PanelScreen = () => {
                 </div>
                 <div className="text-center">
                   <h4 className="font-bold text-emerald-neon uppercase tracking-widest text-xs mb-1">Select Media</h4>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Trigger Android Media Picker</p>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">JPG, PNG, MP4, MOV</p>
                 </div>
               </div>
             ) : (
-              <div className="space-y-4">
-                <div className="bg-card-dark border border-border-dark rounded-3xl overflow-hidden aspect-video relative group">
-                   {isVideo ? (
-                     <video src={mediaUri} className="w-full h-full object-contain bg-black" autoPlay loop muted />
-                   ) : (
-                     <img src={mediaUri} className="w-full h-full object-contain bg-black" />
-                   )}
+              <div className="space-y-4 animate-in fade-in zoom-in duration-300">
+                <div className="bg-card-dark border border-border-dark rounded-3xl overflow-hidden aspect-video relative group border-emerald-neon/20 shadow-[0_0_20px_rgba(16,185,129,0.05)]">
+                   <img src={mediaPreview} className="w-full h-full object-contain bg-black" />
                    <div className="absolute inset-0 bg-gradient-to-t from-bg-dark/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
-                      <span className="text-[10px] text-gray-300 truncate">{mediaUri.split('/').pop()}</span>
+                      <div className="flex items-center gap-2">
+                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-neon shadow-[0_0_5px_rgba(16,185,129,1)]" />
+                         <span className="text-[10px] font-bold text-emerald-neon uppercase tracking-widest">Active Media Source</span>
+                      </div>
                    </div>
                 </div>
                 <button 
@@ -293,7 +312,7 @@ const PanelScreen = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                   {isStreamActive && <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />}
+                   {isStreamActive && <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]" />}
                    <span className="text-[8px] font-bold bg-emerald-neon/10 text-emerald-neon px-2 py-1 rounded border border-emerald-neon/20 uppercase tracking-widest">RTSP / RTMP</span>
                 </div>
               </div>
@@ -338,7 +357,7 @@ const PanelScreen = () => {
                 </div>
               )}
               
-              <p className="text-[9px] text-center text-gray-600 leading-relaxed">
+              <p className="text-[9px] text-center text-gray-600 leading-relaxed italic">
                 {isStreamActive ? 'Connected to remote source. Signals will automatically update the feed.' : 'Connect to OBS stream to enable you control virtual camera input seamlessly.'}
               </p>
             </div>
@@ -380,15 +399,15 @@ const GenStudioScreen = () => (
           action: 'Start Generation'
         }
       ].map((module, i) => (
-        <div key={i} className="bg-card-dark rounded-3xl p-6 border border-border-dark space-y-4 hover:border-emerald-neon/20 transition-colors">
-          <div className="w-10 h-10 rounded-xl bg-emerald-neon/10 flex items-center justify-center border border-emerald-neon/20 text-emerald-neon">
+        <div key={i} className="bg-card-dark rounded-3xl p-6 border border-border-dark space-y-4 hover:border-emerald-neon/20 transition-colors shadow-lg">
+          <div className="w-10 h-10 rounded-xl bg-emerald-neon/10 flex items-center justify-center border border-emerald-neon/20 text-emerald-neon shadow-[0_0_10px_rgba(16,185,129,0.1)]">
             {module.icon}
           </div>
           <div className="space-y-2">
-            <h3 className="font-bold text-lg">{module.title}</h3>
+            <h3 className="font-bold text-lg leading-tight">{module.title}</h3>
             <p className="text-[11px] text-gray-500 leading-relaxed">{module.desc}</p>
           </div>
-          <button className="w-full py-3 rounded-xl bg-emerald-neon text-bg-dark font-bold text-[10px] uppercase tracking-widest hover:brightness-110 transition-all">
+          <button className="w-full py-3 rounded-xl bg-emerald-neon text-bg-dark font-bold text-[10px] uppercase tracking-widest hover:brightness-110 transition-all shadow-md">
             {module.action}
           </button>
         </div>
@@ -404,7 +423,7 @@ const AboutScreen = () => (
     className="p-6 space-y-10"
   >
     <div className="space-y-6">
-      <div className="inline-flex items-center px-3 py-1 rounded-full bg-emerald-neon/10 border border-emerald-neon/20 text-[9px] font-bold text-emerald-neon uppercase tracking-widest">
+      <div className="inline-flex items-center px-3 py-1 rounded-full bg-emerald-neon/10 border border-emerald-neon/20 text-[9px] font-bold text-emerald-neon uppercase tracking-widest shadow-sm">
         System Overview
       </div>
       <p className="text-sm text-gray-400 leading-relaxed">
@@ -413,7 +432,7 @@ const AboutScreen = () => (
     </div>
 
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 px-1">
         <Zap className="w-4 h-4 text-emerald-neon" />
         <h3 className="text-xs uppercase tracking-widest font-bold text-gray-400">Getting Started</h3>
       </div>
@@ -427,32 +446,32 @@ const AboutScreen = () => (
         ].map((item) => (
           <div 
             key={item.step} 
-            className="bg-card-dark rounded-2xl p-5 border border-border-dark flex gap-4 cursor-pointer hover:border-emerald-neon/20 transition-all"
+            className="bg-card-dark rounded-2xl p-5 border border-border-dark flex gap-4 cursor-pointer hover:border-emerald-neon/20 transition-all shadow-sm"
             onClick={() => {
               if (item.step === 3) window.open('https://www.vkxiazai.com/app/11254.html', '_blank');
             }}
           >
-            <div className="w-10 h-10 rounded-full bg-emerald-neon/10 border border-emerald-neon/20 flex items-center justify-center text-emerald-neon font-bold text-xs shrink-0">
+            <div className="w-10 h-10 rounded-full bg-emerald-neon/10 border border-emerald-neon/20 flex items-center justify-center text-emerald-neon font-bold text-xs shrink-0 shadow-inner">
               {item.step}
             </div>
-            <div className="space-y-1">
-              <h4 className="font-bold text-sm">{item.title}</h4>
-              <p className="text-[11px] text-gray-500 leading-relaxed">{item.desc}</p>
-              {item.step === 3 && <span className="text-[9px] text-emerald-neon font-bold uppercase">Click to Download ➔</span>}
+            <div className="space-y-1 overflow-hidden">
+              <h4 className="font-bold text-sm truncate">{item.title}</h4>
+              <p className="text-[11px] text-gray-500 leading-relaxed font-medium">{item.desc}</p>
+              {item.step === 3 && <span className="text-[9px] text-emerald-neon font-bold uppercase tracking-tighter mt-1 block">Click to Download ➔</span>}
             </div>
           </div>
         ))}
       </div>
     </div>
 
-    <div className="bg-emerald-neon/5 border border-emerald-neon/10 rounded-3xl p-6 space-y-4">
+    <div className="bg-emerald-neon/5 border border-emerald-neon/10 rounded-3xl p-6 space-y-4 shadow-inner">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-emerald-neon/10 flex items-center justify-center border border-emerald-neon/20">
+        <div className="w-10 h-10 rounded-xl bg-emerald-neon/10 flex items-center justify-center border border-emerald-neon/20 shadow-sm">
           <Sparkles className="w-5 h-5 text-emerald-neon" />
         </div>
         <h4 className="font-bold text-sm">Device Optimization</h4>
       </div>
-      <p className="text-[11px] text-gray-400 leading-relaxed">
+      <p className="text-[11px] text-gray-400 leading-relaxed font-medium">
         For consistent performance on certain devices, ensure VirtualCam is excluded from battery optimization and background restrictions.
       </p>
     </div>
@@ -499,17 +518,24 @@ export default function App() {
 
   // Synchronization with Android state
   useEffect(() => {
-        const data = typeof json === 'string' ? JSON.parse(json) : json;
-        window.dispatchEvent(new CustomEvent('android-sync', { detail: data }));
+    const handleSync = (payload: any) => {
+      try {
+        const data = typeof payload === 'string' ? JSON.parse(payload) : payload;
+        const event = new CustomEvent('android-sync', { detail: data });
+        window.dispatchEvent(event);
         setIsSynced(true);
       } catch (e) {
-        console.error('Sync failed', e);
+        console.error('Sync process failed', e);
       }
     };
 
     (window as any).onAndroidSync = handleSync;
     
-    // Check if Android already sent a sync signal that we missed
+    // Explicitly request initial state once the interface is established
+    // This ensures we get the persisted 'isEnabled' and 'mediaPreview' status immediately
+    (window as any).Android?.requestSync();
+    
+    // Check if Android already sent a sync signal that we missed during splash
     if ((window as any).pendingAndroidState) {
         handleSync((window as any).pendingAndroidState);
     }
@@ -520,10 +546,10 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen max-w-md mx-auto relative pb-24 shadow-2xl overflow-x-hidden">
+    <div className="min-h-screen bg-bg-dark text-white max-w-md mx-auto relative pb-28 shadow-2xl overflow-x-hidden selection:bg-emerald-neon/30">
       <Header />
       
-      <main>
+      <main className="min-h-[calc(100vh-80px-70px)]">
         <AnimatePresence mode="wait">
           {activeTab === 'panel' && <PanelScreen key="panel" />}
           {activeTab === 'gen' && <GenStudioScreen key="gen" />}

@@ -103,7 +103,7 @@ class MainActivity : AppCompatActivity() {
             put("tcpMode", config.rtspUseTcp)
             put("streamUrl", config.streamUrl ?: "")
             put("isStream", config.isStream)
-            put("mediaUri", config.spoofMediaUri?.toString() ?: "")
+            put("mediaPreview", mediaPreviewBase64 ?: "")
             put("isSpoofVideo", config.isSpoofVideo)
         }
         
@@ -165,6 +165,13 @@ class MainActivity : AppCompatActivity() {
                 syncConfigToWeb()
             }
         }
+
+        @JavascriptInterface
+        fun requestSync() {
+            runOnUiThread {
+                syncConfigToWeb()
+            }
+        }
     }
 
     private fun checkPermissionAndPickMedia() {
@@ -197,7 +204,40 @@ class MainActivity : AppCompatActivity() {
         config.isSpoofVideo = isVideo
         config.isStream = false
         
-        syncConfigToWeb()
+        generateMediaPreview(uri, isVideo)
         Toast.makeText(this, "Media Ready!", Toast.LENGTH_SHORT).show()
+    }
+
+    private var mediaPreviewBase64: String? = null
+
+    private fun generateMediaPreview(uri: Uri, isVideo: Boolean) {
+        val scope = this
+        Thread {
+            try {
+                val bitmap = if (isVideo) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        contentResolver.loadThumbnail(uri, android.util.Size(320, 240), null)
+                    } else {
+                         // Fallback for older Android
+                         null
+                    }
+                } else {
+                    val inputStream = contentResolver.openInputStream(uri)
+                    android.graphics.BitmapFactory.decodeStream(inputStream)
+                }
+
+                bitmap?.let {
+                    val outputStream = java.io.ByteArrayOutputStream()
+                    it.compress(android.graphics.Bitmap.CompressFormat.JPEG, 70, outputStream)
+                    val bytes = outputStream.toByteArray()
+                    mediaPreviewBase64 = "data:image/jpeg;base64," + android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
+                    runOnUiThread {
+                        syncConfigToWeb()
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("VirtuCam_Web", "Thumbnail fail: ${e.message}")
+            }
+        }.start()
     }
 }
