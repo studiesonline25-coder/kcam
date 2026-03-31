@@ -2230,13 +2230,18 @@ class VirtualRenderThread(
 
     private fun getTargetRatio(vW: Int, vH: Int, isCapture: Boolean, mediaW: Int, mediaH: Int): Float {
         return try {
-            // [WYSIWYG Framing Parity]
-            // We use the SAME mathematical baseline for both preview and capture.
-            // This ensures the letterboxing seen in the viewfinder is preserved in the JPG.
-            val isMediaPortrait = mediaH > mediaW
-            val baseRatio = if (isMediaPortrait) (9.0f / 16.0f) else (16.0f / 9.0f)
-            
-            baseRatio * CameraHook.compensationFactor
+            if (isCapture) {
+                // [WYSIWYG Deep Fix] Use real surface dimensions for the final photo.
+                // This prevents 'Vertical Flattening' by ensuring the renderer fits 
+                // the media into the authentic 4:3 (or other) shape of the file.
+                (vW.toFloat() / vH.toFloat()) * CameraHook.compensationFactor
+            } else {
+                // [Gallery Parity] For the phone viewfinder, maintain the 16:9/9:16 baselines.
+                // This preserves the 'Black Bars' look the user prefers for preview.
+                val isMediaPortrait = mediaH > mediaW
+                val baseRatio = if (isMediaPortrait) (9.0f / 16.0f) else (16.0f / 9.0f)
+                baseRatio * CameraHook.compensationFactor
+            }
         } catch (e: Exception) {
             (vW.toFloat() / vH.toFloat()) * CameraHook.compensationFactor
         }
