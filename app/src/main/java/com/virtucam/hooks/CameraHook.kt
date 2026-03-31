@@ -2430,14 +2430,15 @@ class VirtualRenderThread(
                  val isActuallyFront = (isFrontCamera)
                  val shouldMirror = if (isActuallyFront) {
                      // Mirror ImageReaders (Veriff preview/capture) so text is not backwards.
-                     (format == 35 || format == 34 || format == 0x100)
+                     // Added Format 1 (RGBA_8888) and 0 (SurfaceTexture/Opaque) for browsers.
+                     (format == 35 || format == 34 || format == 0x100 || format == 1 || format == 0)
                  } else {
                      // BACK CAMERA: Strictly follow the manual Mirror toggle.
                      CameraHook.isMirrored
                  }
 
                  val ratio = getTargetRatio(vw, vh, isCapture, contentW, contentH)
-                 if (frameCount % 30 == 0) Log.d("VirtuCam_Render", "Drawing: ratio=$ratio, isFront=$isActuallyFront, mirror=$shouldMirror, stretch=${CameraHook.compensationFactor}")
+                 if (frameCount % 30 == 0) Log.d("VirtuCam_Render", "Drawing: ratio=$ratio, isFront=$isActuallyFront, mirror=$shouldMirror, fmt=$format")
                  textureRenderer?.draw(matrix, contentW, contentH, vw, vh, ratio, applyRotation, CameraHook.rotation, shouldMirror, CameraHook.zoomFactor)
 
                  if (eglCore?.swapBuffers(es) == false) {
