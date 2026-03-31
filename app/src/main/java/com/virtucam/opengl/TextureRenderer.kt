@@ -190,12 +190,12 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             scaleY *= zoomFactor
             
             // Corrected Mirroring Logic (Build 152 Fix):
-193:             // We must flip the axis that is currently horizontal on the screen.
-194:             // For 0/180 rotations, the texture's X is horizontal. For 90/270, the texture's Y is horizontal.
-195:             val flipX = isMirrored && (totalRotation % 180 == 0)
-196:             val flipY = isMirrored && (totalRotation % 180 != 0)
-197:             
-198:             Matrix.scaleM(mvpMatrix, 0, if (flipX) -scaleX else scaleX, if (flipY) -scaleY else scaleY, 1f)
+            // We must flip the axis that is currently horizontal on the screen.
+            // For 0/180 rotations, the texture's X is horizontal. For 90/270, the texture's Y is horizontal.
+            val flipX = isMirrored && (totalRotation % 180 == 0)
+            val flipY = isMirrored && (totalRotation % 180 != 0)
+            
+            Matrix.scaleM(mvpMatrix, 0, if (flipX) -scaleX else scaleX, if (flipY) -scaleY else scaleY, 1f)
             
             Log.d("VirtuCam_Render", "TextureRenderer.draw: rot=$rotationDegrees, zoom=$zoomFactor, targetRatio=$targetRatio, video=${videoWidth}x${videoHeight}, view=${viewWidth}x${viewHeight}, scales=${scaleX}x${scaleY}")
         }
