@@ -2426,13 +2426,13 @@ class VirtualRenderThread(
 
                  // DYNAMIC MIRRORING LOGIC (The "Veriff" Fix)
                  // Some apps (Veriff) skip preview mirroring. Native cameras mirror in UI.
-                 // Sense Front-Camera: If isFrontCamera property is true OR sensorOrientation is 270 (Common Front-Cam).
-                 val isActuallyFront = isFrontCamera || sensorOrientation == 270
-                 val shouldMirror = if (isActuallyFront && !isXiaomiCam) {
+                 // Sense Front-Camera: Strictly follow the tracked cameraFacing (1=FRONT).
+                 val isActuallyFront = (isFrontCamera)
+                 val shouldMirror = if (isActuallyFront) {
                      // Mirror ImageReaders (Veriff preview/capture) so text is not backwards.
                      (format == 35 || format == 34 || format == 0x100)
                  } else {
-                     // Native Xiaomi handles mirroring in UI; only flip if user toggled manual Mirror.
+                     // BACK CAMERA: Strictly follow the manual Mirror toggle.
                      CameraHook.isMirrored
                  }
 
