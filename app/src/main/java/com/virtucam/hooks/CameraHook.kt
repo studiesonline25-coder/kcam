@@ -420,11 +420,11 @@ object CameraHook {
                 val attrName = param.args[0] as? String ?: return
                 if (attrName == "Orientation" || attrName == "android:Orientation") {
                     if (param.method.name == "getAttributeInt") {
-                        param.result = 1
+                        // param.result = 1 // [WYSIWYG Fix] Disabled
                     } else if (param.method.name == "getAttribute") {
-                        param.result = "1"
+                        // param.result = "1" // [WYSIWYG Fix] Disabled
                     }
-                    Log.v("DIAGNOSTIC_VIRTUCAM", "ExifInterface: Successfully spoofed Orientation to 1 (Normal)")
+                    Log.v("DIAGNOSTIC_VIRTUCAM", "ExifInterface: PASS-THROUGH")
                 }
             }
         }
