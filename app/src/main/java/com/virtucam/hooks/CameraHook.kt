@@ -420,11 +420,12 @@ object CameraHook {
                 val attrName = param.args[0] as? String ?: return
                 if (attrName == "Orientation" || attrName == "android:Orientation") {
                     if (param.method.name == "getAttributeInt") {
-                        // param.result = 1 // [WYSIWYG Fix] Disabled
+                        val defaultValue = param.args[1] as? Int ?: 1
+                        param.result = 6 // [WYSIWYG Fix] Force Rotate 90 CW to fix sideways Gallery/Thumbnail
                     } else if (param.method.name == "getAttribute") {
-                        // param.result = "1" // [WYSIWYG Fix] Disabled
+                        param.result = "6" // [WYSIWYG Fix] Force Rotate 90 CW
                     }
-                    Log.v("DIAGNOSTIC_VIRTUCAM", "ExifInterface: PASS-THROUGH")
+                    Log.v("DIAGNOSTIC_VIRTUCAM", "ExifInterface: Successfully forced Orientation to 6 (Rotate 90 CW)")
                 }
             }
         }
