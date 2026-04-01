@@ -137,7 +137,7 @@ class TextureRenderer(private val isVideo: Boolean = true) {
     /**
      * Draw the texture to currently bound frame buffer
      */
-    fun draw(transformMatrix: FloatArray, videoWidth: Int = 0, videoHeight: Int = 0, viewWidth: Int = 0, viewHeight: Int = 0, targetRatio: Float = 0f, rotationDegrees: Int = 0, userRotation: Int = 0, isMirrored: Boolean = false, zoomFactor: Float = 1.0f) {
+    fun draw(transformMatrix: FloatArray, videoWidth: Int = 0, videoHeight: Int = 0, viewWidth: Int = 0, viewHeight: Int = 0, targetRatio: Float = 0f, rotationDegrees: Int = 0, userRotation: Int = 0, isMirrored: Boolean = false, zoomFactor: Float = 1.0f, isCapture: Boolean = false) {
         if (viewWidth > 0 && viewHeight > 0) {
             GLES20.glViewport(0, 0, viewWidth, viewHeight)
         }
@@ -176,13 +176,24 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             var scaleX: Float
             var scaleY: Float
             
-            // FIT_CENTER logic: Show full video with black bars by default
-            if (effectiveVideoRatio > viewRatio) {
-                scaleX = 1f
-                scaleY = viewRatio / effectiveVideoRatio
+            if (isCapture) {
+                // CENTER_CROP logic: Fill the entire view exactly like the preview, cropping the excess
+                if (effectiveVideoRatio > viewRatio) {
+                    scaleY = 1f
+                    scaleX = effectiveVideoRatio / viewRatio
+                } else {
+                    scaleX = 1f
+                    scaleY = viewRatio / effectiveVideoRatio
+                }
             } else {
-                scaleX = effectiveVideoRatio / viewRatio
-                scaleY = 1f
+                // FIT_CENTER logic: Show full video with black bars by default for Preview
+                if (effectiveVideoRatio > viewRatio) {
+                    scaleX = 1f
+                    scaleY = viewRatio / effectiveVideoRatio
+                } else {
+                    scaleX = effectiveVideoRatio / viewRatio
+                    scaleY = 1f
+                }
             }
 
             // Apply global zoom factor

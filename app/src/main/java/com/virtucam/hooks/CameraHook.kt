@@ -829,8 +829,8 @@ object CameraHook {
                 if (key == "orientation") {
                     val originalValue = param.args[1] as Int
                     if (originalValue != 0) {
-                        param.args[1] = 0
-                        Log.v("DIAGNOSTIC_VIRTUCAM", "ContentValues Orientation Normalization: $originalValue -> 0")
+                        // param.args[1] = 0 // [WYSIWYG Fix] Disabled EXIF spoofing to restore upright gallery 
+                        Log.v("DIAGNOSTIC_VIRTUCAM", "ContentValues Orientation PASS-THROUGH: $originalValue -> NOT SPOOFED")
                     }
                 }
             }
@@ -2417,11 +2417,16 @@ class VirtualRenderThread(
                  // [WYSIWYG Fix] For com.android.camera, we use 0 rotation for everything (YUV/JPEG/Preview).
                  // For others (Veriff), YUV/PRIVATE follows physical sensor orientation.
                  val isXiaomiCam = (CameraHook.targetPackage == "com.android.camera" || CameraHook.targetPackage == "com.xiaomi.camera")
-                 val applyRotation = if (isCapture) {
+                 var applyRotation = if (isCapture) {
                      // [Rotation Fix] Apply sensor orientation to captures to fix 270-degree thumbnail tilt
                      sensorOrientation
                  } else {
                      0
+                 }
+
+                 // [WYSIWYG Rotation Fix] Auto-rotate sideways if filling a landscape buffer with portrait video
+                 if (isCapture && sensorOrientation == 0 && contentH > contentW && vw > vh) {
+                     applyRotation = 90
                  }
 
                  // DYNAMIC MIRRORING LOGIC (The "Veriff" Fix)
@@ -2439,7 +2444,7 @@ class VirtualRenderThread(
 
                  val ratio = getTargetRatio(vw, vh, isCapture, contentW, contentH)
                  if (frameCount % 30 == 0) Log.d("VirtuCam_Render", "Drawing: ratio=$ratio, isFront=$isActuallyFront, mirror=$shouldMirror, fmt=$format")
-                 textureRenderer?.draw(matrix, contentW, contentH, vw, vh, ratio, applyRotation, CameraHook.rotation, shouldMirror, CameraHook.zoomFactor)
+                 textureRenderer?.draw(matrix, contentW, contentH, vw, vh, ratio, applyRotation, CameraHook.rotation, shouldMirror, CameraHook.zoomFactor, isCapture)
 
                  if (eglCore?.swapBuffers(es) == false) {
                     Log.w("VirtuCam_Render", "Surface abandoned, removing.")
@@ -2479,8 +2484,8 @@ class VirtualRenderThread(
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     if (!isEnabled) return
                     val original = param.args[0] as Int
-                    param.args[0] = 0
-                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: MediaRecorder.setOrientationHint Spoofed $original -> 0")
+                    // param.args[0] = 0 // [WYSIWYG Fix] Disabled
+                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: MediaRecorder.setOrientationHint PASS-THROUGH $original")
                 }
             })
         } catch (_: Throwable) {}
@@ -2495,8 +2500,8 @@ class VirtualRenderThread(
                     val key = param.args[0] as String
                     if (key == "rotation-degrees" || key == "rotation") {
                         val original = param.args[1] as Int
-                        param.args[1] = 0
-                        Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: MediaFormat Rotation Spoofed $original -> 0")
+                        // param.args[1] = 0 // [WYSIWYG Fix] Disabled
+                        Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: MediaFormat Rotation PASS-THROUGH $original")
                     }
                 }
             })
@@ -2510,8 +2515,8 @@ class VirtualRenderThread(
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     if (!isEnabled) return
                     val original = param.args[0] as Int
-                    param.args[0] = 0
-                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: MediaMuxer.setOrientationHint Spoofed $original -> 0")
+                    // param.args[0] = 0 // [WYSIWYG Fix] Disabled
+                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: MediaMuxer.setOrientationHint PASS-THROUGH $original")
                 }
             })
         } catch (_: Throwable) {}
