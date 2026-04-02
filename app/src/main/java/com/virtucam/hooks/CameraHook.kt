@@ -421,11 +421,11 @@ object CameraHook {
                 if (attrName == "Orientation" || attrName == "android:Orientation") {
                     if (param.method.name == "getAttributeInt") {
                         val defaultValue = param.args[1] as? Int ?: 1
-                        // param.result = 6 // [WYSIWYG Fix] Disabled EXIF spoofing to allow native injection
+                        param.result = 6 // [WYSIWYG Fix] Force Rotate 90 CW for Gallery
                     } else if (param.method.name == "getAttribute") {
-                        // param.result = "6" // [WYSIWYG Fix] Disabled 
+                        param.result = "6" // [WYSIWYG Fix] Force Rotate 90 CW for Gallery
                     }
-                    Log.v("DIAGNOSTIC_VIRTUCAM", "ExifInterface: PASS-THROUGH")
+                    Log.v("DIAGNOSTIC_VIRTUCAM", "ExifInterface: Forced Orientation=6")
                 }
             }
         }
@@ -468,6 +468,9 @@ object CameraHook {
                         val path = file.absolutePath
                         XposedHelpers.setAdditionalInstanceField(param.thisObject, "vcPath", path)
                         
+                        // [FIX] Skip our own EXIF injection temp files to prevent recursive corruption
+                        if (path.contains("vc_exif_inject")) return
+                        
                         // Only intercept if it looks like a camera capture artifact
                         if (path.endsWith(".jpg", true) && (path.contains("dcim", true) || path.contains("camera", true) || path.contains("cache", true))) {
                             // We don't block the constructor, but we will soon overwrite the content
@@ -491,13 +494,18 @@ object CameraHook {
                         val data = param.args[0] as? ByteArray ?: return
                         val path = XposedHelpers.getAdditionalInstanceField(param.thisObject, "vcPath") as? String ?: ""
                         
-                        // Overwrite writes that likely represent the full image payload or thumbnails
+                        // [FIX] Skip our own EXIF injection temp files
+                        if (path.contains("vc_exif_inject")) return
+                        // [FIX] Skip thumbnail files to prevent disappearing thumbnails
+                        if (path.contains("thumb", true)) return
+                        
+                        // Overwrite writes that likely represent the full image payload
                         // JPEG Magic Bytes: FF D8 FF
                         val isJpeg = data.size > 3 && data[0] == 0xFF.toByte() && data[1] == 0xD8.toByte() && data[2] == 0xFF.toByte()
                         
-                        if (isJpeg && (data.size > 10000 || (data.size > 5000 && path.contains("thumb", true)))) { 
+                        if (isJpeg && data.size > 10000) { 
                              param.args[0] = virtualJpeg
-                             Log.w(TAG, "VirtuCam_Storage: FileOutputStream.write() (ByteArray) SWAPPED successfully!")
+                             Log.w(TAG, "VirtuCam_Storage: FileOutputStream.write() (ByteArray) SWAPPED successfully! path=$path")
                         }
                     } catch (_: Throwable) {}
                 }
@@ -520,13 +528,18 @@ object CameraHook {
                         val len = param.args[2] as Int
                         val path = XposedHelpers.getAdditionalInstanceField(param.thisObject, "vcPath") as? String ?: ""
                         
+                        // [FIX] Skip our own EXIF injection temp files
+                        if (path.contains("vc_exif_inject")) return
+                        // [FIX] Skip thumbnail files
+                        if (path.contains("thumb", true)) return
+                        
                         val isJpeg = data.size > 3 && data[0] == 0xFF.toByte() && data[1] == 0xD8.toByte() && data[2] == 0xFF.toByte()
                         
-                        if (isJpeg && (len > 10000 || (len > 5000 && path.contains("thumb", true)))) {
+                        if (isJpeg && len > 10000) {
                             param.args[0] = virtualJpeg
                             param.args[1] = 0
                             param.args[2] = virtualJpeg.size
-                            Log.w(TAG, "VirtuCam_Storage: FileOutputStream.write() (Offset) SWAPPED successfully! (Forced size: ${virtualJpeg.size})")
+                            Log.w(TAG, "VirtuCam_Storage: FileOutputStream.write() (Offset) SWAPPED successfully! path=$path (Forced size: ${virtualJpeg.size})")
                         }
                     } catch (_: Throwable) {}
                 }

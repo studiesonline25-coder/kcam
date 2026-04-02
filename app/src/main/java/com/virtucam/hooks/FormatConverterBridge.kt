@@ -191,12 +191,16 @@ class FormatConverterBridge(
      * Engineered for Xiaomi MiAlgoEngine (Parallel Service) compatibility.
      * Strict NV21 (V before U) layout for 2-plane semi-planar buffers.
      */
+    private var lastJpegGenTimeMs = 0L
+
     fun overwriteImageWithLatestYuv(targetImage: Image, timestamp: Long) {
-        // [PHASE 15 STABILITY] Unconditionally generate the JPEG payload anyway.
-        // Even though the camera requested YUV, Xiaomi's algorithm engine will 
-        // eventually ask the Android file system to save a JPEG. When it does,
-        // our URI Direct Write needs this JPEG ready!
-        generateAndStoreSpoofedJpeg()
+        // [PHASE 15 STABILITY] Generate JPEG payload for late-stage file swap.
+        // Throttled to once per second to avoid burning CPU on every preview frame.
+        val now = System.currentTimeMillis()
+        if (now - lastJpegGenTimeMs > 1000) {
+            lastJpegGenTimeMs = now
+            generateAndStoreSpoofedJpeg()
+        }
         
         val rgbaBytes = cachedRgbaData
         if (rgbaBytes == null || !checkDataIntegrity(rgbaBytes)) {
