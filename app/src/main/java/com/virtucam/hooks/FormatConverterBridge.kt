@@ -153,7 +153,7 @@ class FormatConverterBridge(
             // Bitmap.compress does not write EXIF tags. Without tags, the Gallery displays the file 
             // sideways since we mathematically rotated it array-wise to use CENTER_CROP perfectly.
             try {
-                val context = de.robv.android.xposed.AndroidAppHelper.currentApplication()
+                val context = android.app.AndroidAppHelper.currentApplication()
                 if (context != null) {
                     val tempFile = java.io.File(context.cacheDir, "vc_exif_inject_${System.currentTimeMillis()}.jpg")
                     tempFile.writeBytes(jpegBytes)
