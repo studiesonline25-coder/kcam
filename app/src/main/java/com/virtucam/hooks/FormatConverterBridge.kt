@@ -147,7 +147,26 @@ class FormatConverterBridge(
             bitmap.compress(Bitmap.CompressFormat.JPEG, 85, baos)
             bitmap.recycle()
             
-            val jpegBytes = baos.toByteArray()
+            var jpegBytes = baos.toByteArray()
+            
+            // [WYSIWYG EXIF INJECTION] 
+            // Bitmap.compress does not write EXIF tags. Without tags, the Gallery displays the file 
+            // sideways since we mathematically rotated it array-wise to use CENTER_CROP perfectly.
+            try {
+                val context = de.robv.android.xposed.AndroidAppHelper.currentApplication()
+                if (context != null) {
+                    val tempFile = java.io.File(context.cacheDir, "vc_exif_inject_${System.currentTimeMillis()}.jpg")
+                    tempFile.writeBytes(jpegBytes)
+                    val exif = android.media.ExifInterface(tempFile.absolutePath)
+                    exif.setAttribute(android.media.ExifInterface.TAG_ORIENTATION, "6") // Rotate 90 CW
+                    exif.saveAttributes()
+                    jpegBytes = tempFile.readBytes()
+                    tempFile.delete()
+                    Log.d("DIAGNOSTIC_VIRTUCAM", "FormatConverterBridge: Embedded EXIF Orientation=6 into JPEG payload")
+                }
+            } catch (e: Throwable) {
+                Log.e("DIAGNOSTIC_VIRTUCAM", "FormatConverterBridge: Failed EXIF injection", e)
+            }
             
             val area = width * height
             synchronized(CameraHook) {
