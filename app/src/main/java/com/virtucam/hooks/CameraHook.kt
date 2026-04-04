@@ -14,6 +14,7 @@ import android.view.Surface
 import android.os.Handler
 import android.os.HandlerThread
 import android.media.ImageReader
+import android.media.ExifInterface
 import java.util.Collections
 import java.util.WeakHashMap
 import java.util.HashSet
@@ -2242,22 +2243,13 @@ class VirtualRenderThread(
     private var mediaSurface: Surface? = null
     private var frameCount = 0
 
-    private fun getTargetRatio(vW: Int, vH: Int, isCapture: Boolean, mediaW: Int, mediaH: Int): Float {
+    private fun getTargetRatio(vW: Int, vH: Int, isCapture: Boolean, mediaW: Int, mediaH: Int, mediaRotation: Int = 0): Float {
         return try {
-            if (isCapture) {
-                // [WYSIWYG Fix] Capture surfaces (photos) must use their AUTHENTIC geometric ratio.
-                val valRatio = vW.toFloat() / vH.toFloat()
-                Log.e("DIAGNOSTIC_VIRTUCAM", "getTargetRatio(Capture): vW=$vW vH=$vH mediaW=$mediaW mediaH=$mediaH -> Using Auth Ratio ($valRatio)")
-                valRatio
-            } else {
-                // [Viewfinder Parity] For the phone's UI preview, we maintain the requested 16:9/9:16 baselines.
-                // This preserves the "Cinematic" framing the user prefers during setup.
-                val isMediaPortrait = mediaH > mediaW
-                val baseRatio = if (isMediaPortrait) (9.0f / 16.0f) else (16.0f / 9.0f)
-                val finalRatio = baseRatio * CameraHook.compensationFactor
-                Log.e("DIAGNOSTIC_VIRTUCAM", "getTargetRatio(Preview): vW=$vW vH=$vH mediaW=$mediaW mediaH=$mediaH -> Hardcoded Base ($baseRatio) * Comp (${CameraHook.compensationFactor}) = $finalRatio")
-                finalRatio
-            }
+            // [Zero-Error Accuracy Fix] 
+            // We no longer "Guess" the target ratio (16:9). 
+            // We use the AUTHENTIC geometric ratio of the destination buffer.
+            // The Renderer will handle logic to swap these if the screen is rotated.
+            vW.toFloat() / vH.toFloat()
         } catch (e: Exception) {
             vW.toFloat() / vH.toFloat()
         }
@@ -2349,14 +2341,13 @@ class VirtualRenderThread(
                 val bitmap = BitmapFactory.decodeStream(stream)
                 stream?.close()
                 
-                // Add Diagnostic Telemetry - Read EXIF without applying it
-                var diagnosticExifRotation = 0
+                var exifRotation = 0
                 try {
                     val exifStream = context.contentResolver.openInputStream(uri)
                     if (exifStream != null) {
                         val exif = android.media.ExifInterface(exifStream)
                         val orientation = exif.getAttributeInt(android.media.ExifInterface.TAG_ORIENTATION, android.media.ExifInterface.ORIENTATION_NORMAL)
-                        diagnosticExifRotation = when (orientation) {
+                        exifRotation = when (orientation) {
                             android.media.ExifInterface.ORIENTATION_ROTATE_90 -> 90
                             android.media.ExifInterface.ORIENTATION_ROTATE_180 -> 180
                             android.media.ExifInterface.ORIENTATION_ROTATE_270 -> 270
@@ -2370,7 +2361,6 @@ class VirtualRenderThread(
                     textureRenderer!!.loadBitmap(bitmap)
                     val staticImageW = bitmap.width
                     val staticImageH = bitmap.height
-                    Log.e("DIAGNOSTIC_VIRTUCAM", "Static Image Loaded: W=$staticImageW, H=$staticImageH, ExifRotation=$diagnosticExifRotation, Pkg=${CameraHook.targetPackage}")
                     bitmap.recycle()
                     
                     val matrix = FloatArray(16)
@@ -2380,7 +2370,7 @@ class VirtualRenderThread(
                         frameCount++
                         if (frameCount % 10 == 0) CameraHook.loadConfiguration()
 
-                        if (!drawToAllSurfaces(matrix, staticImageW, staticImageH)) break
+                        if (!drawToAllSurfaces(matrix, staticImageW, staticImageH, exifRotation)) break
                         
                         // Handle Photo/Capture Requests (Static Image)
                         synchronized(CameraHook) {
@@ -2436,7 +2426,7 @@ class VirtualRenderThread(
         }
     }
 
-    private fun drawToAllSurfaces(matrix: FloatArray, contentW: Int, contentH: Int): Boolean {
+    private fun drawToAllSurfaces(matrix: FloatArray, contentW: Int, contentH: Int, explicitRotationOffset: Int = 0): Boolean {
         val it = eglSurfaceTargets.iterator()
         while (it.hasNext()) {
             val it_triple = it.next()
@@ -2447,38 +2437,27 @@ class VirtualRenderThread(
                 eglCore!!.makeCurrent(es)
                  val vw = eglCore!!.querySurface(es, android.opengl.EGL14.EGL_WIDTH)
                  val vh = eglCore!!.querySurface(es, android.opengl.EGL14.EGL_HEIGHT)
-                 // DYNAMIC ORIENTATION LOGIC
-                 // [WYSIWYG Fix] For com.android.camera, we use 0 rotation for everything (YUV/JPEG/Preview).
-                 // For others (Veriff), YUV/PRIVATE follows physical sensor orientation.
-                 val isXiaomiCam = (CameraHook.targetPackage == "com.android.camera" || CameraHook.targetPackage == "com.xiaomi.camera")
-                 var applyRotation = if (isCapture) {
-                     // [Rotation Fix] Apply sensor orientation to captures to fix 270-degree thumbnail tilt
-                     sensorOrientation
-                 } else {
-                     0
-                 }
-
+                 
+                 var applyRotation = if (isCapture) sensorOrientation else 0
+                 
                  // [WYSIWYG Rotation Fix] Auto-rotate sideways if filling a landscape buffer with portrait video
                  if (isCapture && sensorOrientation == 0 && contentH > contentW && vw > vh) {
                      applyRotation = 90
                  }
+                 
+                 // Combine physical sensor rotation with any media-specific EXIF rotation
+                 val finalApplyRotation = (applyRotation + explicitRotationOffset) % 360
 
-                 // DYNAMIC MIRRORING LOGIC (The "Veriff" Fix)
-                 // Some apps (Veriff) skip preview mirroring. Native cameras mirror in UI.
-                 // Sense Front-Camera: Strictly follow the tracked cameraFacing (1=FRONT).
+                 // DYNAMIC MIRRORING LOGIC (Axis-Swapping handled in TextureRenderer)
                  val isActuallyFront = (isFrontCamera)
                  val shouldMirror = if (isActuallyFront) {
-                     // Mirror ImageReaders (Veriff preview/capture) so text is not backwards.
-                     // Added Format 1 (RGBA_8888) and 0 (SurfaceTexture/Opaque) for browsers.
                      (format == 35 || format == 34 || format == 0x100 || format == 1 || format == 0)
                  } else {
-                     // BACK CAMERA: Strictly follow the manual Mirror toggle.
                      CameraHook.isMirrored
                  }
 
                  val ratio = getTargetRatio(vw, vh, isCapture, contentW, contentH)
-                 if (frameCount % 30 == 0) Log.d("VirtuCam_Render", "Drawing: ratio=$ratio, isFront=$isActuallyFront, mirror=$shouldMirror, fmt=$format")
-                 textureRenderer?.draw(matrix, contentW, contentH, vw, vh, ratio, applyRotation, CameraHook.rotation, shouldMirror, CameraHook.zoomFactor, isCapture)
+                 textureRenderer?.draw(matrix, contentW, contentH, vw, vh, ratio, finalApplyRotation, CameraHook.rotation, shouldMirror, CameraHook.zoomFactor, isCapture)
 
                  if (eglCore?.swapBuffers(es) == false) {
                     Log.w("VirtuCam_Render", "Surface abandoned, removing.")

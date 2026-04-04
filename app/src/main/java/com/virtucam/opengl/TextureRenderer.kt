@@ -156,63 +156,72 @@ class TextureRenderer(private val isVideo: Boolean = true) {
         Matrix.setIdentityM(mvpMatrix, 0)
         
         if (videoWidth > 0 && videoHeight > 0 && viewWidth > 0 && viewHeight > 0) {
-            // Apply Physical + Manual Rotation
+            // [Zero-Error Accuracy] 1. Calculate Total Rotation
             val totalRotation = (rotationDegrees + userRotation) % 360
-            if (totalRotation != 0) {
-                // OpenGL rotation is CCW. We apply the degrees to stand the video upright.
-                Matrix.rotateM(mvpMatrix, 0, totalRotation.toFloat(), 0f, 0f, 1f)
-            }
-
-            val viewRatio = if (targetRatio > 0f) targetRatio else (viewWidth.toFloat() / viewHeight.toFloat())
             
-            // If we rotated 90 or 270, the effective video dimensions are swapped for ratio calc
-            val videoRatioFallback = if (videoWidth > 0 && videoHeight > 0) videoWidth.toFloat() / videoHeight.toFloat() else (16f/9f)
-            val effectiveVideoRatio = if (totalRotation == 90 || totalRotation == 270 || totalRotation == -90 || totalRotation == -270) {
-                1.0f / videoRatioFallback
+            // [Zero-Error Accuracy] 2. Calculate Oriented Viewport (What the user actually sees)
+            // If the sensor is rotated 90/270 (Portrait), the user sees the surface's height as width.
+            val orientedViewW = if (totalRotation % 180 != 0) viewHeight else viewWidth
+            val orientedViewH = if (totalRotation % 180 != 0) viewWidth else viewHeight
+            
+            val userSeenRatio = orientedViewW.toFloat() / orientedViewH.toFloat()
+            
+            // [Zero-Error Accuracy] 2.1 Calculate Effective Media Ratio
+            // If the media is being rotated 90/270, its width and height are effectively swapped.
+            val effectiveMediaRatio = if (totalRotation % 180 != 0) {
+                videoHeight.toFloat() / videoWidth.toFloat()
             } else {
-                videoRatioFallback
+                videoWidth.toFloat() / videoHeight.toFloat()
             }
             
             var scaleX: Float
             var scaleY: Float
             
             if (isCapture) {
-                // CENTER_CROP logic: Fill the entire view exactly like the preview, cropping the excess
-                if (effectiveVideoRatio > viewRatio) {
-                    scaleY = 1f
-                    scaleX = effectiveVideoRatio / viewRatio
+                // CENTER_CROP: Fill the screen, crop excess
+                if (effectiveMediaRatio > userSeenRatio) {
+                    scaleY = 1.0f
+                    scaleX = effectiveMediaRatio / userSeenRatio
                 } else {
-                    scaleX = 1f
-                    scaleY = viewRatio / effectiveVideoRatio
+                    scaleX = 1.0f
+                    scaleY = userSeenRatio / effectiveMediaRatio
                 }
             } else {
-                // FIT_CENTER logic: Show full video with black bars by default for Preview
-                if (effectiveVideoRatio > viewRatio) {
-                    scaleX = 1f
-                    scaleY = viewRatio / effectiveVideoRatio
+                // FIT_CENTER: Letterbox correctly
+                if (effectiveMediaRatio > userSeenRatio) {
+                    scaleX = 1.0f
+                    scaleY = userSeenRatio / effectiveMediaRatio
                 } else {
-                    scaleX = effectiveVideoRatio / viewRatio
-                    scaleY = 1f
+                    scaleX = effectiveMediaRatio / userSeenRatio
+                    scaleY = 1.0f
                 }
             }
 
-            // Apply global zoom factor
+            // Apply global zoom and compensation (if user still uses the slider)
             scaleX *= zoomFactor
             scaleY *= zoomFactor
-            
-            // Corrected Mirroring Logic (Build 152 Fix):
-            // We must flip the axis that is currently horizontal on the screen.
-            // For 0/180 rotations, the texture's X is horizontal. For 90/270, the texture's Y is horizontal.
+
+            // [Zero-Error Accuracy] 3. Apply Transformations
+            // A: Rotate the quad to match sensor/user orientation
+            if (totalRotation != 0) {
+                Matrix.rotateM(mvpMatrix, 0, totalRotation.toFloat(), 0f, 0f, 1f)
+            }
+
+            // B: Mirroring (Flip the axis that is physically horizontal on the screen)
             val flipX = isMirrored && (totalRotation % 180 == 0)
             val flipY = isMirrored && (totalRotation % 180 != 0)
+
+            // C: Scale to fit the orientation system
+            // If rotated 90/270, the quad's local X is the screen's Y, and local Y is screen X.
+            if (totalRotation % 180 != 0) {
+                Matrix.scaleM(mvpMatrix, 0, if (flipX) -scaleY else scaleY, if (flipY) -scaleX else scaleX, 1f)
+            } else {
+                Matrix.scaleM(mvpMatrix, 0, if (flipX) -scaleX else scaleX, if (flipY) -scaleY else scaleY, 1f)
+            }
             
-            Matrix.scaleM(mvpMatrix, 0, if (flipX) -scaleX else scaleX, if (flipY) -scaleY else scaleY, 1f)
-            
-            Log.e("DIAGNOSTIC_VIRTUCAM", "TextureRenderer.draw Metrics:\n" +
-                "  Rotation Args: rotationDegrees=$rotationDegrees userRotation=$userRotation total=$totalRotation\n" +
-                "  Ratio Logic: viewRatio=$viewRatio videoRatioFallback=$videoRatioFallback effVideoRatio=$effectiveVideoRatio targetRatio=${targetRatio}\n" +
-                "  Input Dims: video=${videoWidth}x${videoHeight} view=${viewWidth}x${viewHeight}\n" +
-                "  Output Scale Matrix: scaleX=$scaleX scaleY=$scaleY flipX=$flipX flipY=$flipY zoom=$zoomFactor")
+            if (frameCount % 60 == 0) {
+                Log.d("VirtuCam_Render", "Draw: media=${videoWidth}x${videoHeight} view=${viewWidth}x${viewHeight} rot=$totalRotation scales=${scaleX}x${scaleY}")
+            }
         }
 
         // Copy transform matrix from SurfaceTexture which Android natively encodes with EXIF Video rotators
