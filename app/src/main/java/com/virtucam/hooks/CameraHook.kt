@@ -432,11 +432,11 @@ object CameraHook {
                 if (attrName == "Orientation" || attrName == "android:Orientation") {
                     if (param.method.name == "getAttributeInt") {
                         val defaultValue = param.args[1] as? Int ?: 1
-                        param.result = 6 // [WYSIWYG Fix] Force Rotate 90 CW for Gallery
+                        param.result = 1 // [WYSIWYG Fix] Pixels are already upright, set Normal (0 deg)
                     } else if (param.method.name == "getAttribute") {
-                        param.result = "6" // [WYSIWYG Fix] Force Rotate 90 CW for Gallery
+                        param.result = "1" // [WYSIWYG Fix] Pixels are already upright, set Normal (0 deg)
                     }
-                    Log.v("DIAGNOSTIC_VIRTUCAM", "ExifInterface: Forced Orientation=6")
+                    Log.v("DIAGNOSTIC_VIRTUCAM", "ExifInterface: Forced Orientation=1")
                 }
             }
         }
