@@ -57,6 +57,11 @@ object CameraHook {
     // Maps original surfaces to their dummy replacements for CaptureRequest consistency
     private val surfaceMap = mutableMapOf<Surface, Surface>()
     private val activeBridges = mutableListOf<FormatConverterBridge>()
+    
+    // ThreadLocal flag to "mute" global hooks when our own logic is loading source media.
+    // This prevents the "Final Boss" hook from forcing 90-degree rotation on input 1:1 images.
+    private val isSourceLoading = ThreadLocal<Boolean>()
+
     @Volatile
     private var activeCameraId: String = "0"
     
@@ -418,6 +423,11 @@ object CameraHook {
         val orientationHook = object : XC_MethodHook() {
             override fun afterHookedMethod(param: MethodHookParam) {
                 if (!isEnabled) return
+                
+                // [BYPASS] If this call is originating from our own source-loading logic, 
+                // do NOT force the orientation. Let the true EXIF value pass through.
+                if (isSourceLoading.get() == true) return
+
                 val attrName = param.args[0] as? String ?: return
                 if (attrName == "Orientation" || attrName == "android:Orientation") {
                     if (param.method.name == "getAttributeInt") {
@@ -2343,6 +2353,7 @@ class VirtualRenderThread(
                 
                 var exifRotation = 0
                 try {
+                    isSourceLoading.set(true)
                     val exifStream = context.contentResolver.openInputStream(uri)
                     if (exifStream != null) {
                         val exif = android.media.ExifInterface(exifStream)
@@ -2355,7 +2366,10 @@ class VirtualRenderThread(
                         }
                         exifStream.close()
                     }
-                } catch (e: Exception) {}
+                } catch (e: Exception) {
+                } finally {
+                    isSourceLoading.remove()
+                }
                 
                 if (bitmap != null) {
                     textureRenderer!!.loadBitmap(bitmap)
