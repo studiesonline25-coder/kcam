@@ -250,10 +250,14 @@ class FormatConverterBridge(
             val tgtW = w.toFloat()
             val tgtH = h.toFloat()
 
-            // Calculate effective source dimensions after sensor rotation
+            val zoom = CameraHook.zoomFactor
+            val comp = CameraHook.compensationFactor
+
+            // Calculate effective source dimensions after sensor rotation AND zoom/stretch
             // If rotating 90/270, source's logic width/height are swapped
-            val logicSrcW = if (totalRotation % 180 == 0) width.toFloat() else height.toFloat()
-            val logicSrcH = if (totalRotation % 180 == 0) height.toFloat() else width.toFloat()
+            // [WYSIWYG Synchronicity] Divide by zoom and compensation to match the preview renderer
+            val logicSrcW = (if (totalRotation % 180 == 0) width.toFloat() else height.toFloat()) / zoom
+            val logicSrcH = (if (totalRotation % 180 == 0) height.toFloat() else width.toFloat()) / (zoom * comp)
             
             val scale = Math.max(tgtW / logicSrcW, tgtH / logicSrcH)
             val offsetX = (logicSrcW - tgtW / scale) / 2f
