@@ -252,7 +252,6 @@ class FormatConverterBridge(
             } catch (e: Exception) {
                 Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Failed to reload config in MiAlgo: ${e.message}")
             }
- beach
 
             // --- UNIFIED ROTATION SYNC ---
             // Force bridge to match the confirmed upright rotation from Build 214.5.
