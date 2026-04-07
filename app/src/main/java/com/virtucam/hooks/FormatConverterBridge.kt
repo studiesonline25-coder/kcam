@@ -255,14 +255,18 @@ class FormatConverterBridge(
             // Calculate base source dimensions
             val baseSrcW = if (totalRotation % 180 == 0) width.toFloat() else height.toFloat()
             val baseSrcH = if (totalRotation % 180 == 0) height.toFloat() else width.toFloat()
+            
+            Log.d(TAG, "DIAGNOSTIC_VIRTUCAM: Intercepting YUV Capture. Target=${w}x${h}, Bridge=${width}x${height}, SensorRot=$sensorOrientation, Zoom=$zoom, Comp=$comp, Rot=$totalRotation")
 
             // Apply Compensation (Stretch) to the logic width to squash width vs height
             // Multiplier > 1.0 makes content 'thinner' (Vertical Stretch relative to screen).
             val logicSrcW = baseSrcW * comp
             val logicSrcH = baseSrcH
             
-            // SCALE: Calculate to fill the target (CENTER_CROP) then apply zoom
-            val baseScale = Math.max(tgtW / logicSrcW, tgtH / logicSrcH)
+            // --- FIT_CENTER STRATEGY ---
+            // Use Math.min (Fit-Center) to fill as much as possible without cropping margins.
+            // This matches the Preview's 'Pillarbox' behavior if ratios mismatch.
+            val baseScale = Math.min(tgtW / logicSrcW, tgtH / logicSrcH)
             val scale = baseScale * zoom
             
             val offsetX = (logicSrcW - tgtW / scale) / 2f
@@ -330,8 +334,9 @@ class FormatConverterBridge(
                     for (tx in 0 until tW_out) {
                         // a) Map target(tx, ty) back to logic source coordinate system
                         // Multiply by 2 because this is Chroma (half res)
-                        val lx = (tx * 2) / scale + offsetX
-                        val ly = (ty * 2) / scale + offsetY
+                        // [PRECISION FIX] Float-to-Int conversion centering
+                        val lx = ((tx * 2) / scale + offsetX).coerceIn(0f, logicSrcW - 1)
+                        val ly = ((ty * 2) / scale + offsetY).coerceIn(0f, logicSrcH - 1)
 
                         // b) Apply rotation to get physical source coordinates (RGBA cache)
                         var sx = 0f
