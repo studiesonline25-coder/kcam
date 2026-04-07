@@ -239,15 +239,19 @@ class FormatConverterBridge(
             // [Multi-Process Sync] MiAlgoEngine often runs in a background process.
             // Force reload from disk to stay in sync with UI sliders.
             // [Multi-Process Sync] MiAlgoEngine often runs in a background process (e.g. mialgo_service).
-            // Force reload from disk to stay in sync with UI sliders.
+            // Bypass Android's stale SharedPreferences cache by manually reading the XML from disk.
             if (context != null) {
                 try {
                     val config = com.virtucam.data.VirtuCamConfig.getInstance(context)
-                    config.reload(context) // FORCE DISK SYNC
-                    zoom = config.zoomFactor
-                    comp = config.compensationFactor
-                    userRot = config.rotation
-                    Log.d(TAG, "DIAGNOSTIC_VIRTUCAM: Force-Reloaded Config in MiAlgo. Comp=$comp, Zoom=$zoom, Rot=$userRot")
+                    // First try to refresh standard prefs
+                    config.reload(context)
+                    
+                    // Then for CRITICAL values, do a raw file read (Direct Sync)
+                    zoom = config.getFloatDirectSync(context, "zoom_factor", 1.0f)
+                    comp = config.getFloatDirectSync(context, "compensation_factor", 1.0f)
+                    userRot = config.rotation // Int sync is usually less volatile but could also be added if needed
+                    
+                    Log.d(TAG, "DIAGNOSTIC_VIRTUCAM: DIRECT SYNC SUCCESS. Comp=$comp, Zoom=$zoom, Rot=$userRot")
                 } catch (e: Exception) {
                     Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Failed to reload config in MiAlgo: ${e.message}")
                 }

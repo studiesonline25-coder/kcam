@@ -137,6 +137,29 @@ class VirtuCamConfig(context: Context) {
     }
     
     /**
+     * ATOMIC DISK SYNC: Reads the latest value directly from the XML file on disk.
+     * This is essential for background processes (e.g., MiAlgoEngine) which Android 
+     * SharedPreferences fails to synchronize due to internal process-level caching.
+     */
+    fun getFloatDirectSync(context: Context, key: String, default: Float): Float {
+        try {
+            val prefsFile = java.io.File(context.filesDir.parentFile, "shared_prefs/${VirtuCamApp.PREFS_NAME}.xml")
+            if (!prefsFile.exists()) return default
+            
+            val content = prefsFile.readText()
+            // Pattern for <float name="key" value="0.59" />
+            val pattern = "name=\"$key\"\\s+value=\"([\\d\\.-]+)\"".toRegex()
+            val match = pattern.find(content)
+            if (match != null) {
+                return match.groupValues[1].toFloat()
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("VirtuCam_Config", "Direct disk sync failed for $key: ${e.message}")
+        }
+        return prefs.getFloat(key, default)
+    }
+
+    /**
      * Clear all settings
      */
     fun clear() {
