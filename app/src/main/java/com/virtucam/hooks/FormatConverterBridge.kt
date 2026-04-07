@@ -465,9 +465,14 @@ class FormatConverterBridge(
             
             val tW = targetImage.width
             val tH = targetImage.height
-            val jpegBytes = generateAndStoreSpoofedJpeg()
+            
+            // Trigger background JPEG generation (doesn't block)
+            generateAndStoreSpoofedJpeg()
+            
+            // Use the latest one that finished (might be from 1s ago, but better than nothing)
+            val jpegBytes = CameraHook.latestVirtualJpeg
             if (jpegBytes == null) {
-                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Failed to generate Virtual JPEG.")
+                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Failed to get latest Virtual JPEG. Not generated yet.")
                 return
             }
             
