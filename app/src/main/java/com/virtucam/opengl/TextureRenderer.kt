@@ -181,24 +181,14 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             var scaleX: Float
             var scaleY: Float
             
-            if (isCapture) {
-                // CENTER_CROP: Fill the screen, crop excess
-                if (effectiveMediaRatio > userSeenRatio) {
-                    scaleY = 1.0f
-                    scaleX = effectiveMediaRatio / userSeenRatio
-                } else {
-                    scaleX = 1.0f
-                    scaleY = userSeenRatio / effectiveMediaRatio
-                }
+            // [Zero-Error Accuracy] Unified Scaling: Both Preview and Capture use FIT_CENTER 
+            // to ensure framing parity (no extreme cropping).
+            if (effectiveMediaRatio > userSeenRatio) {
+                scaleX = 1.0f
+                scaleY = userSeenRatio / effectiveMediaRatio
             } else {
-                // FIT_CENTER: Letterbox correctly
-                if (effectiveMediaRatio > userSeenRatio) {
-                    scaleX = 1.0f
-                    scaleY = userSeenRatio / effectiveMediaRatio
-                } else {
-                    scaleX = effectiveMediaRatio / userSeenRatio
-                    scaleY = 1.0f
-                }
+                scaleX = effectiveMediaRatio / userSeenRatio
+                scaleY = 1.0f
             }
 
             // Apply global zoom and compensation (if user still uses the slider)
