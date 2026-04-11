@@ -165,6 +165,7 @@ class FormatConverterBridge(
                         val exif = android.media.ExifInterface(tempFile.absolutePath)
                         exif.setAttribute(android.media.ExifInterface.TAG_ORIENTATION, "1")
                         exif.saveAttributes()
+                        Log.e("DIAGNOSTIC_VIRTUCAM", "FormatConverterBridge: BURNED TAG_ORIENTATION=1 (Upright) into JPEG EXIF")
                         jpegBytes = tempFile.readBytes()
                         tempFile.delete()
                     }

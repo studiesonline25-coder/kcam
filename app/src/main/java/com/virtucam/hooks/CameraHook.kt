@@ -535,8 +535,8 @@ object CameraHook {
                         
                         // [FIX] Skip our own EXIF injection temp files
                         if (path.contains("vc_exif_inject")) return
-                        // [FIX] Skip thumbnail files to prevent disappearing thumbnails
-                        if (path.contains("thumb", true)) return
+                        // [FIX] Intercepting all writes to ensure rotation parity
+                        // if (path.contains("thumb", true)) return
                         
                         // Overwrite writes that likely represent the full image payload
                         // JPEG Magic Bytes: FF D8 FF
@@ -569,8 +569,8 @@ object CameraHook {
                         
                         // [FIX] Skip our own EXIF injection temp files
                         if (path.contains("vc_exif_inject")) return
-                        // [FIX] Skip thumbnail files
-                        if (path.contains("thumb", true)) return
+                        // [FIX] Intercepting all writes
+                        // if (path.contains("thumb", true)) return
                         
                         val isJpeg = data.size > 3 && data[0] == 0xFF.toByte() && data[1] == 0xD8.toByte() && data[2] == 0xFF.toByte()
                         
@@ -882,8 +882,8 @@ object CameraHook {
                 if (key == "orientation") {
                     val originalValue = param.args[1] as Int
                     if (originalValue != 0) {
-                        // param.args[1] = 0 // [WYSIWYG Fix] Disabled EXIF spoofing to restore upright gallery 
-                        Log.v("DIAGNOSTIC_VIRTUCAM", "ContentValues Orientation PASS-THROUGH: $originalValue -> NOT SPOOFED")
+                        param.args[1] = 0 
+                        Log.e("DIAGNOSTIC_VIRTUCAM", "ContentValues Orientation SPOOFED: $originalValue -> 0")
                     }
                 }
             }
@@ -2580,8 +2580,8 @@ class VirtualRenderThread(
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     if (!isEnabled) return
                     val original = param.args[0] as Int
-                    // param.args[0] = 0 // [WYSIWYG Fix] Disabled
-                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: MediaRecorder.setOrientationHint PASS-THROUGH $original")
+                    param.args[0] = 0 // [WYSIWYG Fix] Enforced 0
+                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: MediaRecorder.setOrientationHint SPOOFED $original -> 0")
                 }
             })
         } catch (_: Throwable) {}
@@ -2595,9 +2595,8 @@ class VirtualRenderThread(
                     if (!isEnabled) return
                     val key = param.args[0] as String
                     if (key == "rotation-degrees" || key == "rotation") {
-                        val original = param.args[1] as Int
-                        // param.args[1] = 0 // [WYSIWYG Fix] Disabled
-                        Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: MediaFormat Rotation PASS-THROUGH $original")
+                        param.args[1] = 0 // [WYSIWYG Fix] Enforced 0
+                        Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: MediaFormat Rotation SPOOFED $original -> 0")
                     }
                 }
             })
@@ -2611,8 +2610,8 @@ class VirtualRenderThread(
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     if (!isEnabled) return
                     val original = param.args[0] as Int
-                    // param.args[0] = 0 // [WYSIWYG Fix] Disabled
-                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: MediaMuxer.setOrientationHint PASS-THROUGH $original")
+                    param.args[0] = 0 // [WYSIWYG Fix] Enforced 0
+                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: MediaMuxer.setOrientationHint SPOOFED $original -> 0")
                 }
             })
         } catch (_: Throwable) {}
