@@ -182,15 +182,24 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             var scaleY: Float
             
             if (isCapture) {
-                // [ABSOLUTE FILL] For high-res captures, we fill the buffer 
-                // so that the result is full-frame after rotation.
-                if (effectiveMediaRatio > userSeenRatio) {
+                // [ABSOLUTE PARITY] For rotated captures, we fill the logical 
+                // portrait frame. This prevents the "eyes-only" zoom and the "narrow-face" squeeze.
+                val captureTargetRatio = if (totalRotation % 180 != 0) {
+                    viewHeight.toFloat() / viewWidth.toFloat()
+                } else {
+                    viewWidth.toFloat() / viewHeight.toFloat()
+                }
+
+                if (effectiveMediaRatio > captureTargetRatio) {
                     scaleY = 1.0f
-                    scaleX = effectiveMediaRatio / userSeenRatio
+                    scaleX = effectiveMediaRatio / captureTargetRatio
                 } else {
                     scaleX = 1.0f
-                    scaleY = userSeenRatio / effectiveMediaRatio
+                    scaleY = captureTargetRatio / effectiveMediaRatio
                 }
+                
+                // Final safety: ensuring we aren't distorting the base quad
+                Log.d("DIAGNOSTIC_VIRTUCAM", "Draw: Capture Match -> MediaRatio=$effectiveMediaRatio, TargetRatio=$captureTargetRatio, ScaleX=$scaleX, ScaleY=$scaleY")
             } else {
                 // [PREVIEW FIT] Keep preview letterboxed as the user expects.
                 if (effectiveMediaRatio > userSeenRatio) {
