@@ -178,36 +178,30 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                 videoWidth.toFloat() / videoHeight.toFloat()
             }
             
+            // [UNIFIED FIT] Use a consolidated logic for both preview and capture.
+            // We establish the 'Target Aspect' we want to fill, then shrink the media to fit inside it.
+            val logicTargetRatio = if (isCapture) {
+                if (totalRotation % 180 != 0) viewHeight.toFloat() / viewWidth.toFloat() 
+                else viewWidth.toFloat() / viewHeight.toFloat()
+            } else {
+                userSeenRatio
+            }
+
             var scaleX: Float
             var scaleY: Float
+
+            if (effectiveMediaRatio > logicTargetRatio) {
+                // Media is relatively wider than the target box -> Shrink Height
+                scaleX = 1.0f
+                scaleY = logicTargetRatio / effectiveMediaRatio
+            } else {
+                // Media is relatively taller than the target box -> Shrink Width
+                scaleX = effectiveMediaRatio / logicTargetRatio
+                scaleY = 1.0f
+            }
             
             if (isCapture) {
-                // [EXACT PARITY] Use FIT_CENTER for captures to match preview framing.
-                // This removes the unintended zoom/crop seen in Build 265.
-                val captureTargetRatio = if (totalRotation % 180 != 0) {
-                    viewHeight.toFloat() / viewWidth.toFloat()
-                } else {
-                    viewWidth.toFloat() / viewHeight.toFloat()
-                }
-
-                if (effectiveMediaRatio > captureTargetRatio) {
-                    scaleX = 1.0f
-                    scaleY = captureTargetRatio / effectiveMediaRatio
-                } else {
-                    scaleX = effectiveMediaRatio / captureTargetRatio
-                    scaleY = 1.0f
-                }
-                
-                Log.d("DIAGNOSTIC_VIRTUCAM", "Draw: Capture FIT -> MediaRatio=$effectiveMediaRatio, Target=$captureTargetRatio, ScaleX=$scaleX, ScaleY=$scaleY")
-            } else {
-                // [PREVIEW FIT] Keep preview letterboxed as the user expects.
-                if (effectiveMediaRatio > userSeenRatio) {
-                    scaleX = 1.0f
-                    scaleY = userSeenRatio / effectiveMediaRatio
-                } else {
-                    scaleX = effectiveMediaRatio / userSeenRatio
-                    scaleY = 1.0f
-                }
+                Log.d("DIAGNOSTIC_VIRTUCAM", "Draw: Capture UNIFIED -> MediaRatio=$effectiveMediaRatio, Target=$logicTargetRatio, ScaleX=$scaleX, ScaleY=$scaleY")
             }
 
             // Apply global zoom and compensation (if user still uses the slider)
