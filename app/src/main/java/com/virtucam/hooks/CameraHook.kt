@@ -1626,12 +1626,19 @@ object CameraHook {
                 val h = XposedHelpers.callMethod(reader, "getHeight") as? Int ?: 0
                 
                 surfaceFormats[surface] = format
-                // [Browser Preview Fix] Only classify JPEG ImageReaders as capture surfaces.
-                // Browsers (Phoenix, Chrome) create YUV/format-35 ImageReaders for LIVE preview
-                // streams — these must NOT get the 90° capture rotation.
-                if (format == 256) { // JPEG only
+                // [Browser vs Native Camera Fix] Differentiate Format 35 by Host Package
+                val isNativeCamera = targetPackage.lowercase().contains("camera") || targetPackage == "net.sourceforge.opencamera" || targetPackage.contains("miui")
+                
+                if (format == 256) { // Always classify JPEG as capture
                     captureSurfaces.add(surface)
                     Log.d(TAG, "VirtuCam_Hook: Classified ImageReader as CAPTURE (JPEG) ${w}x${h}")
+                } else if (format == 35 || format == ImageFormat.YUV_420_888 || format == ImageFormat.YV12) {
+                    if (isNativeCamera) {
+                        Log.d(TAG, "VirtuCam_Hook: Classified ImageReader as CAPTURE (YUV Native Camera App) ${w}x${h}")
+                        captureSurfaces.add(surface)
+                    } else {
+                        Log.d(TAG, "VirtuCam_Hook: Classified ImageReader as PREVIEW (YUV Browser/Social App) ${w}x${h}")
+                    }
                 } else {
                     Log.d(TAG, "VirtuCam_Hook: Classified ImageReader as PREVIEW (format=$format) ${w}x${h}")
                 }
