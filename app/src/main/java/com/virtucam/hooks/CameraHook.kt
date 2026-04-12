@@ -1670,6 +1670,8 @@ object CameraHook {
                         val h = param.args[1] as Int
                         val oldSize = surfaceTextureSizes[st]
                         surfaceTextureSizes[st] = Pair(w, h)
+                        // [DIAGNOSTIC] Log ALL setDefaultBufferSize calls unconditionally
+                        Log.e(TAG, "VirtuCam_Hook: setDefaultBufferSize(${w}x${h}) called on ST@${System.identityHashCode(st).toString(16)} (old=${oldSize?.let{"${it.first}x${it.second}"}?:"none"}, renderActive=${renderThreads.isNotEmpty()})")
                         // Signal resize only if dimensions actually changed and render threads are active
                         if (oldSize != null && (oldSize.first != w || oldSize.second != h) && renderThreads.isNotEmpty()) {
                             Log.e(TAG, "VirtuCam_Hook: SurfaceTexture RESIZED from ${oldSize.first}x${oldSize.second} -> ${w}x${h} - signaling EGL recreate")
