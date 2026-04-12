@@ -126,6 +126,7 @@ const AdvancedControl = () => {
   const [mirrored, setMirrored] = useState(false);
   const [colorSwap, setColorSwap] = useState(false);
   const [tcpMode, setTcpMode] = useState(false);
+  const [liveness, setLiveness] = useState(true);
 
   useEffect(() => {
     const handleSync = (e: any) => {
@@ -134,6 +135,7 @@ const AdvancedControl = () => {
       if (data.mirrored !== undefined) setMirrored(data.mirrored);
       if (data.colorSwap !== undefined) setColorSwap(data.colorSwap);
       if (data.tcpMode !== undefined) setTcpMode(data.tcpMode);
+      if (data.liveness !== undefined) setLiveness(data.liveness);
     };
     window.addEventListener('android-sync', handleSync as any);
     return () => window.removeEventListener('android-sync', handleSync as any);
@@ -161,6 +163,12 @@ const AdvancedControl = () => {
     const next = !tcpMode;
     setTcpMode(next);
     (window as any).Android?.setTcpMode(next);
+  };
+
+  const toggleLiveness = () => {
+    const next = !liveness;
+    setLiveness(next);
+    (window as any).Android?.setLivenessEnabled(next);
   };
 
   return (
@@ -201,6 +209,14 @@ const AdvancedControl = () => {
         >
           <Globe className={`w-5 h-5 ${tcpMode ? 'text-emerald-neon' : 'text-gray-500'}`} />
           <span className="text-[10px] font-bold uppercase">{tcpMode ? 'TCP PROTO' : 'UDP PROTO'}</span>
+        </button>
+
+        <button 
+          onClick={toggleLiveness}
+          className={`border p-4 rounded-2xl flex flex-col items-center gap-2 transition-all ${liveness ? 'bg-emerald-neon/10 border-emerald-neon' : 'bg-card-dark border-border-dark'}`}
+        >
+          <Sparkles className={`w-5 h-5 ${liveness ? 'text-emerald-neon' : 'text-gray-500'}`} />
+          <span className="text-[10px] font-bold uppercase">AI Jitter</span>
         </button>
       </div>
     </div>

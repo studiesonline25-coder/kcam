@@ -97,6 +97,9 @@ object CameraHook {
     var isColorSwapped: Boolean = false
 
     @Volatile
+    var isLivenessEnabled: Boolean = true
+
+    @Volatile
     var isGeneratingJpeg: Boolean = false
 
     @Volatile
@@ -1981,8 +1984,9 @@ object CameraHook {
                         rtspUseTcp = if (it.columnCount > 9) it.getInt(9) == 1 else true
                         rotation = if (it.columnCount > 10) it.getInt(10) else 0
                         isColorSwapped = if (it.columnCount > 11) it.getInt(11) == 1 else false
+                        isLivenessEnabled = if (it.columnCount > 12) it.getInt(12) == 1 else true
                         
-                        Log.d(TAG, "VirtuCam_Hook: Config loaded. Enabled: $isEnabled, Zoom: $zoomFactor, Stretch: $compensationFactor, TCP: $rtspUseTcp, Rot: $rotation, ColorSwap: $isColorSwapped")
+                        Log.d(TAG, "VirtuCam_Hook: Config loaded. Enabled: $isEnabled, Zoom: $zoomFactor, Stretch: $compensationFactor, rot: $rotation, liveness: $isLivenessEnabled")
                     } catch (innerE: Exception) {
                         Log.e(TAG, "VirtuCam_Hook: Error parsing cursor columns", innerE)
                     }
@@ -2463,16 +2467,19 @@ class VirtualRenderThread(
                         frameCount++
                         if (frameCount % 10 == 0) CameraHook.loadConfiguration()
 
-                        val timeMs = System.currentTimeMillis()
-                        val scale = 1.0f + (Math.sin(timeMs / 500.0) * 0.008f).toFloat() 
-                        val trX = (Math.sin(timeMs / 200.0) * 0.005f).toFloat()
-                        val trY = (Math.cos(timeMs / 330.0) * 0.005f).toFloat()
-
                         Matrix.setIdentityM(matrix, 0)
-                        Matrix.translateM(matrix, 0, trX, trY, 0f)
-                        Matrix.translateM(matrix, 0, 0.5f, 0.5f, 0f)
-                        Matrix.scaleM(matrix, 0, scale, scale, 1f)
-                        Matrix.translateM(matrix, 0, -0.5f, -0.5f, 0f)
+
+                        if (CameraHook.isLivenessEnabled) {
+                            val timeMs = System.currentTimeMillis()
+                            val scale = 1.0f + (Math.sin(timeMs / 500.0) * 0.008f).toFloat() 
+                            val trX = (Math.sin(timeMs / 200.0) * 0.005f).toFloat()
+                            val trY = (Math.cos(timeMs / 330.0) * 0.005f).toFloat()
+
+                            Matrix.translateM(matrix, 0, trX, trY, 0f)
+                            Matrix.translateM(matrix, 0, 0.5f, 0.5f, 0f)
+                            Matrix.scaleM(matrix, 0, scale, scale, 1f)
+                            Matrix.translateM(matrix, 0, -0.5f, -0.5f, 0f)
+                        }
 
                         if (!drawToAllSurfaces(matrix, staticImageW, staticImageH, exifRotation)) break
                         

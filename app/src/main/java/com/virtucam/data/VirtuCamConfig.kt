@@ -107,6 +107,13 @@ class VirtuCamConfig(context: Context) {
         get() = prefs.getBoolean("is_color_swapped", false)
         set(value) = prefs.edit().putBoolean("is_color_swapped", value).apply()
 
+    /**
+     * AI Liveness Simulator (micro-movements jitter)
+     */
+    var isLivenessEnabled: Boolean
+        get() = prefs.getBoolean("is_liveness_enabled", true) // Default to ON
+        set(value) = prefs.edit().putBoolean("is_liveness_enabled", value).apply()
+
 
     /**
      * List of package names for apps to target

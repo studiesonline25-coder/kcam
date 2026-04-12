@@ -100,6 +100,7 @@ class MainActivity : AppCompatActivity() {
             put("rotation", config.rotation)
             put("mirrored", config.isMirrored)
             put("colorSwap", config.isColorSwapped)
+            put("liveness", config.isLivenessEnabled)
             put("tcpMode", config.rtspUseTcp)
             put("streamUrl", config.streamUrl ?: "")
             put("isStream", config.isStream)
@@ -117,6 +118,11 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun setEnabled(enabled: Boolean) {
             config.isEnabled = enabled
+        }
+
+        @JavascriptInterface
+        fun setLivenessEnabled(enabled: Boolean) {
+            config.isLivenessEnabled = enabled
         }
 
         @JavascriptInterface
