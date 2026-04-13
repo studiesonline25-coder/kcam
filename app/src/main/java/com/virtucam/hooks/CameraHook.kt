@@ -1145,19 +1145,8 @@ object CameraHook {
      * Spoof Sensor Orientation to 0 to prevent double-rotation for apps that ignore JPEG_ORIENTATION tags.
      */
     private fun hookSensorOrientationSpoof(lpparam: XC_LoadPackage.LoadPackageParam) {
-        val charsClass = XposedHelpers.findClassIfExists("android.hardware.camera2.CameraCharacteristics", lpparam.classLoader) ?: return
-        
-        XposedBridge.hookAllMethods(charsClass, "get", object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam) {
-                if (!isEnabled) return
-                val key = param.args[0] as? android.hardware.camera2.CameraCharacteristics.Key<*> ?: return
-                if (key.name == "android.sensor.orientation") {
-                    // Forcing 0 here makes the System think the sensor is physically upright.
-                    // This prevents CAM_Storage from applying downstream rotations.
-                    param.result = 0
-                }
-            }
-        })
+        // [HARDWARE PARITY FIX] Disabled spoofing. We now report the true 
+        // sideways sensor orientation (e.g. 270) to the OS, just like a real camera.
     }
 
     /**
@@ -2567,12 +2556,14 @@ class VirtualRenderThread(
                  val vw = eglCore!!.querySurface(es, android.opengl.EGL14.EGL_WIDTH)
                  val vh = eglCore!!.querySurface(es, android.opengl.EGL14.EGL_HEIGHT)
                  
-                 var applyRotation = if (isCapture) sensorOrientation else 0
+                 // [HARDWARE PARITY FIX] Always rotate our internal upright video by the 
+                 // physical sensor orientation (e.g. 270) so that it is written sideways
+                 // into the buffer, matching real hardware pixel layout!
+                 val applyRotation = sensorOrientation
+
                  
-                 // [WYSIWYG Rotation Fix] Auto-rotate sideways if filling a landscape buffer with portrait video
-                 if (isCapture && sensorOrientation == 0 && contentH > contentW && vw > vh) {
-                     applyRotation = 90
-                 }
+                 // Removed obsolete WYSIWYG hack.
+
                  
                  // Combine physical sensor rotation with any media-specific EXIF rotation
                  val finalApplyRotation = (applyRotation + explicitRotationOffset) % 360
@@ -2668,48 +2659,15 @@ class VirtualRenderThread(
     }
 }
     private fun hookMediaRecorderOrientation(lpparam: XC_LoadPackage.LoadPackageParam) {
-        try {
-            val mrClass = XposedHelpers.findClassIfExists("android.media.MediaRecorder", lpparam.classLoader) ?: return
-            XposedHelpers.findAndHookMethod(mrClass, "setOrientationHint", Int::class.javaPrimitiveType, object : XC_MethodHook() {
-                override fun beforeHookedMethod(param: MethodHookParam) {
-                    if (!isEnabled) return
-                    val original = param.args[0] as Int
-                    param.args[0] = 0 // [WYSIWYG Fix] Enforced 0
-                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: MediaRecorder.setOrientationHint SPOOFED $original -> 0")
-                }
-            })
-        } catch (_: Throwable) {}
+        // [HARDWARE PARITY FIX] Disabled. Let the OS handle MediaRecorder orientation physically.
     }
 
     private fun hookMediaFormatRotation(lpparam: XC_LoadPackage.LoadPackageParam) {
-        try {
-            val formatClass = XposedHelpers.findClassIfExists("android.media.MediaFormat", lpparam.classLoader) ?: return
-            XposedHelpers.findAndHookMethod(formatClass, "setInteger", String::class.java, Int::class.javaPrimitiveType, object : XC_MethodHook() {
-                override fun beforeHookedMethod(param: MethodHookParam) {
-                    if (!isEnabled) return
-                    val key = param.args[0] as String
-                    if (key == "rotation-degrees" || key == "rotation") {
-                        val original = param.args[1] as Int
-                        param.args[1] = 0 // [WYSIWYG Fix] Enforced 0
-                        Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: MediaFormat Rotation SPOOFED $original -> 0")
-                    }
-                }
-            })
-        } catch (_: Throwable) {}
+        // [HARDWARE PARITY FIX] Disabled. Let MediaFormat report true rotation naturally.
     }
 
     private fun hookMediaMuxerOrientation(lpparam: XC_LoadPackage.LoadPackageParam) {
-        try {
-            val muxerClass = XposedHelpers.findClassIfExists("android.media.MediaMuxer", lpparam.classLoader) ?: return
-            XposedHelpers.findAndHookMethod(muxerClass, "setOrientationHint", Int::class.javaPrimitiveType, object : XC_MethodHook() {
-                override fun beforeHookedMethod(param: MethodHookParam) {
-                    if (!isEnabled) return
-                    val original = param.args[0] as Int
-                    param.args[0] = 0 // [WYSIWYG Fix] Enforced 0
-                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: MediaMuxer.setOrientationHint SPOOFED $original -> 0")
-                }
-            })
-        } catch (_: Throwable) {}
+        // [HARDWARE PARITY FIX] Disabled. Let MediaMuxer use the physical hint.
     }
 }
 
