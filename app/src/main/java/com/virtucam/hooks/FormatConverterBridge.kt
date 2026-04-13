@@ -215,9 +215,6 @@ class FormatConverterBridge(
             // Goal: Fill Target(w, h) from Source(width, height) without stretching.
             // Includes Sensor Rotation (Hardware Mimicry) and Center-Cropping.
             
-            val srcW = width.toFloat()
-            val srcH = height.toFloat()
-        
             val context = android.app.AndroidAppHelper.currentApplication()
             var zoom = CameraHook.zoomFactor
             var comp = CameraHook.compensationFactor
@@ -236,72 +233,20 @@ class FormatConverterBridge(
                 Log.d(TAG, "DIAGNOSTIC_VIRTUCAM: GLOBAL SYNC CHECK (Courier Pending). Current Stretch=$comp, Rot=$userRot")
             }
 
-            // --- UNIFIED ROTATION SYNC ---
-            // Force bridge to match the confirmed upright rotation from Build 214.5.
-            val appRotation = CameraHook.lastRequestedOrientation.let { if (it == -1) 0 else it }
-            val totalRotation = (sensorOrientation + userRot + rotationOffset + appRotation) % 360
-
-            val tgtW = w.toFloat()
-            val tgtH = h.toFloat()
-
-            // Calculate base source dimensions (Upright base)
-            val baseSrcW = if (totalRotation % 180 == 0) width.toFloat() else height.toFloat()
-            val baseSrcH = if (totalRotation % 180 == 0) height.toFloat() else width.toFloat()
-
-            // 1. Calculate oriented viewport/target (what the user 'sees' in the buffer)
-            val orientedTgtW = if (totalRotation % 180 != 0) tgtH else tgtW
-            val orientedTgtH = if (totalRotation % 180 != 0) tgtW else tgtH
+            // --- PERFECT HARDWARE 1:1 MAPPING ---
+            // Because VirtualRenderThread's isotropic math in TextureRenderer ALREADY
+            // perfectly rotated, scaled, and geometrically cropped the image into the exact
+            // dimensions of the EGL buffer (matching target size), applying math here causes Double-Rotation
+            // and Double-Cropping (the "massive black bars & sideways" bug).
+            // We just perform a direct 1:1 byte copy from our pre-rendered RGBA EGL cache into the YUV target.
             
-            // 2. Apply Compensation (Stretch) to the target ratio (Build 221 Parity Fix)
-            val logicTgtRatio = (orientedTgtW / orientedTgtH) * comp
-            
-            // 3. Calculate Media Ratio (Upright source dimensions)
-            val mediaRatio = baseSrcW / baseSrcH
-            
-            // 4. Calculate Scale (FIT_CENTER strategy like Preview)
-            val baseScale = if (mediaRatio > logicTgtRatio) {
-                orientedTgtW / baseSrcW
-            } else {
-                orientedTgtH / baseSrcH
-            }
-            // ScaleX/Y logic for logic boundary derivation
-            val scale = baseScale * zoom
-            
-            // We derive source-space boundaries based on the oriented system
-            val logicSrcW = orientedTgtW / scale
-            val logicSrcH = orientedTgtH / scale
-            
-            val offsetX = (baseSrcW - logicSrcW) / 2f
-            val offsetY = (baseSrcH - logicSrcH) / 2f
-
             val srcStrideArr = width * 4
 
             // 1. Process Y Plane
-            for (ty in 0 until tgtH.toInt()) {
+            for (ty in 0 until h) {
                 val rowPos = ty * yRowStride
-                for (tx in 0 until tgtW.toInt()) {
-                    // a) Map target(tx, ty) back to logic source coordinate system
-                    val lx = tx / scale + offsetX
-                    val ly = ty / scale + offsetY
-
-                    // b) Apply rotation to get physical source coordinates (RGBA cache)
-                    var sx = 0f
-                    var sy = 0f
-                    when (totalRotation % 360) {
-                        0 -> { sx = lx; sy = ly }
-                        90 -> { sx = ly; sy = srcH - 1 - lx }
-                        180 -> { sx = srcW - 1 - lx; sy = srcH - 1 - ly }
-                        270 -> { sx = srcW - 1 - ly; sy = lx }
-                        else -> { sx = lx; sy = ly }
-                    }
-
-                    val srcRow = sx.toInt().coerceIn(0, width - 1)
-                    val srcCol = sy.toInt().coerceIn(0, height - 1)
-                    
-                    // Actually, sx is horizontal (width) and sy is vertical (height)
-                    // so sx -> col, sy -> row
-                    val rgbaOff = (srcCol * srcStrideArr) + (srcRow * 4)
-                    
+                for (tx in 0 until w) {
+                    val rgbaOff = (ty * srcStrideArr) + (tx * 4)
                     if (rgbaOff >= 0 && rgbaOff + 3 < rgbaBytes.size) {
                         val r = rgbaBytes[rgbaOff].toInt() and 0xFF
                         val g = rgbaBytes[rgbaOff+1].toInt() and 0xFF
@@ -316,17 +261,16 @@ class FormatConverterBridge(
             }
 
             // 2. Process Chroma Planes (U/V)
-            // Xiaomi NativeTool expects NV21 (0x11) where V precedes U in memory
             val isYV12 = (format == 842094169)
             val isNv21 = (format == 0x11)
             val isSemiPlanar = (planes.size == 2)
 
             if (isSemiPlanar) {
-                // [XIAOMI FIX] 2-plane semi-planar layout (NV21/NV12)
+                // NV21/NV12 2-plane semi-planar layout
                 val uvPlane = planes[1]
                 val uvBuffer = uvPlane.buffer
                 val pStride = uvPlane.rowStride
-                val pixStride = uvPlane.pixelStride // Should be 2
+                val pixStride = uvPlane.pixelStride
                 
                 val tW_out = w / 2
                 val tH_out = h / 2
@@ -334,27 +278,7 @@ class FormatConverterBridge(
                 for (ty in 0 until tH_out) {
                     val rowPos = ty * pStride
                     for (tx in 0 until tW_out) {
-                        // a) Map target(tx, ty) back to logic source coordinate system
-                        // Multiply by 2 because this is Chroma (half res)
-                        // [PRECISION FIX] Float-to-Int conversion centering
-                        val lx = ((tx * 2) / scale + offsetX).coerceIn(0f, logicSrcW - 1)
-                        val ly = ((ty * 2) / scale + offsetY).coerceIn(0f, logicSrcH - 1)
-
-                        // b) Apply rotation to get physical source coordinates (RGBA cache)
-                        var sx = 0f
-                        var sy = 0f
-                        when (totalRotation % 360) {
-                            0 -> { sx = lx; sy = ly }
-                            90 -> { sx = ly; sy = srcH - 1 - lx }
-                            180 -> { sx = srcW - 1 - lx; sy = srcH - 1 - ly }
-                            270 -> { sx = srcW - 1 - ly; sy = lx }
-                            else -> { sx = lx; sy = ly }
-                        }
-
-                        val srcRow = sx.toInt().coerceIn(0, width - 1)
-                        val srcCol = sy.toInt().coerceIn(0, height - 1)
-                        
-                        val rgbaOff = (srcCol * srcStrideArr) + (srcRow * 4)
+                        val rgbaOff = ((ty * 2) * srcStrideArr) + ((tx * 2) * 4)
                         if (rgbaOff >= 0 && rgbaOff + 3 < rgbaBytes.size) {
                             val r = rgbaBytes[rgbaOff].toInt() and 0xFF
                             val g = rgbaBytes[rgbaOff+1].toInt() and 0xFF
@@ -376,7 +300,7 @@ class FormatConverterBridge(
                     }
                 }
             } else {
-                // Standard 3-plane or fallback
+                // Standard 3-plane layout (YUV420P / YV12)
                 val uPlane = if (isYV12) (if (planes.size > 2) planes[2] else null) else (if (planes.size > 1) planes[1] else null)
                 val vPlane = if (isYV12) (if (planes.size > 1) planes[1] else null) else (if (planes.size > 2) planes[2] else null)
 
@@ -391,23 +315,7 @@ class FormatConverterBridge(
                     for (ty in 0 until tH_out) {
                         val rowPos = ty * pStride
                         for (tx in 0 until tW_out) {
-                            val lx = (tx * 2) / scale + offsetX
-                            val ly = (ty * 2) / scale + offsetY
-
-                            var sx = 0f
-                            var sy = 0f
-                            when (totalRotation % 360) {
-                                0 -> { sx = lx; sy = ly }
-                                90 -> { sx = ly; sy = srcH - 1 - lx }
-                                180 -> { sx = srcW - 1 - lx; sy = srcH - 1 - ly }
-                                270 -> { sx = srcW - 1 - ly; sy = lx }
-                                else -> { sx = lx; sy = ly }
-                            }
-
-                            val srcRow = sx.toInt().coerceIn(0, width - 1)
-                            val srcCol = sy.toInt().coerceIn(0, height - 1)
-                            
-                            val rgbaOff = (srcCol * srcStrideArr) + (srcRow * 4)
+                            val rgbaOff = ((ty * 2) * srcStrideArr) + ((tx * 2) * 4)
                             if (rgbaOff >= 0 && rgbaOff + 3 < rgbaBytes.size) {
                                 val r = rgbaBytes[rgbaOff].toInt() and 0xFF
                                 val g = rgbaBytes[rgbaOff+1].toInt() and 0xFF
@@ -418,7 +326,7 @@ class FormatConverterBridge(
                                 } else {
                                     ((112 * r - 94 * g - 18 * b + 128) shr 8) + 128
                                 }
-                                
+
                                 val pos = rowPos + (tx * pixStride)
                                 if (pos < buffer.capacity()) {
                                     buffer.put(pos, chroma.coerceIn(16, 240).toByte())
