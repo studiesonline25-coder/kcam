@@ -156,22 +156,8 @@ class FormatConverterBridge(
                 
                 var jpegBytes = baos.toByteArray()
                 
-                // EXIF INJECTION
-                try {
-                    val context = android.app.AndroidAppHelper.currentApplication()
-                    if (context != null) {
-                        val tempFile = java.io.File(context.cacheDir, "vc_exif_inject_${System.currentTimeMillis()}.jpg")
-                        tempFile.writeBytes(jpegBytes)
-                        val exif = android.media.ExifInterface(tempFile.absolutePath)
-                        exif.setAttribute(android.media.ExifInterface.TAG_ORIENTATION, "6")
-                        exif.saveAttributes()
-                        Log.e("DIAGNOSTIC_VIRTUCAM", "FormatConverterBridge: BURNED TAG_ORIENTATION=6 (90 CW) into JPEG EXIF")
-                        jpegBytes = tempFile.readBytes()
-                        tempFile.delete()
-                    }
-                } catch (e: Throwable) {
-                    Log.e(TAG, "Exif inject fail", e)
-                }
+                // [HARDWARE PARITY FIX] Disabled EXIF INJECTION
+                // Let the OS handle real EXIF orientation naturally.
                 
                 val area = w * h
                 synchronized(CameraHook) {

@@ -449,40 +449,7 @@ object CameraHook {
      * This ensures the gallery never rotates our already-upright pixels.
      */
     private fun hookExifInterface(lpparam: XC_LoadPackage.LoadPackageParam) {
-        val exifClasses = listOf(
-            "android.media.ExifInterface",
-            "androidx.exifinterface.media.ExifInterface"
-        )
-        
-        val orientationHook = object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam) {
-                if (!isEnabled) return
-                
-                // [BYPASS] If this call is originating from our own source-loading logic, 
-                // do NOT force the orientation. Let the true EXIF value pass through.
-                if (isSourceLoading.get() == true) return
-
-                val attrName = param.args[0] as? String ?: return
-                if (attrName == "Orientation" || attrName == "android:Orientation") {
-                    if (param.method.name == "getAttributeInt") {
-                        val defaultValue = param.args[1] as? Int ?: 1
-                        param.result = 6 // [Fix] Force Rotate 90 CW for Gallery
-                    } else if (param.method.name == "getAttribute") {
-                        param.result = "6" // [Fix] Force Rotate 90 CW for Gallery
-                    }
-                    Log.v("DIAGNOSTIC_VIRTUCAM", "ExifInterface: Forced Orientation=6")
-                }
-            }
-        }
-
-        for (className in exifClasses) {
-            try {
-                val clazz = XposedHelpers.findClassIfExists(className, lpparam.classLoader) ?: continue
-                XposedBridge.hookAllMethods(clazz, "getAttributeInt", orientationHook)
-                XposedBridge.hookAllMethods(clazz, "getAttribute", orientationHook)
-                Log.d(TAG, "ExifInterface Hook: Deployed for $className")
-            } catch (_: Throwable) {}
-        }
+        // [HARDWARE PARITY FIX] Disabled. Let the OS handle real EXIF orientation physically.
     }
 
     
