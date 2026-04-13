@@ -205,94 +205,70 @@ class TextureRenderer(private val isVideo: Boolean = true) {
         if (videoWidth > 0 && videoHeight > 0 && viewWidth > 0 && viewHeight > 0) {
             // [Zero-Error Accuracy] 1. Calculate Total Rotation
             val totalRotation = (rotationDegrees + userRotation) % 360
-            
-            // [Zero-Error Accuracy] 2. Calculate Oriented Viewport (What the user actually sees)
-            val orientedViewW = if (totalRotation % 180 != 0) viewHeight else viewWidth
-            val orientedViewH = if (totalRotation % 180 != 0) viewWidth else viewHeight
-            
-            val userSeenRatio = (orientedViewW.toFloat() / orientedViewH.toFloat()) * compensationFactor
-            
-            val effectiveMediaRatio: Float = if (totalRotation % 180 != 0) {
-                videoHeight.toFloat() / videoWidth.toFloat()
-            } else {
-                videoWidth.toFloat() / videoHeight.toFloat()
-            }
-            
-            val logicTargetRatio: Float = if (isCapture) {
-                viewWidth.toFloat() / viewHeight.toFloat()
-            } else {
-                userSeenRatio
-            }
 
-            // --- HELPER FUNCTION TO DRAW QUAD ---
-            fun drawQuad(scaleX: Float, scaleY: Float, isBackground: Boolean) {
-                Matrix.setIdentityM(mvpMatrix, 0)
+            // --- ISOTROPIC FITTING MATH ---
+            // Helper function to draw quad with exact, squash-free scale logic
+            fun drawQuad(isBackground: Boolean) {
+                // 1. Establish the Viewport Projection Matrix (Orthographic)
+                // This creates perfect square pixels in NDC!
+                val projMatrix = FloatArray(16)
+                val viewRatio = viewWidth.toFloat() / viewHeight.toFloat()
+                Matrix.orthoM(projMatrix, 0, -viewRatio, viewRatio, -1f, 1f, -1f, 1f)
+
+                // 2. Establish Base Media Geometry
+                val videoRatio = videoWidth.toFloat() / videoHeight.toFloat()
+                val modelMatrix = FloatArray(16)
+                Matrix.setIdentityM(modelMatrix, 0)
                 
-                // A: Rotate the quad to match sensor/user orientation
+                // Determine the geometric size of the box AFTER it is rotated
+                val rotatedW = if (totalRotation % 180 != 0) 2.0f else (2.0f * videoRatio)
+                val rotatedH = if (totalRotation % 180 != 0) (2.0f * videoRatio) else 2.0f
+                
+                // Calculate scales needed to EXACTLY fill the actual screen geometry (2.0 * viewRatio by 2.0)
+                val scaleXToFill = (2.0f * viewRatio) / rotatedW
+                val scaleYToFill = 2.0f / rotatedH
+                
+                // FIT_CENTER (Preview) uses min, CENTER_CROP (Background or Capture) uses max
+                val scaleToFit = java.lang.Math.min(scaleXToFill, scaleYToFill)
+                val scaleToFill = java.lang.Math.max(scaleXToFill, scaleYToFill)
+                val baseScale = if (isBackground || isCapture) scaleToFill else scaleToFit
+
+                // Mirroring configuration
+                val mirrorSignX = if (isMirrored) -1.0f else 1.0f
+                val userStretchX = compensationFactor
+                val userStretchY = 1.0f
+
+                // Apply matrices in reverse order of operation (Model Matrix operations happen right-to-left)
+                
+                // Third: Scale up the final oriented box to fit/fill the user's viewport
+                Matrix.scaleM(modelMatrix, 0, baseScale * zoomFactor * userStretchX, baseScale * zoomFactor * userStretchY, 1.0f)
+                
+                // Second: Rotate the coordinate system
                 if (totalRotation != 0) {
-                    Matrix.rotateM(mvpMatrix, 0, totalRotation.toFloat(), 0f, 0f, 1f)
-                }
-
-                // B: Mirroring
-                val flipX = isMirrored && (totalRotation % 180 == 0)
-                val flipY = isMirrored && (totalRotation % 180 != 0)
-
-                // C: Scale to fit the orientation system
-                val finalScaleX = (if (flipX) -scaleX else scaleX) * zoomFactor
-                val finalScaleY = (if (flipY) -scaleY else scaleY) * zoomFactor
-
-                if (totalRotation % 180 != 0) {
-                    Matrix.scaleM(mvpMatrix, 0, finalScaleY, finalScaleX, 1f)
-                } else {
-                    Matrix.scaleM(mvpMatrix, 0, finalScaleX, finalScaleY, 1f)
+                    Matrix.rotateM(modelMatrix, 0, totalRotation.toFloat(), 0f, 0f, 1f)
                 }
                 
+                // First: establish square-pixel geometry of the source video and apply mirroring
+                Matrix.scaleM(modelMatrix, 0, videoRatio * mirrorSignX, 1.0f, 1.0f)
+
+                // Combine Proj * Model -> mvpMatrix
+                Matrix.multiplyMM(mvpMatrix, 0, projMatrix, 0, modelMatrix, 0)
+
                 GLES20.glUniform1i(muIsBackgroundHandle, if (isBackground) 1 else 0)
                 GLES20.glUniformMatrix4fv(muSTMatrixHandle, 1, false, stMatrix, 0)
                 GLES20.glUniformMatrix4fv(muMVPMatrixHandle, 1, false, mvpMatrix, 0)
-                
+
                 GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
             }
 
             // === 1. DRAW BACKGROUND (Edge-Fill via CENTER_CROP) ===
-            var bgScaleX = 1.0f
-            var bgScaleY = 1.0f
-            
-            if (effectiveMediaRatio > logicTargetRatio) {
-                bgScaleY = 1.0f
-                bgScaleX = effectiveMediaRatio / logicTargetRatio
-            } else {
-                bgScaleX = 1.0f
-                bgScaleY = logicTargetRatio / effectiveMediaRatio
-            }
-            
-            drawQuad(bgScaleX, bgScaleY, true)
+            drawQuad(true)
 
             // === 2. DRAW FOREGROUND (Video layer via FIT_CENTER) ===
-            var fgScaleX = 1.0f
-            var fgScaleY = 1.0f
-            
-            if (isCapture) {
-                // Restoration of Build 213: Capture mode strictly fills the buffer perfectly.
-                fgScaleX = bgScaleX
-                fgScaleY = bgScaleY
-            } else {
-                // Preview mode uses FIT_CENTER
-                if (effectiveMediaRatio > logicTargetRatio) {
-                    fgScaleX = 1.0f
-                    fgScaleY = logicTargetRatio / effectiveMediaRatio
-                } else {
-                    fgScaleX = effectiveMediaRatio / logicTargetRatio
-                    fgScaleY = 1.0f
-                }
-                fgScaleX = fgScaleX.coerceAtMost(1.0f)
-                fgScaleY = fgScaleY.coerceAtMost(1.0f)
-            }
-            
-            drawQuad(fgScaleX, fgScaleY, false)
+            drawQuad(false)
 
             if (frameCount++ % 60 == 0) {
-                Log.d("VirtuCam_Render", "Draw Edge-Fill: media=${videoWidth}x${videoHeight} view=${viewWidth}x${viewHeight} rot=$totalRotation fg_scales=${fgScaleX}x${fgScaleY} bg_scales=${bgScaleX}x${bgScaleY}")
+                Log.d("VirtuCam_Render", "Draw Isotropic: media=${videoWidth}x${videoHeight} view=${viewWidth}x${viewHeight} rot=$totalRotation zoom=$zoomFactor isCapture=$isCapture mirror=$isMirrored")
             }
         } else {
             // Draw default if dimensions are zero
