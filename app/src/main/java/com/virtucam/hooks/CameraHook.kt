@@ -2523,18 +2523,19 @@ class VirtualRenderThread(
                  val vw = eglCore!!.querySurface(es, android.opengl.EGL14.EGL_WIDTH)
                  val vh = eglCore!!.querySurface(es, android.opengl.EGL14.EGL_HEIGHT)
                  
-                 // [HARDWARE PARITY FIX] Always rotate our internal upright video by the 
-                 // physical sensor orientation (e.g. 270) so that it is written sideways
-                 // into the buffer, matching real hardware pixel layout!
-                 // In OpenGL, rotating by (360 - sensorOrientation) puts the buffer in the correct physical layout.
-                 val applyRotation = (360 - sensorOrientation) % 360
-
-
+                 // [HARDWARE PARITY FIX - CORRECTED]
+                 // Preview surfaces: The SurfaceTexture content is displayed AS-IS by the camera
+                 // app (no counter-rotation applied). Our source video is already upright, so
+                 // preview must use rotation=0.
+                 // Capture surfaces: These go through the camera framework's EXIF/orientation
+                 // pipeline which expects raw sensor-oriented bytes, so we apply sensor rotation.
+                 val applyRotation = if (isCapture) {
+                     (360 - sensorOrientation) % 360
+                 } else {
+                     0 // Preview: deliver upright, camera app shows as-is
+                 }
                  
-                 // Removed obsolete WYSIWYG hack.
-
-                 
-                 // Combine physical sensor rotation with any media-specific EXIF rotation
+                 // Combine with any media-specific EXIF rotation
                  val finalApplyRotation = (applyRotation + explicitRotationOffset) % 360
 
                  // DYNAMIC MIRRORING LOGIC (Axis-Swapping handled in TextureRenderer)
