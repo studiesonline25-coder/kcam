@@ -1586,6 +1586,19 @@ object CameraHook {
      * we catch the UnsupportedOperationException in acquireNextImage/acquireLatestImage.
      * This lets the camera HAL work normally while silently ignoring format mismatches.
      */
+        private val XIAOMI_BACK_MATRIX = floatArrayOf(
+            0.00f, -1.00f, 0.00f, 0.00f, 
+            -1.00f, 0.00f, 0.00f, 0.00f, 
+            0.00f, 0.00f, 1.00f, 0.00f, 
+            1.00f, 1.00f, 0.00f, 1.00f
+        )
+        private val XIAOMI_FRONT_MATRIX = floatArrayOf(
+            0.00f, -1.00f, 0.00f, 0.00f, 
+            1.00f, 0.00f, 0.00f, 0.00f, 
+            0.00f, 0.00f, 1.00f, 0.00f, 
+            0.00f, 1.00f, 0.00f, 1.00f
+        )
+
     private fun hookImageReader(lpparam: XC_LoadPackage.LoadPackageParam) {
         val imageReaderClass = XposedHelpers.findClassIfExists(
             "android.media.ImageReader", lpparam.classLoader
@@ -1698,11 +1711,25 @@ object CameraHook {
                     object : XC_MethodHook() {
                         private var localFrameCount = 0
                         override fun afterHookedMethod(param: MethodHookParam) {
-                            val matrix = param.args[0] as? FloatArray ?: return
-                            localFrameCount++
-                            if (localFrameCount % 300 == 0) { // Throttled logging (approx every 10 seconds at 30fps)
-                                val mStr = matrix.joinToString(", ") { String.format("%.2f", it) }
-                                Log.e(TAG, "SURVEILLANCE: Real ST Matrix -> [$mStr]")
+                            if (!isEnabled) {
+                                // Surveillance only when OFF
+                                val matrix = param.args[0] as? FloatArray ?: return
+                                localFrameCount++
+                                if (localFrameCount % 300 == 0) { // Throttled logging (approx every 10 seconds at 30fps)
+                                    val mStr = matrix.joinToString(", ") { String.format("%.2f", it) }
+                                    Log.e(TAG, "SURVEILLANCE: Real ST Matrix -> [$mStr]")
+                                }
+                                return
+                            }
+
+                            // [ABSOLUTE HARDWARE PARITY]
+                            // When VirtuCam is ON, we return the EXACT matrices we observed
+                            // from the real Xiaomi hardware. This makes the stream indistinguishable.
+                            val outMatrix = param.args[0] as? FloatArray ?: return
+                            if (activeCameraId == 1) { // Front
+                                System.arraycopy(XIAOMI_FRONT_MATRIX, 0, outMatrix, 0, 16)
+                            } else { // Back
+                                System.arraycopy(XIAOMI_BACK_MATRIX, 0, outMatrix, 0, 16)
                             }
                         }
                     }
@@ -2581,37 +2608,25 @@ class VirtualRenderThread(
                  val vw = eglCore!!.querySurface(es, android.opengl.EGL14.EGL_WIDTH)
                  val vh = eglCore!!.querySurface(es, android.opengl.EGL14.EGL_HEIGHT)
                  
-                 // [HARDWARE PARITY FIX - CORRECTED]
-                 // Preview surfaces: The SurfaceTexture content is displayed AS-IS by the camera
-                 // app (no counter-rotation applied). Our source video is already upright, so
-                 // preview must use rotation=0.
-                 // Capture surfaces: These go through the camera framework's EXIF/orientation
-                 // pipeline which expects raw sensor-oriented bytes, so we apply sensor rotation.
-                 val applyRotation = if (isCapture) {
-                     (360 - sensorOrientation) % 360
-                 } else {
-                     0 // Preview: deliver upright, camera app shows as-is
-                 }
-                 
-                 // Combine with any media-specific EXIF rotation
-                 val finalApplyRotation = (applyRotation + explicitRotationOffset) % 360
-
-                 // DYNAMIC MIRRORING LOGIC (Axis-Swapping handled in TextureRenderer)
-                 val isActuallyFront = (isFrontCamera)
-                 val shouldMirror = if (isActuallyFront) {
-                     (format == 35 || format == 34 || format == 0x100 || format == 1 || format == 0)
-                 } else {
-                     CameraHook.isMirrored
-                 }
-
-                  val ratio = getTargetRatio(vw, vh, isCapture, contentW, contentH)
+                  // [ABSOLUTE HARDWARE PARITY] 
+                  // We always pass the real physical sensor orientation to the renderer.
+                  // The renderer will mimic the "Sideways" pixels of the real hardware.
+                  val parityOrientation = sensorOrientation
                   
-                  // [TRUTH LOG] Direct confirmation of the stretch factor being used for rendering.
-                  if (frameCount % 60 == 0) {
-                      Log.d(TAG, "DIAGNOSTIC_VIRTUCAM: DRAW LOOP - Stretch: $compensationFactor, Rot: $rotation, Zoom: $zoomFactor")
+                  // Combine with any media-specific EXIF rotation or user adjustments
+                  val finalUserRotation = CameraHook.rotation + explicitRotationOffset
+
+                  // DYNAMIC MIRRORING LOGIC (Axis-Swapping handled in TextureRenderer)
+                  val isActuallyFront = (isFrontCamera)
+                  val shouldMirror = if (isActuallyFront) {
+                      (format == 35 || format == 34 || format == 0x100 || format == 1 || format == 0)
+                  } else {
+                      CameraHook.isMirrored
                   }
-                  
-                  textureRenderer?.draw(matrix, contentW, contentH, vw, vh, ratio, finalApplyRotation, CameraHook.rotation, shouldMirror, CameraHook.zoomFactor, isCapture, CameraHook.compensationFactor)
+
+                   val ratio = getTargetRatio(vw, vh, isCapture, contentW, contentH)
+                   
+                   textureRenderer?.draw(matrix, contentW, contentH, vw, vh, ratio, parityOrientation, finalUserRotation, shouldMirror, CameraHook.zoomFactor, isCapture, CameraHook.compensationFactor)
 
                  eglCore?.setPresentationTime(es, System.nanoTime())
                  if (eglCore?.swapBuffers(es) == false) {

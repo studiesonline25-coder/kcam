@@ -173,7 +173,7 @@ class TextureRenderer(private val isVideo: Boolean = true) {
      * Draw the texture to currently bound frame buffer
      */
     fun draw(transformMatrix: FloatArray, videoWidth: Int = 0, videoHeight: Int = 0, viewWidth: Int = 0, viewHeight: Int = 0, 
-             targetRatio: Float = 0f, rotationDegrees: Int = 0, userRotation: Int = 0, 
+             targetRatio: Float = 0f, hardwareSensorOrientation: Int = 0, userRotation: Int = 0, 
              isMirrored: Boolean = false, zoomFactor: Float = 1.0f, isCapture: Boolean = false,
              compensationFactor: Float = 1.0f) {
         if (viewWidth > 0 && viewHeight > 0) {
@@ -203,14 +203,14 @@ class TextureRenderer(private val isVideo: Boolean = true) {
         GLES20.glEnableVertexAttribArray(maTextureHandle)
 
         if (videoWidth > 0 && videoHeight > 0 && viewWidth > 0 && viewHeight > 0) {
-            // [Zero-Error Accuracy] 1. Calculate Total Rotation
-            val totalRotation = (rotationDegrees + userRotation) % 360
+            // [ABSOLUTE HARDWARE PARITY] 
+            // We rotate the video to match the physical mounting of the sensor (-90 or -270).
+            // This ensures the app's subsequent rotation makes it upright.
+            val totalRotation = (-hardwareSensorOrientation + userRotation + 360) % 360
 
             // --- ISOTROPIC FITTING MATH ---
-            // Helper function to draw quad with exact, squash-free scale logic
             fun drawQuad(isBackground: Boolean) {
                 // 1. Establish the Viewport Projection Matrix (Orthographic)
-                // This creates perfect square pixels in NDC!
                 val projMatrix = FloatArray(16)
                 val viewRatio = viewWidth.toFloat() / viewHeight.toFloat()
                 Matrix.orthoM(projMatrix, 0, -viewRatio, viewRatio, -1f, 1f, -1f, 1f)
@@ -220,38 +220,37 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                 val modelMatrix = FloatArray(16)
                 Matrix.setIdentityM(modelMatrix, 0)
                 
-                // Determine the geometric size of the box AFTER it is rotated
+                // Calculate scales needed to fill/fit the viewport
+                // Note: We use the geometric "Box" size after rotation to calculate baseScale
                 val rotatedW = if (totalRotation % 180 != 0) 2.0f else (2.0f * videoRatio)
                 val rotatedH = if (totalRotation % 180 != 0) (2.0f * videoRatio) else 2.0f
-                
-                // Calculate scales needed to EXACTLY fill the actual screen geometry (2.0 * viewRatio by 2.0)
                 val scaleXToFill = (2.0f * viewRatio) / rotatedW
                 val scaleYToFill = 2.0f / rotatedH
                 
-                // FIT_CENTER (Preview) uses min, CENTER_CROP (Background or Capture) uses max
                 val scaleToFit = java.lang.Math.min(scaleXToFill, scaleYToFill)
                 val scaleToFill = java.lang.Math.max(scaleXToFill, scaleYToFill)
                 val baseScale = if (isBackground || isCapture) scaleToFill else scaleToFit
 
-                // Mirroring configuration
+                // Mirroring and Stretch (PRE-ROTATION)
                 val mirrorSignX = if (isMirrored) -1.0f else 1.0f
-                val userStretchX = compensationFactor
-                val userStretchY = 1.0f
-
-                // Apply matrices in reverse order of operation (Model Matrix operations happen right-to-left)
                 
-                // Third: Scale up the final oriented box to fit/fill the user's viewport
-                Matrix.scaleM(modelMatrix, 0, baseScale * zoomFactor * userStretchX, baseScale * zoomFactor * userStretchY, 1.0f)
+                // --- MATRIX ORDER (Right-to-Left) ---
                 
-                // Second: Rotate the coordinate system
+                // 4. Final Viewport Scale (Fit/Fill/Zoom)
+                Matrix.scaleM(modelMatrix, 0, baseScale * zoomFactor, baseScale * zoomFactor, 1.0f)
+                
+                // 3. Sensor/User Rotation
                 if (totalRotation != 0) {
                     Matrix.rotateM(modelMatrix, 0, totalRotation.toFloat(), 0f, 0f, 1f)
                 }
                 
-                // First: establish square-pixel geometry of the source video and apply mirroring
-                Matrix.scaleM(modelMatrix, 0, videoRatio * mirrorSignX, 1.0f, 1.0f)
+                // 2. Mirroring and Manual Aspect Correction (BEFORE Rotation to prevent axis-swap)
+                Matrix.scaleM(modelMatrix, 0, mirrorSignX * compensationFactor, 1.0f, 1.0f)
+                
+                // 1. Initial Video Geometry (Square Pixels)
+                Matrix.scaleM(modelMatrix, 0, videoRatio, 1.0f, 1.0f)
 
-                // Combine Proj * Model -> mvpMatrix
+                // Combine
                 Matrix.multiplyMM(mvpMatrix, 0, projMatrix, 0, modelMatrix, 0)
 
                 GLES20.glUniform1i(muIsBackgroundHandle, if (isBackground) 1 else 0)
