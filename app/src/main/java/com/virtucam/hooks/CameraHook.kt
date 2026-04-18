@@ -113,29 +113,17 @@ object CameraHook {
     @Volatile
     var lastRequestedOrientation: Int = -1 // -1 = NOT_SET
     
-    // --- METADATA COURIER (Build 220: The 'Truth' Sync) ---
-    data class TransformationState(
-        val compensationFactor: Float,
-        val rotation: Int,
-        val isMirrored: Boolean
-    )
-    
-    // Memory-managed map for cross-process state sync
+    // [Metadata Sync] Process-local sync to avoid collision with real hardware focus distance
+    data class TransformationState(val compensationFactor: Float, val rotation: Int, val isMirrored: Boolean)
     private val metadataCourierMap = java.util.concurrent.ConcurrentHashMap<Long, TransformationState>()
-    private const val METADATA_SYNC_MARKER = 1.234f
     
     fun getLatestCouriedState(timestamp: Long): TransformationState? {
-        // 1. Direct hit
-        metadataCourierMap[timestamp]?.let { return it }
-        
-        // 2. Sliding window (1s jitter fallback for Xiaomi Parallel Engine)
-        val sortedKeys = metadataCourierMap.keys().toList().sortedDescending()
-        for (key in sortedKeys) {
-            if (Math.abs(key - timestamp) < 1_000_000_000L) { // 1 second
-                return metadataCourierMap[key]
-            }
+        // Find the closest state that is <= the current timestamp
+        val keys = metadataCourierMap.keys().toList().sortedDescending()
+        for (k in keys) {
+            if (k <= timestamp) return metadataCourierMap[k]
         }
-        return null
+        return metadataCourierMap.values.firstOrNull() // Fallback
     }
 
     // [ONCE AND FOR ALL] Surface tracking and crash prevention structures
@@ -1020,26 +1008,14 @@ object CameraHook {
                                     try {
                                         val sensorTimestamp = result.get(android.hardware.camera2.CaptureResult.SENSOR_TIMESTAMP) ?: System.nanoTime()
 
-                                        // 1. DYNAMIC METADATA COURIER DECODER (Build 220: The 'Truth' Sync)
-                                        // Formula: Value = Marker + (Rot/1000) + (Comp/10000) + (Mirror/100000)
-                                        val courierValue = result.get(android.hardware.camera2.CaptureResult.LENS_FOCUS_DISTANCE) ?: 0f
-                                        if (Math.abs(courierValue - METADATA_SYNC_MARKER) < 0.5f) { // Range check 0.734 to 1.734
-                                            val remainder = courierValue - METADATA_SYNC_MARKER
-                                            
-                                            val decodedRot = (Math.round(remainder * 1000.0f) / 90 * 90).coerceIn(0, 270)
-                                            val afterRot = remainder - (decodedRot / 1000.0f)
-                                            val decodedComp = Math.round(afterRot * 100.0f * 100.0f) / 100.0f
-                                            val afterComp = afterRot - (decodedComp / 100.0f)
-                                            
-                                            val decodedMirror = afterComp > 0.00005f
-                                            
-                                            metadataCourierMap[sensorTimestamp] = TransformationState(decodedComp, decodedRot, decodedMirror)
-                                            
-                                            // Cleanup old entries (Keep last 2 seconds)
-                                            if (metadataCourierMap.size > 120) {
-                                                val cutoff = sensorTimestamp - 2_000_000_000L
-                                                metadataCourierMap.keys.removeIf { it < cutoff }
-                                            }
+                                        // [ABSOLUTE PARITY] Directly store the current UI state for this frame's timestamp
+                                        // This replaces the LENS_FOCUS_DISTANCE courier which was colliding with real hardware.
+                                        metadataCourierMap[sensorTimestamp] = TransformationState(compensationFactor, rotation, isMirrored)
+                                        
+                                        // Cleanup old entries (Keep last 2 seconds)
+                                        if (metadataCourierMap.size > 120) {
+                                            val cutoff = sensorTimestamp - 2_000_000_000L
+                                            metadataCourierMap.keys.removeIf { it < cutoff }
                                         }
 
                                         // 1.5 Intercept capture count for bridge triggering
@@ -1243,19 +1219,18 @@ object CameraHook {
                 val cameraId = param.args[0] as? String ?: "unknown"
                 val char = param.result as? android.hardware.camera2.CameraCharacteristics ?: return
                 
-                // [HARDWARE X-RAY] Log EVERY SINGLE KEY in Characteristics
-                try {
-                    val allKeys = char.keys
-                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: --- MASTER CHARACTERISTICS DUMP (Camera $cameraId) ---")
-                    for (key in allKeys) {
-                        try {
-                            val value = char.get(key)
-                            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: CharKey(${key.name}) -> $value")
-                        } catch (_: Exception) {}
-                    }
-                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: --- END MASTER DUMP ---")
-                } catch (e: Exception) {
-                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Failed to dump characteristics", e)
+                // DIAGNOSTIC: Log key characteristics Veriff might be checking
+                val facing = char.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
+                val orientation = char.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
+                val level = char.get(android.hardware.camera2.CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)
+                
+                cameraOrientations[cameraId] = orientation
+                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics($cameraId) -> Facing=$facing, Orient=$orientation, HW_Level=$level")
+                
+                val streamMap = char.get(android.hardware.camera2.CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
+                if (streamMap != null) {
+                    val sizes = streamMap.getOutputSizes(android.graphics.ImageFormat.JPEG)
+                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Camera $cameraId supports ${sizes?.size ?: 0} JPEG sizes. Max: ${sizes?.firstOrNull()}")
                 }
             }
         })
@@ -1278,12 +1253,18 @@ object CameraHook {
                     val value = param.args[1]
                     val keyName = XposedHelpers.callMethod(key, "getName") as? String ?: "unknown"
                     
-                    // [HARDWARE X-RAY] Log EVERY SINGLE SETTING (No filters)
-                    Log.e(TAG, "SURVEILLANCE: Request.set($keyName) -> $value")
-                    
-                    // Still track the orientation for the renderer logic
-                    if (keyName == "xiaomi.device.orientation") {
-                        xiaomiRequestedOrientation = value as? Int ?: -1
+                    // High-priority metadata to track for Hardware Parity
+                    if (keyName.contains("orientation", true) || 
+                        keyName.contains("crop", true) || 
+                        keyName.contains("rotation", true) ||
+                        keyName.contains("control.mode", true)) {
+                        Log.e(TAG, "SURVEILLANCE: Request.set($keyName) -> $value")
+                        
+                        // [DYNAMIC ROTATION PARITY]
+                        // Xiaomi Native camera uses this to tell the HAL how to orient the buffer.
+                        if (keyName == "xiaomi.device.orientation") {
+                            xiaomiRequestedOrientation = value as? Int ?: -1
+                        }
                     }
                 } catch (_: Throwable) {}
             }
@@ -1527,18 +1508,11 @@ object CameraHook {
                                 // 1. Force JPEG_ORIENTATION to 0 (since our EGL pixels are already upright)
                                 val jpegOrientationKey = android.hardware.camera2.CaptureRequest.JPEG_ORIENTATION
                                 XposedHelpers.callMethod(settings, "set", jpegOrientationKey, 0)
-                                
-                                // 3. METADATA COURIER (Build 221: The 'Truth' Sync)
-                                // Bit-pack: Marker + (Rot/1000) + (Comp/100) + (Mirror/10000)
-                                val rotationPart = (rotation / 1000.0f)
-                                val compPart = (compensationFactor / 100.0f)
-                                val mirrorPart = if (isMirrored) 0.0001f else 0f
-                                
-                                val courierValue = METADATA_SYNC_MARKER + rotationPart + compPart + mirrorPart
-                                XposedHelpers.callMethod(settings, "set", android.hardware.camera2.CaptureRequest.LENS_FOCUS_DISTANCE, courierValue)
+                                                              // [Metadata Sync] Store current state for future lookup by Bridge
+                                // No longer injecting into LENS_FOCUS_DISTANCE to avoid hardware collision.
                                 
                                 // [TRUTH LOG] This confirms the Camera App process HAS the updated slider value.
-                                Log.d(TAG, "DIAGNOSTIC_VIRTUCAM: Courier Injected: $courierValue (Stretch: $compensationFactor, Rot: $rotation, Mirror: $isMirrored)")
+                                Log.d(TAG, "DIAGNOSTIC_VIRTUCAM: State Captured for Courier: (Stretch: $compensationFactor, Rot: $rotation, Mirror: $isMirrored)")
                                 
                                 // 2. NUCLEAR SWEEP: Disable parallel capture and AI features in the metadata directly
                                 val manufacturer = android.os.Build.MANUFACTURER ?: ""
@@ -1589,17 +1563,19 @@ object CameraHook {
      * we catch the UnsupportedOperationException in acquireNextImage/acquireLatestImage.
      * This lets the camera HAL work normally while silently ignoring format mismatches.
      */
+        // [Xiaomi Reference Matrices]
+        // These match the standard SurfaceTexture orientation for 90/270 sensors.
         private val XIAOMI_BACK_MATRIX = floatArrayOf(
-            0.00f, -1.00f, 0.00f, 0.00f, 
-            -1.00f, 0.00f, 0.00f, 0.00f, 
-            0.00f, 0.00f, 1.00f, 0.00f, 
-            1.00f, 1.00f, 0.00f, 1.00f
+            0.0f, -1.0f, 0.0f, 0.0f,
+            1.0f,  0.0f, 0.0f, 0.0f,
+            0.0f,  0.0f, 1.0f, 0.0f,
+            0.0f,  1.0f, 0.0f, 1.0f
         )
         private val XIAOMI_FRONT_MATRIX = floatArrayOf(
-            0.00f, -1.00f, 0.00f, 0.00f, 
-            1.00f, 0.00f, 0.00f, 0.00f, 
-            0.00f, 0.00f, 1.00f, 0.00f, 
-            0.00f, 1.00f, 0.00f, 1.00f
+            0.0f,  1.0f, 0.0f, 0.0f,
+            1.0f,  0.0f, 0.0f, 0.0f,
+            0.0f,  0.0f, 1.0f, 0.0f,
+            0.0f,  0.0f, 0.0f, 1.0f
         )
 
     private fun hookImageReader(lpparam: XC_LoadPackage.LoadPackageParam) {
@@ -2612,13 +2588,9 @@ class VirtualRenderThread(
                  val vh = eglCore!!.querySurface(es, android.opengl.EGL14.EGL_HEIGHT)
                  
                   // [ABSOLUTE HARDWARE PARITY] 
-                  // If the app (like Native Camera) sends a Xiaomi orientation request, we follow it.
-                  // Otherwise (like Browsers), we fall back to the raw sensor orientation (90/270).
-                  val parityOrientation = if (CameraHook.xiaomiRequestedOrientation != -1) {
-                      CameraHook.xiaomiRequestedOrientation
-                  } else {
-                      sensorOrientation
-                  }
+                  // We always pass the real physical sensor orientation to the renderer.
+                  // The renderer will mimic the "Sideways" pixels of the real hardware.
+                  val parityOrientation = sensorOrientation
                   
                   // Combine with any media-specific EXIF rotation or user adjustments
                   val finalUserRotation = CameraHook.rotation + explicitRotationOffset

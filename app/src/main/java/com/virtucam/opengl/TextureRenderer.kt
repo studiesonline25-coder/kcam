@@ -205,8 +205,9 @@ class TextureRenderer(private val isVideo: Boolean = true) {
         if (videoWidth > 0 && videoHeight > 0 && viewWidth > 0 && viewHeight > 0) {
             // [ABSOLUTE HARDWARE PARITY] 
             // We rotate the video to match the physical mounting of the sensor (90 or 270).
-            // This ensures the app's subsequent rotation makes it upright.
-            val totalRotation = (hardwareSensorOrientation + userRotation + 360) % 360
+            // NOTE: Matrix.rotateM is CCW, but sensors are CW relative to board top.
+            // We negate the rotation to achieve CW parity.
+            val totalRotation = (360 - ((hardwareSensorOrientation + userRotation + 360) % 360)) % 360
 
             // --- ISOTROPIC FITTING MATH ---
             fun drawQuad(isBackground: Boolean) {
