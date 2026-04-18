@@ -1674,19 +1674,9 @@ object CameraHook {
                         val s = param.thisObject as? Surface ?: return
                         val st = param.args[0] as? SurfaceTexture ?: return
                         
-                        // [TOTAL SURVEILLANCE] Hook getTransformMatrix to see how hardware rotates preview
-                        XposedHelpers.findAndHookMethod(st.javaClass, "getTransformMatrix", FloatArray::class.java, object : XC_MethodHook() {
-                            private var localFrameCount = 0
-                            override fun afterHookedMethod(innerParam: MethodHookParam) {
-                                val matrix = innerParam.args[0] as? FloatArray ?: return
-                                localFrameCount++
-                                if (localFrameCount % 300 == 0) { // Throttled logging
-                                    val mStr = matrix.joinToString(", ") { String.format("%.2f", it) }
-                                    Log.e(TAG, "SURVEILLANCE: Real ST Matrix -> [$mStr]")
-                                }
-                            }
-                        })
-
+                        // [TOTAL SURVEILLANCE - MOVED OUTSIDE] We no longer hook this inside the constructor
+                        // to prevent redundant layering and crashes (fixes Phoenix).
+                        // Instead, we just associate the size below.
 
                         val size = surfaceTextureSizes[st]
                         if (size != null) {
@@ -1696,6 +1686,30 @@ object CameraHook {
                     }
                 }
             )
+
+            // [TOTAL SURVEILLANCE] Hook getTransformMatrix GLOBALLY for SurfaceTexture
+            // This is safer and only applies once per app launch.
+            try {
+                XposedHelpers.findAndHookMethod(
+                    "android.graphics.SurfaceTexture",
+                    lpparam.classLoader,
+                    "getTransformMatrix",
+                    FloatArray::class.java,
+                    object : XC_MethodHook() {
+                        private var localFrameCount = 0
+                        override fun afterHookedMethod(param: MethodHookParam) {
+                            val matrix = param.args[0] as? FloatArray ?: return
+                            localFrameCount++
+                            if (localFrameCount % 300 == 0) { // Throttled logging (approx every 10 seconds at 30fps)
+                                val mStr = matrix.joinToString(", ") { String.format("%.2f", it) }
+                                Log.e(TAG, "SURVEILLANCE: Real ST Matrix -> [$mStr]")
+                            }
+                        }
+                    }
+                )
+            } catch (e: Throwable) {
+                Log.e(TAG, "VirtuCam_Hook: Failed to hook getTransformMatrix surveillance: ${e.message}")
+            }
 
         } catch (_: Throwable) {}
 
