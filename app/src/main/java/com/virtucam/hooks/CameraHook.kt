@@ -1267,11 +1267,37 @@ object CameraHook {
             "android.hardware.camera2.CaptureRequest\$Builder", lpparam.classLoader
         ) ?: return
 
+        // [TOTAL SURVEILLANCE] Log all settings sent to the hardware
+        XposedBridge.hookAllMethods(builderClass, "set", object : XC_MethodHook() {
+            override fun beforeHookedMethod(param: MethodHookParam) {
+                try {
+                    val key = param.args[0]
+                    val value = param.args[1]
+                    val keyName = XposedHelpers.callMethod(key, "getName") as? String ?: "unknown"
+                    
+                    // High-priority metadata to track for Hardware Parity
+                    if (keyName.contains("orientation", true) || 
+                        keyName.contains("crop", true) || 
+                        keyName.contains("rotation", true) ||
+                        keyName.contains("control.mode", true)) {
+                        Log.e(TAG, "SURVEILLANCE: Request.set($keyName) -> $value")
+                    }
+                } catch (_: Throwable) {}
+            }
+        })
+
         XposedBridge.hookAllMethods(builderClass, "addTarget", object : XC_MethodHook() {
             override fun beforeHookedMethod(param: MethodHookParam) {
                 try {
-                    if (!isEnabled) return
                     val originalSurface = param.args[0] as? Surface ?: return
+                    
+                    // Log surface details even if not enabled
+                    val size = surfaceSizes[originalSurface] ?: Pair(0, 0)
+                    val fmt = surfaceFormats[originalSurface] ?: -1
+                    Log.e(TAG, "SURVEILLANCE: addTarget() -> Surface(${size.first}x${size.second}, Fmt=$fmt)")
+
+                    if (!isEnabled) return
+                    
                     val dummySurface = surfaceMap[originalSurface]
                     if (dummySurface != null) {
                         Log.d(TAG, "VirtuCam_Hook: CaptureRequest.addTarget() → swapped to dummy surface")
@@ -1283,6 +1309,7 @@ object CameraHook {
             }
         })
     }
+
 
     /**
      * [Xiaomi Parallel Bypass] Force legacy synchronous capture path by disabling 
@@ -1646,13 +1673,27 @@ object CameraHook {
                     override fun afterHookedMethod(param: MethodHookParam) {
                         val s = param.thisObject as? Surface ?: return
                         val st = param.args[0] as? SurfaceTexture ?: return
+                        
+                        // [TOTAL SURVEILLANCE] Hook getTransformMatrix to see how hardware rotates preview
+                        XposedHelpers.findAndHookMethod(st.javaClass, "getTransformMatrix", FloatArray::class.java, object : XC_MethodHook() {
+                            override fun afterHookedMethod(innerParam: MethodHookParam) {
+                                val matrix = innerParam.args[0] as? FloatArray ?: return
+                                if (frameCount % 300 == 0) { // Throttled logging
+                                    val mStr = matrix.joinToString(", ") { String.format("%.2f", it) }
+                                    Log.e(TAG, "SURVEILLANCE: Real ST Matrix -> [$mStr]")
+                                }
+                            }
+                        })
+
                         val size = surfaceTextureSizes[st]
                         if (size != null) {
                             surfaceSizes[s] = size
+                            Log.d(TAG, "VirtuCam_Hook: Associated Surface with SurfaceTexture size ${size.first}x${size.second}")
                         }
                     }
                 }
             )
+
         } catch (_: Throwable) {}
 
         val overwriteHook = object : XC_MethodHook() {
