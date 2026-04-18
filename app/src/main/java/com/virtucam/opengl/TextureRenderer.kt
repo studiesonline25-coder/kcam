@@ -204,9 +204,9 @@ class TextureRenderer(private val isVideo: Boolean = true) {
 
         if (videoWidth > 0 && videoHeight > 0 && viewWidth > 0 && viewHeight > 0) {
             // [ABSOLUTE HARDWARE PARITY] 
-            // We rotate the video to match the physical mounting of the sensor (-90 or -270).
+            // We rotate the video to match the physical mounting of the sensor (90 or 270).
             // This ensures the app's subsequent rotation makes it upright.
-            val totalRotation = (-hardwareSensorOrientation + userRotation + 360) % 360
+            val totalRotation = (hardwareSensorOrientation + userRotation + 360) % 360
 
             // --- ISOTROPIC FITTING MATH ---
             fun drawQuad(isBackground: Boolean) {
@@ -221,7 +221,6 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                 Matrix.setIdentityM(modelMatrix, 0)
                 
                 // Calculate scales needed to fill/fit the viewport
-                // Note: We use the geometric "Box" size after rotation to calculate baseScale
                 val rotatedW = if (totalRotation % 180 != 0) 2.0f else (2.0f * videoRatio)
                 val rotatedH = if (totalRotation % 180 != 0) (2.0f * videoRatio) else 2.0f
                 val scaleXToFill = (2.0f * viewRatio) / rotatedW
