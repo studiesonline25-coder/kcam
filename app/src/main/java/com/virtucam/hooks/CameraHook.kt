@@ -1726,7 +1726,7 @@ object CameraHook {
                             // When VirtuCam is ON, we return the EXACT matrices we observed
                             // from the real Xiaomi hardware. This makes the stream indistinguishable.
                             val outMatrix = param.args[0] as? FloatArray ?: return
-                            if (activeCameraId == 1) { // Front
+                            if (activeCameraId == "1") { // Front
                                 System.arraycopy(XIAOMI_FRONT_MATRIX, 0, outMatrix, 0, 16)
                             } else { // Back
                                 System.arraycopy(XIAOMI_BACK_MATRIX, 0, outMatrix, 0, 16)
