@@ -1243,18 +1243,19 @@ object CameraHook {
                 val cameraId = param.args[0] as? String ?: "unknown"
                 val char = param.result as? android.hardware.camera2.CameraCharacteristics ?: return
                 
-                // DIAGNOSTIC: Log key characteristics Veriff might be checking
-                val facing = char.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
-                val orientation = char.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
-                val level = char.get(android.hardware.camera2.CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)
-                
-                cameraOrientations[cameraId] = orientation
-                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics($cameraId) -> Facing=$facing, Orient=$orientation, HW_Level=$level")
-                
-                val streamMap = char.get(android.hardware.camera2.CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-                if (streamMap != null) {
-                    val sizes = streamMap.getOutputSizes(android.graphics.ImageFormat.JPEG)
-                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Camera $cameraId supports ${sizes?.size ?: 0} JPEG sizes. Max: ${sizes?.firstOrNull()}")
+                // [HARDWARE X-RAY] Log EVERY SINGLE KEY in Characteristics
+                try {
+                    val allKeys = char.keys
+                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: --- MASTER CHARACTERISTICS DUMP (Camera $cameraId) ---")
+                    for (key in allKeys) {
+                        try {
+                            val value = char.get(key)
+                            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: CharKey(${key.name}) -> $value")
+                        } catch (_: Exception) {}
+                    }
+                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: --- END MASTER DUMP ---")
+                } catch (e: Exception) {
+                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Failed to dump characteristics", e)
                 }
             }
         })
@@ -1277,18 +1278,12 @@ object CameraHook {
                     val value = param.args[1]
                     val keyName = XposedHelpers.callMethod(key, "getName") as? String ?: "unknown"
                     
-                    // High-priority metadata to track for Hardware Parity
-                    if (keyName.contains("orientation", true) || 
-                        keyName.contains("crop", true) || 
-                        keyName.contains("rotation", true) ||
-                        keyName.contains("control.mode", true)) {
-                        Log.e(TAG, "SURVEILLANCE: Request.set($keyName) -> $value")
-                        
-                        // [DYNAMIC ROTATION PARITY]
-                        // Xiaomi Native camera uses this to tell the HAL how to orient the buffer.
-                        if (keyName == "xiaomi.device.orientation") {
-                            xiaomiRequestedOrientation = value as? Int ?: -1
-                        }
+                    // [HARDWARE X-RAY] Log EVERY SINGLE SETTING (No filters)
+                    Log.e(TAG, "SURVEILLANCE: Request.set($keyName) -> $value")
+                    
+                    // Still track the orientation for the renderer logic
+                    if (keyName == "xiaomi.device.orientation") {
+                        xiaomiRequestedOrientation = value as? Int ?: -1
                     }
                 } catch (_: Throwable) {}
             }
