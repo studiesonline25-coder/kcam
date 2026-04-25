@@ -420,6 +420,9 @@ object HardwareAuditLogger {
         }
         currentSession.put("output_surfaces", surfaceArr)
         Log.i(TAG, "Audit: began session $sessionIndex for camera $cameraId")
+        // Force immediate flush so each new session is reflected on disk
+        // even if the user pulls before the next auto-flush fires.
+        flush()
     }
 
     fun endSession() {
@@ -449,30 +452,30 @@ object HardwareAuditLogger {
     // -----------------------------------------------------------------------
 
     fun flush() {
-        if (isFlushing.getAndSet(true)) return
         // Snapshot in-progress session as a sibling so data isn't lost mid-session
         try {
             if (currentSession.length() > 0) {
                 auditDoc.put("current_session_in_progress", currentSession)
             }
         } catch (_: Throwable) {}
-        val snapshot = auditDoc.toString(2)
+        val snapshot = synchronized(auditDoc) { auditDoc.toString(2) }
         // Capture target package and PID for per-process audit file
         val pkg = try { android.app.AndroidAppHelper.currentPackageName() ?: "unknown" } catch (_: Throwable) { "unknown" }
         val pid = android.os.Process.myPid()
         Thread {
-            try {
-                val dir = File(AUDIT_DIR)
-                if (!dir.exists()) dir.mkdirs()
-                // Single rolling file per (package, pid) — overwritten on each flush
-                val fileName = "hw_audit_${pkg}_pid${pid}.json"
-                val file = File(dir, fileName)
-                FileWriter(file).use { it.write(snapshot) }
-                Log.i(TAG, "Hardware audit saved to ${file.absolutePath} (${snapshot.length} chars)")
-            } catch (e: Throwable) {
-                Log.e(TAG, "Failed to write audit file", e)
-            } finally {
-                isFlushing.set(false)
+            // Serialize disk writes per-process via a JVM-wide lock so concurrent
+            // flush() calls don't trample each other.
+            synchronized(this) {
+                try {
+                    val dir = File(AUDIT_DIR)
+                    if (!dir.exists()) dir.mkdirs()
+                    val fileName = "hw_audit_${pkg}_pid${pid}.json"
+                    val file = File(dir, fileName)
+                    FileWriter(file).use { it.write(snapshot) }
+                    Log.i(TAG, "Hardware audit saved to ${file.absolutePath} (${snapshot.length} chars)")
+                } catch (e: Throwable) {
+                    Log.e(TAG, "Failed to write audit file", e)
+                }
             }
         }.also { it.name = "VirtuCam-AuditFlush"; it.start() }
     }
