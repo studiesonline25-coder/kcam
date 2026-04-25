@@ -1,0 +1,253 @@
+================================================================================
+NATIVE CAMERA AUDIT — Xiaomi Redmi 'pond' (com.android.camera)
+================================================================================
+Device: Xiaomi Redmi 2409BRN2CA, Android 15, SDK 35, HW Level 3
+Source app: com.android.camera (native MIUI/HyperOS camera)
+Audit captures: 4 sessions (back + front + retests), ~200 frames each
+================================================================================
+
+
+--------------------------------------------------------------------------------
+1. CAMERA CHARACTERISTICS — what getCameraCharacteristics() reports
+--------------------------------------------------------------------------------
+
+                            BACK (camera_0)         FRONT (camera_1)
+lens_facing                 1 (BACK)                0 (FRONT)
+sensor_orientation          90                      270
+hw_level                    LEVEL_3                 LEVEL_3
+apertures                   [1.8]                   [2.0]
+focal_length                3.84 mm                 3.56 mm
+sensitivity_range           50..3200                50..1600
+exposure_time_range_ns      100000..400000000       100000..343000000
+max_frame_duration_ns       400000000               400000000
+pixel_array_size            4096x3072               4208x3120
+active_array                4096x3072               4208x3120
+ois_available               false                   false
+has_flash                   true                    false
+max_digital_zoom            10                      ?
+min_focus_distance          10 (1/cm = 10cm)        0 (fixed-focus, infinity)
+hyperfocal_distance         0.1                     ?
+af_available_modes          [0,1,2,3,4]             (limited — fixed focus)
+ae_available_modes          [0,1,2,3]               [0,1,2,3]
+awb_available_modes         [0,1,2,3,4,5,6,7,8]     [0,1,2,3,4,5,6,7,8]
+noise_reduction_modes       [0,1,2,3,4]             [0,1,2,3,4]
+
+
+--------------------------------------------------------------------------------
+2. SURFACETEXTURE TRANSFORM MATRICES — getTransformMatrix() ground truth
+--------------------------------------------------------------------------------
+
+BACK (camera 0) — column-major float[16]:
+    [0,-1,0,0,  -1,0,0,0,  0,0,1,0,  1,1,0,1]
+  = row form:
+    | 0  -1   0   1 |
+    |-1   0   0   1 |
+    | 0   0   1   0 |
+    | 0   0   0   1 |
+  = geometry: 180° rotation around center
+  = swap BL↔TR, BR↔TL
+
+FRONT (camera 1) — column-major float[16]:
+    [0,-1,0,0,   1,0,0,0,  0,0,1,0,  0,1,0,1]
+  = row form:
+    | 0   1   0   0 |
+    |-1   0   0   1 |
+    | 0   0   1   0 |
+    | 0   0   0   1 |
+  = geometry: 90° CW rotation
+  = BL→TL, BR→BL, TL→TR, TR→BR
+
+CURRENT CODE BUGS (XIAOMI_BACK_MATRIX / XIAOMI_FRONT_MATRIX in CameraHook.kt):
+- The "XIAOMI_BACK_MATRIX" constant in code is actually the REAL FRONT matrix
+- The "XIAOMI_FRONT_MATRIX" constant ([0,1,0,0, 1,0,0,0, 0,0,1,0, 0,0,0,1])
+  matches NOTHING observed on real hardware — it's just wrong.
+- Net effect on this device: back camera renders rotated 90° instead of 180°,
+  front camera renders with arbitrary wrong transform.
+
+
+--------------------------------------------------------------------------------
+3. CAPTURE RESULT — per-frame metadata real hardware emits
+--------------------------------------------------------------------------------
+
+                            BACK                    FRONT
+
+3A STATE TRANSITIONS:
+  AE                        SEARCHING ↔ CONVERGED   SEARCHING ↔ FLASH_REQUIRED
+                            (reaches CONVERGED)     (oscillates, rarely CONVERGED)
+  AF                        INACTIVE → PASSIVE_     always INACTIVE
+                            UNFOCUSED → PASSIVE_    (front is fixed-focus)
+                            FOCUSED, drifts
+  AWB                       SEARCHING → CONVERGED   SEARCHING → CONVERGED
+                            (drifts back to         (drifts back to SEARCHING)
+                            SEARCHING periodically)
+
+OBSERVED 3A QUADRUPLES (back):
+  (CONVERGED, INACTIVE, INACTIVE)
+  (CONVERGED, PASSIVE_UNFOCUSED, INACTIVE)
+  (CONVERGED, PASSIVE_UNFOCUSED, CONVERGED)
+  (CONVERGED, PASSIVE_FOCUSED, CONVERGED)
+  (SEARCHING, INACTIVE, INACTIVE)
+  (SEARCHING, PASSIVE_UNFOCUSED, SEARCHING)
+  (SEARCHING, PASSIVE_UNFOCUSED, CONVERGED)
+
+OBSERVED 3A TRIPLES (front):
+  (SEARCHING, INACTIVE, INACTIVE)
+  (SEARCHING, INACTIVE, CONVERGED)
+  (SEARCHING, INACTIVE, SEARCHING)
+  (FLASH_REQUIRED, INACTIVE, CONVERGED)
+  (FLASH_REQUIRED, INACTIVE, SEARCHING)
+
+EXPOSURE / SENSOR:
+  ae_mode                   1 (always)              1 (always)
+  af_mode                   4 (always)              4 (always)
+                            = CONTINUOUS_PICTURE     = CONTINUOUS_PICTURE
+  exposure_time_ns          50,005,000 (locked)     2,995,000..100,000,000
+                            = 50ms exactly          = 3ms..100ms (variable)
+  iso (sensitivity)         636..1107               55..6481
+  frame_duration_ns         50,025,000 (locked)     33M / 50M / 70M / 80M / 90M / 100M
+                            = 20 fps                = 10–30 fps variable
+  focus_distance (dpt)      0.0..7.68 (drifts)      0.0 (always — fixed)
+  aperture                  1.8                     2.0
+  focal_length_mm           3.84                    3.56
+  ois_mode                  0 (off)                 0 (off)
+  rolling_shutter_skew_ns   26,842,229 ns           32,662,789 ns
+                            (= 26.84 ms)            (= 32.66 ms)
+  flash_state               2 (= READY)             2 (= READY)
+  control_mode              1 (AUTO)                1 (AUTO)
+  noise_reduction_mode      1 (FAST)                1 (FAST)
+  jpeg_orientation          0                       0
+  jpeg_quality              100                     100
+  crop_region               0,0,4096,3072           0,0,4208,3120
+                            (no zoom, full sensor)  (no zoom, full sensor)
+
+
+--------------------------------------------------------------------------------
+4. CAPTURE REQUESTS — what the native camera app sends to the HAL
+--------------------------------------------------------------------------------
+
+Standard android.* keys observed in requests:
+  android.control.aeAntibandingMode, aeExposureCompensation, aeLock, aeMode,
+  aePrecaptureTrigger, aeRegions, aeTargetFpsRange,
+  android.control.afMode, afRegions, afTrigger,
+  android.control.awbLock, enableZsl, mode, sceneMode, videoStabilizationMode,
+  android.flash.mode,
+  android.jpeg.orientation, quality, thumbnailQuality, thumbnailSize,
+  android.scaler.cropRegion
+
+MediaTek vendor tags (this device uses Helio G chipset):
+  com.mediatek.3afeature.aeMeteringMode
+  com.mediatek.abffeature.abfMode
+  com.mediatek.configure.setting.initrequest
+  com.mediatek.configure.setting.proprietaryRequest
+  com.mediatek.control.capture.flipmode
+  com.mediatek.control.capture.ispMetaEnable
+  com.mediatek.control.capture.ispTuningRequest
+  com.mediatek.control.capture.zsl.mode
+  com.mediatek.ispfeature.controlEdgeLevel
+  com.mediatek.ispfeature.controlSaturationLevel
+  com.mediatek.multicamfeature.multiCamConfigScalerCropRegion
+
+Xiaomi vendor tags (heavily set by MIUI camera app):
+  com.xiaomi.capture.hint
+  com.xiaomi.customquality.enable
+  com.xiaomi.liveshot.enabled
+  com.xiaomi.objectTrackingConfig.cropRegion
+  com.xiaomi.satFastzoom.isZoomSlowDown / isZoomSpeedUp
+  com.xiaomi.streetshoot.enabled
+  xiaomi.ai.asd.enabled / sceneApplied
+  xiaomi.ai.misd.motionCaptureType
+  xiaomi.ai.segment.enabled
+  xiaomi.app.module
+  xiaomi.asd.enabled
+  xiaomi.beauty.beautyLevelApplied / beautyMode / enlargeEyeRatio /
+                skinColorRatio / skinSmoothRatio / slimFaceRatio / whitenRatio
+  xiaomi.bokeh.enabled / fNumberApplied
+  xiaomi.device.orientation         ← used for rotation parity
+  xiaomi.dyvideo.aeRegion / afRegion
+  xiaomi.flash.mode
+  xiaomi.flip.enabled
+  xiaomi.hdr.enabled / hdrChecker.enabled / hdrChecker.status / hdrMode
+  xiaomi.mfnr.enabled
+  xiaomi.mimovie.enabled
+  xiaomi.multiframe.inputNum
+  xiaomi.pro.video.histogram.stats.enabled
+  xiaomi.pureView.enabled
+  xiaomi.snapshot.front.ScreenLighting.enabled
+  xiaomi.superResolution.enabled
+  xiaomi.supernight.enabled
+  xiaomi.swmf.enabled
+  xiaomi.thermal.thermalLevel
+
+
+--------------------------------------------------------------------------------
+5. KEY HARDWARE-PARITY GAPS IN CURRENT CODE
+--------------------------------------------------------------------------------
+
+A) TRANSFORM MATRICES (CameraHook.kt:XIAOMI_BACK_MATRIX / XIAOMI_FRONT_MATRIX)
+   • XIAOMI_BACK_MATRIX is actually the front-camera matrix
+   • XIAOMI_FRONT_MATRIX is wrong (matches no real hardware)
+   • Fix: use the correct matrices captured above (or even better, capture
+     the real matrix once during the first frame and replay it).
+
+B) SENSOR_ORIENTATION DEFAULT (CameraHook.kt:startRenderThreads)
+   • Falls back to 270 if cameraOrientations[activeCameraId] is missing
+   • Real values for this device: BACK=90, FRONT=270
+   • Fix: never fall back to a hardcoded value — read it from
+     CameraCharacteristics on demand.
+
+C) CAPTURE RESULT METADATA NOT SPOOFED
+   • Real hardware emits: AE/AF/AWB state transitions, rolling shutter skew,
+     exposure time, ISO, focus distance, aperture, focal length, frame duration
+   • Current code only spoofs JPEG_ORIENTATION=0
+   • Fix: synthesize a realistic per-frame CaptureResult with state drift.
+
+D) FRONT vs BACK BEHAVIOR DIFFERENCES IGNORED
+   • Front camera is fixed-focus (AF always INACTIVE, focus_distance always 0)
+   • Front camera AE oscillates SEARCHING ↔ FLASH_REQUIRED, rarely CONVERGED
+   • Front camera has variable framerate (10–30 fps); back is locked 20 fps
+   • Front has no flash, no OIS; back has flash, no OIS
+   • Front aperture 2.0 (f/2.0); back aperture 1.8 (f/1.8)
+   • Spoofed CaptureResults must distinguish between these profiles.
+
+E) ROLLING SHUTTER SKEW
+   • BACK: 26,842,229 ns; FRONT: 32,662,789 ns
+   • Currently not set in spoofed CaptureResults → KYC apps that check
+     SENSOR_ROLLING_SHUTTER_SKEW will see null/0.
+
+F) CHARACTERISTIC SPOOFING
+   • If running on a non-Xiaomi or different-spec device but pretending to be
+     a Redmi pond, INFO_SUPPORTED_HARDWARE_LEVEL must report LEVEL_3, sensor
+     dimensions must match (4096×3072 / 4208×3120), apertures must be [1.8]
+     and [2.0] respectively, etc.
+
+G) MEDIATEK + XIAOMI VENDOR TAGS LARGELY UNTOUCHED
+   • Native MIUI camera sets ~50 xiaomi.* tags per request
+   • Current code only neutralizes a few (mfnr, hdr, mivi, parallel)
+   • A complete spoof should mirror the realistic set of vendor tags so
+     downstream HAL components see expected metadata.
+
+
+--------------------------------------------------------------------------------
+6. REPRODUCIBILITY
+--------------------------------------------------------------------------------
+
+Source audit JSON files:
+  /sdcard/Download/virtucam_audit/hw_audit_com.android.camera_pid17000.json
+    — first back-camera-only run (50 KB)
+  /sdcard/Download/virtucam_audit/hw_audit_com.android.camera_pid27360.json
+    — back camera with full 200 capture_results (206 KB)
+  /sdcard/Download/virtucam_audit/hw_audit_com.android.camera_pid2942.json
+    — first front-camera attempt (212 KB, mislabeled matrices)
+  /sdcard/Download/virtucam_audit/hw_audit_com.android.camera_pid15301.json
+    — front retest, low-light (228 KB, mislabeled matrices)
+  /sdcard/Download/virtucam_audit/hw_audit_com.android.camera_pid31612.json
+    — final retest with activeCameraId tracking fix (229 KB,
+      CORRECTLY labeled matrices)
+
+Code commits that produced this data:
+  ad9373b — feat: add HardwareAuditLogger for ground-truth camera surveillance
+  fefa841 — fix: HardwareAuditLogger persists data even without sessions
+  27fdfbe — fix: capture CaptureResults during surveillance + snapshot in-progress
+  f950cae — fix: per-camera matrix dedupe so front-camera matrix is captured
+  ca50213 — fix: track activeCameraId for audit even when VirtuCam is disabled
+================================================================================
