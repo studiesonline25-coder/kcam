@@ -138,6 +138,19 @@ object CameraHook {
         try {
             targetPackage = lpparam.packageName
             Log.d(TAG, "VirtuCam_Hook: Initializing hooks for $targetPackage")
+
+            // Boot the hardware audit logger
+            try {
+                val deviceInfo = org.json.JSONObject()
+                deviceInfo.put("manufacturer", android.os.Build.MANUFACTURER)
+                deviceInfo.put("model", android.os.Build.MODEL)
+                deviceInfo.put("device", android.os.Build.DEVICE)
+                deviceInfo.put("brand", android.os.Build.BRAND)
+                deviceInfo.put("android_version", android.os.Build.VERSION.RELEASE)
+                deviceInfo.put("sdk_int", android.os.Build.VERSION.SDK_INT)
+                deviceInfo.put("target_package", lpparam.packageName)
+                HardwareAuditLogger.init(deviceInfo)
+            } catch (_: Throwable) {}
             
             hookCameraManager(lpparam)
             hookImageReader(lpparam)
@@ -1038,6 +1051,11 @@ object CameraHook {
                                     }
                                 } catch (_: Exception) {}
 
+                                // [HARDWARE AUDIT] Log the real CaptureResult when VirtuCam is OFF
+                                if (!isEnabled) {
+                                    try { HardwareAuditLogger.logCaptureResult(result) } catch (_: Throwable) {}
+                                }
+
                             } catch (e: Exception) {}
                             originalCallback.onCaptureCompleted(session, request, result)
                         }
@@ -1215,7 +1233,6 @@ object CameraHook {
 
         XposedBridge.hookAllMethods(managerClass, "getCameraCharacteristics", object : XC_MethodHook() {
             override fun afterHookedMethod(param: MethodHookParam) {
-                if (!isEnabled) return
                 val cameraId = param.args[0] as? String ?: "unknown"
                 val char = param.result as? android.hardware.camera2.CameraCharacteristics ?: return
                 
@@ -1232,6 +1249,9 @@ object CameraHook {
                     val sizes = streamMap.getOutputSizes(android.graphics.ImageFormat.JPEG)
                     Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Camera $cameraId supports ${sizes?.size ?: 0} JPEG sizes. Max: ${sizes?.firstOrNull()}")
                 }
+
+                // [HARDWARE AUDIT] Always record real characteristics regardless of enabled state
+                try { HardwareAuditLogger.logCharacteristics(cameraId, char) } catch (_: Throwable) {}
             }
         })
     }
@@ -1265,6 +1285,11 @@ object CameraHook {
                         if (keyName == "xiaomi.device.orientation") {
                             xiaomiRequestedOrientation = value as? Int ?: -1
                         }
+                    }
+
+                    // [HARDWARE AUDIT] Record ALL request fields when VirtuCam is OFF
+                    if (!isEnabled) {
+                        try { HardwareAuditLogger.logCaptureRequest(keyName, value) } catch (_: Throwable) {}
                     }
                 } catch (_: Throwable) {}
             }
@@ -1698,6 +1723,9 @@ object CameraHook {
                                     val mStr = matrix.joinToString(", ") { String.format("%.2f", it) }
                                     Log.e(TAG, "SURVEILLANCE: Real ST Matrix -> [$mStr]")
                                 }
+                                // [HARDWARE AUDIT] Record every unique matrix we observe
+                                val isFront = (cameraFacings[activeCameraId] == 1)
+                                try { HardwareAuditLogger.logTransformMatrix(activeCameraId, isFront, matrix) } catch (_: Throwable) {}
                                 return
                             }
 
@@ -2059,6 +2087,18 @@ object CameraHook {
                                 val fmt = SurfaceUtils.getSurfaceFormat(s)
                                 Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Target Surface: ${size.first}x${size.second}, Format=$fmt")
                             }
+
+                            // [HARDWARE AUDIT] Begin session logging (captures surface geometry)
+                            if (!isEnabled) {
+                                try {
+                                    val auditSurfaces = surfacesList.map { s ->
+                                        val sz = SurfaceUtils.getSurfaceSize(s)
+                                        val fmt = SurfaceUtils.getSurfaceFormat(s)
+                                        Pair(fmt, sz)
+                                    }
+                                    HardwareAuditLogger.beginSession(activeCameraId, auditSurfaces)
+                                } catch (_: Throwable) {}
+                            }
                             
                             stopOldPipeline()
                             
@@ -2254,6 +2294,9 @@ object CameraHook {
     }
 
     private fun stopOldPipeline() {
+        // [HARDWARE AUDIT] End the current session and flush to disk before tearing down
+        try { HardwareAuditLogger.endSession() } catch (_: Throwable) {}
+
         renderThreads.forEach { 
             try {
                 it.javaClass.getMethod("quit").invoke(it)
