@@ -233,8 +233,12 @@ object HardwareAuditLogger {
 
     fun logCaptureResult(result: TotalCaptureResult) {
         try {
-            // Throttle: keep at most 200 results total
-            if (globalCaptureResults.length() >= 200) return
+            // Rotating buffer: keep at most 500 latest results, drop oldest at cap.
+            // JSONArray.remove(int) removes and shifts in place (API 19+).
+            val MAX_GLOBAL_RESULTS = 500
+            while (globalCaptureResults.length() >= MAX_GLOBAL_RESULTS) {
+                globalCaptureResults.remove(0)
+            }
             resultCount.incrementAndGet()
 
             val obj = JSONObject()
@@ -374,7 +378,10 @@ object HardwareAuditLogger {
     // -----------------------------------------------------------------------
 
     fun logCaptureRequest(keyName: String, value: Any?) {
-        if (globalCaptureRequests.length() >= 500) return
+        // Rotating buffer: keep at most 500 latest, drop oldest at cap.
+        while (globalCaptureRequests.length() >= 500) {
+            globalCaptureRequests.remove(0)
+        }
         val obj = JSONObject()
         obj.put("key", keyName)
         obj.put("value", value?.toString() ?: "null")
