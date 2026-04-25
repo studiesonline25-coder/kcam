@@ -1051,10 +1051,8 @@ object CameraHook {
                                     }
                                 } catch (_: Exception) {}
 
-                                // [HARDWARE AUDIT] Log the real CaptureResult when VirtuCam is OFF
-                                if (!isEnabled) {
-                                    try { HardwareAuditLogger.logCaptureResult(result) } catch (_: Throwable) {}
-                                }
+                                // [HARDWARE AUDIT] Always log CaptureResult (read-only surveillance)
+                                try { HardwareAuditLogger.logCaptureResult(result) } catch (_: Throwable) {}
 
                             } catch (e: Exception) {}
                             originalCallback.onCaptureCompleted(session, request, result)
@@ -1287,10 +1285,8 @@ object CameraHook {
                         }
                     }
 
-                    // [HARDWARE AUDIT] Record ALL request fields when VirtuCam is OFF
-                    if (!isEnabled) {
-                        try { HardwareAuditLogger.logCaptureRequest(keyName, value) } catch (_: Throwable) {}
-                    }
+                    // [HARDWARE AUDIT] Always record request fields (read-only surveillance)
+                    try { HardwareAuditLogger.logCaptureRequest(keyName, value) } catch (_: Throwable) {}
                 } catch (_: Throwable) {}
             }
         })
@@ -2088,17 +2084,15 @@ object CameraHook {
                                 Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Target Surface: ${size.first}x${size.second}, Format=$fmt")
                             }
 
-                            // [HARDWARE AUDIT] Begin session logging (captures surface geometry)
-                            if (!isEnabled) {
-                                try {
-                                    val auditSurfaces = surfacesList.map { s ->
-                                        val sz = SurfaceUtils.getSurfaceSize(s)
-                                        val fmt = SurfaceUtils.getSurfaceFormat(s)
-                                        Pair(fmt, sz)
-                                    }
-                                    HardwareAuditLogger.beginSession(activeCameraId, auditSurfaces)
-                                } catch (_: Throwable) {}
-                            }
+                            // [HARDWARE AUDIT] Always begin session logging (read-only surveillance)
+                            try {
+                                val auditSurfaces = surfacesList.map { s ->
+                                    val sz = SurfaceUtils.getSurfaceSize(s)
+                                    val fmt = SurfaceUtils.getSurfaceFormat(s)
+                                    Pair(fmt, sz)
+                                }
+                                HardwareAuditLogger.beginSession(activeCameraId, auditSurfaces)
+                            } catch (_: Throwable) {}
                             
                             stopOldPipeline()
                             

@@ -41,6 +41,11 @@ object HardwareAuditLogger {
     private val auditDoc = JSONObject()
     private val sessions = JSONArray()   // one entry per createCaptureSession call
     private var currentSession = JSONObject()
+    // Top-level pools that persist even if no session is begun
+    private val globalCharacteristics = JSONObject()
+    private val globalMatrices = JSONArray()
+    private val globalCaptureResults = JSONArray()
+    private val globalCaptureRequests = JSONArray()
 
     // ---- Transform matrix history (one sample per unique matrix seen) ----
     // key = camera_id + facing, value = list of observed matrices
@@ -74,18 +79,20 @@ object HardwareAuditLogger {
         initialized = true
         auditDoc.put("device", deviceInfo)
         auditDoc.put("capture_time", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date()))
+        auditDoc.put("characteristics", globalCharacteristics)
+        auditDoc.put("transform_matrices", globalMatrices)
+        auditDoc.put("capture_results", globalCaptureResults)
+        auditDoc.put("capture_requests", globalCaptureRequests)
         auditDoc.put("sessions", sessions)
         Log.i(TAG, "HardwareAuditLogger initialized. Audit dir: $AUDIT_DIR")
 
-        // Start periodic auto-flush thread
+        // Start periodic auto-flush thread — always flush so file reflects latest state
         autoFlushThread = Thread {
             while (!Thread.currentThread().isInterrupted) {
                 try {
-                    Thread.sleep(30_000)
-                    if (resultCount.get() > 0 || matrixFrameCount > 0) {
-                        Log.i(TAG, "Auto-flush: snapshotting ${resultCount.get()} results, $matrixFrameCount matrix frames")
-                        flush()
-                    }
+                    Thread.sleep(15_000)
+                    Log.i(TAG, "Auto-flush: chars=${globalCharacteristics.length()}, matrices=${globalMatrices.length()}, results=${globalCaptureResults.length()}, requests=${globalCaptureRequests.length()}")
+                    flush()
                 } catch (_: InterruptedException) { break }
                   catch (_: Throwable) {}
             }
@@ -211,6 +218,8 @@ object HardwareAuditLogger {
             resKeys?.forEach { resKeyArr.put(it.name) }
             obj.put("available_result_keys", resKeyArr)
 
+            // Write to BOTH the global pool (always persists) and current session (if any)
+            globalCharacteristics.put("camera_$cameraId", obj)
             currentSession.put("characteristics_$cameraId", obj)
             Log.i(TAG, "Logged CameraCharacteristics for camera $cameraId")
         } catch (e: Throwable) {
@@ -224,8 +233,8 @@ object HardwareAuditLogger {
 
     fun logCaptureResult(result: TotalCaptureResult) {
         try {
-            // Throttle: keep at most 60 results per session
-            if (resultCount.get() >= 60) return
+            // Throttle: keep at most 200 results total
+            if (globalCaptureResults.length() >= 200) return
             resultCount.incrementAndGet()
 
             val obj = JSONObject()
@@ -306,6 +315,8 @@ object HardwareAuditLogger {
             obj.put("rolling_shutter_skew_ns", rollingSkew)
 
             resultBuffer.offer(obj)
+            // Always also persist to global pool so data isn't lost if no session begins
+            globalCaptureResults.put(obj)
         } catch (e: Throwable) {
             Log.e(TAG, "Error logging CaptureResult", e)
         }
@@ -347,6 +358,8 @@ object HardwareAuditLogger {
             }
             matObj.put("matrix_rows", rows)
 
+            // Write to BOTH global pool (always persists) and current session
+            globalMatrices.put(matObj)
             val matrixLog = currentSession.optJSONArray("transform_matrices") ?: JSONArray().also {
                 currentSession.put("transform_matrices", it)
             }
@@ -360,11 +373,13 @@ object HardwareAuditLogger {
     // -----------------------------------------------------------------------
 
     fun logCaptureRequest(keyName: String, value: Any?) {
-        if (requestBuffer.size >= 200) return
+        if (globalCaptureRequests.length() >= 500) return
         val obj = JSONObject()
         obj.put("key", keyName)
         obj.put("value", value?.toString() ?: "null")
         requestBuffer.offer(obj)
+        // Persist to global pool so data isn't lost without a session
+        globalCaptureRequests.put(obj)
     }
 
     // -----------------------------------------------------------------------
@@ -428,11 +443,15 @@ object HardwareAuditLogger {
     fun flush() {
         if (isFlushing.getAndSet(true)) return
         val snapshot = auditDoc.toString(2)
+        // Capture target package and PID for per-process audit file
+        val pkg = try { android.app.AndroidAppHelper.currentPackageName() ?: "unknown" } catch (_: Throwable) { "unknown" }
+        val pid = android.os.Process.myPid()
         Thread {
             try {
                 val dir = File(AUDIT_DIR)
                 if (!dir.exists()) dir.mkdirs()
-                val fileName = "hw_audit_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())}.json"
+                // Single rolling file per (package, pid) — overwritten on each flush
+                val fileName = "hw_audit_${pkg}_pid${pid}.json"
                 val file = File(dir, fileName)
                 FileWriter(file).use { it.write(snapshot) }
                 Log.i(TAG, "Hardware audit saved to ${file.absolutePath} (${snapshot.length} chars)")
