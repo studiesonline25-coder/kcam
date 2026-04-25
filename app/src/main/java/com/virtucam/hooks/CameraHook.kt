@@ -2108,7 +2108,43 @@ object CameraHook {
                     try {
                         // Lazy load configuration when camera is actually accessed
                         loadConfiguration()
-                        if (!isEnabled) return
+
+                        // [AUDIT TRACKING] Always update activeCameraId regardless of isEnabled,
+                        // so getTransformMatrix and other read-only hooks can attribute correctly.
+                        try {
+                            val cameraDevice = param.thisObject as android.hardware.camera2.CameraDevice
+                            val newId = cameraDevice.id
+                            if (newId != activeCameraId) {
+                                Log.e(TAG, "AUDIT: activeCameraId changed $activeCameraId -> $newId via createCaptureSession")
+                                activeCameraId = newId
+                                try {
+                                    val manager = AndroidAppHelper.currentApplication().getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
+                                    val characteristics = manager.getCameraCharacteristics(activeCameraId)
+                                    val facing = characteristics.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
+                                    if (facing != null) cameraFacings[activeCameraId] = if (facing == 0) 1 else 0
+                                    cameraOrientations[activeCameraId] = characteristics.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
+                                } catch (_: Throwable) {}
+                            }
+                        } catch (_: Throwable) {}
+
+                        if (!isEnabled) {
+                            // Audit-only path: still record session geometry so we capture the front camera's surface info
+                            val args0 = param.args
+                            if (args0.isNotEmpty() && args0[0] is List<*>) {
+                                val sList = args0[0] as List<Surface>
+                                if (sList.isNotEmpty()) {
+                                    try {
+                                        val auditSurfaces = sList.map { s ->
+                                            val sz = SurfaceUtils.getSurfaceSize(s)
+                                            val fmt = SurfaceUtils.getSurfaceFormat(s)
+                                            Pair(fmt, sz)
+                                        }
+                                        HardwareAuditLogger.beginSession(activeCameraId, auditSurfaces)
+                                    } catch (_: Throwable) {}
+                                }
+                            }
+                            return
+                        }
 
                         val args = param.args
                         if (args.isEmpty() || args[0] !is List<*>) return
@@ -2208,6 +2244,24 @@ object CameraHook {
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     try {
                         loadConfiguration()
+
+                        // [AUDIT TRACKING] Always update activeCameraId for read-only audit
+                        try {
+                            val cameraDevice = param.thisObject as android.hardware.camera2.CameraDevice
+                            val newId = cameraDevice.id
+                            if (newId != activeCameraId) {
+                                Log.e(TAG, "AUDIT: activeCameraId changed $activeCameraId -> $newId via createCaptureSessionByOutputConfigurations")
+                                activeCameraId = newId
+                                try {
+                                    val manager = AndroidAppHelper.currentApplication().getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
+                                    val characteristics = manager.getCameraCharacteristics(activeCameraId)
+                                    val facing = characteristics.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
+                                    if (facing != null) cameraFacings[activeCameraId] = if (facing == 0) 1 else 0
+                                    cameraOrientations[activeCameraId] = characteristics.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
+                                } catch (_: Throwable) {}
+                            }
+                        } catch (_: Throwable) {}
+
                         if (!isEnabled) return
                         
                         val args = param.args
@@ -2268,6 +2322,24 @@ object CameraHook {
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     try {
                         loadConfiguration()
+
+                        // [AUDIT TRACKING] Always update activeCameraId for read-only audit
+                        try {
+                            val cameraDevice = param.thisObject as android.hardware.camera2.CameraDevice
+                            val newId = cameraDevice.id
+                            if (newId != activeCameraId) {
+                                Log.e(TAG, "AUDIT: activeCameraId changed $activeCameraId -> $newId via SessionConfiguration")
+                                activeCameraId = newId
+                                try {
+                                    val manager = AndroidAppHelper.currentApplication().getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
+                                    val characteristics = manager.getCameraCharacteristics(activeCameraId)
+                                    val facing = characteristics.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
+                                    if (facing != null) cameraFacings[activeCameraId] = if (facing == 0) 1 else 0
+                                    cameraOrientations[activeCameraId] = characteristics.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
+                                } catch (_: Throwable) {}
+                            }
+                        } catch (_: Throwable) {}
+
                         if (!isEnabled) return
                         
                         val args = param.args
