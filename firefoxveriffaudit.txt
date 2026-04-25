@@ -1,10 +1,12 @@
 ================================================================================
-FIREFOX + VERIFF AGE VERIFICATION AUDIT — Xiaomi Redmi 'pond'
+FIREFOX BROWSER AUDIT — Xiaomi Redmi 'pond'
 ================================================================================
 Device: Xiaomi Redmi 2409BRN2CA, Android 15, SDK 35, HW Level 3
 Source app: org.mozilla.firefox
-Test scenario: Veriff age-verification flow (selfie / front camera liveness)
-Audit file: hw_audit_org.mozilla.firefox_pid31808.json (187 KB)
+Test scenarios:
+  1. Veriff age-verification flow (selfie / front camera liveness)
+  2. webcamtests.com FRONT camera tests (multiple resolutions)
+  3. webcamtests.com BACK camera tests (multiple resolutions)
 ================================================================================
 
 
@@ -12,242 +14,287 @@ Audit file: hw_audit_org.mozilla.firefox_pid31808.json (187 KB)
 1. PROCESS BEHAVIOR — Firefox is multi-process
 --------------------------------------------------------------------------------
 
-Firefox spawned 6 processes during the test, but only 1 actually used the
-camera. The other 5 were content/utility/extension processes that loaded the
-hook but never opened a camera.
+Firefox spawns 6+ processes. Only the main process actually opens the camera;
+the others (content/utility/extension workers) load the hook into memory but
+never call CameraManager. Files captured per run:
+  hw_audit_org.mozilla.firefox_pid<MAIN>.json    (large, has camera data)
+  hw_audit_org.mozilla.firefox_pid<CHILD>.json   (each ~377 bytes)
 
-Files captured:
-  hw_audit_org.mozilla.firefox_pid31808.json   (187 KB) — main / camera proc
-  hw_audit_org.mozilla.firefox_pid9921.json    (377 B)  — child, no camera
-  hw_audit_org.mozilla.firefox_pid10090.json   (377 B)  — child, no camera
-  hw_audit_org.mozilla.firefox_pid10208.json   (377 B)  — child, no camera
-  hw_audit_org.mozilla.firefox_pid10330.json   (377 B)  — child, no camera
-  hw_audit_org.mozilla.firefox_pid10479.json   (377 B)  — child, no camera
-
-Implication: when targeting Firefox with VirtuCam, the hook MUST be loaded
-into all child processes (LSPatch already does this) but the camera spoofing
-only ever fires in the main process. No need to wire up cross-process state
-for Firefox specifically.
+Implication: when targeting Firefox, the spoof only ever fires in the main
+process. No need to wire up cross-process state for browsers specifically.
 
 
 --------------------------------------------------------------------------------
-2. CAMERA ENUMERATION — both cameras queried, only front opened
+2. CAMERA ENUMERATION — both cameras queried regardless of which is opened
 --------------------------------------------------------------------------------
 
 Firefox calls getCameraCharacteristics() for BOTH camera_0 (back) and
-camera_1 (front), almost certainly to satisfy the WebRTC/getUserMedia
-enumerateDevices() call. This means our CameraCharacteristics spoofing must
-remain consistent across BOTH cameras even when only one is opened.
+camera_1 (front), to satisfy WebRTC/getUserMedia enumerateDevices(). This
+holds whether you only open the front or only the back camera.
 
-Then it opens ONLY camera_1 (front) — confirmed by:
-  - currentSessionInProgress.camera_id == "1"
-  - All 200 capture_results have aperture=2.0, focal_length=3.56,
-    crop=4208x3120 (= front camera fingerprint exactly)
-  - Single transform matrix logged: cam=1 front=true
+Implication: spoofed CameraCharacteristics must remain consistent across
+BOTH cameras even when only one will be opened.
 
 
 --------------------------------------------------------------------------------
-3. SESSION GEOMETRY — single 720p PRIVATE surface
+3. SESSION LIFECYCLE — fresh session per camera/resolution change
 --------------------------------------------------------------------------------
 
-Output surfaces requested:
-  [
-    { format: 34 (PRIVATE / 0x22), width: 1280, height: 720 }
-  ]
+Each camera switch and each resolution change triggers a brand-new
+CameraCaptureSession (close + reopen). Webcamtests.com's resolution
+dropdown reliably triggers session restarts.
 
-Compare native MIUI camera which requests 4–6 surfaces (preview + ZSL +
-capture + record). Veriff/WebRTC has exactly ONE preview-style surface.
+Real session sequence captured during back-camera webcamtests.com run:
+  session 1: cam=None, no surfaces             (initial probe)
+  session 2: cam=1 (front), 640x480 PRIVATE    (default front, 6 frames)
+  session 3: cam=0 (BACK),  640x480 PRIVATE    (user-selected, 56 frames)
+  session 4: cam=0 (BACK),  2340x1080 PRIVATE  (resolution change)
+  session 5: cam=0 (BACK),  2560x1920 PRIVATE  (resolution change)
 
-Implication: VirtuCam's surface-classification heuristics
-(captureSurfaces vs videoSurfaces vs preview) all collapse to a single
-"preview" path for browser flows. No JPEG capture surface is ever created.
-
-
---------------------------------------------------------------------------------
-4. TRANSFORM MATRIX — same as native front camera
---------------------------------------------------------------------------------
-
-Captured matrix for cam=1 front=true:
-  [0,-1,0,0,  1,0,0,0,  0,0,1,0,  0,1,0,1]
-
-This is IDENTICAL to the matrix observed in the native MIUI camera app for
-camera_1, confirming the matrix is purely device/sensor-driven (not app-
-driven). Our hardcoded constant XIAOMI_FRONT_MATRIX is still wrong here too.
+CONFIRMED: Firefox does NOT use applyConstraints to renegotiate mid-stream.
+It always closes the session and opens a new one on resolution change.
 
 
 --------------------------------------------------------------------------------
-5. CAPTURE REQUEST — bare-bones, no vendor tags
+4. SURFACE GEOMETRY — single PRIVATE surface every time
 --------------------------------------------------------------------------------
 
-Unique CaptureRequest keys observed in 200 frames (only 3 total!):
+Every session has EXACTLY 1 output surface. Format is always PRIVATE (0x22).
+Resolutions observed in browser flows:
+  640 x 480     (webcamtests "default")
+  1280 x 720    (Veriff WebRTC HD)
+  2340 x 1080   (webcamtests "FHD")
+  2560 x 1440   (webcamtests "QHD")
+  2560 x 1920   (webcamtests "5MP 4:3")
+
+Implication: VirtuCam does NOT need a JPEG capture pipeline for browser
+flows. Firefox/Veriff/webcamtests never request format 256 (JPEG) and
+never request format 35 (YUV_420_888). Only PRIVATE.
+
+
+--------------------------------------------------------------------------------
+5. TRANSFORM MATRICES — sensor-driven, identical across apps
+--------------------------------------------------------------------------------
+
+BACK (camera 0):
+  [0,-1,0,0,  -1,0,0,0,  0,0,1,0,  1,1,0,1]   (180 deg rotation)
+
+FRONT (camera 1):
+  [0,-1,0,0,   1,0,0,0,  0,0,1,0,  0,1,0,1]   (90 deg CW rotation)
+
+Both matrices are IDENTICAL to those captured from the native MIUI camera
+app. Conclusion: SurfaceTexture.getTransformMatrix() is purely
+sensor/HAL-driven, not influenced by the calling app.
+
+CURRENT CODE BUGS (CameraHook.kt):
+  XIAOMI_BACK_MATRIX  = [0,-1,0,0, 1,0,0,0, 0,0,1,0, 0,1,0,1]
+                        (this is actually the FRONT matrix!)
+  XIAOMI_FRONT_MATRIX = [0,1,0,0,  1,0,0,0, 0,0,1,0, 0,0,0,1]
+                        (this matches NOTHING captured)
+
+Effect: front camera in Firefox renders with arbitrary wrong transform;
+back camera renders 90 deg rotation instead of correct 180 deg.
+
+
+--------------------------------------------------------------------------------
+6. CAPTURE REQUEST — 4 keys total, no vendor tags ever
+--------------------------------------------------------------------------------
+
+Across 500+ frames spanning Veriff + webcamtests.com (front + back), Firefox
+sets EXACTLY 4 unique CaptureRequest keys:
   android.control.aeLock
   android.control.aeMode
   android.control.aeTargetFpsRange
+  android.control.afMode               (set only when AF is available — back camera)
 
-Compare native MIUI camera which sets ~70 keys per frame, including ~50
-xiaomi.* and ~11 com.mediatek.* vendor tags.
+Compare native MIUI camera which sets ~70 keys including ~50 xiaomi.* and
+~11 com.mediatek.* vendor tags.
 
-CRITICAL IMPLICATION:
-  All the xiaomi.* / mediatek.* / mivi / parallel / algo bypass complexity
-  in CameraHook.hookXiaomiBypass() and applyParallelTaskDataHooks() is
-  COMPLETELY IRRELEVANT for Firefox/WebRTC flows. Veriff never reads any of
-  these tags, so spoofing them adds zero parity value for KYC/browser
-  scenarios.
+Concrete values observed:
+  android.control.aeMode            = "1" (CONTROL_AE_MODE_ON)
+  android.control.aeLock            = "false"
+  android.control.afMode            = (set on back camera, not front)
+  android.control.aeTargetFpsRange  = [10, 30]   (Veriff)
+                                    = [5, 30]    (webcamtests at higher res)
 
-  The MIVI/Parallel work is only relevant if you also need photos to land
-  in Xiaomi's gallery DCIM folder (native camera app), not for liveness
-  in browsers.
-
-
---------------------------------------------------------------------------------
-6. CAPTURE RESULT — what Veriff actually observes
---------------------------------------------------------------------------------
-
-3A STATE TRANSITIONS observed (only 2 distinct quadruples!):
-  (SEARCHING,        INACTIVE, CONVERGED)
-  (FLASH_REQUIRED,   INACTIVE, CONVERGED)
-
-NOTE: AE NEVER reaches CONVERGED on the front camera in low light.
-NOTE: AF stays at INACTIVE permanently (front is fixed-focus).
-NOTE: AWB reaches CONVERGED quickly and stays there.
-
-If we spoof "perfect" AE_CONVERGED + AF_PASSIVE_FOCUSED states, the
-fingerprint would NOT match what real front-camera hardware produces in
-realistic indoor lighting. Veriff likely has this baseline calibrated.
-
-Per-frame metadata:
-  exposure_time_ns          90,002,000 .. 100,000,000   (= 90–100ms)
-  iso (sensitivity)         3,148 .. 5,491              (very high — dim room)
-  focus_distance            0.0 (always)                (fixed-focus)
-  aperture                  2.0 (always)                (= f/2.0)
-  focal_length_mm           3.56 (always)               (= 3.56mm)
-  crop_region               0,0,4208,3120               (no zoom, full sensor)
-  frame_duration_ns         {90,135,136 / 100,000,000 / 100,050,000}
-                                                        (~10 fps in low light)
-  rolling_shutter_skew_ns   32,662,789 (= 32.66 ms — same as native front)
+Implications:
+- Veriff and webcamtests both use [N, 30] ranges with N varying by
+  scenario (5-15). The fps lower bound is loose.
+- Firefox does NOT set afMode for the front camera (since the front camera
+  has no AF on this device). So the spoof for front-camera afMode should
+  default to AF_MODE_OFF (0).
+- All xiaomi.* / mediatek.* vendor tag spoofing is irrelevant for Firefox.
+  The MIVI / Parallel / MiAlgo bypass is wasted complexity for browser
+  flows. Reserve that for native-camera-app DCIM-rescue scenarios only.
 
 
 --------------------------------------------------------------------------------
-7. NEGOTIATED FPS RANGE
+7. CAPTURE RESULT — what Firefox observes per camera
 --------------------------------------------------------------------------------
 
-The fact that android.control.aeTargetFpsRange was the most-set key suggests
-Veriff requests a specific FPS range via WebRTC video constraints. Combined
-with frame_duration values (90–100ms), Veriff's request is being capped by
-the front camera's own auto-exposure when light is low. Common WebRTC FPS
-ranges Veriff likely sends:
+FRONT CAMERA (cam 1) — observed across Veriff + webcamtests.com:
 
-  (15, 30) — preferred when getUserMedia constraints {frameRate: 30}
-  (24, 30) — sometimes when {frameRate: {ideal: 30}} 
-  (30, 30) — when {frameRate: {exact: 30}}
+  3A states (limited set):
+    (SEARCHING, INACTIVE, CONVERGED)
+    (FLASH_REQUIRED, INACTIVE, CONVERGED)
 
-The fact that we see ~10 fps actual frame rate means the camera CAN drop
-below the requested range under low light, and Veriff tolerates this.
+  Per-frame metadata:
+    exposure_time_ns           90,002,000 .. 100,000,000  (90-100ms)
+    iso                        3,148 .. 6,339             (very high, low light)
+    focus_distance             0.0 always                 (fixed-focus)
+    aperture                   2.0
+    focal_length_mm            3.56
+    crop_region                0,0,4208,3120              (no zoom)
+    frame_duration_ns          90M / 100M                  (~10 fps)
+    rolling_shutter_skew_ns    32,662,789 (= 32.66 ms)
+
+BACK CAMERA (cam 0) — observed during webcamtests.com test:
+
+  3A states (full spectrum):
+    (SEARCHING,  PASSIVE_UNFOCUSED, CONVERGED)
+    (CONVERGED,  PASSIVE_UNFOCUSED, CONVERGED)
+    (CONVERGED,  PASSIVE_FOCUSED,   CONVERGED)
+
+  Per-frame metadata:
+    exposure_time_ns           50,005,000 .. 70,003,000   (variable!)
+    iso                        1,106 .. 5,150             (variable)
+    focus_distance             -1.472 .. 2.987            (lens hunting!)
+    aperture                   1.8
+    focal_length_mm            3.84
+    crop_region                0,0,4096,3072              (no zoom)
+    frame_duration_ns          50M / 60M / 70M             (14-20 fps variable)
+    rolling_shutter_skew_ns    26,842,229 (= 26.84 ms)
 
 
---------------------------------------------------------------------------------
-8. KEY DIFFERENCES vs NATIVE MIUI CAMERA
---------------------------------------------------------------------------------
+CRITICAL DIFFERENCES vs Native MIUI Back Camera:
 
-Behavior                   Native MIUI Camera   Firefox / Veriff
----------------------------------------------------------------------------
-Surface count              4–6 (preview/cap)    1 (preview only)
-Surface formats            PRIVATE+JPEG+YUV     PRIVATE only
-Resolutions                up to 4096×3072      exactly 1280×720
-Vendor tag fingerprint     ~50 xiaomi tags      0 vendor tags
-Per-frame request keys     ~70                  3
-Camera open API            Handler overload     Executor overload
-Both cameras opened?       no (one at a time)   yes (enumerates both)
-JPEG captures              yes                  never
-3A perfection demanded?    -                    NO — accepts realistic noise
+  Behavior              Native MIUI Camera         Firefox / WebRTC
+  ----------------------------------------------------------------
+  exposure_time         locked 50,005,000 ns       variable 50-70 ms
+  frame_duration        locked 50,025,000 ns       variable 50-70 ms
+  iso range observed    636 .. 1,107               1,106 .. 5,150
+  focus_distance        0..7.7 (smooth drift)      -1.47..2.99 (hunting!)
+  3A quadruples         all 7 seen                 3 seen (subset)
 
+The negative focus_distance values during PASSIVE_UNFOCUSED are the lens
+ACTIVELY HUNTING in real time. This is real-hardware noise that no
+spoofed-constant focus value could reproduce.
 
---------------------------------------------------------------------------------
-9. WHAT VERIFF MOST LIKELY VALIDATES
---------------------------------------------------------------------------------
-
-Based on the captured behavior and what's known about KYC liveness checks:
-
-A) HARDWARE LEVEL
-   - INFO_SUPPORTED_HARDWARE_LEVEL must be LIMITED or better (not LEGACY).
-     Real device reports LEVEL_3 — fine.
-
-B) LENS_FACING
-   - Confirmed FRONT for selfie capture.
-
-C) RESOLUTION CAPABILITY
-   - Camera must support exactly 1280×720 in the YUV/PRIVATE output sizes.
-     Real characteristics report this. Spoofed characteristics must too.
-
-D) FRAME-TO-FRAME LIVENESS
-   - Veriff feeds the WebRTC stream into a face-detection model that wants
-     to see SMALL DIFFERENCES in pixel data between consecutive frames
-     (head movement, micro-expressions, lighting micro-shifts).
-   - SENSOR_TIMESTAMP must be monotonically increasing (it is — uses real
-     CLOCK_MONOTONIC nanoseconds).
-   - Frame intervals must look natural (~33ms in good light; longer in dim).
-
-E) STATIC IMAGE INJECTION DETECTION
-   - If the same exact pixel pattern appears in many consecutive frames
-     (which a static image spoof would produce), Veriff's model can detect
-     this. Liveness "AI Jitter" added in current code (translateM/scaleM
-     micro-shake) is a partial countermeasure but obvious to a smart model.
-   - Real solution: feed a video file or live stream, not a static image.
-
-F) TIMING / SEQUENCING
-   - Veriff issues challenges (turn head, blink, etc.) and expects frame
-     content to respond within a tight window. Pre-recorded videos that
-     don't match the issued challenge fail.
+The variable exposure / frame_duration in Firefox shows that when an app
+doesn't override the auto-exposure (Firefox sets just aeMode=ON), the
+HAL ADAPTS to lighting. Native MIUI overrode this with stricter
+parameters that locked exposure. Firefox lets the HAL run free.
 
 
 --------------------------------------------------------------------------------
-10. PRIORITIZED FIX LIST FOR FIREFOX/VERIFF PARITY
+8. WEB API <-> ANDROID MAPPING
 --------------------------------------------------------------------------------
 
-HIGHEST IMPACT (these break the current spoof):
+When a JS app calls navigator.mediaDevices.getUserMedia({ video: { ... } }),
+Firefox translates the constraints into Android Camera2 calls:
 
-1. Fix transform matrix for camera_1 (front).
-   Current XIAOMI_FRONT_MATRIX = [0,1,0,0, 1,0,0,0, 0,0,1,0, 0,0,0,1]
-   Real on this device       = [0,-1,0,0, 1,0,0,0, 0,0,1,0, 0,1,0,1]
-   The wrong matrix produces wrong-orientation pixels in the WebRTC stream.
+  WebRTC constraint                   --> Android Camera2 effect
+  --------------------------------------- ----------------------------------
+  facingMode: "user"                  --> openCamera("1") (front)
+  facingMode: "environment"           --> openCamera("0") (back)
+  width: { ideal: N }                 --> SurfaceTexture.setDefaultBufferSize
+  height: { ideal: N }                -->                  to picked YUV/RGB size
+  frameRate: { ideal: N }             --> aeTargetFpsRange = [N-pad, N]
+  frameRate: { exact: 30 }            --> aeTargetFpsRange = [30, 30]
+  applyConstraints({ width: ... })    --> close + reopen session, NOT mid-stream
+
+Implication: when VirtuCam intercepts in browser flows, the simplest model
+is "honor the requested PRIVATE surface size exactly, deliver frames at
+something within the requested fps range, render via SurfaceTexture".
+
+
+--------------------------------------------------------------------------------
+9. PRIORITIZED FIX LIST FOR BROWSER (FIREFOX) PARITY
+--------------------------------------------------------------------------------
+
+HIGHEST IMPACT (these break or weaken the current spoof):
+
+1. Fix transform matrices for both cameras.
+   Replace the broken hardcoded XIAOMI_BACK_MATRIX / XIAOMI_FRONT_MATRIX
+   with the correct ones captured here. Best: read the real matrix from
+   the actual SurfaceTexture during a brief surveillance pass at startup
+   and replay that.
 
 2. Spoof realistic CaptureResult metadata when isEnabled=true.
-   Front camera profile (Redmi pond):
-     - AF_STATE = always INACTIVE (fixed-focus)
-     - AE_STATE = oscillate SEARCHING ↔ FLASH_REQUIRED in low light;
-                  reach CONVERGED only in good light
-     - AWB_STATE = CONVERGED most of the time
-     - SENSOR_EXPOSURE_TIME = 3ms (bright) to 100ms (dim), variable
-     - SENSOR_SENSITIVITY = 55 (bright) to ~6500 (dim), variable
-     - LENS_FOCUS_DISTANCE = 0.0 ALWAYS (fixed-focus front!)
-     - LENS_APERTURE = 2.0
-     - LENS_FOCAL_LENGTH = 3.56
-     - SENSOR_ROLLING_SHUTTER_SKEW = 32,662,789
-     - SENSOR_TIMESTAMP = monotonic ns from CLOCK_MONOTONIC
-     - SENSOR_FRAME_DURATION = matches the variable frame rate
+   MUST differ between front and back:
 
-3. Honor the 1280×720 PRIVATE surface request exactly.
-   Don't downscale or upscale. The browser expects pixel-exact dimensions.
+   FRONT camera profile:
+     - AF_STATE      = INACTIVE always
+     - AE_STATE      = oscillate SEARCHING <-> FLASH_REQUIRED in low light
+     - AWB_STATE     = CONVERGED
+     - exposure      = 90-100 ms (low light)
+     - iso           = 3000-6500
+     - focus         = 0.0 always
+     - aperture      = 2.0
+     - focal_length  = 3.56
+     - skew          = 32,662,789
 
-LOWER PRIORITY (irrelevant for Firefox specifically):
+   BACK camera profile:
+     - AF_STATE      = INACTIVE -> PASSIVE_UNFOCUSED -> PASSIVE_FOCUSED cycle
+     - AE_STATE      = SEARCHING -> CONVERGED, drifts
+     - AWB_STATE     = CONVERGED
+     - exposure      = 50-70 ms (variable)
+     - iso           = 1000-5000
+     - focus         = drift in [-1.5, +3] dpt with some hunting noise
+     - aperture      = 1.8
+     - focal_length  = 3.84
+     - skew          = 26,842,229
 
-4. Vendor tag spoofing (xiaomi.*, mediatek.*) — Firefox doesn't read these.
-5. JPEG capture pipeline — Firefox/Veriff never request JPEG.
-6. MIVI/Parallel/MiAlgo bypass — only relevant for native camera app DCIM.
+3. Honor the requested PRIVATE surface size exactly.
+   Don't downscale. Browser frames are passed pixel-exact through WebRTC.
+
+4. Respect aeTargetFpsRange.
+   When the app sets [10, 30], deliver frames between 33ms and 100ms apart.
+   When [5, 30], allow up to 200ms gaps. Don't pump rigid 33ms frames if
+   the requested range is wider.
+
+LOWER PRIORITY (irrelevant for browsers specifically):
+
+5. Vendor tag spoofing (xiaomi.*, mediatek.*) — Firefox doesn't read these.
+6. JPEG capture pipeline — Firefox never requests JPEG.
+7. MIVI/Parallel/MiAlgo bypass — only relevant for native camera DCIM.
+
+
+--------------------------------------------------------------------------------
+10. SUMMARY TABLE — Native MIUI vs Firefox/WebRTC
+--------------------------------------------------------------------------------
+
+  Aspect                    Native MIUI Camera     Firefox / WebRTC
+  -----------------------------------------------------------------
+  Surface count             4-6                    1
+  Surface formats           PRIVATE+JPEG+YUV       PRIVATE only
+  Resolutions               up to 4096x3072        640x480 .. 2560x1920
+  Per-session captures      ~200                   varies (6-200)
+  Vendor tag fingerprint    ~50 xiaomi tags        0
+  Per-frame request keys    ~70                    4
+  Camera open API           Handler overload       Executor overload
+  Both cameras opened?      no (one at a time)     yes (enumerates both)
+  JPEG captures             yes                    never
+  3A perfection demanded?   N/A                    NO - accepts realistic noise
+  Session restart on res    no                     yes - close + reopen
+  HAL exposure override     yes (50ms locked)      no (HAL auto-adapts)
 
 
 --------------------------------------------------------------------------------
 11. SOURCE FILES
 --------------------------------------------------------------------------------
 
-Audit JSON:
-  /sdcard/Download/virtucam_audit/hw_audit_org.mozilla.firefox_pid31808.json
+Audit JSONs (latest-first):
+  hw_audit_org.mozilla.firefox_pid29089.json   (back camera, webcamtests, 359 KB)
+  hw_audit_org.mozilla.firefox_pid31808.json   (Veriff + front webcamtests, 422 KB)
 
 Code commits:
-  ad9373b — feat: add HardwareAuditLogger
-  fefa841 — fix: HardwareAuditLogger persists data even without sessions
-  27fdfbe — fix: capture CaptureResults during surveillance
-  f950cae — fix: per-camera matrix dedupe
-  ca50213 — fix: track activeCameraId for audit
-  288f36f — docs: native camera findings (nativecameratest.txt)
+  ad9373b  feat: HardwareAuditLogger
+  fefa841  fix: persists data even without sessions
+  27fdfbe  fix: capture CaptureResults during surveillance
+  f950cae  fix: per-camera matrix dedupe
+  ca50213  fix: track activeCameraId for audit
+  288f36f  docs: native camera findings
+  8f61cea  docs: Firefox + Veriff age-verify findings
+  3734e9b  fix: rotating buffer for global pools
 ================================================================================
