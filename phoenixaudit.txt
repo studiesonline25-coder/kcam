@@ -1,10 +1,11 @@
 ================================================================================
-PHOENIX BROWSER + VERIFF AUDIT — Xiaomi Redmi 'pond'
+PHOENIX BROWSER AUDIT — Xiaomi Redmi 'pond'
 ================================================================================
 Device: Xiaomi Redmi 2409BRN2CA, Android 15, SDK 35, HW Level 3
 Source app: com.transsion.phoenix (Phoenix Browser by Transsion)
-Test scenario: Veriff age-verification flow (selfie / front camera)
-Audit file: hw_audit_com.transsion.phoenix_pid29927.json (364 KB)
+Test scenarios:
+  1. Veriff age-verification flow (front camera)         pid29927 (364 KB)
+  2. webcamtests.com front + back camera                 pid18935 (179 KB)
 ================================================================================
 
 
@@ -92,6 +93,26 @@ whereas Firefox only ever sees SEARCHING / FLASH_REQUIRED.
 
 
 --------------------------------------------------------------------------------
+3b. WEBCAMTESTS.COM SESSIONS — multi-resolution behavior in Phoenix
+--------------------------------------------------------------------------------
+
+When using webcamtests.com (vs Veriff), Phoenix shows the same multi-session
+restart pattern as Firefox does. Sessions captured:
+
+  session 1: cam=None (probe)
+  session 2: cam=1 (front), 640x480 YUV_420_888  -> 22 frames
+  in-progress: cam=0 (back), 640x480 YUV_420_888 -> 64 frames in pool
+
+Same finding as Firefox: each camera switch creates a brand-new
+CameraCaptureSession (close + reopen). Phoenix's WebRTC backend behaves
+identically to Firefox's in this respect.
+
+aeTargetFpsRange values seen across Phoenix sessions:
+  [10, 30]   (Veriff and most webcamtests sessions)
+  [5, 30]    (webcamtests at higher resolutions, same as Firefox)
+
+
+--------------------------------------------------------------------------------
 4. CAPTURE RESULT — Phoenix front camera observations
 --------------------------------------------------------------------------------
 
@@ -124,6 +145,64 @@ PER-FRAME METADATA:
                               (= 30 / 25 / 20 / 16.6 / 12.5 / 10 fps)
   rolling_shutter_skew_ns    32,662,789 (= 32.66 ms — same as native)
   ois_mode                   0 (off)
+
+
+--------------------------------------------------------------------------------
+4b. CAPTURE RESULT — Phoenix BACK camera observations
+--------------------------------------------------------------------------------
+
+Back camera (cam 0) on webcamtests.com — 64 frames in low-light Phoenix run:
+
+3A STATES OBSERVED (richest set across all browsers!):
+  (SEARCHING,      PASSIVE_UNFOCUSED, CONVERGED)
+  (FLASH_REQUIRED, PASSIVE_UNFOCUSED, CONVERGED)
+  (FLASH_REQUIRED, PASSIVE_SCAN,      CONVERGED)   <-- AF actively scanning!
+  (FLASH_REQUIRED, PASSIVE_FOCUSED,   CONVERGED)
+  (FLASH_REQUIRED, PASSIVE_FOCUSED,   SEARCHING)
+  (SEARCHING,      PASSIVE_FOCUSED,   SEARCHING)
+  (CONVERGED,      PASSIVE_FOCUSED,   SEARCHING)
+  (CONVERGED,      PASSIVE_FOCUSED,   CONVERGED)
+
+  PASSIVE_SCAN is brand new — never seen in Firefox, native, or Veriff.
+  This is the autofocus actively scanning during a focus transition.
+  The 12-key Phoenix CaptureRequest config produces enough HAL stimulus
+  for the lens to enter the SCAN state.
+
+PER-FRAME METADATA:
+  exposure_time_ns           60,004,000 .. 70,003,000   (60-70ms)
+  iso (sensitivity)          2,553 .. 6,368             (low light)
+  focus_distance             0.330 .. 6.331             (ALL POSITIVE!)
+                             vs Firefox back which had  -1.47..2.99 (hunting)
+  aperture                   1.8
+  focal_length_mm            3.84
+  crop_region                0,0,4096,3072
+  frame_duration_ns          [60,271,084 / 70,457,744]   (~14-16 fps)
+  rolling_shutter_skew_ns    26,842,229 (= 26.84 ms — same as native back)
+
+
+--------------------------------------------------------------------------------
+4c. CRITICAL INSIGHT — Phoenix back camera behavior is CLEANER than Firefox's
+--------------------------------------------------------------------------------
+
+  Behavior              Firefox back     Phoenix back     Native MIUI back
+  ---------------------------------------------------------------------------
+  3A quadruples seen    3                8                7
+  AF state range        UNFOCUSED-FOCUSED + PASSIVE_SCAN   full cycle
+  focus_distance        -1.47 .. 2.99    0.33 .. 6.33     0.0 .. 7.7
+  Negative focus dpt?   YES (hunting)    NO (clean)       NO (clean)
+  Exposure variation    50-70ms          60-70ms          50ms locked
+  Request keys          4                12               ~70
+
+The 12-key configuration Phoenix sends produces:
+  - Cleaner, more "settled" lens behavior (no negative-distance hunting)
+  - Richer 3A state space (PASSIVE_SCAN observed)
+  - More closely matches the native MIUI camera in terms of "smoothness"
+
+For VirtuCam parity:
+  - Phoenix's 12-key CaptureResult expectations are different from Firefox's 4
+  - Spoofing should produce Phoenix-realistic 3A states (including the
+    SEARCHING -> PASSIVE_SCAN -> PASSIVE_FOCUSED transition for back camera)
+  - Front camera in Phoenix shows AE_CONVERGED (vs Firefox which never did)
 
 
 --------------------------------------------------------------------------------
