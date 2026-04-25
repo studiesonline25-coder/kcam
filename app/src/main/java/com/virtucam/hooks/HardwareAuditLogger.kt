@@ -64,8 +64,8 @@ object HardwareAuditLogger {
     // ---- Session counter ----
     private var sessionIndex = 0
 
-    // ---- Throttle: log matrix only when it changes ----
-    private var lastMatrixStr = ""
+    // ---- Throttle: log matrix only when it changes (per camera key) ----
+    private val lastMatrixStrPerKey = mutableMapOf<String, String>()
     private var matrixFrameCount = 0
 
     // ---- Initialized flag ----
@@ -335,12 +335,13 @@ object HardwareAuditLogger {
     fun logTransformMatrix(cameraId: String, isFront: Boolean, matrix: FloatArray) {
         matrixFrameCount++
         val matStr = matrix.joinToString(",") { String.format("%.6f", it) }
-
-        // Only record when matrix changes (avoids flooding with identical frames)
-        if (matStr == lastMatrixStr) return
-        lastMatrixStr = matStr
-
         val key = "cam${cameraId}_${if (isFront) "front" else "back"}"
+
+        // Only record when matrix changes for THIS camera (per-key dedupe so cam0 and cam1 don't shadow each other)
+        val lastForKey = lastMatrixStrPerKey[key]
+        if (matStr == lastForKey) return
+        lastMatrixStrPerKey[key] = matStr
+
         val seenSet = matrixHistory.getOrPut(key) { mutableSetOf() }
         if (seenSet.add(matStr)) {
             // New unique matrix — record it
@@ -398,7 +399,7 @@ object HardwareAuditLogger {
         resultCount.set(0)
         resultBuffer.clear()
         requestBuffer.clear()
-        lastMatrixStr = ""
+        lastMatrixStrPerKey.clear()
         matrixFrameCount = 0
 
         val surfaceArr = JSONArray()
