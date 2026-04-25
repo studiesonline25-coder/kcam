@@ -1,0 +1,253 @@
+================================================================================
+PHOENIX BROWSER + VERIFF AUDIT — Xiaomi Redmi 'pond'
+================================================================================
+Device: Xiaomi Redmi 2409BRN2CA, Android 15, SDK 35, HW Level 3
+Source app: com.transsion.phoenix (Phoenix Browser by Transsion)
+Test scenario: Veriff age-verification flow (selfie / front camera)
+Audit file: hw_audit_com.transsion.phoenix_pid29927.json (364 KB)
+================================================================================
+
+
+--------------------------------------------------------------------------------
+1. PHOENIX vs FIREFOX — fundamentally different camera path
+--------------------------------------------------------------------------------
+
+Phoenix and Firefox both run Veriff in a browser, but their Camera2 usage is
+remarkably different.
+
+  Aspect                      Firefox                  Phoenix
+  ------------------------------------------------------------------------
+  Surface format              PRIVATE  (0x22)          YUV_420_888 (35)
+  Surface count               1                        1
+  Resolution                  1280x720                 1280x720
+  CaptureRequest unique keys  4                        12  (3x more)
+  Vendor tags read/written    0                        0
+  SurfaceTexture used?        YES (PRIVATE-backed)     NO (YUV ImageReader)
+  Transform matrix logged?    YES                      NO  (no SurfaceTexture!)
+  3A AE_CONVERGED reached?    NO  (only SEARCHING)     YES (full convergence)
+  Frame rate observed         ~10 fps (low light)      10-30 fps full range
+  Sets afMode on fixed-focus  NO                       YES (=4 ignored by HAL)
+
+Critical implication for VirtuCam:
+  - For Firefox: replace pixels via OpenGL EGL on the PRIVATE SurfaceTexture
+  - For Phoenix: replace pixels via FormatConverterBridge writing YUV planes
+                 directly to ImageReader buffers
+  - The current code already handles BOTH paths via FormatConverterBridge,
+    but the OpenGL EGL render-to-PRIVATE-SurfaceTexture path is irrelevant
+    for Phoenix.
+
+
+--------------------------------------------------------------------------------
+2. SESSION GEOMETRY
+--------------------------------------------------------------------------------
+
+Sessions captured:
+  session 1: cam=None, no surfaces                   (initial probe)
+  session 2: cam=1 (front), 1280x720 YUV_420_888     (1 frame, then closed)
+  in-progress: cam=1 (front), 1280x720 YUV_420_888   (385 frames in pool)
+
+Phoenix opens the front camera ONCE, doesn't switch resolutions, doesn't
+restart sessions (unlike webcamtests.com on Firefox which restarts every
+resolution change). The Veriff flow opens a single 1280x720 YUV stream and
+runs all face-detection/liveness on that stream.
+
+Interesting: the user-facing Veriff appears identical between Firefox and
+Phoenix, but Veriff's underlying getUserMedia constraint produces different
+Android API calls based on the browser's WebRTC backend.
+
+
+--------------------------------------------------------------------------------
+3. CAPTURE REQUEST — 12 keys, all standard android.* (no vendor tags)
+--------------------------------------------------------------------------------
+
+Phoenix sets these 12 unique CaptureRequest keys (none vendor):
+
+  android.control.aeExposureCompensation = 0
+  android.control.aeMode                 = 1   (CONTROL_AE_MODE_ON)
+  android.control.aePrecaptureTrigger    = 0   (IDLE)
+  android.control.aeTargetFpsRange       = [10, 30]
+  android.control.afMode                 = 4   (CONTINUOUS_PICTURE)
+  android.control.afTrigger              = 0   (IDLE)
+  android.control.awbLock                = false
+  android.control.awbMode                = 1   (CONTROL_AWB_MODE_AUTO)
+  android.control.mode                   = 1   (CONTROL_MODE_AUTO)
+  android.edge.mode                      = 1   (FAST)
+  android.flash.mode                     = 0   (OFF)
+  android.noiseReduction.mode            = 1   (FAST)
+
+Note that afMode=4 (CONTINUOUS_PICTURE) is set on the FRONT camera even
+though it has no autofocus. The HAL silently ignores this and AF state
+stays INACTIVE all 385 frames. This is fine — both real hardware and a
+spoof can simply ignore the afMode value when AF is not available.
+
+Compared to Firefox's 4 keys (aeLock, aeMode, aeTargetFpsRange, afMode),
+Phoenix's 12 keys make the HAL behave more like a "real camera app":
+  - awbMode + awbLock together drive AWB to CONVERGED
+  - edge + noiseReduction = FAST
+  - aeExposureCompensation explicit zero
+  - aePrecaptureTrigger / afTrigger explicit IDLE
+
+Result: Phoenix's 3A actually reaches CONVERGED for both AE and AWB,
+whereas Firefox only ever sees SEARCHING / FLASH_REQUIRED.
+
+
+--------------------------------------------------------------------------------
+4. CAPTURE RESULT — Phoenix front camera observations
+--------------------------------------------------------------------------------
+
+Front camera (cam 1) — 385 frames captured in Phoenix:
+
+3A STATES OBSERVED:
+  (SEARCHING,  INACTIVE, CONVERGED)
+  (CONVERGED,  INACTIVE, CONVERGED)   <-- AE reaches convergence!
+  (CONVERGED,  INACTIVE, SEARCHING)
+  (SEARCHING,  INACTIVE, SEARCHING)
+
+  AF state is permanently INACTIVE (front is fixed-focus, expected).
+  AE oscillates between SEARCHING and CONVERGED.
+  AWB oscillates between SEARCHING and CONVERGED.
+
+  Compare Firefox front camera which only ever showed:
+    (SEARCHING,     INACTIVE, CONVERGED)
+    (FLASH_REQUIRED, INACTIVE, CONVERGED)
+  Firefox never reached AE_CONVERGED on the front camera in this test.
+
+PER-FRAME METADATA:
+  exposure_time_ns           30,005,000 .. 100,000,000   (30-100ms variable)
+  iso (sensitivity)          730 .. 6,302                (variable)
+  focus_distance             0.0 always                  (fixed-focus)
+  aperture                   2.0
+  focal_length_mm            3.56
+  crop_region                0,0,4208,3120
+  frame_duration_ns          [33,350,000 / 40,020,000 / 50,025,000 /
+                              60,271,084 / 80,040,000 / 100,050,000]
+                              (= 30 / 25 / 20 / 16.6 / 12.5 / 10 fps)
+  rolling_shutter_skew_ns    32,662,789 (= 32.66 ms — same as native)
+  ois_mode                   0 (off)
+
+
+--------------------------------------------------------------------------------
+5. NO TRANSFORM MATRICES — Phoenix bypasses SurfaceTexture
+--------------------------------------------------------------------------------
+
+The audit logged ZERO SurfaceTexture.getTransformMatrix() calls during
+the entire Phoenix run. This is because Phoenix configures its preview
+output as YUV_420_888 ImageReader (CPU-readable buffers), not as
+PRIVATE-format SurfaceTexture (GPU/HAL pipeline).
+
+Implication: All the OpenGL/EGL transform-matrix work in TextureRenderer
+and the XIAOMI_BACK_MATRIX/XIAOMI_FRONT_MATRIX constants are irrelevant
+for Phoenix. The pixels Phoenix sees come straight from YUV_420_888 plane
+buffers; there is no GPU transform applied. The orientation must be
+correct in the raw YUV bytes.
+
+To spoof Phoenix correctly:
+  - Pre-rotate the spoof image to match the sensor's physical orientation
+    (sensor_orientation=270 for front means rotate 270 deg before putting
+    it into the YUV buffer)
+  - Pre-mirror for the front camera (Android convention)
+  - Write the rotated/mirrored YUV planes directly via the
+    FormatConverterBridge pipeline
+
+
+--------------------------------------------------------------------------------
+6. PHOENIX-VS-FIREFOX SUMMARY TABLE
+--------------------------------------------------------------------------------
+
+  Behavior                  Firefox                  Phoenix
+  ------------------------------------------------------------------------
+  Browser package           org.mozilla.firefox      com.transsion.phoenix
+  Multi-process spawning    yes (~6 procs)           yes (only 2 logged)
+  Both cameras enumerated?  yes                      yes
+  Surface format            PRIVATE (0x22)           YUV_420_888 (35)
+  Resolution                1280x720 (Veriff)        1280x720
+  Pipeline path             SurfaceTexture + EGL     ImageReader YUV planes
+  CaptureRequest key count  4                        12
+  Vendor tags               0                        0
+  AE convergence            never CONVERGED          CONVERGED reached
+  AWB convergence           CONVERGED early          oscillates
+  Frame rate observed       ~10 fps                  10-30 fps
+  Exposure range observed   90-100 ms                30-100 ms (full)
+  Transform matrix queried? yes                      no
+
+
+--------------------------------------------------------------------------------
+7. PRIORITIZED FIX LIST FOR PHOENIX PARITY
+--------------------------------------------------------------------------------
+
+HIGHEST IMPACT:
+
+1. YUV plane orientation must be correct in the buffer.
+   For Phoenix's front-camera YUV_420_888 stream:
+     - Pre-rotate by sensor_orientation (270 for front)
+     - Pre-mirror horizontally (front-camera Android convention)
+   This is independent of the SurfaceTexture matrix work needed for Firefox.
+
+2. Spoof realistic CaptureResult metadata (same fields as Firefox/native).
+   Phoenix front-camera realistic profile:
+     - AF_STATE      = INACTIVE (always)
+     - AE_STATE      = SEARCHING <-> CONVERGED drift
+     - AWB_STATE     = SEARCHING <-> CONVERGED drift
+     - exposure      = 30-100 ms (variable)
+     - iso           = 700-6500
+     - focus         = 0.0 always
+     - aperture      = 2.0
+     - focal_length  = 3.56
+     - skew          = 32,662,789
+
+3. Honor the 1280x720 YUV_420_888 surface request.
+   Phoenix doesn't change resolution mid-session.
+
+LOWER PRIORITY:
+
+4. Vendor tag spoofing — Phoenix doesn't read xiaomi.* either.
+5. JPEG capture — Phoenix never requests JPEG.
+6. SurfaceTexture transform matrix work — Phoenix doesn't use ST.
+
+
+--------------------------------------------------------------------------------
+8. CROSS-BROWSER PARITY STRATEGY
+--------------------------------------------------------------------------------
+
+To handle BOTH Firefox and Phoenix correctly, VirtuCam must provide:
+
+A) PRIVATE SurfaceTexture path (Firefox)
+   - OpenGL EGL renderer drawing to a SurfaceTexture
+   - Correct getTransformMatrix() value to make orientation right
+   - The fix: replace the broken hardcoded XIAOMI_*_MATRIX constants
+     with the real ones captured from this device
+
+B) YUV_420_888 ImageReader path (Phoenix)
+   - FormatConverterBridge writing YUV planes
+   - Pre-rotation/mirroring baked into the YUV bytes
+   - The fix: ensure the YUV write code applies the right rotation
+     based on cameraId (back: 90, front: 270) and mirroring (front only)
+
+C) CaptureResult spoofing (both)
+   - Same realistic per-camera profiles whether the consumer is a
+     SurfaceTexture or an ImageReader
+   - Driven by sensor_timestamp from CLOCK_MONOTONIC
+   - 3A states drift with time
+
+D) CameraCharacteristics spoofing (both)
+   - Both browsers enumerate both cameras
+   - Spoofed values must remain consistent across cam_0 and cam_1
+
+
+--------------------------------------------------------------------------------
+9. SOURCE FILES
+--------------------------------------------------------------------------------
+
+Audit JSON:
+  hw_audit_com.transsion.phoenix_pid29927.json (364 KB)
+
+Code commits:
+  ad9373b  feat: HardwareAuditLogger
+  fefa841  fix: persists data even without sessions
+  27fdfbe  fix: capture CaptureResults during surveillance
+  f950cae  fix: per-camera matrix dedupe
+  ca50213  fix: track activeCameraId for audit
+  288f36f  docs: native camera findings
+  c0dc197  docs: Firefox audit (Veriff + webcamtests, both cameras)
+  3734e9b  fix: rotating buffer for global pools
+================================================================================
