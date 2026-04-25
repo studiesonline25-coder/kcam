@@ -1000,7 +1000,45 @@ object CameraHook {
     private fun hookCaptureCallback(lpparam: XC_LoadPackage.LoadPackageParam) {
         val sessionClass = XposedHelpers.findClassIfExists(
             "android.hardware.camera2.impl.CameraCaptureSessionImpl", lpparam.classLoader
-        ) ?: return
+        )
+        if (sessionClass == null) {
+            Log.e(TAG, "AUDIT: CameraCaptureSessionImpl class NOT FOUND — capture callback hook will not engage")
+            return
+        }
+        Log.e(TAG, "AUDIT: CameraCaptureSessionImpl found, installing capture hooks")
+
+        // [HARDWARE AUDIT] Always-on wrapper that records CaptureResults regardless of isEnabled.
+        // This is separate from the spoofing logic below so audit data is captured even when OFF.
+        val auditOnlyHook = object : XC_MethodHook() {
+            override fun beforeHookedMethod(param: MethodHookParam) {
+                try {
+                    val callbackIndex = 1
+                    val originalCallback = if (param.args.size > callbackIndex)
+                        param.args[callbackIndex] as? android.hardware.camera2.CameraCaptureSession.CaptureCallback
+                        else null
+                    if (originalCallback == null) return
+                    val auditWrapped = object : android.hardware.camera2.CameraCaptureSession.CaptureCallback() {
+                        override fun onCaptureStarted(session: android.hardware.camera2.CameraCaptureSession, request: android.hardware.camera2.CaptureRequest, timestamp: Long, frameNumber: Long) {
+                            originalCallback.onCaptureStarted(session, request, timestamp, frameNumber)
+                        }
+                        override fun onCaptureCompleted(session: android.hardware.camera2.CameraCaptureSession, request: android.hardware.camera2.CaptureRequest, result: android.hardware.camera2.TotalCaptureResult) {
+                            try { HardwareAuditLogger.logCaptureResult(result) } catch (_: Throwable) {}
+                            originalCallback.onCaptureCompleted(session, request, result)
+                        }
+                        override fun onCaptureFailed(session: android.hardware.camera2.CameraCaptureSession, request: android.hardware.camera2.CaptureRequest, failure: android.hardware.camera2.CaptureFailure) {
+                            originalCallback.onCaptureFailed(session, request, failure)
+                        }
+                    }
+                    // Only wrap if the spoofing path won't (i.e., when disabled).
+                    // When VirtuCam is enabled, the next hook below will replace the callback again.
+                    if (!isEnabled) param.args[callbackIndex] = auditWrapped
+                } catch (_: Throwable) {}
+            }
+        }
+        XposedBridge.hookAllMethods(sessionClass, "capture", auditOnlyHook)
+        XposedBridge.hookAllMethods(sessionClass, "captureBurst", auditOnlyHook)
+        XposedBridge.hookAllMethods(sessionClass, "setRepeatingRequest", auditOnlyHook)
+        XposedBridge.hookAllMethods(sessionClass, "setRepeatingBurst", auditOnlyHook)
 
         val callbackHook = object : XC_MethodHook() {
             override fun beforeHookedMethod(param: MethodHookParam) {

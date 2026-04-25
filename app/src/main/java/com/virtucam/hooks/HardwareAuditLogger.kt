@@ -442,6 +442,12 @@ object HardwareAuditLogger {
 
     fun flush() {
         if (isFlushing.getAndSet(true)) return
+        // Snapshot in-progress session as a sibling so data isn't lost mid-session
+        try {
+            if (currentSession.length() > 0) {
+                auditDoc.put("current_session_in_progress", currentSession)
+            }
+        } catch (_: Throwable) {}
         val snapshot = auditDoc.toString(2)
         // Capture target package and PID for per-process audit file
         val pkg = try { android.app.AndroidAppHelper.currentPackageName() ?: "unknown" } catch (_: Throwable) { "unknown" }
