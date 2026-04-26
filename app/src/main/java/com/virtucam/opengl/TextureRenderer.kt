@@ -208,7 +208,8 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             // NOTE: Matrix.rotateM is CCW, but sensors are CW relative to board top.
             // We negate the rotation to achieve CW parity, then add 180 deg to compensate
             // for the upright orientation of the user's uploaded media.
-            val totalRotation = ((360 - ((hardwareSensorOrientation + userRotation + 360) % 360)) + 180) % 360
+            // PLUS: apply manual rotationOffset for per-app fine-tuning.
+            val totalRotation = ((360 - ((hardwareSensorOrientation + userRotation + rotationOffset + 360) % 360)) + 180) % 360
 
             // --- ISOTROPIC FITTING MATH ---
             fun drawQuad(isBackground: Boolean) {

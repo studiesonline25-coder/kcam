@@ -130,9 +130,14 @@ class MainActivity : AppCompatActivity() {
             config.isTestPatternMode = enabled
         }
 
-        @JavascriptInterface
+        @android.webkit.JavascriptInterface
         fun setPassthroughMode(enabled: Boolean) {
             config.isPassthroughMode = enabled
+        }
+
+        @android.webkit.JavascriptInterface
+        fun setRotationOffset(offset: Int) {
+            config.rotationOffset = offset
         }
 
         @JavascriptInterface

@@ -107,6 +107,9 @@ object CameraHook {
     @Volatile
     var isPassthroughMode: Boolean = false
 
+    @Volatile
+    var rotationOffset: Int = 0
+
     // [PASSTHROUGH] Spy ImageReader that taps real hardware frames without replacing surfaces
     private var spyImageReader: ImageReader? = null
     private var spyHandlerThread: HandlerThread? = null
@@ -2591,7 +2594,8 @@ class VirtualRenderThread(
     private val streamUrl: String,
     private val isFrontCamera: Boolean,
     private val sensorOrientation: Int = 0,
-    private val userRotation: Int = 0
+    private val userRotation: Int = 0,
+    private val rotationOffset: Int = 0
 ) : Thread("VirtuCam-RenderThread") {
     
     @Volatile
