@@ -204,14 +204,38 @@ class TextureRenderer(private val isVideo: Boolean = true) {
 
         if (videoWidth > 0 && videoHeight > 0 && viewWidth > 0 && viewHeight > 0) {
             // [ABSOLUTE HARDWARE PARITY]
-            // We rotate the video to match the physical mounting of the sensor (90 or 270).
-            // NOTE: Matrix.rotateM is CCW, but sensors are CW relative to board top.
-            // We negate the rotation to achieve CW parity, then add 180 deg to compensate
-            // for the upright orientation of the user's uploaded media (real sensors output
-            // physically rotated frames; we synthesize from already-upright content so we
-            // need an extra half-turn to land in the correct orientation after the
-            // SurfaceTexture matrix / YUV consumer applies its own transform).
-            val totalRotation = ((360 - ((hardwareSensorOrientation + userRotation + 360) % 360)) + 180) % 360
+            // Real cameras emit pixels in sensor-native orientation. The aspect ratio of
+            // the consumer surface tells us how the consumer expects to handle that:
+            //
+            //  PORTRAIT surface (height >= width): browsers, native camera, KYC selfie.
+            //    These consumers either display the buffer directly (no rotation correction)
+            //    or apply the SurfaceTexture transform matrix. Either way, after empirical
+            //    testing across native MIUI, Firefox+Veriff, Firefox+webcamtests, and
+            //    Phoenix+Veriff, all 6 paths needed an extra +180 deg vs the naive sensor-
+            //    inverse formula to land upright.
+            //
+            //  LANDSCAPE surface (width > height): scanners (QR/barcode/document), ML Kit,
+            //    ZXing, anything that reads ImageReader buffers and applies its own
+            //    rotation correction based on SENSOR_ORIENTATION metadata. These consumers
+            //    EXPECT sensor-native rotated pixels and undo the sensor mount themselves.
+            //    Confirmed empirically with com.gamma.scan: a 1440x720 surface produced
+            //    a 90 deg CCW rotation when we delivered upright pixels (the scanner
+            //    rotated again on top). Delivering sensor-native (no +180) makes the
+            //    scanner's correction cancel out to upright.
+            //
+            // NOTE: Matrix.rotateM is CCW, sensors are CW relative to board top, so we
+            // negate the sensor orientation to express it in Matrix.rotateM's coordinate
+            // system.
+            val baseRotation = (360 - ((hardwareSensorOrientation + userRotation + 360) % 360)) % 360
+            val surfaceIsLandscape = viewWidth > viewHeight
+            val totalRotation = if (surfaceIsLandscape) {
+                // Hardware-faithful: deliver sensor-native pixels. Consumer applies its
+                // own rotation hint (real cameras work the same way here).
+                baseRotation
+            } else {
+                // Empirically required half-turn for portrait consumers.
+                (baseRotation + 180) % 360
+            }
 
             // --- ISOTROPIC FITTING MATH ---
             fun drawQuad(isBackground: Boolean) {
