@@ -203,15 +203,29 @@ class TextureRenderer(private val isVideo: Boolean = true) {
         GLES20.glEnableVertexAttribArray(maTextureHandle)
 
         if (videoWidth > 0 && videoHeight > 0 && viewWidth > 0 && viewHeight > 0) {
-            // [ABSOLUTE HARDWARE PARITY]
-            // We rotate the video to match the physical mounting of the sensor (90 or 270).
-            // NOTE: Matrix.rotateM is CCW, but sensors are CW relative to board top.
-            // We negate the rotation to achieve CW parity, then add 180 deg to compensate
-            // for the upright orientation of the user's uploaded media (real sensors output
-            // physically rotated frames; we synthesize from already-upright content so we
-            // need an extra half-turn to land in the correct orientation after the
-            // SurfaceTexture matrix / YUV consumer applies its own transform).
-            val totalRotation = ((360 - ((hardwareSensorOrientation + userRotation + 360) % 360)) + 180) % 360
+            // [ABSOLUTE HARDWARE PARITY — sensor-native pixel emission]
+            //
+            // Real cameras emit pixels rotated by the sensor's physical mount
+            // (90 deg CW for the back camera, 270 deg CW for the front on this device).
+            // The buffer always contains sensor-native pixels, regardless of consumer.
+            //
+            // Each consumer then derives upright display from the buffer through one
+            // of these standard Camera2 paths:
+            //   - SurfaceTexture-based: applies getTransformMatrix() during sampling.
+            //   - ImageReader-based:   reads SENSOR_ORIENTATION from CameraCharacteristics
+            //                          and rotates the buffer accordingly.
+            //   - WebRTC: rotation negotiated via SDP using the same metadata.
+            //
+            // Our job is to produce sensor-native pixels (the constant) from the user's
+            // upright source media. We pre-rotate by sensor_orientation in CW direction.
+            // Matrix.rotateM is CCW, so we use (360 - sensor_orientation) for CW parity.
+            //
+            // The hardcoded XIAOMI_*_MATRIX that the getTransformMatrix hook overrides
+            // with is the real captured matrix from this device — it correctly undoes
+            // the sensor rotation for SurfaceTexture consumers. The two pieces (buffer
+            // rotation here + matrix in CameraHook) form a coherent (buffer + metadata)
+            // pair, exactly like real hardware does.
+            val totalRotation = (360 - ((hardwareSensorOrientation + userRotation + 360) % 360)) % 360
 
             // --- ISOTROPIC FITTING MATH ---
             fun drawQuad(isBackground: Boolean) {
