@@ -104,6 +104,16 @@ object CameraHook {
     @Volatile
     var isTestPatternMode: Boolean = false
 
+    @Volatile
+    var isPassthroughMode: Boolean = false
+
+    // [PASSTHROUGH] Spy ImageReader that taps real hardware frames without replacing surfaces
+    private var spyImageReader: ImageReader? = null
+    private var spyHandlerThread: HandlerThread? = null
+    private var spyHandler: Handler? = null
+    @Volatile
+    private var lastSpyDumpMs: Long = 0L
+
     // Signal for VirtualRenderThread to recreate EGL surfaces when browser renegotiates resolution
     val pendingSurfaceResize = java.util.concurrent.atomic.AtomicBoolean(false)
 
@@ -1519,6 +1529,34 @@ object CameraHook {
         XposedBridge.hookAllMethods(deviceImplClass, "submitCaptureRequest", object : XC_MethodHook() {
             override fun beforeHookedMethod(param: MethodHookParam) {
                 applyDeferredHooksToClassLoader(Thread.currentThread().contextClassLoader)
+
+                // [PASSTHROUGH] When disabled but passthrough is on, inject spy surface into every request
+                if (!isEnabled && isPassthroughMode) {
+                    val spySurf = spyImageReader?.surface
+                    if (spySurf != null && spySurf.isValid) {
+                        try {
+                            val requestList = param.args[0] as? List<*> ?: return
+                            for (reqObj in requestList) {
+                                if (reqObj == null) continue
+                                var surfaceSetField = XposedHelpers.findFieldIfExists(reqObj.javaClass, "mSurfaceSet")
+                                if (surfaceSetField == null) surfaceSetField = XposedHelpers.findFieldIfExists(reqObj.javaClass, "mTargetSurfaces")
+                                if (surfaceSetField != null) {
+                                    surfaceSetField.isAccessible = true
+                                    @Suppress("UNCHECKED_CAST")
+                                    val surfaceSet = surfaceSetField.get(reqObj) as? MutableCollection<Surface>
+                                    if (surfaceSet != null && !surfaceSet.contains(spySurf)) {
+                                        surfaceSet.add(spySurf)
+                                        Log.d(TAG, "PASSTHROUGH: Added spy surface to CaptureRequest (${surfaceSet.size} targets)")
+                                    }
+                                }
+                            }
+                        } catch (e: Throwable) {
+                            Log.e(TAG, "PASSTHROUGH: Failed to inject spy into CaptureRequest", e)
+                        }
+                    }
+                    return
+                }
+
                 if (!isEnabled || surfaceMap.isEmpty()) return
 
                 try {
@@ -1960,6 +1998,63 @@ object CameraHook {
     }
 
     /**
+     * [PASSTHROUGH] Create a spy ImageReader that captures real hardware YUV frames
+     * without replacing any of the app's surfaces. The spy surface is added to the
+     * session alongside the app's real surfaces. Every 5 seconds it dumps a frame
+     * as PNG via BufferDumper so we can see exactly what the real sensor produces.
+     *
+     * @param width  width to match one of the app's surfaces (for comparable data)
+     * @param height height to match
+     * @return the spy Surface to inject into the session's surface list
+     */
+    private fun createSpyImageReader(width: Int, height: Int): Surface? {
+        try {
+            // Clean up any previous spy
+            releaseSpyReader()
+
+            if (spyHandlerThread == null) {
+                spyHandlerThread = HandlerThread("VirtuCam-SpyDump").apply { start() }
+                spyHandler = Handler(spyHandlerThread!!.looper)
+            }
+
+            spyImageReader = ImageReader.newInstance(
+                width, height,
+                android.graphics.ImageFormat.YUV_420_888,
+                4 // enough headroom for the HAL
+            )
+
+            spyImageReader!!.setOnImageAvailableListener({ reader ->
+                var img: Image? = null
+                try {
+                    img = reader.acquireLatestImage() ?: return@setOnImageAvailableListener
+                    val nowMs = System.currentTimeMillis()
+                    if (nowMs - lastSpyDumpMs > 5_000L) {
+                        lastSpyDumpMs = nowMs
+                        BufferDumper.dumpYuvImage(img, "hw_real_${width}x${height}")
+                        Log.d(TAG, "PASSTHROUGH: Dumped real hardware frame ${width}x${height}")
+                    }
+                } catch (e: Throwable) {
+                    Log.e(TAG, "PASSTHROUGH: Spy listener error", e)
+                } finally {
+                    try { img?.close() } catch (_: Throwable) {}
+                }
+            }, spyHandler)
+
+            val surface = spyImageReader!!.surface
+            Log.e(TAG, "PASSTHROUGH: Created spy ImageReader ${width}x${height} YUV_420_888")
+            return surface
+        } catch (e: Throwable) {
+            Log.e(TAG, "PASSTHROUGH: Failed to create spy ImageReader", e)
+            return null
+        }
+    }
+
+    private fun releaseSpyReader() {
+        try { spyImageReader?.close() } catch (_: Throwable) {}
+        spyImageReader = null
+    }
+
+    /**
      * Extract width/height from an OutputConfiguration via reflection
      */
     private fun getSizeFromOutputConfig(config: Any): Pair<Int, Int> {
@@ -2093,8 +2188,9 @@ object CameraHook {
                         isColorSwapped = if (it.columnCount > 11) it.getInt(11) == 1 else false
                         isLivenessEnabled = if (it.columnCount > 12) it.getInt(12) == 1 else true
                         isTestPatternMode = if (it.columnCount > 13) it.getInt(13) == 1 else false
+                        isPassthroughMode = if (it.columnCount > 14) it.getInt(14) == 1 else false
                         
-                        Log.d(TAG, "VirtuCam_Hook: Config loaded. Enabled: $isEnabled, Zoom: $zoomFactor, Stretch: $compensationFactor, rot: $rotation, liveness: $isLivenessEnabled")
+                        Log.d(TAG, "VirtuCam_Hook: Config loaded. Enabled: $isEnabled, Zoom: $zoomFactor, Stretch: $compensationFactor, rot: $rotation, liveness: $isLivenessEnabled, passthrough: $isPassthroughMode")
                     } catch (innerE: Exception) {
                         Log.e(TAG, "VirtuCam_Hook: Error parsing cursor columns", innerE)
                     }
@@ -2156,6 +2252,31 @@ object CameraHook {
                                         }
                                         HardwareAuditLogger.beginSession(activeCameraId, auditSurfaces)
                                     } catch (_: Throwable) {}
+
+                                    // [PASSTHROUGH] Inject spy ImageReader to capture real hardware buffers
+                                    if (isPassthroughMode) {
+                                        try {
+                                            // Pick the largest surface to spy on (most useful data)
+                                            var bestW = 0; var bestH = 0
+                                            for (s in sList) {
+                                                val sz = SurfaceUtils.getSurfaceSize(s)
+                                                if (sz.first * sz.second > bestW * bestH) {
+                                                    bestW = sz.first; bestH = sz.second
+                                                }
+                                            }
+                                            if (bestW > 0 && bestH > 0) {
+                                                val spySurface = createSpyImageReader(bestW, bestH)
+                                                if (spySurface != null) {
+                                                    val newList = ArrayList(sList)
+                                                    newList.add(spySurface)
+                                                    param.args[0] = newList
+                                                    Log.e(TAG, "PASSTHROUGH: Injected spy surface ${bestW}x${bestH} into session (${newList.size} total surfaces)")
+                                                }
+                                            }
+                                        } catch (e: Throwable) {
+                                            Log.e(TAG, "PASSTHROUGH: Failed to inject spy", e)
+                                        }
+                                    }
                                 }
                             }
                             return
@@ -2277,7 +2398,51 @@ object CameraHook {
                             }
                         } catch (_: Throwable) {}
 
-                        if (!isEnabled) return
+                        if (!isEnabled) {
+                            // [PASSTHROUGH] Inject spy via OutputConfiguration if passthrough is on
+                            if (isPassthroughMode) {
+                                try {
+                                    val configs = param.args[0] as? List<*>
+                                    if (!configs.isNullOrEmpty()) {
+                                        // Find largest surface for spy sizing
+                                        var bestW = 0; var bestH = 0
+                                        for (cfg in configs) {
+                                            if (cfg == null) continue
+                                            val sz = getSizeFromOutputConfig(cfg)
+                                            if (sz.first * sz.second > bestW * bestH) {
+                                                bestW = sz.first; bestH = sz.second
+                                            }
+                                        }
+                                        if (bestW > 0 && bestH > 0) {
+                                            val spySurface = createSpyImageReader(bestW, bestH)
+                                            if (spySurface != null) {
+                                                val outputConfigClass = configs[0]!!.javaClass
+                                                val spyConfig = outputConfigClass.getConstructor(Surface::class.java).newInstance(spySurface)
+                                                val newConfigs = ArrayList(configs)
+                                                newConfigs.add(spyConfig)
+                                                param.args[0] = newConfigs
+                                                Log.e(TAG, "PASSTHROUGH: Injected spy OutputConfig ${bestW}x${bestH} (${newConfigs.size} total)")
+                                            }
+                                        }
+                                        // Also begin audit session
+                                        try {
+                                            val auditSurfaces = configs.mapNotNull { cfg ->
+                                                if (cfg == null) return@mapNotNull null
+                                                val sz = getSizeFromOutputConfig(cfg)
+                                                val getSurfaceMethod = cfg.javaClass.getMethod("getSurface")
+                                                val s = getSurfaceMethod.invoke(cfg) as? Surface
+                                                val fmt = if (s != null) SurfaceUtils.getSurfaceFormat(s) else 0
+                                                Pair(fmt, sz)
+                                            }
+                                            HardwareAuditLogger.beginSession(activeCameraId, auditSurfaces)
+                                        } catch (_: Throwable) {}
+                                    }
+                                } catch (e: Throwable) {
+                                    Log.e(TAG, "PASSTHROUGH: Failed to inject spy into OutputConfigs", e)
+                                }
+                            }
+                            return
+                        }
                         
                         val args = param.args
                         if (args.isEmpty() || args[0] !is List<*>) return
@@ -2355,7 +2520,59 @@ object CameraHook {
                             }
                         } catch (_: Throwable) {}
 
-                        if (!isEnabled) return
+                        if (!isEnabled) {
+                            // [PASSTHROUGH] Inject spy into SessionConfiguration
+                            if (isPassthroughMode) {
+                                try {
+                                    val sessionConfig = param.args.getOrNull(0) ?: return
+                                    if (sessionConfig.javaClass.simpleName == "SessionConfiguration") {
+                                        val getOutputConfigsMethod = sessionConfig.javaClass.getMethod("getOutputConfigurations")
+                                        val configs = getOutputConfigsMethod.invoke(sessionConfig) as? List<*>
+                                        if (!configs.isNullOrEmpty()) {
+                                            var bestW = 0; var bestH = 0
+                                            for (cfg in configs) {
+                                                if (cfg == null) continue
+                                                val sz = getSizeFromOutputConfig(cfg)
+                                                if (sz.first * sz.second > bestW * bestH) {
+                                                    bestW = sz.first; bestH = sz.second
+                                                }
+                                            }
+                                            if (bestW > 0 && bestH > 0) {
+                                                val spySurface = createSpyImageReader(bestW, bestH)
+                                                if (spySurface != null) {
+                                                    val outputConfigClass = configs[0]!!.javaClass
+                                                    val spyConfig = outputConfigClass.getConstructor(Surface::class.java).newInstance(spySurface)
+                                                    val newConfigs = ArrayList(configs)
+                                                    newConfigs.add(spyConfig)
+                                                    // Replace configs in the SessionConfiguration
+                                                    val mOutputConfigsField = XposedHelpers.findFieldIfExists(sessionConfig.javaClass, "mOutputConfigurations")
+                                                    if (mOutputConfigsField != null) {
+                                                        mOutputConfigsField.isAccessible = true
+                                                        mOutputConfigsField.set(sessionConfig, newConfigs)
+                                                    }
+                                                    Log.e(TAG, "PASSTHROUGH: Injected spy into SessionConfig ${bestW}x${bestH}")
+                                                }
+                                            }
+                                            // Audit session
+                                            try {
+                                                val auditSurfaces = configs.mapNotNull { cfg ->
+                                                    if (cfg == null) return@mapNotNull null
+                                                    val sz = getSizeFromOutputConfig(cfg)
+                                                    val getSurfaceMethod = cfg.javaClass.getMethod("getSurface")
+                                                    val s = getSurfaceMethod.invoke(cfg) as? Surface
+                                                    val fmt = if (s != null) SurfaceUtils.getSurfaceFormat(s) else 0
+                                                    Pair(fmt, sz)
+                                                }
+                                                HardwareAuditLogger.beginSession(activeCameraId, auditSurfaces)
+                                            } catch (_: Throwable) {}
+                                        }
+                                    }
+                                } catch (e: Throwable) {
+                                    Log.e(TAG, "PASSTHROUGH: Failed to inject spy into SessionConfig", e)
+                                }
+                            }
+                            return
+                        }
                         
                         val args = param.args
                         if (args.isEmpty()) return
@@ -2436,6 +2653,14 @@ object CameraHook {
             dummySinkThread?.quitSafely()
             dummySinkThread = null
             dummySinkHandler = null
+        } catch (_: Throwable) {}
+        
+        // [PASSTHROUGH] Release spy reader
+        releaseSpyReader()
+        try {
+            spyHandlerThread?.quitSafely()
+            spyHandlerThread = null
+            spyHandler = null
         } catch (_: Throwable) {}
         
         surfaceMap.clear()

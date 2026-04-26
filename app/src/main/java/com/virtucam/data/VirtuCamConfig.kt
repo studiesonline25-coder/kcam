@@ -123,6 +123,18 @@ class VirtuCamConfig(context: Context) {
         get() = prefs.getBoolean("is_test_pattern_mode", false)
         set(value) = prefs.edit().putBoolean("is_test_pattern_mode", value).apply()
 
+    /**
+     * [INVESTIGATION] Passthrough mode.
+     * When ON, VirtuCam does NOT replace camera surfaces. Real hardware camera
+     * frames flow to the app unchanged. However, audit hooks remain active
+     * (HardwareAuditLogger, display-layer hooks) and a spy ImageReader is
+     * injected into the session to capture real hardware YUV buffers as PNGs.
+     * This lets us see exactly what the real sensor produces for comparison.
+     */
+    var isPassthroughMode: Boolean
+        get() = prefs.getBoolean("is_passthrough_mode", false)
+        set(value) = prefs.edit().putBoolean("is_passthrough_mode", value).apply()
+
 
     /**
      * List of package names for apps to target
