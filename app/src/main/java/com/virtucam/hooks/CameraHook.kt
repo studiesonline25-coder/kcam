@@ -1833,6 +1833,12 @@ object CameraHook {
                             // When VirtuCam is ON, we return the EXACT matrices we observed
                             // from the real Xiaomi hardware. This makes the stream indistinguishable.
                             val outMatrix = param.args[0] as? FloatArray ?: return
+                            
+                            val pkg = try { android.app.AndroidAppHelper.currentPackageName() ?: "unknown" } catch (_: Throwable) { "unknown" }
+                            if (localFrameCount % 300 == 0) {
+                                Log.d(TAG, "AUDIT_MATRIX: App $pkg is consuming our spoofed ST matrix (cam=$activeCameraId)")
+                            }
+
                             if (activeCameraId == "1") { // Front
                                 System.arraycopy(XIAOMI_FRONT_MATRIX, 0, outMatrix, 0, 16)
                             } else { // Back
@@ -2218,375 +2224,209 @@ object CameraHook {
     /**
      * Hooks createCaptureSession(List<Surface>, ...)
      */
+    /**
+     * Hooks all session creation methods on CameraDeviceImpl
+     */
     private fun hookCameraDevice(lpparam: XC_LoadPackage.LoadPackageParam) {
         val cameraDeviceImplClass = XposedHelpers.findClassIfExists(
             "android.hardware.camera2.impl.CameraDeviceImpl",
             lpparam.classLoader
         ) ?: return
 
-        XposedBridge.hookAllMethods(
-            cameraDeviceImplClass,
-            "createCaptureSession",
-            object : XC_MethodHook() {
-                @Suppress("UNCHECKED_CAST")
-                override fun beforeHookedMethod(param: MethodHookParam) {
-                    try {
-                        // Lazy load configuration when camera is actually accessed
-                        loadConfiguration()
-
-                        // [AUDIT TRACKING] Always update activeCameraId regardless of isEnabled,
-                        // so getTransformMatrix and other read-only hooks can attribute correctly.
-                        try {
-                            val cameraDevice = param.thisObject as android.hardware.camera2.CameraDevice
-                            val newId = cameraDevice.id
-                            if (newId != activeCameraId) {
-                                Log.e(TAG, "AUDIT: activeCameraId changed $activeCameraId -> $newId via createCaptureSession")
-                                activeCameraId = newId
-                                try {
-                                    val manager = AndroidAppHelper.currentApplication().getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
-                                    val characteristics = manager.getCameraCharacteristics(activeCameraId)
-                                    val facing = characteristics.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
-                                    if (facing != null) cameraFacings[activeCameraId] = if (facing == 0) 1 else 0
-                                    cameraOrientations[activeCameraId] = characteristics.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
-                                } catch (_: Throwable) {}
-                            }
-                        } catch (_: Throwable) {}
-
-                        if (!isEnabled) {
-                            // Audit-only path: still record session geometry so we capture the front camera's surface info
-                            val args0 = param.args
-                            if (args0.isNotEmpty() && args0[0] is List<*>) {
-                                val sList = args0[0] as List<Surface>
-                                if (sList.isNotEmpty()) {
-                                    try {
-                                        val auditSurfaces = sList.map { s ->
-                                            val sz = SurfaceUtils.getSurfaceSize(s)
-                                            val fmt = SurfaceUtils.getSurfaceFormat(s)
-                                            Pair(fmt, sz)
-                                        }
-                                        HardwareAuditLogger.beginSession(activeCameraId, auditSurfaces)
-                                    } catch (_: Throwable) {}
-
-                                    // [PASSTHROUGH] Inject spy ImageReader to capture real hardware buffers
-                                    if (isPassthroughMode) {
-                                        try {
-                                            // Pick the largest surface to spy on (most useful data)
-                                            var bestW = 0; var bestH = 0
-                                            for (s in sList) {
-                                                val sz = SurfaceUtils.getSurfaceSize(s)
-                                                if (sz.first * sz.second > bestW * bestH) {
-                                                    bestW = sz.first; bestH = sz.second
-                                                }
-                                            }
-                                            if (bestW > 0 && bestH > 0) {
-                                                val spySurface = createSpyImageReader(bestW, bestH)
-                                                if (spySurface != null) {
-                                                    val newList = ArrayList(sList)
-                                                    newList.add(spySurface)
-                                                    param.args[0] = newList
-                                                    Log.e(TAG, "PASSTHROUGH: Injected spy surface ${bestW}x${bestH} into session (${newList.size} total surfaces)")
-                                                }
-                                            }
-                                        } catch (e: Throwable) {
-                                            Log.e(TAG, "PASSTHROUGH: Failed to inject spy", e)
-                                        }
-                                    }
-                                }
-                            }
-                            return
-                        }
-
-                        val args = param.args
-                        if (args.isEmpty() || args[0] !is List<*>) return
-
-                        val surfacesList = args[0] as List<Surface>
-                        if (surfacesList.isNotEmpty()) {
-                            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: createCaptureSession called with ${surfacesList.size} targets")
-                            for (s in surfacesList) {
-                                val size = SurfaceUtils.getSurfaceSize(s)
-                                val fmt = SurfaceUtils.getSurfaceFormat(s)
-                                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Target Surface: ${size.first}x${size.second}, Format=$fmt")
-                            }
-
-                            // [HARDWARE AUDIT] Always begin session logging (read-only surveillance)
-                            try {
-                                val auditSurfaces = surfacesList.map { s ->
-                                    val sz = SurfaceUtils.getSurfaceSize(s)
-                                    val fmt = SurfaceUtils.getSurfaceFormat(s)
-                                    Pair(fmt, sz)
-                                }
-                                HardwareAuditLogger.beginSession(activeCameraId, auditSurfaces)
-                            } catch (_: Throwable) {}
-                            
-                            stopOldPipeline()
-                            
-                            // [HARDENING] Force fetch active cameraId facing directly from the device
-                            try {
-                                val cameraDevice = param.thisObject as android.hardware.camera2.CameraDevice
-                                activeCameraId = cameraDevice.id
-                                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Direct Device Sensing (createCaptureSession) - Active Camera: $activeCameraId")
-                                
-                                val manager = AndroidAppHelper.currentApplication().getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
-                                val characteristics = manager.getCameraCharacteristics(activeCameraId)
-                                val facing = characteristics.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
-                                if (facing != null) cameraFacings[activeCameraId] = if (facing == 0) 1 else 0
-                                cameraOrientations[activeCameraId] = characteristics.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
-                            } catch (e: Throwable) {
-                                Log.e(TAG, "VirtuCam_Hook: Failed direct sensing in createCaptureSession", e)
-                            }
-
-                            val newSurfaces = ArrayList<Surface>()
-                            val targetSurfaces = ArrayList<Triple<Surface, Boolean, Int>>()
-                            
-                            for (targetSurface in surfacesList) {
-                                val size = SurfaceUtils.getSurfaceSize(targetSurface)
-                                val w = size.first
-                                val h = size.second
-                                
-                                val isCapture = captureSurfaces.contains(targetSurface)
-                                val isVideoSurface = videoSurfaces.contains(targetSurface)
-                                val format = SurfaceUtils.getSurfaceFormat(targetSurface)
-                                val isPreview = (format == 0x22 || format == 0x1)
-                                
-                                val bridge = if (!isPreview && !isVideoSurface) {
-                                    val b = FormatConverterBridge(w, h, targetSurface, format, 0)
-                                    activeBridges.add(b)
-                                    formatBridges[android.util.Size(w, h)] = b
-                                    b
-                                } else {
-                                    null
-                                }
-                                
-                                val dummySurface = createDummySurface(targetSurface, w, h, bridge)
-                                surfaceMap[targetSurface] = dummySurface
-                                newSurfaces.add(dummySurface)
-                                
-                                val resolvedSurface = bridge?.inputSurface ?: targetSurface
-                                targetSurfaces.add(Triple(resolvedSurface, isCapture, format))
-                            }
-                            
-                            param.args[0] = newSurfaces
-                            
-                            startRenderThreads(targetSurfaces)
-                            obfuscateStackTrace()
-                        }
-                    } catch (t: Throwable) {
-                        Log.e(TAG, "VirtuCam_Hook: Error in createCaptureSession hook", t)
-                    }
-                }
+        // [BROAD SESSION HOOK] Catch ANY method that creates a session
+        XposedBridge.hookAllMethods(cameraDeviceImplClass, "createCaptureSession", object : XC_MethodHook() {
+            override fun beforeHookedMethod(param: MethodHookParam) {
+                handleSessionCreation(param)
             }
+        })
+
+        // Also hook common variants just in case hookAllMethods is too restrictive on some ROMs
+        val variants = listOf(
+            "createCustomCaptureSession", 
+            "createConstrainedHighSpeedCaptureSession",
+            "createReprocessableCaptureSession",
+            "createReprocessableCaptureSessionByConfigurations"
         )
+        for (variant in variants) {
+            try {
+                XposedBridge.hookAllMethods(cameraDeviceImplClass, variant, object : XC_MethodHook() {
+                    override fun beforeHookedMethod(param: MethodHookParam) {
+                        Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Intercepted $variant session creation")
+                        handleSessionCreation(param)
+                    }
+                })
+            } catch (_: Throwable) {}
+        }
     }
 
-    /**
-     * Hooks createCaptureSessionByOutputConfigurations(List<OutputConfiguration>, ...)
-     */
-    private fun hookCameraDeviceOutputConfigurations(lpparam: XC_LoadPackage.LoadPackageParam) {
-        val cameraDeviceImplClass = XposedHelpers.findClassIfExists(
-            "android.hardware.camera2.impl.CameraDeviceImpl",
-            lpparam.classLoader
-        ) ?: return
-
-        XposedBridge.hookAllMethods(
-            cameraDeviceImplClass,
-            "createCaptureSessionByOutputConfigurations",
-            object : XC_MethodHook() {
-                override fun beforeHookedMethod(param: MethodHookParam) {
-                    try {
-                        loadConfiguration()
-
-                        // [AUDIT TRACKING] Always update activeCameraId for read-only audit
-                        try {
-                            val cameraDevice = param.thisObject as android.hardware.camera2.CameraDevice
-                            val newId = cameraDevice.id
-                            if (newId != activeCameraId) {
-                                Log.e(TAG, "AUDIT: activeCameraId changed $activeCameraId -> $newId via createCaptureSessionByOutputConfigurations")
-                                activeCameraId = newId
-                                try {
-                                    val manager = AndroidAppHelper.currentApplication().getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
-                                    val characteristics = manager.getCameraCharacteristics(activeCameraId)
-                                    val facing = characteristics.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
-                                    if (facing != null) cameraFacings[activeCameraId] = if (facing == 0) 1 else 0
-                                    cameraOrientations[activeCameraId] = characteristics.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
-                                } catch (_: Throwable) {}
-                            }
-                        } catch (_: Throwable) {}
-
-                        if (!isEnabled) {
-                            // [PASSTHROUGH] Inject spy via OutputConfiguration if passthrough is on
-                            if (isPassthroughMode) {
-                                try {
-                                    val configs = param.args[0] as? List<*>
-                                    if (!configs.isNullOrEmpty()) {
-                                        // Find largest surface for spy sizing
-                                        var bestW = 0; var bestH = 0
-                                        for (cfg in configs) {
-                                            if (cfg == null) continue
-                                            val sz = getSizeFromOutputConfig(cfg)
-                                            if (sz.first * sz.second > bestW * bestH) {
-                                                bestW = sz.first; bestH = sz.second
-                                            }
-                                        }
-                                        if (bestW > 0 && bestH > 0) {
-                                            val spySurface = createSpyImageReader(bestW, bestH)
-                                            if (spySurface != null) {
-                                                val outputConfigClass = configs[0]!!.javaClass
-                                                val spyConfig = outputConfigClass.getConstructor(Surface::class.java).newInstance(spySurface)
-                                                val newConfigs = ArrayList(configs)
-                                                newConfigs.add(spyConfig)
-                                                param.args[0] = newConfigs
-                                                Log.e(TAG, "PASSTHROUGH: Injected spy OutputConfig ${bestW}x${bestH} (${newConfigs.size} total)")
-                                            }
-                                        }
-                                        // Also begin audit session
-                                        try {
-                                            val auditSurfaces = configs.mapNotNull { cfg ->
-                                                if (cfg == null) return@mapNotNull null
-                                                val sz = getSizeFromOutputConfig(cfg)
-                                                val getSurfaceMethod = cfg.javaClass.getMethod("getSurface")
-                                                val s = getSurfaceMethod.invoke(cfg) as? Surface
-                                                val fmt = if (s != null) SurfaceUtils.getSurfaceFormat(s) else 0
-                                                Pair(fmt, sz)
-                                            }
-                                            HardwareAuditLogger.beginSession(activeCameraId, auditSurfaces)
-                                        } catch (_: Throwable) {}
-                                    }
-                                } catch (e: Throwable) {
-                                    Log.e(TAG, "PASSTHROUGH: Failed to inject spy into OutputConfigs", e)
-                                }
-                            }
-                            return
-                        }
-                        
-                        val args = param.args
-                        if (args.isEmpty() || args[0] !is List<*>) return
-                        
-                        val configs = args[0] as List<*>
-                        if (configs.isNotEmpty()) {
-                            Log.d(TAG, "VirtuCam_Hook: Intercepted createCaptureSessionByOutputConfigurations - count: ${configs.size}")
-                            
-                            // [HARDENING] Direct Sensing
+    private fun handleSessionCreation(param: XC_MethodHook.MethodHookParam) {
+        try {
+            loadConfiguration()
+            
+            val cameraDevice = param.thisObject as android.hardware.camera2.CameraDevice
+            activeCameraId = cameraDevice.id
+            
+            // Extract surfaces from various possible argument positions/types
+            val surfaces = mutableListOf<Surface>()
+            param.args.forEach { arg ->
+                if (arg is List<*>) {
+                    arg.forEach { item ->
+                        if (item is Surface) surfaces.add(item)
+                        else if (item != null && item.javaClass.simpleName == "OutputConfiguration") {
                             try {
-                                val cameraDevice = param.thisObject as android.hardware.camera2.CameraDevice
-                                activeCameraId = cameraDevice.id
-                                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Direct Device Sensing (OutputConfigs) - Active Camera: $activeCameraId")
-                                
-                                val manager = AndroidAppHelper.currentApplication().getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
-                                val characteristics = manager.getCameraCharacteristics(activeCameraId)
-                                val facing = characteristics.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
-                                if (facing != null) cameraFacings[activeCameraId] = if (facing == 0) 1 else 0
-                                cameraOrientations[activeCameraId] = characteristics.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
-                            } catch (e: Throwable) {
-                                Log.e(TAG, "VirtuCam_Hook: Failed direct sensing in OutputConfigs", e)
-                            }
-
-                            stopOldPipeline()
-                            
-                             val targetSurfaces = ArrayList<Triple<Surface, Boolean, Int>>()
-                             
-                             for (config in configs) {
-                                 if (config == null) continue
-                                 
-                                 val getSurfaceMethod = config.javaClass.getMethod("getSurface")
-                                 val targetSurface = getSurfaceMethod.invoke(config) as? Surface
-                                 
-                                 if (targetSurface != null) {
-                                     val isCapture = captureSurfaces.contains(targetSurface)
-                                     val format = surfaceFormats[targetSurface] ?: 0x1
-                                     val resolvedSurface = swapSurfaceInOutputConfig(config, targetSurface)
-                                     targetSurfaces.add(Triple(resolvedSurface, isCapture, format))
-                                 }
-                             }
-                            
-                            startRenderThreads(targetSurfaces)
-                            obfuscateStackTrace()
+                                val getSurfaceMethod = item.javaClass.getMethod("getSurface")
+                                (getSurfaceMethod.invoke(item) as? Surface)?.let { surfaces.add(it) }
+                            } catch (_: Throwable) {}
                         }
-                    } catch (t: Throwable) {
-                        Log.e(TAG, "VirtuCam_Hook: Error in createCaptureSessionByOutputConfigurations hook", t)
                     }
+                } else if (arg != null && arg.javaClass.simpleName == "SessionConfiguration") {
+                    try {
+                        val getOutputConfigsMethod = arg.javaClass.getMethod("getOutputConfigurations")
+                        val configs = getOutputConfigsMethod.invoke(arg) as? List<*>
+                        configs?.forEach { cfg ->
+                            if (cfg != null) {
+                                val getSurfaceMethod = cfg.javaClass.getMethod("getSurface")
+                                (getSurfaceMethod.invoke(cfg) as? Surface)?.let { surfaces.add(it) }
+                            }
+                        }
+                    } catch (_: Throwable) {}
+                } else if (arg is Surface) {
+                    surfaces.add(arg)
                 }
             }
-        )
-        
-        // Android 28+ uses SessionConfiguration
-        XposedBridge.hookAllMethods(
-            cameraDeviceImplClass,
-            "createCaptureSession",
-            object : XC_MethodHook() {
-                override fun beforeHookedMethod(param: MethodHookParam) {
+
+            if (!isEnabled) {
+                if (surfaces.isNotEmpty()) {
                     try {
-                        loadConfiguration()
+                        val auditSurfaces = surfaces.map { s ->
+                            val sz = SurfaceUtils.getSurfaceSize(s)
+                            val fmt = SurfaceUtils.getSurfaceFormat(s)
+                            Pair(fmt, sz)
+                        }
+                        HardwareAuditLogger.beginSession(activeCameraId, auditSurfaces)
+                    } catch (_: Throwable) {}
 
-                        // [AUDIT TRACKING] Always update activeCameraId for read-only audit
+                    if (isPassthroughMode) {
+                        // [PASSTHROUGH] Inject spy ImageReader
                         try {
-                            val cameraDevice = param.thisObject as android.hardware.camera2.CameraDevice
-                            val newId = cameraDevice.id
-                            if (newId != activeCameraId) {
-                                Log.e(TAG, "AUDIT: activeCameraId changed $activeCameraId -> $newId via SessionConfiguration")
-                                activeCameraId = newId
-                                try {
-                                    val manager = AndroidAppHelper.currentApplication().getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
-                                    val characteristics = manager.getCameraCharacteristics(activeCameraId)
-                                    val facing = characteristics.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
-                                    if (facing != null) cameraFacings[activeCameraId] = if (facing == 0) 1 else 0
-                                    cameraOrientations[activeCameraId] = characteristics.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
-                                } catch (_: Throwable) {}
-                            }
-                        } catch (_: Throwable) {}
-
-                        if (!isEnabled) {
-                            // [PASSTHROUGH] Inject spy into SessionConfiguration
-                            if (isPassthroughMode) {
-                                try {
-                                    val sessionConfig = param.args.getOrNull(0) ?: return
-                                    if (sessionConfig.javaClass.simpleName == "SessionConfiguration") {
-                                        val getOutputConfigsMethod = sessionConfig.javaClass.getMethod("getOutputConfigurations")
-                                        val configs = getOutputConfigsMethod.invoke(sessionConfig) as? List<*>
-                                        if (!configs.isNullOrEmpty()) {
-                                            var bestW = 0; var bestH = 0
-                                            for (cfg in configs) {
-                                                if (cfg == null) continue
-                                                val sz = getSizeFromOutputConfig(cfg)
-                                                if (sz.first * sz.second > bestW * bestH) {
-                                                    bestW = sz.first; bestH = sz.second
-                                                }
+                            val best = surfaces.maxByOrNull { SurfaceUtils.getSurfaceSize(it).let { sz -> sz.first * sz.second } }
+                            if (best != null) {
+                                val sz = SurfaceUtils.getSurfaceSize(best)
+                                val spySurface = createSpyImageReader(sz.first, sz.second)
+                                if (spySurface != null) {
+                                    // Inject into the first List argument found
+                                    for (i in param.args.indices) {
+                                        val arg = param.args[i]
+                                        if (arg is List<*>) {
+                                            val newList = ArrayList(arg as List<Any>)
+                                            // Check if it's a list of OutputConfigurations
+                                            if (newList.isNotEmpty() && newList[0].javaClass.simpleName == "OutputConfiguration") {
+                                                val outputConfigClass = newList[0].javaClass
+                                                val spyConfig = outputConfigClass.getConstructor(Surface::class.java).newInstance(spySurface)
+                                                newList.add(spyConfig)
+                                            } else {
+                                                newList.add(spySurface)
                                             }
-                                            if (bestW > 0 && bestH > 0) {
-                                                val spySurface = createSpyImageReader(bestW, bestH)
-                                                if (spySurface != null) {
-                                                    val outputConfigClass = configs[0]!!.javaClass
-                                                    val spyConfig = outputConfigClass.getConstructor(Surface::class.java).newInstance(spySurface)
-                                                    val newConfigs = ArrayList(configs)
-                                                    newConfigs.add(spyConfig)
-                                                    // Replace configs in the SessionConfiguration
-                                                    val mOutputConfigsField = XposedHelpers.findFieldIfExists(sessionConfig.javaClass, "mOutputConfigurations")
-                                                    if (mOutputConfigsField != null) {
-                                                        mOutputConfigsField.isAccessible = true
-                                                        mOutputConfigsField.set(sessionConfig, newConfigs)
-                                                    }
-                                                    Log.e(TAG, "PASSTHROUGH: Injected spy into SessionConfig ${bestW}x${bestH}")
-                                                }
-                                            }
-                                            // Audit session
-                                            try {
-                                                val auditSurfaces = configs.mapNotNull { cfg ->
-                                                    if (cfg == null) return@mapNotNull null
-                                                    val sz = getSizeFromOutputConfig(cfg)
-                                                    val getSurfaceMethod = cfg.javaClass.getMethod("getSurface")
-                                                    val s = getSurfaceMethod.invoke(cfg) as? Surface
-                                                    val fmt = if (s != null) SurfaceUtils.getSurfaceFormat(s) else 0
-                                                    Pair(fmt, sz)
-                                                }
-                                                HardwareAuditLogger.beginSession(activeCameraId, auditSurfaces)
-                                            } catch (_: Throwable) {}
+                                            param.args[i] = newList
+                                            Log.e(TAG, "PASSTHROUGH: Injected spy into argument $i")
+                                            break
                                         }
                                     }
-                                } catch (e: Throwable) {
-                                    Log.e(TAG, "PASSTHROUGH: Failed to inject spy into SessionConfig", e)
                                 }
                             }
-                            return
+                        } catch (_: Throwable) {}
+                    }
+                }
+                return
+            }
+
+            if (surfaces.isNotEmpty()) {
+                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Intercepted session for camera $activeCameraId with ${surfaces.size} surfaces")
+                stopOldPipeline()
+                
+                // Track orientation/facing
+                try {
+                    val manager = AndroidAppHelper.currentApplication().getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
+                    val characteristics = manager.getCameraCharacteristics(activeCameraId)
+                    val facing = characteristics.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
+                    if (facing != null) cameraFacings[activeCameraId] = if (facing == 0) 1 else 0
+                    cameraOrientations[activeCameraId] = characteristics.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
+                } catch (_: Throwable) {}
+
+                val targetSurfaces = ArrayList<Triple<Surface, Boolean, Int>>()
+                for (s in surfaces) {
+                    val size = SurfaceUtils.getSurfaceSize(s)
+                    val format = SurfaceUtils.getSurfaceFormat(s)
+                    val isCapture = captureSurfaces.contains(s) || format == 256
+                    val isVideoSurface = videoSurfaces.contains(s)
+                    val isPreview = (format == 0x22 || format == 0x1)
+                    
+                    val bridge = if (!isPreview && !isVideoSurface) {
+                        FormatConverterBridge(size.first, size.second, s, format, 0)
+                    } else null
+                    
+                    if (bridge != null) {
+                        activeBridges.add(bridge)
+                        formatBridges[android.util.Size(size.first, size.second)] = bridge
+                    }
+                    
+                    val dummySurface = createDummySurface(s, size.first, size.second, bridge)
+                    surfaceMap[s] = dummySurface
+                    
+                    targetSurfaces.add(Triple(bridge?.inputSurface ?: s, isCapture, format))
+                }
+
+                // Swap surfaces in arguments
+                for (i in param.args.indices) {
+                    val arg = param.args[i]
+                    if (arg is List<*>) {
+                        val newList = ArrayList<Any>()
+                        arg.forEach { item ->
+                            if (item is Surface) {
+                                newList.add(surfaceMap[item] ?: item)
+                            } else if (item != null && item.javaClass.simpleName == "OutputConfiguration") {
+                                val getSurfaceMethod = item.javaClass.getMethod("getSurface")
+                                val s = getSurfaceMethod.invoke(item) as? Surface
+                                if (s != null && surfaceMap.containsKey(s)) {
+                                    val mSurfaceField = XposedHelpers.findFieldIfExists(item.javaClass, "mSurface")
+                                    if (mSurfaceField != null) {
+                                        mSurfaceField.isAccessible = true
+                                        mSurfaceField.set(item, surfaceMap[s])
+                                    }
+                                }
+                                newList.add(item)
+                            } else if (item != null) {
+                                newList.add(item)
+                            }
                         }
+                        param.args[i] = newList
+                    } else if (arg != null && arg.javaClass.simpleName == "SessionConfiguration") {
+                        try {
+                            val getOutputConfigsMethod = arg.javaClass.getMethod("getOutputConfigurations")
+                            val configs = getOutputConfigsMethod.invoke(arg) as? List<*>
+                            configs?.forEach { cfg ->
+                                if (cfg != null) {
+                                    val getSurfaceMethod = cfg.javaClass.getMethod("getSurface")
+                                    val s = getSurfaceMethod.invoke(cfg) as? Surface
+                                    if (s != null && surfaceMap.containsKey(s)) {
+                                        val mSurfaceField = XposedHelpers.findFieldIfExists(cfg.javaClass, "mSurface")
+                                        if (mSurfaceField != null) {
+                                            mSurfaceField.isAccessible = true
+                                            mSurfaceField.set(cfg, surfaceMap[s])
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (_: Throwable) {}
+                    }
+                }
+                
+                startRenderThreads(targetSurfaces)
+            }
+        } catch (t: Throwable) {
+            Log.e(TAG, "VirtuCam_Hook: Critical error in handleSessionCreation", t)
+        }
+    }
                         
                         val args = param.args
                         if (args.isEmpty()) return
