@@ -1622,19 +1622,29 @@ object CameraHook {
      * we catch the UnsupportedOperationException in acquireNextImage/acquireLatestImage.
      * This lets the camera HAL work normally while silently ignoring format mismatches.
      */
-        // [Xiaomi Reference Matrices]
-        // These match the standard SurfaceTexture orientation for 90/270 sensors.
+        // [Real captured SurfaceTexture transform matrices — Xiaomi Redmi 'pond']
+        // Captured directly from the device via HardwareAuditLogger surveillance.
+        // See nativecameratest.txt and firefoxveriffaudit.txt for derivation.
+        //
+        // Geometric meaning:
+        //   BACK  = 180 deg rotation around the texture center (sensor mounted upside-down)
+        //   FRONT = 90 deg CW rotation (sensor mounted sideways relative to display)
+        //
+        // Both are identical across native MIUI camera, Firefox/WebRTC, and Phoenix —
+        // SurfaceTexture matrices are sensor/HAL-driven, not app-driven.
+        // Format: column-major float[16].
         private val XIAOMI_BACK_MATRIX = floatArrayOf(
-            0.0f, -1.0f, 0.0f, 0.0f,
-            1.0f,  0.0f, 0.0f, 0.0f,
-            0.0f,  0.0f, 1.0f, 0.0f,
-            0.0f,  1.0f, 0.0f, 1.0f
+            // col 0       col 1       col 2       col 3
+             0.0f, -1.0f, 0.0f, 0.0f,
+            -1.0f,  0.0f, 0.0f, 0.0f,
+             0.0f,  0.0f, 1.0f, 0.0f,
+             1.0f,  1.0f, 0.0f, 1.0f
         )
         private val XIAOMI_FRONT_MATRIX = floatArrayOf(
-            0.0f,  1.0f, 0.0f, 0.0f,
-            1.0f,  0.0f, 0.0f, 0.0f,
-            0.0f,  0.0f, 1.0f, 0.0f,
-            0.0f,  0.0f, 0.0f, 1.0f
+             0.0f, -1.0f, 0.0f, 0.0f,
+             1.0f,  0.0f, 0.0f, 0.0f,
+             0.0f,  0.0f, 1.0f, 0.0f,
+             0.0f,  1.0f, 0.0f, 1.0f
         )
 
     private fun hookImageReader(lpparam: XC_LoadPackage.LoadPackageParam) {
