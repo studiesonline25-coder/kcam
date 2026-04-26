@@ -419,10 +419,49 @@ object HardwareAuditLogger {
             surfaceArr.put(s)
         }
         currentSession.put("output_surfaces", surfaceArr)
+
+        // [INVESTIGATION] Capture host activity context at session begin
+        try {
+            val ctx = android.app.AndroidAppHelper.currentApplication()
+            val wm = ctx?.getSystemService(android.content.Context.WINDOW_SERVICE) as? android.view.WindowManager
+            val display = wm?.defaultDisplay
+            if (display != null) {
+                val rotMap = mapOf(0 to "ROTATION_0", 1 to "ROTATION_90",
+                                   2 to "ROTATION_180", 3 to "ROTATION_270")
+                val r = display.rotation
+                currentSession.put("display_rotation", r)
+                currentSession.put("display_rotation_name", rotMap[r] ?: "UNKNOWN")
+                val w = android.graphics.Point()
+                @Suppress("DEPRECATION") display.getRealSize(w)
+                currentSession.put("display_size", "${w.x}x${w.y}")
+                Log.i(TAG, "Audit session $sessionIndex: display rotation=$r (${rotMap[r]}), size=${w.x}x${w.y}")
+            }
+        } catch (_: Throwable) {}
+
         Log.i(TAG, "Audit: began session $sessionIndex for camera $cameraId")
         // Force immediate flush so each new session is reflected on disk
         // even if the user pulls before the next auto-flush fires.
         flush()
+    }
+
+    /**
+     * [INVESTIGATION] Log a consumer-side display transform application.
+     * Things like TextureView.setTransform(matrix) get logged here so we can
+     * see what the host app does to our buffer after consuming it.
+     */
+    fun logDisplayTransform(tag: String, value: String) {
+        try {
+            val arr = auditDoc.optJSONArray("display_transforms") ?: JSONArray().also {
+                auditDoc.put("display_transforms", it)
+            }
+            // Cap at 200 entries to avoid unbounded growth
+            while (arr.length() >= 200) arr.remove(0)
+            val obj = JSONObject()
+            obj.put("ts_ms", System.currentTimeMillis())
+            obj.put("tag", tag)
+            obj.put("value", value)
+            arr.put(obj)
+        } catch (_: Throwable) {}
     }
 
     fun endSession() {

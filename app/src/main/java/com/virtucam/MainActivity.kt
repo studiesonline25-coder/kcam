@@ -126,6 +126,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
+        fun setTestPatternMode(enabled: Boolean) {
+            config.isTestPatternMode = enabled
+        }
+
+        @JavascriptInterface
         fun updateZoom(valZoom: Float) {
             config.zoomFactor = valZoom
         }

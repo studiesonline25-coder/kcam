@@ -101,6 +101,9 @@ object CameraHook {
     @Volatile
     var isLivenessEnabled: Boolean = true
 
+    @Volatile
+    var isTestPatternMode: Boolean = false
+
     // Signal for VirtualRenderThread to recreate EGL surfaces when browser renegotiates resolution
     val pendingSurfaceResize = java.util.concurrent.atomic.AtomicBoolean(false)
 
@@ -178,6 +181,7 @@ object CameraHook {
             hookMediaRecorderOrientation(lpparam)
             hookMediaFormatRotation(lpparam)
             hookMediaMuxerOrientation(lpparam)
+            hookDisplayLayer(lpparam)
             Log.d(TAG, "VirtuCam_Hook: All hooks deployed successfully.")
         } catch (t: Throwable) {
             Log.e(TAG, "VirtuCam_Hook: CRITICAL failure in $targetPackage", t)
@@ -2088,6 +2092,7 @@ object CameraHook {
                         rotation = if (it.columnCount > 10) it.getInt(10) else 0
                         isColorSwapped = if (it.columnCount > 11) it.getInt(11) == 1 else false
                         isLivenessEnabled = if (it.columnCount > 12) it.getInt(12) == 1 else true
+                        isTestPatternMode = if (it.columnCount > 13) it.getInt(13) == 1 else false
                         
                         Log.d(TAG, "VirtuCam_Hook: Config loaded. Enabled: $isEnabled, Zoom: $zoomFactor, Stretch: $compensationFactor, rot: $rotation, liveness: $isLivenessEnabled")
                     } catch (innerE: Exception) {
@@ -2622,28 +2627,41 @@ class VirtualRenderThread(
                 }
             } else {
                 // Static Image Mode Pipeline
-                val stream = context.contentResolver.openInputStream(uri)
-                val bitmap = BitmapFactory.decodeStream(stream)
-                stream?.close()
+                // [INVESTIGATION] If test pattern mode is enabled, replace user media
+                // with a known-orientation test pattern so we can analyze rotations
+                // empirically against a reference.
+                val bitmap: android.graphics.Bitmap? = if (CameraHook.isTestPatternMode) {
+                    Log.e("VirtuCam_Render", "[INVESTIGATION] Using TEST PATTERN as source media")
+                    // Render at 720x1280 (portrait, 9:16) — common selfie aspect.
+                    // The renderer's aspect-fit math will scale it appropriately.
+                    TestPattern.generate(720, 1280)
+                } else {
+                    val stream = context.contentResolver.openInputStream(uri)
+                    val bm = BitmapFactory.decodeStream(stream)
+                    stream?.close()
+                    bm
+                }
                 
                 var exifRotation = 0
-                try {
-                    isSourceLoading.set(true)
-                    val exifStream = context.contentResolver.openInputStream(uri)
-                    if (exifStream != null) {
-                        val exif = android.media.ExifInterface(exifStream)
-                        val orientation = exif.getAttributeInt(android.media.ExifInterface.TAG_ORIENTATION, android.media.ExifInterface.ORIENTATION_NORMAL)
-                        exifRotation = when (orientation) {
-                            android.media.ExifInterface.ORIENTATION_ROTATE_90 -> 90
-                            android.media.ExifInterface.ORIENTATION_ROTATE_180 -> 180
-                            android.media.ExifInterface.ORIENTATION_ROTATE_270 -> 270
-                            else -> 0
+                if (!CameraHook.isTestPatternMode) {
+                    try {
+                        isSourceLoading.set(true)
+                        val exifStream = context.contentResolver.openInputStream(uri)
+                        if (exifStream != null) {
+                            val exif = android.media.ExifInterface(exifStream)
+                            val orientation = exif.getAttributeInt(android.media.ExifInterface.TAG_ORIENTATION, android.media.ExifInterface.ORIENTATION_NORMAL)
+                            exifRotation = when (orientation) {
+                                android.media.ExifInterface.ORIENTATION_ROTATE_90 -> 90
+                                android.media.ExifInterface.ORIENTATION_ROTATE_180 -> 180
+                                android.media.ExifInterface.ORIENTATION_ROTATE_270 -> 270
+                                else -> 0
+                            }
+                            exifStream.close()
                         }
-                        exifStream.close()
+                    } catch (e: Exception) {
+                    } finally {
+                        isSourceLoading.remove()
                     }
-                } catch (e: Exception) {
-                } finally {
-                    isSourceLoading.remove()
                 }
                 
                 if (bitmap != null) {
@@ -2847,6 +2865,67 @@ class VirtualRenderThread(
 
     private fun hookMediaMuxerOrientation(lpparam: XC_LoadPackage.LoadPackageParam) {
         // [HARDWARE PARITY FIX] Disabled. Let MediaMuxer use the physical hint.
+    }
+
+    /**
+     * [INVESTIGATION] Surface display-layer instrumentation.
+     *
+     * Logs what consumer apps do AFTER they receive our buffer:
+     *   - TextureView.setTransform(Matrix) — apps like scanners use this to rotate
+     *     the displayed texture independent of the buffer content
+     *   - Display.getRotation() at session begin — host activity orientation context
+     *
+     * Output goes to the existing audit JSON via HardwareAuditLogger.
+     */
+    private fun hookDisplayLayer(lpparam: XC_LoadPackage.LoadPackageParam) {
+        // 1) TextureView.setTransform(Matrix) — captures app-applied display matrix
+        try {
+            val textureViewCls = XposedHelpers.findClassIfExists(
+                "android.view.TextureView", lpparam.classLoader
+            )
+            if (textureViewCls != null) {
+                XposedBridge.hookAllMethods(textureViewCls, "setTransform", object : XC_MethodHook() {
+                    override fun afterHookedMethod(param: MethodHookParam) {
+                        try {
+                            val matrix = param.args[0] as? android.graphics.Matrix ?: return
+                            val vals = FloatArray(9)
+                            matrix.getValues(vals)
+                            val str = vals.joinToString(",") { String.format("%.4f", it) }
+                            Log.e(TAG, "AUDIT_DISPLAY: TextureView.setTransform([$str])")
+                            try {
+                                HardwareAuditLogger.logDisplayTransform("TextureView.setTransform", str)
+                            } catch (_: Throwable) {}
+                        } catch (_: Throwable) {}
+                    }
+                })
+                Log.d(TAG, "Display-layer: hooked TextureView.setTransform")
+            }
+        } catch (_: Throwable) {}
+
+        // 2) View.setRotation(float) — captures direct view rotation calls (less common but possible)
+        try {
+            val viewCls = XposedHelpers.findClassIfExists(
+                "android.view.View", lpparam.classLoader
+            )
+            if (viewCls != null) {
+                XposedHelpers.findAndHookMethod(viewCls, "setRotation", Float::class.javaPrimitiveType,
+                    object : XC_MethodHook() {
+                        override fun afterHookedMethod(param: MethodHookParam) {
+                            try {
+                                val deg = (param.args[0] as Float)
+                                if (deg != 0f) {
+                                    val view = param.thisObject
+                                    val cls = view.javaClass.simpleName
+                                    Log.e(TAG, "AUDIT_DISPLAY: View($cls).setRotation($deg)")
+                                    try {
+                                        HardwareAuditLogger.logDisplayTransform("View.setRotation:$cls", deg.toString())
+                                    } catch (_: Throwable) {}
+                                }
+                            } catch (_: Throwable) {}
+                        }
+                    })
+            }
+        } catch (_: Throwable) {}
     }
 }
 

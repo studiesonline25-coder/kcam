@@ -45,6 +45,7 @@ class FormatConverterBridge(
     private var cachedRgbaData: ByteArray? = null
     
     private var debugCounter = 0
+    private var lastBufferDumpMs = 0L
 
     // This is the surface we hand to the VirtualRenderThread (it receives RGBA from OpenGL)
     val inputSurface: Surface?
@@ -100,6 +101,15 @@ class FormatConverterBridge(
                                 buffer.get(data, row * width * 4, width * 4)
                             }
                         }
+                    }
+                    // [INVESTIGATION] Periodic buffer dump for rotation analysis.
+                    // Throttled to once per 5 seconds per bridge to avoid spamming disk.
+                    val nowMs = System.currentTimeMillis()
+                    if (nowMs - lastBufferDumpMs > 5_000L) {
+                        lastBufferDumpMs = nowMs
+                        try {
+                            BufferDumper.dumpRgba(width, height, cachedRgbaData!!.copyOf(), "bridge_${width}x${height}")
+                        } catch (_: Throwable) {}
                     }
                 } catch (e: Throwable) {
                     Log.e(TAG, "Cache loop error: ${e.message}")

@@ -54,7 +54,7 @@ class VirtuCamProvider : ContentProvider() {
     ): Cursor? {
         return when (uriMatcher.match(uri)) {
             CODE_CONFIG -> {
-                MatrixCursor(arrayOf("enabled", "media_uri", "is_video", "is_stream", "stream_url", "target_apps", "compensation_factor", "is_mirrored", "zoom_factor", "rtsp_use_tcp", "rotation", "is_color_swapped", "is_liveness_enabled")).apply {
+                MatrixCursor(arrayOf("enabled", "media_uri", "is_video", "is_stream", "stream_url", "target_apps", "compensation_factor", "is_mirrored", "zoom_factor", "rtsp_use_tcp", "rotation", "is_color_swapped", "is_liveness_enabled", "is_test_pattern_mode")).apply {
                     addRow(arrayOf(
                         if (config.isEnabled) 1 else 0,
                         config.spoofMediaUri?.toString() ?: "",
@@ -68,7 +68,8 @@ class VirtuCamProvider : ContentProvider() {
                         if (config.getFloatDirectSync(context, "rtsp_use_tcp", 1.0f) == 1.0f) 1 else 0,
                         config.getFloatDirectSync(context, "rotation_override", 0.0f).toInt(),
                         if (config.getFloatDirectSync(context, "is_color_swapped", 0.0f) == 1.0f) 1 else 0,
-                        if (config.getFloatDirectSync(context, "is_liveness_enabled", 1.0f) == 1.0f) 1 else 0
+                        if (config.getFloatDirectSync(context, "is_liveness_enabled", 1.0f) == 1.0f) 1 else 0,
+                        if (config.isTestPatternMode) 1 else 0
                     ))
                 }
             }
