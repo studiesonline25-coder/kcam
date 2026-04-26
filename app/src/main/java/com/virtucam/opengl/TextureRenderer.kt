@@ -203,11 +203,15 @@ class TextureRenderer(private val isVideo: Boolean = true) {
         GLES20.glEnableVertexAttribArray(maTextureHandle)
 
         if (videoWidth > 0 && videoHeight > 0 && viewWidth > 0 && viewHeight > 0) {
-            // [ABSOLUTE HARDWARE PARITY] 
+            // [ABSOLUTE HARDWARE PARITY]
             // We rotate the video to match the physical mounting of the sensor (90 or 270).
             // NOTE: Matrix.rotateM is CCW, but sensors are CW relative to board top.
-            // We negate the rotation to achieve CW parity.
-            val totalRotation = (360 - ((hardwareSensorOrientation + userRotation + 360) % 360)) % 360
+            // We negate the rotation to achieve CW parity, then add 180 deg to compensate
+            // for the upright orientation of the user's uploaded media (real sensors output
+            // physically rotated frames; we synthesize from already-upright content so we
+            // need an extra half-turn to land in the correct orientation after the
+            // SurfaceTexture matrix / YUV consumer applies its own transform).
+            val totalRotation = ((360 - ((hardwareSensorOrientation + userRotation + 360) % 360)) + 180) % 360
 
             // --- ISOTROPIC FITTING MATH ---
             fun drawQuad(isBackground: Boolean) {
