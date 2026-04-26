@@ -1526,8 +1526,22 @@ object CameraHook {
             "android.hardware.camera2.impl.CameraDeviceImpl", lpparam.classLoader
         ) ?: return
 
-        XposedBridge.hookAllMethods(deviceImplClass, "submitCaptureRequest", object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
+        XposedHelpers.findAndHookMethod(deviceImplClass, "createCaptureRequest", Int::class.javaPrimitiveType, object : XC_MethodHook() {
+            override fun afterHookedMethod(param: MethodHookParam) {
+                if (!isEnabled && isPassthroughMode) {
+                    val builder = param.result as? android.hardware.camera2.CaptureRequest.Builder ?: return
+                    val spySurf = spyImageReader?.surface
+                    if (spySurf != null && spySurf.isValid) {
+                        try {
+                            builder.addTarget(spySurf)
+                            Log.d(TAG, "PASSTHROUGH: Added spy surface to new CaptureRequest")
+                        } catch (_: Throwable) {}
+                    }
+                }
+            }
+        })
+
+        XposedBridge.hookAllMethods(deviceImplClass, "submitCaptureRequest", object : XC_MethodHook() {            override fun beforeHookedMethod(param: MethodHookParam) {
                 applyDeferredHooksToClassLoader(Thread.currentThread().contextClassLoader)
 
                 // [PASSTHROUGH] When disabled but passthrough is on, inject spy surface into every request
