@@ -46,6 +46,15 @@ object CameraHook {
     private var isStream = false
     private var streamUrl: String = ""
     private var targetPackage: String = ""
+
+    @Volatile
+    var isPassthroughMode: Boolean = false
+
+    @Volatile
+    var rotationOffset: Int = 0
+
+    @Volatile
+    private var lastSpyDumpMs: Long = 0L
     
     private val renderThreads = mutableListOf<Any>()
     // Strong references to prevent GC from destroying surfaces while native camera pipeline uses them
@@ -1810,6 +1819,19 @@ object CameraHook {
                     // Safe access to format to avoid IllegalStateException: Image is already closed
                     val format = try { image.format } catch (e: IllegalStateException) { return }
                     
+                    // [INVESTIGATION] Dump real hardware frames if Passthrough is ON
+                    if (!isEnabled && isPassthroughMode) {
+                        if (format == ImageFormat.YUV_420_888 || format == 35 || format == ImageFormat.YV12) {
+                            val now = System.currentTimeMillis()
+                            if (now - lastSpyDumpMs > 5000L) {
+                                lastSpyDumpMs = now
+                                try { BufferDumper.dumpYuvImage(image, "hw_real_${image.width}x${image.height}") } catch (_: Throwable) {}
+                                Log.d(TAG, "PASSTHROUGH: Dumped real hardware frame ${image.width}x${image.height}")
+                            }
+                        }
+                        return
+                    }
+
                     // Find matching bridge for this image dimensions
                     val bridge = activeBridges.firstOrNull { it.width == image.width && it.height == image.height }
                     
@@ -2093,8 +2115,10 @@ object CameraHook {
                         isColorSwapped = if (it.columnCount > 11) it.getInt(11) == 1 else false
                         isLivenessEnabled = if (it.columnCount > 12) it.getInt(12) == 1 else true
                         isTestPatternMode = if (it.columnCount > 13) it.getInt(13) == 1 else false
+                        isPassthroughMode = if (it.columnCount > 14) it.getInt(14) == 1 else false
+                        rotationOffset = if (it.columnCount > 15) it.getInt(15) else 0
                         
-                        Log.d(TAG, "VirtuCam_Hook: Config loaded. Enabled: $isEnabled, Zoom: $zoomFactor, Stretch: $compensationFactor, rot: $rotation, liveness: $isLivenessEnabled")
+                        Log.d(TAG, "VirtuCam_Hook: Config loaded. Enabled: $isEnabled, Zoom: $zoomFactor, Stretch: $compensationFactor, rot: $rotation, liveness: $isLivenessEnabled, passthrough: $isPassthroughMode, offset: $rotationOffset")
                     } catch (innerE: Exception) {
                         Log.e(TAG, "VirtuCam_Hook: Error parsing cursor columns", innerE)
                     }
@@ -2452,7 +2476,7 @@ object CameraHook {
             try {
                 // [Sync Fix] Start ONE master thread for ALL surfaces to ensure sync and save CPU
                 var isFront = (cameraFacings[activeCameraId] == 1)
-                val thread = VirtualRenderThread(targetSurfaces, context, isVideo, isStream, streamUrl, isFront, sensorOrientation, CameraHook.rotation)
+                val thread = VirtualRenderThread(targetSurfaces, context, isVideo, isStream, streamUrl, isFront, sensorOrientation, CameraHook.rotation, CameraHook.rotationOffset)
                 thread.start()
                 renderThreads.add(thread)
                 Log.d(TAG, "VirtuCam_Hook: Started MASTER RenderThread for ${targetSurfaces.size} surfaces.")
@@ -2512,7 +2536,8 @@ class VirtualRenderThread(
     private val streamUrl: String,
     private val isFrontCamera: Boolean,
     private val sensorOrientation: Int = 0,
-    private val userRotation: Int = 0
+    private val userRotation: Int = 0,
+    private val rotationOffset: Int = 0
 ) : Thread("VirtuCam-RenderThread") {
     
     @Volatile
@@ -2780,7 +2805,7 @@ class VirtualRenderThread(
 
                    val ratio = getTargetRatio(vw, vh, isCapture, contentW, contentH)
                    
-                   textureRenderer?.draw(matrix, contentW, contentH, vw, vh, ratio, parityOrientation, finalUserRotation, shouldMirror, CameraHook.zoomFactor, isCapture, CameraHook.compensationFactor)
+                   textureRenderer?.draw(matrix, contentW, contentH, vw, vh, ratio, parityOrientation, finalUserRotation, shouldMirror, CameraHook.zoomFactor, isCapture, CameraHook.compensationFactor, rotationOffset)
 
                  eglCore?.setPresentationTime(es, System.nanoTime())
                  if (eglCore?.swapBuffers(es) == false) {

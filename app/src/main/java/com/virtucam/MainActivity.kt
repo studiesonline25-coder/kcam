@@ -131,6 +131,16 @@ class MainActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
+        fun setPassthroughMode(enabled: Boolean) {
+            config.isPassthroughMode = enabled
+        }
+
+        @JavascriptInterface
+        fun setRotationOffset(offset: Int) {
+            config.rotationOffset = offset
+        }
+
+        @JavascriptInterface
         fun updateZoom(valZoom: Float) {
             config.zoomFactor = valZoom
         }

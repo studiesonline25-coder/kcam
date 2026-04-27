@@ -123,6 +123,14 @@ class VirtuCamConfig(context: Context) {
         get() = prefs.getBoolean("is_test_pattern_mode", false)
         set(value) = prefs.edit().putBoolean("is_test_pattern_mode", value).apply()
 
+    var isPassthroughMode: Boolean
+        get() = prefs.getBoolean("is_passthrough_mode", false)
+        set(value) = prefs.edit().putBoolean("is_passthrough_mode", value).apply()
+
+    var rotationOffset: Int
+        get() = prefs.getInt("rotation_offset", 0)
+        set(value) = prefs.edit().putInt("rotation_offset", value).apply()
+
 
     /**
      * List of package names for apps to target
