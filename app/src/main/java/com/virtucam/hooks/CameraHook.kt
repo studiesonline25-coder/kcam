@@ -2316,7 +2316,7 @@ object CameraHook {
                                 val sz = SurfaceUtils.getSurfaceSize(best)
                                 val spySurface = createSpyImageReader(sz.first, sz.second)
                                 if (spySurface != null) {
-                                    // Inject into the first List argument found
+                                    // Inject into the first List or SessionConfiguration argument found
                                     for (i in param.args.indices) {
                                         val arg = param.args[i]
                                         if (arg is List<*>) {
@@ -2332,6 +2332,26 @@ object CameraHook {
                                             param.args[i] = newList
                                             Log.e(TAG, "PASSTHROUGH: Injected spy into argument $i")
                                             break
+                                        } else if (arg != null && arg.javaClass.simpleName == "SessionConfiguration") {
+                                            try {
+                                                val getOutputConfigsMethod = arg.javaClass.getMethod("getOutputConfigurations")
+                                                val configs = getOutputConfigsMethod.invoke(arg) as? List<*>
+                                                if (!configs.isNullOrEmpty() && configs[0] != null) {
+                                                    val outputConfigClass = configs[0]!!.javaClass
+                                                    val spyConfig = outputConfigClass.getConstructor(Surface::class.java).newInstance(spySurface)
+                                                    val newConfigs = ArrayList(configs)
+                                                    newConfigs.add(spyConfig)
+                                                    val mOutputConfigsField = XposedHelpers.findFieldIfExists(arg.javaClass, "mOutputConfigurations")
+                                                    if (mOutputConfigsField != null) {
+                                                        mOutputConfigsField.isAccessible = true
+                                                        mOutputConfigsField.set(arg, newConfigs)
+                                                        Log.e(TAG, "PASSTHROUGH: Injected spy into SessionConfiguration")
+                                                        break
+                                                    }
+                                                }
+                                            } catch (e: Throwable) {
+                                                Log.e(TAG, "PASSTHROUGH: Failed to inject spy into SessionConfiguration", e)
+                                            }
                                         }
                                     }
                                 }
