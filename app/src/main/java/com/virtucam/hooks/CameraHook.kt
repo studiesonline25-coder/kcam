@@ -175,7 +175,6 @@ object CameraHook {
             hookCameraError(lpparam)
             hookCaptureSurfaces(lpparam)
             hookCameraDevice(lpparam)
-            hookCameraDeviceOutputConfigurations(lpparam)
             hookCamera1(lpparam)
             hookCaptureCallback(lpparam)
             hookXiaomiBypass(lpparam)
@@ -2429,61 +2428,6 @@ object CameraHook {
         } catch (t: Throwable) {
             Log.e(TAG, "VirtuCam_Hook: Critical error in handleSessionCreation", t)
         }
-    }
-                        
-                        val args = param.args
-                        if (args.isEmpty()) return
-                        
-                        val sessionConfig = args[0]
-                        if (sessionConfig != null && sessionConfig.javaClass.simpleName == "SessionConfiguration") {
-                            val getOutputConfigsMethod = sessionConfig.javaClass.getMethod("getOutputConfigurations")
-                            val configs = getOutputConfigsMethod.invoke(sessionConfig) as? List<*>
-                            
-                            if (!configs.isNullOrEmpty()) {
-                                Log.d(TAG, "VirtuCam_Hook: Intercepted SessionConfiguration - count: ${configs.size}")
-                                
-                                // [HARDENING] Direct Sensing
-                                try {
-                                    val cameraDevice = param.thisObject as android.hardware.camera2.CameraDevice
-                                    activeCameraId = cameraDevice.id
-                                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Direct Device Sensing (SessionConfig) - Active Camera: $activeCameraId")
-                                    
-                                    val manager = AndroidAppHelper.currentApplication().getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
-                                    val characteristics = manager.getCameraCharacteristics(activeCameraId)
-                                    val facing = characteristics.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
-                                    if (facing != null) cameraFacings[activeCameraId] = if (facing == 0) 1 else 0
-                                    cameraOrientations[activeCameraId] = characteristics.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
-                                } catch (e: Throwable) {
-                                    Log.e(TAG, "VirtuCam_Hook: Failed direct sensing in SessionConfig", e)
-                                }
-
-                                stopOldPipeline()
-                                
-                                 val targetSurfaces = ArrayList<Triple<Surface, Boolean, Int>>()
-                                 
-                                 for (config in configs) {
-                                      if (config == null) continue
-                                      val getSurfaceMethod = config.javaClass.getMethod("getSurface")
-                                      val targetSurface = getSurfaceMethod.invoke(config) as? Surface
-                                      
-                                      if (targetSurface != null) {
-                                          val isCapture = captureSurfaces.contains(targetSurface)
-                                          val format = SurfaceUtils.getSurfaceFormat(targetSurface)
-                                          val resolvedSurface = swapSurfaceInOutputConfig(config, targetSurface)
-                                          targetSurfaces.add(Triple(resolvedSurface, isCapture, format))
-                                      }
-                                  }
-                                
-                                startRenderThreads(targetSurfaces)
-                                obfuscateStackTrace()
-                            }
-                        }
-                    } catch (t: Throwable) {
-                        Log.e(TAG, "VirtuCam_Hook: Error overriding SessionConfiguration", t)
-                    }
-                }
-            }
-        )
     }
 
     private fun stopOldPipeline() {
