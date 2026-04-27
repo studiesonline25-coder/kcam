@@ -175,7 +175,7 @@ class TextureRenderer(private val isVideo: Boolean = true) {
     fun draw(transformMatrix: FloatArray, videoWidth: Int = 0, videoHeight: Int = 0, viewWidth: Int = 0, viewHeight: Int = 0, 
              targetRatio: Float = 0f, hardwareSensorOrientation: Int = 0, userRotation: Int = 0, 
              isMirrored: Boolean = false, zoomFactor: Float = 1.0f, isCapture: Boolean = false,
-             compensationFactor: Float = 1.0f) {
+             compensationFactor: Float = 1.0f, rotationOffset: Int = 0) {
         if (viewWidth > 0 && viewHeight > 0) {
             GLES20.glViewport(0, 0, viewWidth, viewHeight)
         }
