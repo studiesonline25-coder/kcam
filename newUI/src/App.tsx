@@ -1,4 +1,4 @@
-import { Eye, Settings, LayoutGrid, Sparkles, Info, Upload, Network, Play, CheckCircle2, Zap, SlidersHorizontal, RotateCw, Copy, Palette, Globe } from 'lucide-react';
+import { Eye, Settings, LayoutGrid, Sparkles, Info, Upload, Network, Play, CheckCircle2, Zap, SlidersHorizontal, RotateCw, Copy, Palette, Globe, ShieldAlert, Bug, RotateCcw } from 'lucide-react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -127,6 +127,9 @@ const AdvancedControl = () => {
   const [colorSwap, setColorSwap] = useState(false);
   const [tcpMode, setTcpMode] = useState(false);
   const [liveness, setLiveness] = useState(true);
+  const [passthrough, setPassthrough] = useState(false);
+  const [testPattern, setTestPattern] = useState(false);
+  const [rotationOffset, setRotationOffset] = useState(0);
 
   useEffect(() => {
     const handleSync = (e: any) => {
@@ -136,6 +139,9 @@ const AdvancedControl = () => {
       if (data.colorSwap !== undefined) setColorSwap(data.colorSwap);
       if (data.tcpMode !== undefined) setTcpMode(data.tcpMode);
       if (data.liveness !== undefined) setLiveness(data.liveness);
+      if (data.isPassthroughMode !== undefined) setPassthrough(data.isPassthroughMode);
+      if (data.isTestPatternMode !== undefined) setTestPattern(data.isTestPatternMode);
+      if (data.rotationOffset !== undefined) setRotationOffset(data.rotationOffset);
     };
     window.addEventListener('android-sync', handleSync as any);
     return () => window.removeEventListener('android-sync', handleSync as any);
@@ -169,6 +175,24 @@ const AdvancedControl = () => {
     const next = !liveness;
     setLiveness(next);
     (window as any).Android?.setLivenessEnabled(next);
+  };
+
+  const togglePassthrough = () => {
+    const next = !passthrough;
+    setPassthrough(next);
+    (window as any).Android?.setPassthroughMode(next);
+  };
+
+  const toggleTestPattern = () => {
+    const next = !testPattern;
+    setTestPattern(next);
+    (window as any).Android?.setTestPatternMode(next);
+  };
+
+  const toggleRotationOffset = () => {
+    const next = (rotationOffset + 90) % 360;
+    setRotationOffset(next);
+    (window as any).Android?.setRotationOffset(next);
   };
 
   return (
@@ -218,6 +242,43 @@ const AdvancedControl = () => {
           <Sparkles className={`w-5 h-5 ${liveness ? 'text-emerald-neon' : 'text-gray-500'}`} />
           <span className="text-[10px] font-bold uppercase">AI Jitter</span>
         </button>
+      </div>
+
+      <div className="space-y-6 mt-8">
+        <div className="flex items-center gap-2 mb-4">
+          <Bug className="w-4 h-4 text-amber-500" />
+          <h3 className="text-xs uppercase tracking-widest font-bold text-gray-400">Investigation Tools</h3>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <button 
+            onClick={togglePassthrough}
+            className={`border p-4 rounded-2xl flex flex-col items-center gap-2 transition-all ${passthrough ? 'bg-amber-500/10 border-amber-500' : 'bg-card-dark border-border-dark'}`}
+          >
+            <ShieldAlert className={`w-5 h-5 ${passthrough ? 'text-amber-500' : 'text-gray-500'}`} />
+            <span className="text-[10px] font-bold uppercase">{passthrough ? 'Spy Mode ON' : 'Passthrough'}</span>
+          </button>
+
+          <button 
+            onClick={toggleTestPattern}
+            className={`border p-4 rounded-2xl flex flex-col items-center gap-2 transition-all ${testPattern ? 'bg-amber-500/10 border-amber-500' : 'bg-card-dark border-border-dark'}`}
+          >
+            <LayoutGrid className={`w-5 h-5 ${testPattern ? 'text-amber-500' : 'text-gray-500'}`} />
+            <span className="text-[10px] font-bold uppercase">{testPattern ? 'Grid ON' : 'Test Pattern'}</span>
+          </button>
+
+          <button 
+            onClick={toggleRotationOffset}
+            className={`border p-4 rounded-2xl flex flex-col items-center gap-2 transition-all ${rotationOffset !== 0 ? 'bg-amber-500/10 border-amber-500' : 'bg-card-dark border-border-dark'}`}
+          >
+            <RotateCcw className={`w-5 h-5 ${rotationOffset !== 0 ? 'text-amber-500' : 'text-gray-500'}`} />
+            <span className="text-[10px] font-bold uppercase">Offset: {rotationOffset}°</span>
+          </button>
+        </div>
+        
+        <p className="text-[9px] text-gray-500 italic leading-relaxed px-1">
+          Use Spy Mode to capture real hardware buffers when VirtuCam is OFF. Offset helps fix sideways apps.
+        </p>
       </div>
     </div>
   );
