@@ -1786,15 +1786,13 @@ object CameraHook {
                                 return
                             }
 
-                            // [ABSOLUTE HARDWARE PARITY]
-                            // When VirtuCam is ON, we return the EXACT matrices we observed
-                            // from the real Xiaomi hardware. This makes the stream indistinguishable.
-                            val outMatrix = param.args[0] as? FloatArray ?: return
-                            if (activeCameraId == "1") { // Front
-                                System.arraycopy(XIAOMI_FRONT_MATRIX, 0, outMatrix, 0, 16)
-                            } else { // Back
-                                System.arraycopy(XIAOMI_BACK_MATRIX, 0, outMatrix, 0, 16)
-                            }
+                            // [MINIMAL INTERVENTION]
+                            // Real buffers with correct orientation already have the right
+                            // transform matrix from the physical camera. Let it pass through
+                            // unchanged. Overwriting it with a hardcoded Xiaomi matrix would
+                            // corrupt a correct signal and cause preview orientation errors.
+                            // Surveillance continues via the isEnabled=false path above.
+                            return
                         }
                     }
                 )
