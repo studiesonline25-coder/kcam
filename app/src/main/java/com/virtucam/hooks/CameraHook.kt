@@ -1771,6 +1771,22 @@ object CameraHook {
                     FloatArray::class.java,
                     object : XC_MethodHook() {
                         private var localFrameCount = 0
+                        
+                        // [Real captured SurfaceTexture transform matrices — Xiaomi Redmi 'pond']
+                        // Captured directly from the device via HardwareAuditLogger surveillance.
+                        private val XIAOMI_BACK_MATRIX = floatArrayOf(
+                             0.0f, -1.0f, 0.0f, 0.0f,
+                            -1.0f,  0.0f, 0.0f, 0.0f,
+                             0.0f,  0.0f, 1.0f, 0.0f,
+                             1.0f,  1.0f, 0.0f, 1.0f
+                        )
+                        private val XIAOMI_FRONT_MATRIX = floatArrayOf(
+                             0.0f, -1.0f, 0.0f, 0.0f,
+                             1.0f,  0.0f, 0.0f, 0.0f,
+                             0.0f,  0.0f, 1.0f, 0.0f,
+                             0.0f,  1.0f, 0.0f, 1.0f
+                        )
+                        
                         override fun afterHookedMethod(param: MethodHookParam) {
                             if (!isEnabled) {
                                 // Surveillance only when OFF
@@ -1790,7 +1806,13 @@ object CameraHook {
                             // When VirtuCam is ON, we return the EXACT matrices we observed
                             // from the real Xiaomi hardware. This makes the stream indistinguishable.
                             val outMatrix = param.args[0] as? FloatArray ?: return
-                            if (activeCameraId == "1") { // Front
+                            
+                            val pkg = try { android.app.AndroidAppHelper.currentPackageName() ?: "unknown" } catch (_: Throwable) { "unknown" }
+                            if (localFrameCount % 300 == 0) {
+                                Log.d(TAG, "AUDIT_MATRIX: App $pkg is consuming our spoofed ST matrix (cam=$activeCameraId)")
+                            }
+
+                            if (cameraFacings[activeCameraId] == 1) { // Front
                                 System.arraycopy(XIAOMI_FRONT_MATRIX, 0, outMatrix, 0, 16)
                             } else { // Back
                                 System.arraycopy(XIAOMI_BACK_MATRIX, 0, outMatrix, 0, 16)
