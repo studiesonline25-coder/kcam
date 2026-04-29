@@ -1091,11 +1091,6 @@ object CameraHook {
                                             }
                                         }
 
-                                // [ABSOLUTE HARDWARE PARITY — METADATA PASSTHROUGH]
-                                // We no longer override the orientation in CaptureResult.
-                                // Since our buffer already matches the real hardware orientation (90 CCW),
-                                // we let the real HAL orientation metadata flow through.
-                                
                                 // [HARDWARE AUDIT] Always log CaptureResult (read-only surveillance)
                                 try { HardwareAuditLogger.logCaptureResult(result) } catch (_: Throwable) {}
 
@@ -1571,11 +1566,6 @@ object CameraHook {
                                 mSettingsField.isAccessible = true
                                 val settings = mSettingsField.get(reqObj) // CameraMetadataNative
                                 
-                                // [ABSOLUTE HARDWARE PARITY — METADATA PASSTHROUGH]
-                                // We no longer override the orientation in CaptureRequest.
-                                // Since our buffer already matches the real hardware orientation (90 CCW),
-                                // we let the real HAL orientation metadata flow through.
-                                
                                 // [Metadata Sync] Store current state for future lookup by Bridge
                                 // No longer injecting into LENS_FOCUS_DISTANCE to avoid hardware collision.
                                 
@@ -1631,31 +1621,6 @@ object CameraHook {
      * we catch the UnsupportedOperationException in acquireNextImage/acquireLatestImage.
      * This lets the camera HAL work normally while silently ignoring format mismatches.
      */
-        // [Real captured SurfaceTexture transform matrices — Xiaomi Redmi 'pond']
-        // Captured directly from the device via HardwareAuditLogger surveillance.
-        // See nativecameratest.txt and firefoxveriffaudit.txt for derivation.
-        //
-        // Geometric meaning:
-        //   BACK  = 180 deg rotation around the texture center (sensor mounted upside-down)
-        //   FRONT = 90 deg CW rotation (sensor mounted sideways relative to display)
-        //
-        // Both are identical across native MIUI camera, Firefox/WebRTC, and Phoenix —
-        // SurfaceTexture matrices are sensor/HAL-driven, not app-driven.
-        // Format: column-major float[16].
-        private val XIAOMI_BACK_MATRIX = floatArrayOf(
-            // col 0       col 1       col 2       col 3
-             0.0f, -1.0f, 0.0f, 0.0f,
-            -1.0f,  0.0f, 0.0f, 0.0f,
-             0.0f,  0.0f, 1.0f, 0.0f,
-             1.0f,  1.0f, 0.0f, 1.0f
-        )
-        private val XIAOMI_FRONT_MATRIX = floatArrayOf(
-             0.0f, -1.0f, 0.0f, 0.0f,
-             1.0f,  0.0f, 0.0f, 0.0f,
-             0.0f,  0.0f, 1.0f, 0.0f,
-             0.0f,  1.0f, 0.0f, 1.0f
-        )
-
     private fun hookImageReader(lpparam: XC_LoadPackage.LoadPackageParam) {
         val imageReaderClass = XposedHelpers.findClassIfExists(
             "android.media.ImageReader", lpparam.classLoader
@@ -1768,50 +1733,16 @@ object CameraHook {
                     object : XC_MethodHook() {
                         private var localFrameCount = 0
                         
-                        // [Real captured SurfaceTexture transform matrices — Xiaomi Redmi 'pond']
-                        // These are the "Physical Instructions" the HAL sends to apps to align 90/270 CCW buffers.
-                        private val XIAOMI_BACK_MATRIX = floatArrayOf(
-                             0.0f, -1.0f, 0.0f, 0.0f,
-                            -1.0f,  0.0f, 0.0f, 0.0f,
-                             0.0f,  0.0f, 1.0f, 0.0f,
-                             1.0f,  1.0f, 0.0f, 1.0f
-                        )
-                        private val XIAOMI_FRONT_MATRIX = floatArrayOf(
-                             0.0f, -1.0f, 0.0f, 0.0f,
-                             1.0f,  0.0f, 0.0f, 0.0f,
-                             0.0f,  0.0f, 1.0f, 0.0f,
-                             0.0f,  1.0f, 0.0f, 1.0f
-                        )
-                        
                         override fun afterHookedMethod(param: MethodHookParam) {
-                            if (!isEnabled) {
-                                // Surveillance only when OFF
-                                val matrix = param.args[0] as? FloatArray ?: return
-                                localFrameCount++
-                                if (localFrameCount % 300 == 0) {
-                                    val mStr = matrix.joinToString(", ") { String.format("%.2f", it) }
-                                    Log.e(TAG, "SURVEILLANCE: Real ST Matrix -> [$mStr]")
-                                }
-                                val isFront = (cameraFacings[activeCameraId] == 1)
-                                try { HardwareAuditLogger.logTransformMatrix(activeCameraId, isFront, matrix) } catch (_: Throwable) {}
-                                return
+                            val matrix = param.args[0] as? FloatArray ?: return
+                            localFrameCount++
+                            if (!isEnabled && localFrameCount % 300 == 0) { // Throttled logging (approx every 10 seconds at 30fps)
+                                val mStr = matrix.joinToString(", ") { String.format("%.2f", it) }
+                                Log.e(TAG, "SURVEILLANCE: Real ST Matrix -> [$mStr]")
                             }
-
-                            // [ABSOLUTE HARDWARE PARITY]
-                            // We provide the EXACT matrix the real HAL would provide for this sensor.
-                            // This ensures the app correctly rotates our sensor-native (90/270 CCW) buffer.
-                            val outMatrix = param.args[0] as? FloatArray ?: return
-                            
-                            if (cameraFacings[activeCameraId] == 1) { // Front
-                                System.arraycopy(XIAOMI_FRONT_MATRIX, 0, outMatrix, 0, 16)
-                            } else { // Back
-                                System.arraycopy(XIAOMI_BACK_MATRIX, 0, outMatrix, 0, 16)
-                            }
-                            
-                            if (localFrameCount % 300 == 0) {
-                                val pkg = try { android.app.AndroidAppHelper.currentPackageName() ?: "unknown" } catch (_: Throwable) { "unknown" }
-                                Log.d(TAG, "AUDIT_MATRIX: App $pkg is consuming spoofed hardware matrix (cam=$activeCameraId)")
-                            }
+                            // [HARDWARE AUDIT] Record every unique matrix we observe
+                            val isFront = (cameraFacings[activeCameraId] == 1)
+                            try { HardwareAuditLogger.logTransformMatrix(activeCameraId, isFront, matrix) } catch (_: Throwable) {}
                         }
                     }
                 )
