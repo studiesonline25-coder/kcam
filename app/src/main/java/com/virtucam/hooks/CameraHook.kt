@@ -1769,7 +1769,7 @@ object CameraHook {
                         private var localFrameCount = 0
                         
                         // [Real captured SurfaceTexture transform matrices — Xiaomi Redmi 'pond']
-                        // Captured directly from the device via HardwareAuditLogger surveillance.
+                        // These are the "Physical Instructions" the HAL sends to apps to align 90/270 CCW buffers.
                         private val XIAOMI_BACK_MATRIX = floatArrayOf(
                              0.0f, -1.0f, 0.0f, 0.0f,
                             -1.0f,  0.0f, 0.0f, 0.0f,
@@ -1788,26 +1788,29 @@ object CameraHook {
                                 // Surveillance only when OFF
                                 val matrix = param.args[0] as? FloatArray ?: return
                                 localFrameCount++
-                                if (localFrameCount % 300 == 0) { // Throttled logging (approx every 10 seconds at 30fps)
+                                if (localFrameCount % 300 == 0) {
                                     val mStr = matrix.joinToString(", ") { String.format("%.2f", it) }
                                     Log.e(TAG, "SURVEILLANCE: Real ST Matrix -> [$mStr]")
                                 }
-                                // [HARDWARE AUDIT] Record every unique matrix we observe
                                 val isFront = (cameraFacings[activeCameraId] == 1)
                                 try { HardwareAuditLogger.logTransformMatrix(activeCameraId, isFront, matrix) } catch (_: Throwable) {}
                                 return
                             }
 
-                            // [ABSOLUTE HARDWARE PARITY — METADATA PASSTHROUGH]
-                            // We no longer override the matrix. Since our buffer now perfectly matches 
-                            // the real hardware orientation (90 CCW), we let the real HAL matrix 
-                            // flow through. This ensures the app receives the correct instructions 
-                            // to align our spoofed pixels.
+                            // [ABSOLUTE HARDWARE PARITY]
+                            // We provide the EXACT matrix the real HAL would provide for this sensor.
+                            // This ensures the app correctly rotates our sensor-native (90/270 CCW) buffer.
                             val outMatrix = param.args[0] as? FloatArray ?: return
                             
-                            val pkg = try { android.app.AndroidAppHelper.currentPackageName() ?: "unknown" } catch (_: Throwable) { "unknown" }
+                            if (cameraFacings[activeCameraId] == 1) { // Front
+                                System.arraycopy(XIAOMI_FRONT_MATRIX, 0, outMatrix, 0, 16)
+                            } else { // Back
+                                System.arraycopy(XIAOMI_BACK_MATRIX, 0, outMatrix, 0, 16)
+                            }
+                            
                             if (localFrameCount % 300 == 0) {
-                                Log.d(TAG, "AUDIT_MATRIX: App $pkg is consuming the REAL HAL matrix (cam=$activeCameraId)")
+                                val pkg = try { android.app.AndroidAppHelper.currentPackageName() ?: "unknown" } catch (_: Throwable) { "unknown" }
+                                Log.d(TAG, "AUDIT_MATRIX: App $pkg is consuming spoofed hardware matrix (cam=$activeCameraId)")
                             }
                         }
                     }
