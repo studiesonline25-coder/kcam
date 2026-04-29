@@ -1994,8 +1994,9 @@ object CameraHook {
         val isVideoSurface = videoSurfaces.contains(targetSurface)
         
         val bridge = if (!isPreview && !isVideoSurface) {
-            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Creating FormatConverterBridge for $w x $h (Format $format) SensorRot=$sensorOrientation(source), RotOffset=$rotationOffset, ColorSwap=$isColorSwapped")
-            val b = FormatConverterBridge(w, h, targetSurface, format, sensorOrientation, rotationOffset, isColorSwapped)
+            val sourceSensorOrientation = cameraOrientations[activeCameraId] ?: 270
+            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Creating FormatConverterBridge for $w x $h (Format $format) SensorRot=$sourceSensorOrientation(source), RotOffset=$rotationOffset, ColorSwap=$isColorSwapped")
+            val b = FormatConverterBridge(w, h, targetSurface, format, sourceSensorOrientation, rotationOffset, isColorSwapped)
             activeBridges.add(b)
             formatBridges[android.util.Size(w, h)] = b
             b
