@@ -102,9 +102,6 @@ object CameraHook {
     @Volatile var zoomFactor: Float = 1.0f
     @Volatile var rtspUseTcp: Boolean = true
     @Volatile
-    var rotation: Int = 0
-    
-    @Volatile
     var isColorSwapped: Boolean = false
 
     @Volatile
@@ -126,7 +123,7 @@ object CameraHook {
     var lastRequestedOrientation: Int = -1 // -1 = NOT_SET
     
     // [Metadata Sync] Process-local sync to avoid collision with real hardware focus distance
-    data class TransformationState(val compensationFactor: Float, val rotation: Int, val isMirrored: Boolean)
+    data class TransformationState(val compensationFactor: Float, val rotationOffset: Int, val isMirrored: Boolean)
     private val metadataCourierMap = java.util.concurrent.ConcurrentHashMap<Long, TransformationState>()
     
     fun getLatestCouriedState(timestamp: Long): TransformationState? {
@@ -1074,7 +1071,7 @@ object CameraHook {
 
                                         // [ABSOLUTE PARITY] Directly store the current UI state for this frame's timestamp
                                         // This replaces the LENS_FOCUS_DISTANCE courier which was colliding with real hardware.
-                                        metadataCourierMap[sensorTimestamp] = TransformationState(compensationFactor, rotation, isMirrored)
+                                        metadataCourierMap[sensorTimestamp] = TransformationState(compensationFactor, rotationOffset, isMirrored)
                                         
                                         // Cleanup old entries (Keep last 2 seconds)
                                         if (metadataCourierMap.size > 120) {
@@ -1570,7 +1567,7 @@ object CameraHook {
                                 // No longer injecting into LENS_FOCUS_DISTANCE to avoid hardware collision.
                                 
                                 // [TRUTH LOG] This confirms the Camera App process HAS the updated slider value.
-                                Log.d(TAG, "DIAGNOSTIC_VIRTUCAM: State Captured for Courier: (Stretch: $compensationFactor, Rot: $rotation, Mirror: $isMirrored)")
+                                Log.d(TAG, "DIAGNOSTIC_VIRTUCAM: State Captured for Courier: (Stretch: $compensationFactor, RotOffset: $rotationOffset, Mirror: $isMirrored)")
                                 
                                 // 2. NUCLEAR SWEEP: Disable parallel capture and AI features in the metadata directly
                                 val manufacturer = android.os.Build.MANUFACTURER ?: ""
@@ -1997,10 +1994,8 @@ object CameraHook {
         val isVideoSurface = videoSurfaces.contains(targetSurface)
         
         val bridge = if (!isPreview && !isVideoSurface) {
-            // sensorOrientation=0: EGL render already applies rotation in drawToAllSurfaces.
-            // Bridge only handles user rotationOffset + app JPEG_ORIENTATION.
-            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Creating FormatConverterBridge for $w x $h (Format $format) SensorRot=0(EGL-handled), RotOffset=$rotation, ColorSwap=$isColorSwapped")
-            val b = FormatConverterBridge(w, h, targetSurface, format, 0, rotation, isColorSwapped) // Changed sensorOrientation to 0
+            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Creating FormatConverterBridge for $w x $h (Format $format) SensorRot=$sensorOrientation(source), RotOffset=$rotationOffset, ColorSwap=$isColorSwapped")
+            val b = FormatConverterBridge(w, h, targetSurface, format, sensorOrientation, rotationOffset, isColorSwapped)
             activeBridges.add(b)
             formatBridges[android.util.Size(w, h)] = b
             b
@@ -2059,14 +2054,13 @@ object CameraHook {
                         isMirrored = if (it.columnCount > 7) it.getInt(7) == 1 else false
                         zoomFactor = if (it.columnCount > 8) it.getFloat(8) else 1.0f
                         rtspUseTcp = if (it.columnCount > 9) it.getInt(9) == 1 else true
-                        rotation = if (it.columnCount > 10) it.getInt(10) else 0
                         isColorSwapped = if (it.columnCount > 11) it.getInt(11) == 1 else false
                         isLivenessEnabled = if (it.columnCount > 12) it.getInt(12) == 1 else true
                         isTestPatternMode = if (it.columnCount > 13) it.getInt(13) == 1 else false
                         isPassthroughMode = if (it.columnCount > 14) it.getInt(14) == 1 else false
                         rotationOffset = if (it.columnCount > 15) it.getInt(15) else 0
                         
-                        Log.d(TAG, "VirtuCam_Hook: Config loaded. Enabled: $isEnabled, Zoom: $zoomFactor, Stretch: $compensationFactor, rot: $rotation, liveness: $isLivenessEnabled, passthrough: $isPassthroughMode, offset: $rotationOffset")
+                        Log.d(TAG, "VirtuCam_Hook: Config loaded. Enabled: $isEnabled, Zoom: $zoomFactor, Stretch: $compensationFactor, liveness: $isLivenessEnabled, passthrough: $isPassthroughMode, offset: $rotationOffset")
                     } catch (innerE: Exception) {
                         Log.e(TAG, "VirtuCam_Hook: Error parsing cursor columns", innerE)
                     }
@@ -2424,7 +2418,7 @@ object CameraHook {
             try {
                 // [Sync Fix] Start ONE master thread for ALL surfaces to ensure sync and save CPU
                 var isFront = (cameraFacings[activeCameraId] == 1)
-                val thread = VirtualRenderThread(targetSurfaces, context, isVideo, isStream, streamUrl, isFront, sensorOrientation, CameraHook.rotation, CameraHook.rotationOffset)
+                val thread = VirtualRenderThread(targetSurfaces, context, isVideo, isStream, streamUrl, isFront, sensorOrientation, CameraHook.rotationOffset)
                 thread.start()
                 renderThreads.add(thread)
                 Log.d(TAG, "VirtuCam_Hook: Started MASTER RenderThread for ${targetSurfaces.size} surfaces.")
@@ -2484,7 +2478,6 @@ class VirtualRenderThread(
     private val streamUrl: String,
     private val isFrontCamera: Boolean,
     private val sensorOrientation: Int = 0,
-    private val userRotation: Int = 0,
     private val rotationOffset: Int = 0
 ) : Thread("VirtuCam-RenderThread") {
     
@@ -2740,8 +2733,7 @@ class VirtualRenderThread(
                   // The renderer will mimic the "Sideways" pixels of the real hardware.
                   val parityOrientation = sensorOrientation
                   
-                  // Combine with any media-specific EXIF rotation or user adjustments
-                  val finalUserRotation = CameraHook.rotation + explicitRotationOffset
+                  val finalUserRotation = explicitRotationOffset
 
                   // DYNAMIC MIRRORING LOGIC (Axis-Swapping handled in TextureRenderer)
                   val isActuallyFront = (isFrontCamera)

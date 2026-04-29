@@ -97,7 +97,6 @@ class MainActivity : AppCompatActivity() {
             put("isEnabled", config.isEnabled)
             put("zoom", config.zoomFactor)
             put("stretch", config.compensationFactor)
-            put("rotation", config.rotation)
             put("mirrored", config.isMirrored)
             put("colorSwap", config.isColorSwapped)
             put("liveness", config.isLivenessEnabled)
@@ -148,11 +147,6 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun updateStretch(valStretch: Float) {
             config.compensationFactor = valStretch
-        }
-
-        @JavascriptInterface
-        fun setRotation(deg: Int) {
-            config.rotation = deg
         }
 
         @JavascriptInterface

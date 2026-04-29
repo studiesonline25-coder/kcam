@@ -209,7 +209,7 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             // We negate the rotation to achieve CW parity, then add 180 deg to compensate
             // for the upright orientation of the user's uploaded media.
             // PLUS: apply manual rotationOffset for per-app fine-tuning.
-            val totalRotation = ((360 - ((hardwareSensorOrientation + userRotation + rotationOffset + 360) % 360)) + 180) % 360
+            val totalRotation = ((360 - ((hardwareSensorOrientation + userRotation + 360) % 360)) + 180 + rotationOffset) % 360
 
             // --- ISOTROPIC FITTING MATH ---
             fun drawQuad(isBackground: Boolean) {

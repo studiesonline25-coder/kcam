@@ -66,7 +66,7 @@ class VirtuCamProvider : ContentProvider() {
                         if (config.isMirrored) 1 else 0,
                         config.zoomFactor,
                         if (config.getFloatDirectSync(context, "rtsp_use_tcp", 1.0f) == 1.0f) 1 else 0,
-                        config.getFloatDirectSync(context, "rotation_override", 0.0f).toInt(),
+                        0,
                         if (config.getFloatDirectSync(context, "is_color_swapped", 0.0f) == 1.0f) 1 else 0,
                         if (config.getFloatDirectSync(context, "is_liveness_enabled", 1.0f) == 1.0f) 1 else 0,
                         if (config.isTestPatternMode) 1 else 0,
@@ -83,7 +83,7 @@ class VirtuCamProvider : ContentProvider() {
                         if (config.isStream) 1 else 0,
                         config.streamUrl ?: "",
                         if (config.isMirrored) 1 else 0,
-                        config.rotation,
+                        0,
                         if (config.isColorSwapped) 1 else 0
                     ))
                 }

@@ -228,7 +228,7 @@ class FormatConverterBridge(
             val context = android.app.AndroidAppHelper.currentApplication()
             var zoom = CameraHook.zoomFactor
             var comp = CameraHook.compensationFactor
-            var userRot = CameraHook.rotation
+            var userRot = CameraHook.rotationOffset
             
             // --- METADATA COURIER SYNC (Build 220: The 'Truth' Sync) ---
             // We use the 'Courier' to sync all transformation parameters in real-time.
@@ -236,11 +236,11 @@ class FormatConverterBridge(
             val couriedState = CameraHook.getLatestCouriedState(timestamp)
             if (couriedState != null) {
                 comp = couriedState.compensationFactor
-                userRot = couriedState.rotation
-                Log.d(TAG, "DIAGNOSTIC_VIRTUCAM: GLOBAL SYNC SUCCESS via Courier. Stretch=$comp, Rot=$userRot (TS $timestamp)")
+                userRot = couriedState.rotationOffset
+                Log.d(TAG, "DIAGNOSTIC_VIRTUCAM: GLOBAL SYNC SUCCESS via Courier. Stretch=$comp, RotOffset=$userRot (TS $timestamp)")
             } else {
                 // Fallback for logic consistency
-                Log.d(TAG, "DIAGNOSTIC_VIRTUCAM: GLOBAL SYNC CHECK (Courier Pending). Current Stretch=$comp, Rot=$userRot")
+                Log.d(TAG, "DIAGNOSTIC_VIRTUCAM: GLOBAL SYNC CHECK (Courier Pending). Current Stretch=$comp, RotOffset=$userRot")
             }
 
             // --- PERFECT HARDWARE 1:1 MAPPING ---

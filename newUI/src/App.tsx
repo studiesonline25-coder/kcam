@@ -1,4 +1,4 @@
-import { Eye, Settings, LayoutGrid, Sparkles, Info, Upload, Network, Play, CheckCircle2, Zap, SlidersHorizontal, RotateCw, Copy, Palette, Globe, ShieldAlert, Bug, RotateCcw } from 'lucide-react';
+import { Eye, Settings, LayoutGrid, Sparkles, Info, Upload, Network, Play, CheckCircle2, Zap, SlidersHorizontal, Copy, Palette, Globe, ShieldAlert, Bug, RotateCcw } from 'lucide-react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -122,7 +122,6 @@ const FrameControl = () => {
 };
 
 const AdvancedControl = () => {
-  const [rotation, setRotation] = useState(0);
   const [mirrored, setMirrored] = useState(false);
   const [colorSwap, setColorSwap] = useState(false);
   const [tcpMode, setTcpMode] = useState(false);
@@ -134,7 +133,6 @@ const AdvancedControl = () => {
   useEffect(() => {
     const handleSync = (e: any) => {
       const data = typeof e.detail === 'string' ? JSON.parse(e.detail) : e.detail;
-      if (data.rotation !== undefined) setRotation(data.rotation);
       if (data.mirrored !== undefined) setMirrored(data.mirrored);
       if (data.colorSwap !== undefined) setColorSwap(data.colorSwap);
       if (data.tcpMode !== undefined) setTcpMode(data.tcpMode);
@@ -146,12 +144,6 @@ const AdvancedControl = () => {
     window.addEventListener('android-sync', handleSync as any);
     return () => window.removeEventListener('android-sync', handleSync as any);
   }, []);
-
-  const toggleRotation = () => {
-    const next = (rotation + 90) % 360;
-    setRotation(next);
-    (window as any).Android?.setRotation(next);
-  };
 
   const toggleMirror = () => {
     const next = !mirrored;
@@ -203,14 +195,6 @@ const AdvancedControl = () => {
       </div>
       
       <div className="grid grid-cols-2 gap-4">
-        <button 
-          onClick={toggleRotation}
-          className="bg-card-dark border border-border-dark p-4 rounded-2xl flex flex-col items-center gap-2 hover:border-emerald-neon/30 transition-all"
-        >
-          <RotateCw className="w-5 h-5 text-emerald-neon" />
-          <span className="text-[10px] font-bold uppercase">{rotation}° Rot</span>
-        </button>
-
         <button 
           onClick={toggleMirror}
           className={`border p-4 rounded-2xl flex flex-col items-center gap-2 transition-all ${mirrored ? 'bg-emerald-neon/10 border-emerald-neon' : 'bg-card-dark border-border-dark'}`}

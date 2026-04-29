@@ -94,13 +94,6 @@ class VirtuCamConfig(context: Context) {
         set(value) = prefs.edit().putBoolean("is_mirrored", value).apply()
     
     /**
-     * Rotation override (clockwise in degrees: 0, 90, 180, 270)
-     */
-    var rotation: Int
-        get() = prefs.getInt("rotation_override", 0)
-        set(value) = prefs.edit().putInt("rotation_override", value).apply()
-
-    /**
      * Whether to swap U and V planes (color fix for some devices)
      */
     var isColorSwapped: Boolean
