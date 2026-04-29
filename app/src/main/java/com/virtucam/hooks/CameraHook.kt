@@ -1091,17 +1091,11 @@ object CameraHook {
                                             }
                                         }
 
-                                // 2. Spoof CaptureResult Orientation to 0
-                                try {
-                                    val mResultsField = XposedHelpers.findFieldIfExists(result.javaClass, "mResults")
-                                    if (mResultsField != null) {
-                                        mResultsField.isAccessible = true
-                                        val results = mResultsField.get(result) // CameraMetadataNative
-                                        val jpegOrientationKey = android.hardware.camera2.CaptureResult.JPEG_ORIENTATION
-                                        XposedHelpers.callMethod(results, "set", jpegOrientationKey, 0)
-                                    }
-                                } catch (_: Exception) {}
-
+                                // [ABSOLUTE HARDWARE PARITY — METADATA PASSTHROUGH]
+                                // We no longer override the orientation in CaptureResult.
+                                // Since our buffer already matches the real hardware orientation (90 CCW),
+                                // we let the real HAL orientation metadata flow through.
+                                
                                 // [HARDWARE AUDIT] Always log CaptureResult (read-only surveillance)
                                 try { HardwareAuditLogger.logCaptureResult(result) } catch (_: Throwable) {}
 
@@ -1577,10 +1571,12 @@ object CameraHook {
                                 mSettingsField.isAccessible = true
                                 val settings = mSettingsField.get(reqObj) // CameraMetadataNative
                                 
-                                // 1. Force JPEG_ORIENTATION to 0 (since our EGL pixels are already upright)
-                                val jpegOrientationKey = android.hardware.camera2.CaptureRequest.JPEG_ORIENTATION
-                                XposedHelpers.callMethod(settings, "set", jpegOrientationKey, 0)
-                                                              // [Metadata Sync] Store current state for future lookup by Bridge
+                                // [ABSOLUTE HARDWARE PARITY — METADATA PASSTHROUGH]
+                                // We no longer override the orientation in CaptureRequest.
+                                // Since our buffer already matches the real hardware orientation (90 CCW),
+                                // we let the real HAL orientation metadata flow through.
+                                
+                                // [Metadata Sync] Store current state for future lookup by Bridge
                                 // No longer injecting into LENS_FOCUS_DISTANCE to avoid hardware collision.
                                 
                                 // [TRUTH LOG] This confirms the Camera App process HAS the updated slider value.
@@ -1802,20 +1798,16 @@ object CameraHook {
                                 return
                             }
 
-                            // [ABSOLUTE HARDWARE PARITY]
-                            // When VirtuCam is ON, we return the EXACT matrices we observed
-                            // from the real Xiaomi hardware. This makes the stream indistinguishable.
+                            // [ABSOLUTE HARDWARE PARITY — METADATA PASSTHROUGH]
+                            // We no longer override the matrix. Since our buffer now perfectly matches 
+                            // the real hardware orientation (90 CCW), we let the real HAL matrix 
+                            // flow through. This ensures the app receives the correct instructions 
+                            // to align our spoofed pixels.
                             val outMatrix = param.args[0] as? FloatArray ?: return
                             
                             val pkg = try { android.app.AndroidAppHelper.currentPackageName() ?: "unknown" } catch (_: Throwable) { "unknown" }
                             if (localFrameCount % 300 == 0) {
-                                Log.d(TAG, "AUDIT_MATRIX: App $pkg is consuming our spoofed ST matrix (cam=$activeCameraId)")
-                            }
-
-                            if (cameraFacings[activeCameraId] == 1) { // Front
-                                System.arraycopy(XIAOMI_FRONT_MATRIX, 0, outMatrix, 0, 16)
-                            } else { // Back
-                                System.arraycopy(XIAOMI_BACK_MATRIX, 0, outMatrix, 0, 16)
+                                Log.d(TAG, "AUDIT_MATRIX: App $pkg is consuming the REAL HAL matrix (cam=$activeCameraId)")
                             }
                         }
                     }
