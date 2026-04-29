@@ -1,4 +1,4 @@
-# VirtuCam 👻
+# VirtuCam
 
 A virtual camera app for Android that can inject custom images into camera feeds for pranking friends!
 
