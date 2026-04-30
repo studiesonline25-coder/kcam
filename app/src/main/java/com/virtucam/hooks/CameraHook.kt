@@ -2419,7 +2419,7 @@ object CameraHook {
             try {
                 // [Sync Fix] Start ONE master thread for ALL surfaces to ensure sync and save CPU
                 var isFront = (cameraFacings[activeCameraId] == 1)
-                val thread = VirtualRenderThread(targetSurfaces, context, isVideo, isStream, streamUrl, isFront, sensorOrientation, CameraHook.rotationOffset)
+                val thread = VirtualRenderThread(targetSurfaces, context, isVideo, isStream, streamUrl, isFront, sensorOrientation)
                 thread.start()
                 renderThreads.add(thread)
                 Log.d(TAG, "VirtuCam_Hook: Started MASTER RenderThread for ${targetSurfaces.size} surfaces.")
@@ -2478,8 +2478,7 @@ class VirtualRenderThread(
     private val isStream: Boolean,
     private val streamUrl: String,
     private val isFrontCamera: Boolean,
-    private val sensorOrientation: Int = 0,
-    private val rotationOffset: Int = 0
+    private val sensorOrientation: Int = 0
 ) : Thread("VirtuCam-RenderThread") {
     
     @Volatile
@@ -2609,28 +2608,6 @@ class VirtualRenderThread(
                     bm
                 }
                 
-                var exifRotation = 0
-                if (!CameraHook.isTestPatternMode) {
-                    try {
-                        isSourceLoading.set(true)
-                        val exifStream = context.contentResolver.openInputStream(uri)
-                        if (exifStream != null) {
-                            val exif = android.media.ExifInterface(exifStream)
-                            val orientation = exif.getAttributeInt(android.media.ExifInterface.TAG_ORIENTATION, android.media.ExifInterface.ORIENTATION_NORMAL)
-                            exifRotation = when (orientation) {
-                                android.media.ExifInterface.ORIENTATION_ROTATE_90 -> 90
-                                android.media.ExifInterface.ORIENTATION_ROTATE_180 -> 180
-                                android.media.ExifInterface.ORIENTATION_ROTATE_270 -> 270
-                                else -> 0
-                            }
-                            exifStream.close()
-                        }
-                    } catch (e: Exception) {
-                    } finally {
-                        isSourceLoading.remove()
-                    }
-                }
-                
                 if (bitmap != null) {
                     textureRenderer!!.loadBitmap(bitmap)
                     val staticImageW = bitmap.width
@@ -2657,7 +2634,7 @@ class VirtualRenderThread(
                             Matrix.translateM(matrix, 0, -0.5f, -0.5f, 0f)
                         }
 
-                        if (!drawToAllSurfaces(matrix, staticImageW, staticImageH, exifRotation)) break
+                        if (!drawToAllSurfaces(matrix, staticImageW, staticImageH)) break
                         
                         // Handle Photo/Capture Requests (Static Image)
                         synchronized(CameraHook) {
@@ -2713,7 +2690,7 @@ class VirtualRenderThread(
         }
     }
 
-    private fun drawToAllSurfaces(matrix: FloatArray, contentW: Int, contentH: Int, explicitRotationOffset: Int = 0): Boolean {
+    private fun drawToAllSurfaces(matrix: FloatArray, contentW: Int, contentH: Int): Boolean {
         // [Dynamic Resize] Recreate EGL surfaces if browser renegotiated resolution
         if (CameraHook.pendingSurfaceResize.compareAndSet(true, false)) {
             recreateEglSurfaces()
@@ -2734,7 +2711,7 @@ class VirtualRenderThread(
                   // The renderer will mimic the "Sideways" pixels of the real hardware.
                   val parityOrientation = sensorOrientation
                   
-                  val finalUserRotation = explicitRotationOffset
+                  val finalUserRotation = 0
 
                   // DYNAMIC MIRRORING LOGIC (Axis-Swapping handled in TextureRenderer)
                   val isActuallyFront = (isFrontCamera)
@@ -2746,7 +2723,7 @@ class VirtualRenderThread(
 
                    val ratio = getTargetRatio(vw, vh, isCapture, contentW, contentH)
                    
-                   textureRenderer?.draw(matrix, contentW, contentH, vw, vh, ratio, parityOrientation, finalUserRotation, shouldMirror, CameraHook.zoomFactor, isCapture, CameraHook.compensationFactor, rotationOffset)
+                   textureRenderer?.draw(matrix, contentW, contentH, vw, vh, ratio, parityOrientation, finalUserRotation, shouldMirror, CameraHook.zoomFactor, isCapture, CameraHook.compensationFactor, 0)
 
                  eglCore?.setPresentationTime(es, System.nanoTime())
                  if (eglCore?.swapBuffers(es) == false) {
