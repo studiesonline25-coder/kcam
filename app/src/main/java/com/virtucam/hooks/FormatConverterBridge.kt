@@ -43,9 +43,14 @@ class FormatConverterBridge(
 
     @Volatile
     private var cachedRgbaData: ByteArray? = null
-    
+
     private var debugCounter = 0
     private var lastBufferDumpMs = 0L
+
+    // Stage-dump markers — dump once per session on first valid frame
+    private var didDumpStage1 = false  // post-GL RGBA (bridge cache capture)
+    private var didDumpStage2 = false  // post-bridge YUV (overwrite)
+    private var didDumpStage3 = false  // final consumed capture (downstream reader)
 
     // This is the surface we hand to the VirtualRenderThread (it receives RGBA from OpenGL)
     val inputSurface: Surface?
@@ -108,7 +113,16 @@ class FormatConverterBridge(
                     if (nowMs - lastBufferDumpMs > 5_000L) {
                         lastBufferDumpMs = nowMs
                         try {
-                            BufferDumper.dumpRgba(width, height, cachedRgbaData!!.copyOf(), "stage_gl_rgba_${width}x${height}")
+                            BufferDumper.dumpRgba(width, height, cachedRgbaData!!.copyOf(), "bridge_${width}x${height}")
+                        } catch (_: Throwable) {}
+                    }
+
+                    // [STAGE DUMP 1] Post-GL RGBA — one-shot per session
+                    if (!didDumpStage1 && cachedRgbaData != null && cachedRgbaData!!.isNotEmpty()) {
+                        didDumpStage1 = true
+                        try {
+                            BufferDumper.dumpRgba(width, height, cachedRgbaData!!.copyOf(), "stage1_gl_rgba_${width}x${height}")
+                            Log.i(TAG, "[STAGE_DUMP_1] Saved post-GL RGBA buffer to virtucam_audit/buffers/stage1_gl_rgba_${width}x${height}_*.png")
                         } catch (_: Throwable) {}
                     }
                 } catch (e: Throwable) {
@@ -349,13 +363,22 @@ class FormatConverterBridge(
                 writeChroma(vPlane, false)
             }
             
-            // stage dump: YUV immediately after bridge overwrite
+            // diagnostic dump (YUV is hard to view directly, so we just log metadata or dump raw bytes)
             if (debugCounter % 5 == 0) {
-                try { BufferDumper.dumpYuvImage(targetImage, "stage_bridge_yuv_${w}x${h}") } catch (_: Throwable) {}
-                dumpRawBuffer(targetImage, "stage_bridge_yuv_${System.currentTimeMillis()}.raw")
+                dumpRawBuffer(targetImage, "capture_yuv_${System.currentTimeMillis()}.raw")
             }
             debugCounter++
-            
+
+            // [STAGE DUMP 2] Post-bridge YUV — one-shot per session
+            if (!didDumpStage2) {
+                didDumpStage2 = true
+                try {
+                    // Dump the target YUV as-is (our rewritten buffer)
+                    BufferDumper.dumpYuvImage(targetImage, "stage2_bridge_yuv_${w}x${h}")
+                    Log.i(TAG, "[STAGE_DUMP_2] Saved post-bridge YUV buffer to virtucam_audit/buffers/stage2_bridge_yuv_${w}x${h}_*.png")
+                } catch (_: Throwable) {}
+            }
+
             Log.d(TAG, "FormatConverterBridge: Captured frame (${w}x${h}) rewritten successfully. Format=$format")
         } catch (e: Exception) {
             Log.e(TAG, "FormatConverterBridge: Error overwriting capture buffer", e)
