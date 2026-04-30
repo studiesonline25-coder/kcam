@@ -55,6 +55,9 @@ object CameraHook {
 
     @Volatile
     private var lastSpyDumpMs: Long = 0L
+
+    @Volatile
+    private var lastFinalDumpMs: Long = 0L
     
     private val renderThreads = mutableListOf<Any>()
     // Strong references to prevent GC from destroying surfaces while native camera pipeline uses them
@@ -1786,6 +1789,11 @@ object CameraHook {
                             if (bridge != null && !bridge.hasImageWriter) {
                                 bridge.overwriteImageWithLatestYuv(image, image.timestamp)
                                 Log.d(TAG, "VirtuCam_Hook: Overwrote YUV image ${image.width}x${image.height}")
+                            }
+                            val nowFinal = System.currentTimeMillis()
+                            if (nowFinal - lastFinalDumpMs > 5_000L) {
+                                lastFinalDumpMs = nowFinal
+                                try { BufferDumper.dumpYuvImage(image, "stage_final_yuv_${image.width}x${image.height}") } catch (_: Throwable) {}
                             }
                         }
                         256 -> { // JPEG = 0x100 = 256

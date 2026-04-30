@@ -108,7 +108,7 @@ class FormatConverterBridge(
                     if (nowMs - lastBufferDumpMs > 5_000L) {
                         lastBufferDumpMs = nowMs
                         try {
-                            BufferDumper.dumpRgba(width, height, cachedRgbaData!!.copyOf(), "bridge_${width}x${height}")
+                            BufferDumper.dumpRgba(width, height, cachedRgbaData!!.copyOf(), "stage_gl_rgba_${width}x${height}")
                         } catch (_: Throwable) {}
                     }
                 } catch (e: Throwable) {
@@ -349,9 +349,10 @@ class FormatConverterBridge(
                 writeChroma(vPlane, false)
             }
             
-            // diagnostic dump (YUV is hard to view directly, so we just log metadata or dump raw bytes)
+            // stage dump: YUV immediately after bridge overwrite
             if (debugCounter % 5 == 0) {
-                dumpRawBuffer(targetImage, "capture_yuv_${System.currentTimeMillis()}.raw")
+                try { BufferDumper.dumpYuvImage(targetImage, "stage_bridge_yuv_${w}x${h}") } catch (_: Throwable) {}
+                dumpRawBuffer(targetImage, "stage_bridge_yuv_${System.currentTimeMillis()}.raw")
             }
             debugCounter++
             
