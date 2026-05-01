@@ -123,9 +123,7 @@ class StreamPlayer(
             MediaItem.Builder()
                 .setUri(uri)
                 .setRequestMetadata(
-                    RequestMetadata.Builder()
-                        .setMediaMimeType("video/mp4")  // hint to extractor
-                        .build()
+                    RequestMetadata.Builder().build()
                 )
                 .build()
                 .let { mediaSourceFactory.createMediaSource(it) }
