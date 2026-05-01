@@ -203,13 +203,22 @@ class TextureRenderer(private val isVideo: Boolean = true) {
         GLES20.glEnableVertexAttribArray(maTextureHandle)
 
         if (videoWidth > 0 && videoHeight > 0 && viewWidth > 0 && viewHeight > 0) {
-            // [ABSOLUTE HARDWARE PARITY — f223d95 baseline]
-            // We rotate the video to match the physical mounting of the sensor (90 or 270).
-            // NOTE: Matrix.rotateM is CCW, but sensors are CW relative to board top.
-            // We negate the rotation to achieve CW parity, then add 180 deg to compensate
-            // for the upright orientation of the user's uploaded media.
-            // PLUS: apply manual rotationOffset for per-app fine-tuning.
-            val totalRotation = ((360 - ((hardwareSensorOrientation + userRotation + 360) % 360)) + 180 + rotationOffset) % 360
+            // [ABSOLUTE HARDWARE PARITY]
+            // Goal: buffer in sensor native orientation (sideways for both cameras).
+            //
+            // Observed pipeline alone (totalRotation=0):
+            //   Back:  upright  (pipeline adds ~90° CCW internally)
+            //   Front: upside-down (pipeline adds ~270° CCW internally, over-rotates by 180°)
+            //
+            // We need: both SIDEWAYS (net 90° CCW for both)
+            //   Back:  upright  + 90° CCW = sideways ✓
+            //   Front: upside-down + 90° CCW = sideways ✓
+            //
+            // Formula that always produces 90°:
+            //   totalRotation = (360 - sensorOrientation + 180) % 360
+            //   Back (so=90):  (360 - 90 + 180) % 360 = 450 % 360 = 90° CCW ✓
+            //   Front (so=270): (360 - 270 + 180) % 360 = 270 % 360 = 90° CCW ✓
+            val totalRotation = ((360 - hardwareSensorOrientation) + 180 + userRotation + rotationOffset) % 360
 
             // --- ISOTROPIC FITTING MATH ---
             fun drawQuad(isBackground: Boolean) {

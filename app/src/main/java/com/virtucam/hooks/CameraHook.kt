@@ -135,6 +135,27 @@ object CameraHook {
         return metadataCourierMap.values.firstOrNull() // Fallback
     }
 
+    /**
+     * Saves a stream preview frame to internal storage.
+     * Called from StreamPlayer's onFirstFrame callback on the main looper.
+     * The file is then served via VirtuCamProvider at content://com.virtucam.provider/stream_preview/stream_preview.jpg
+     */
+    fun saveStreamPreviewToProvider(bitmap: android.graphics.Bitmap) {
+        Thread {
+            try {
+                val ctx = AndroidAppHelper.currentApplication() ?: return@Thread
+                val file = java.io.File(ctx.filesDir, "stream_preview.jpg")
+                file.outputStream().use { fos ->
+                    bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 75, fos)
+                }
+                bitmap.recycle()
+                Log.d(TAG, "Stream preview saved to provider: ${file.absolutePath}")
+            } catch (e: Exception) {
+                Log.e(TAG, "Stream preview save failed: ${e.message}")
+            }
+        }.start()
+    }
+
     // [ONCE AND FOR ALL] Surface tracking and crash prevention structures
     private val hookedListenerClasses = java.util.Collections.newSetFromMap(java.util.WeakHashMap<Class<*>, Boolean>())
     private val captureSurfaces = java.util.Collections.newSetFromMap(java.util.WeakHashMap<Surface, Boolean>())
@@ -2572,7 +2593,14 @@ class VirtualRenderThread(
                 val hasNewFrame = java.util.concurrent.atomic.AtomicBoolean(false)
                 mediaSurfaceTexture?.setOnFrameAvailableListener { hasNewFrame.set(true) }
                 
-                streamPlayer = StreamPlayer(context, streamUrl, mediaSurface!!, CameraHook.rtspUseTcp) {}
+                streamPlayer = StreamPlayer(context, streamUrl, mediaSurface!!, CameraHook.rtspUseTcp, {
+                    // onFrameAvailable callback — same as before
+                }) { bitmap ->
+                    // onFirstFrame callback — capture and save stream preview
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        saveStreamPreviewToProvider(bitmap)
+                    }
+                }
                 streamPlayer!!.start()
                 
                 renderLoop(hasNewFrame) { streamPlayer!!.videoWidth to streamPlayer!!.videoHeight }

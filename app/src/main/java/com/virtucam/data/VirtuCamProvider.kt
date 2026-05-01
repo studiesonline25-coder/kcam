@@ -20,19 +20,24 @@ class VirtuCamProvider : ContentProvider() {
         const val PATH_CONFIG = "config"
         const val PATH_MEDIA = "media"
         const val PATH_FILE = "file"
-        
+        const val PATH_STREAM_PREVIEW = "stream_preview"
+        const val PATH_STREAM_PREVIEW_JPEG = "stream_preview.jpg"
+
         private const val CODE_CONFIG = 1
         private const val CODE_MEDIA = 2
         private const val CODE_FILE = 3
+        private const val CODE_STREAM_PREVIEW = 4
         
         val URI_CONFIG: Uri = Uri.parse("content://$AUTHORITY/$PATH_CONFIG")
         val URI_MEDIA: Uri = Uri.parse("content://$AUTHORITY/$PATH_MEDIA")
         val URI_FILE: Uri = Uri.parse("content://$AUTHORITY/$PATH_FILE")
-        
+        val URI_STREAM_PREVIEW: Uri = Uri.parse("content://$AUTHORITY/$PATH_STREAM_PREVIEW/$PATH_STREAM_PREVIEW_JPEG")
+
         private val uriMatcher = UriMatcher(UriMatcher.NO_MATCH).apply {
             addURI(AUTHORITY, PATH_CONFIG, CODE_CONFIG)
             addURI(AUTHORITY, PATH_MEDIA, CODE_MEDIA)
             addURI(AUTHORITY, PATH_FILE, CODE_FILE)
+            addURI(AUTHORITY, "$PATH_STREAM_PREVIEW/*", CODE_STREAM_PREVIEW)
         }
     }
     
@@ -94,17 +99,24 @@ class VirtuCamProvider : ContentProvider() {
     }
     
     /**
-     * Proxies file descriptors to the target app so we bypass permission restrictions
+     * Proxies file descriptors to the target app so we bypass permission restrictions.
+     * Also serves the stream preview JPEG from internal storage.
      */
     @Throws(FileNotFoundException::class)
     override fun openFile(uri: Uri, mode: String): ParcelFileDescriptor? {
-        if (uriMatcher.match(uri) == CODE_FILE) {
-            val mediaUri = config.spoofMediaUri
-                ?: throw FileNotFoundException("No media selected in VirtuCam")
-            
-            return context?.contentResolver?.openFileDescriptor(mediaUri, "r")
+        return when (uriMatcher.match(uri)) {
+            CODE_FILE -> {
+                val mediaUri = config.spoofMediaUri
+                    ?: throw FileNotFoundException("No media selected in VirtuCam")
+                context?.contentResolver?.openFileDescriptor(mediaUri, "r")
+            }
+            CODE_STREAM_PREVIEW -> {
+                val previewFile = java.io.File(context?.filesDir, "stream_preview.jpg")
+                if (!previewFile.exists()) throw FileNotFoundException("Stream preview not available yet")
+                ParcelFileDescriptor.open(previewFile, ParcelFileDescriptor.MODE_READ_ONLY)
+            }
+            else -> super.openFile(uri, mode)
         }
-        return super.openFile(uri, mode)
     }
     
     override fun getType(uri: Uri): String? {

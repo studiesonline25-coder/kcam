@@ -124,6 +124,13 @@ class VirtuCamConfig(context: Context) {
         get() = prefs.getInt("rotation_offset", 0)
         set(value) = prefs.edit().putInt("rotation_offset", value).apply()
 
+    /**
+     * Base64 JPEG of the first rendered stream frame (used for stream preview thumbnail).
+     * Stored in-memory only — cleared on app restart.
+     */
+    @Volatile
+    var streamPreviewBase64: String? = null
+
 
     /**
      * List of package names for apps to target

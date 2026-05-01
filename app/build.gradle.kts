@@ -69,4 +69,7 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer:$media3_version")
     implementation("androidx.media3:media3-exoplayer-rtsp:$media3_version")
     implementation("androidx.media3:media3-ui:$media3_version")
+    // RTMP: Android 10+ (API 29+) uses platform MediaExtractor natively — no extra lib needed.
+    // If targeting Android 9, also add (and add maven { url = uri("https://jitpack.io") } to repositories):
+    //   implementation("com.github.nickolaspapadopoulos:exoplayer-rtmp:1.0.0")
 }

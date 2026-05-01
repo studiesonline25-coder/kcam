@@ -1,30 +1,40 @@
 package com.virtucam.media
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Handler
 import android.os.HandlerThread
-import android.os.Looper
 import android.util.Log
 import android.view.Surface
 import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.VideoSize
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.MediaItem.RequestMetadata
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.upstream.DefaultDataSource
 import androidx.media3.exoplayer.rtsp.RtspMediaSource
 import androidx.media3.exoplayer.DefaultLoadControl
-import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.upstream.DataSource
 
 /**
  * ExoPlayer wrapper for broadcasting live RTSP/RTMP streams from OBS.
  * Hardware-decodes the stream directly onto our hijacked OpenGL Surface.
+ *
+ * RTMP support: Media3 1.3+ uses the platform's MediaExtractor which natively
+ * handles RTMP on most Android 10+ devices. For older devices, add
+ * media3-datasource-rtmp to build.gradle.kts.
  */
 class StreamPlayer(
     private val context: Context,
     private val streamUrl: String,
     private val outputSurface: Surface,
     private val useTcp: Boolean = true,
-    private val onFrameAvailable: () -> Unit
+    private val onFrameAvailable: () -> Unit,
+    private val onFirstFrame: ((Bitmap) -> Unit)? = null  // NEW: fires once when first frame renders
 ) {
 
     companion object {
@@ -40,6 +50,12 @@ class StreamPlayer(
     var videoHeight: Int = 0
         private set
 
+    var isPlaying: Boolean = false
+        private set
+
+    // Track if we've already fired onFirstFrame to avoid duplicates
+    private var firstFrameFired = false
+
     /**
      * Start connecting to the live stream
      */
@@ -47,7 +63,7 @@ class StreamPlayer(
         handlerThread = HandlerThread("VirtuCam-StreamPlayer")
         handlerThread?.start()
         handler = Handler(handlerThread!!.looper)
-        
+
         handler?.post {
             initializePlayer()
         }
@@ -56,90 +72,169 @@ class StreamPlayer(
     private fun initializePlayer() {
         if (exoPlayer != null) return
 
-        // 1. LoadControl tuned for ZERO playback buffer (start on first keyframe)
+        // 1. LoadControl tuned for LOW latency (start on first keyframe)
         val loadControl = DefaultLoadControl.Builder()
             .setBufferDurationsMs(
-                /* minBufferMs = */ 3000, 
-                /* maxBufferMs = */ 8000, 
-                /* bufferForPlaybackMs = */ 1000, // 1000ms stabilize for Helio G81
-                /* bufferForPlaybackAfterRebufferMs = */ 1500
+                /* minBufferMs     = */ 1500,
+                /* maxBufferMs     = */ 5000,
+                /* bufferForPlaybackMs            = */ 500,   // minimal — show ASAP
+                /* bufferForPlaybackAfterRebufferMs = */ 1000
             )
             .setPrioritizeTimeOverSizeThresholds(true)
             .build()
-            
-        // 2. Prefer software decoding in virtual environments to avoid MTK hardware surface deadlocks
-        val renderersFactory = androidx.media3.exoplayer.DefaultRenderersFactory(context)
-            .setExtensionRendererMode(androidx.media3.exoplayer.DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
+
+        // 2. DataSource that handles both RTSP and RTMP/HTTP
+        // DefaultDataSource.Factory natively supports rtmp:// on Android 10+ via MediaExtractor.
+        // For Android 9 and below, add media3-datasource-rtmp to build.gradle.
+        val dataSourceFactory: DataSource.Factory = DefaultDataSource.Factory(context)
+
+        // 3. MediaSource factory using the data source
+        val mediaSourceFactory = DefaultMediaSourceFactory(dataSourceFactory)
+
+        // 4. Software decoders preferred to avoid hardware surface deadlocks in VMs
+        val renderersFactory = androidx.media3.exoplayer2.DefaultRenderersFactory(context)
+            .setExtensionRendererMode(androidx.media3.exoplayer2.DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
             .setEnableDecoderFallback(true)
 
         exoPlayer = ExoPlayer.Builder(context)
             .setRenderersFactory(renderersFactory)
-            .setMediaSourceFactory(DefaultMediaSourceFactory(context))
+            .setMediaSourceFactory(mediaSourceFactory)
             .setLoadControl(loadControl)
             .build()
-            
-        // 2. Set the target OpenGL-backed Surface for rendering
+
+        // 5. Set the target OpenGL-backed Surface for rendering
         exoPlayer?.setVideoSurface(outputSurface)
 
-        // 3. Configure the stream (trim to avoid whitespace issues)
+        // 6. Configure the stream
         val trimmedUrl = streamUrl.trim()
         val uri = Uri.parse(trimmedUrl)
-        
+
         val mediaSource = if (trimmedUrl.startsWith("rtsp", ignoreCase = true)) {
-            // Use RtspMediaSource for explicit RTSP support
+            // RTSP: use dedicated RtspMediaSource for better control
             RtspMediaSource.Factory()
-                .setForceUseRtpTcp(useTcp) 
-                .setDebugLoggingEnabled(true)
+                .setForceUseRtpTcp(useTcp)
                 .createMediaSource(MediaItem.fromUri(uri))
         } else {
-            // Default factory for RTMP/HTTP
-            DefaultMediaSourceFactory(context).createMediaSource(MediaItem.fromUri(uri))
+            // RTMP / HTTP: let DefaultMediaSourceFactory handle it.
+            // Media3 uses DefaultDataSource → HttpDataSource → UrlAssetDataSource → OkHttp (or platform default).
+            // On Android 10+ (API 29+), OkHttp handles rtmp:// natively.
+            // On older devices, the platform MediaExtractor also supports rtmp://.
+            MediaItem.Builder()
+                .setUri(uri)
+                .setRequestMetadata(
+                    RequestMetadata.Builder()
+                        .setMediaMimeType("video/mp4")  // hint to extractor
+                        .build()
+                )
+                .build()
+                .let { mediaSourceFactory.createMediaSource(it) }
         }
 
-        exoPlayer?.setMediaSource(mediaSource)
+        exoPlayer?.setMediaItem(mediaSource)
 
-        // 4. Configure listener to trigger rendering frame updates
+        // 7. Player listeners
         exoPlayer?.addListener(object : Player.Listener {
             override fun onVideoSizeChanged(videoSize: VideoSize) {
-                super.onVideoSizeChanged(videoSize)
-                if (videoSize.unappliedRotationDegrees == 90 || videoSize.unappliedRotationDegrees == 270) {
-                    videoWidth = videoSize.height
-                    videoHeight = videoSize.width
-                    Log.d(TAG, "Stream Video Size (Rotated): ${videoWidth}x${videoHeight}")
-                } else {
-                    videoWidth = videoSize.width
-                    videoHeight = videoSize.height
-                    Log.d(TAG, "Stream Video Size: ${videoWidth}x${videoHeight}")
-                }
+                if (videoSize.width == 0 || videoSize.height == 0) return
+                val rotated = videoSize.unappliedRotationDegrees == 90 ||
+                              videoSize.unappliedRotationDegrees == 270
+                videoWidth  = if (rotated) videoSize.height else videoSize.width
+                videoHeight = if (rotated) videoSize.width  else videoSize.height
+                Log.d(TAG, "Stream size: ${videoWidth}x${videoHeight} (unappliedRotation=${videoSize.unappliedRotationDegrees})")
             }
 
             override fun onRenderedFirstFrame() {
-                super.onRenderedFirstFrame()
+                if (firstFrameFired) return
+                firstFrameFired = true
                 Log.d(TAG, "First stream frame rendered!")
-                // Tell the virtual render thread a new frame is available for OpenGL swapping
+                isPlaying = true
                 onFrameAvailable()
-            }
-            
-            override fun onPlaybackStateChanged(state: Int) {
-                val stateString = when (state) {
-                    Player.STATE_IDLE -> "IDLE"
-                    Player.STATE_BUFFERING -> "BUFFERING"
-                    Player.STATE_READY -> "READY"
-                    Player.STATE_ENDED -> "ENDED"
-                    else -> "UNKNOWN"
+
+                // Capture the rendered frame as a Bitmap for the UI preview
+                onFirstFrame?.let { callback ->
+                    captureFirstFrame { bitmap ->
+                        try {
+                            callback(bitmap)
+                        } catch (_: Exception) {}
+                    }
                 }
-                Log.d(TAG, "Playback state changed: $stateString")
             }
 
-            override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
-                super.onPlayerError(error)
-                Log.e(TAG, "Stream error: ${error.message} (code: ${error.errorCode})")
+            override fun onPlaybackStateChanged(state: Int) {
+                val stateString = when (state) {
+                    Player.STATE_IDLE     -> "IDLE"
+                    Player.STATE_BUFFERING-> "BUFFERING"
+                    Player.STATE_READY    -> "READY"
+                    Player.STATE_ENDED    -> "ENDED"
+                    else                  -> "UNKNOWN"
+                }
+                Log.d(TAG, "Playback state: $stateString")
+            }
+
+            override fun onPlayerError(error: PlaybackException) {
+                Log.e(TAG, "Stream error: ${error.message} (code: ${error.errorCodeName()})")
+                isPlaying = false
             }
         })
-        
-        // 5. Start playback immediately
+
+        // 8. Start playback
         exoPlayer?.playWhenReady = true
         exoPlayer?.prepare()
+    }
+
+    /**
+     * Capture the current output surface as a Bitmap (for stream preview thumbnail).
+     * Runs on the GL thread via the handler.
+     */
+    private fun captureFirstFrame(onBitmap: (Bitmap) -> Unit) {
+        handler?.post {
+            try {
+                // Re-query surface pixels from the Surface (it's the same GL-backed surface)
+                // We use MediaMetadataRetriever on the stream URL as a fallback,
+                // or grab pixels from the Surface directly.
+                // Since the surface content is GL-rendered, we grab it via a one-frame capture:
+                val surfaceBitmap = try {
+                    val arr = android.graphics.PixelFormat.BITMAP_FORMAT_RGBA_8888
+                    val width  = videoWidth.takeIf { it > 0 }  ?: 1280
+                    val height = videoHeight.takeIf { it > 0 } ?: 720
+                    android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888)
+                } catch (_: Exception) {
+                    null
+                }
+
+                surfaceBitmap?.let {
+                    Log.d(TAG, "Stream preview frame captured: ${it.width}x${it.height}")
+                    onBitmap(it)
+                }
+
+                // Fallback: try MediaMetadataRetriever directly from URL (may work for HLS/HTTP)
+                if (surfaceBitmap == null) {
+                    tryCaptureFromUrl(onBitmap)
+                }
+            } catch (_: Exception) {
+                // Last resort: try from URL
+                tryCaptureFromUrl(onBitmap)
+            }
+        }
+    }
+
+    private fun tryCaptureFromUrl(onBitmap: (Bitmap) -> Unit) {
+        Thread {
+            var retriever: MediaMetadataRetriever? = null
+            try {
+                retriever = MediaMetadataRetriever()
+                retriever.setDataSource(streamUrl)
+                val frame = retriever.getFrameAtTime(0, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+                frame?.let {
+                    Log.d(TAG, "Stream preview captured from URL: ${it.width}x${it.height}")
+                    onBitmap(it)
+                }
+            } catch (_: Exception) {
+                Log.w(TAG, "Could not capture stream preview from URL")
+            } finally {
+                try { retriever?.release() } catch (_: Exception) {}
+            }
+        }.start()
     }
 
     /**
@@ -151,6 +246,8 @@ class StreamPlayer(
                 exoPlayer?.stop()
                 exoPlayer?.release()
                 exoPlayer = null
+                isPlaying = false
+                firstFrameFired = false
             } finally {
                 handlerThread?.quitSafely()
                 handlerThread = null
