@@ -203,9 +203,13 @@ class TextureRenderer(private val isVideo: Boolean = true) {
         GLES20.glEnableVertexAttribArray(maTextureHandle)
 
         if (videoWidth > 0 && videoHeight > 0 && viewWidth > 0 && viewHeight > 0) {
-            // Hardware parity: same base rotation for video (OES + SurfaceTexture stMatrix) and
-            // static images (2D texture). Native sensor degrees; decoder/display hints stay in stMatrix.
-            val baseRotation = ((hardwareSensorOrientation % 360) + 360) % 360
+            // Video: rotate in MVP (OES + stMatrix). Static images: sensor rotation is baked into
+            // the bitmap before texImage2D — MVP base rotation must stay 0 or we double-rotate.
+            val baseRotation = if (isVideo) {
+                ((hardwareSensorOrientation % 360) + 360) % 360
+            } else {
+                0
+            }
             val totalRotation = (baseRotation + userRotation + rotationOffset + 360) % 360
 
             // --- ISOTROPIC FITTING MATH ---

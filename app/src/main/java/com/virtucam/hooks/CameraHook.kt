@@ -1,6 +1,7 @@
 package com.virtucam.hooks
 
 import android.app.AndroidAppHelper
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.ImageFormat
 import android.media.Image
@@ -159,6 +160,27 @@ object CameraHook {
     }
 
     private fun normalizeOrientationDeg(deg: Int): Int = ((deg % 360) + 360) % 360
+
+    /**
+     * Rewrites an upright (display-oriented) bitmap into the same pixel layout as a raw
+     * camera buffer for this [sensorOrientationDeg] ([CameraCharacteristics.SENSOR_ORIENTATION]).
+     * GL MVP rotation alone is unreliable with 2D textures + Y-flipped tex coords; baking here
+     * makes RGBA→YUV copies and surface content match hardware.
+     */
+    fun bakeUprightBitmapForSensorNativePixels(src: Bitmap, sensorOrientationDeg: Int): Bitmap {
+        val d = normalizeOrientationDeg(sensorOrientationDeg)
+        if (d == 0) return src
+        return try {
+            val m = android.graphics.Matrix()
+            // SENSOR_ORIENTATION is CW degrees to rotate the *buffer* to upright; bake the inverse
+            // (CCW in same convention) so upright gallery pixels land in native sensor memory layout.
+            m.postRotate(-d.toFloat())
+            Bitmap.createBitmap(src, 0, 0, src.width, src.height, m, true)
+        } catch (e: Exception) {
+            Log.e(TAG, "bakeUprightBitmapForSensorNativePixels: failed, using source", e)
+            src
+        }
+    }
 
     fun trackedSurfaceSize(surface: Surface): Pair<Int, Int>? = surfaceSizes[surface]
 
@@ -2694,10 +2716,15 @@ class VirtualRenderThread(
                 }
                 
                 if (bitmap != null) {
-                    textureRenderer!!.loadBitmap(bitmap)
-                    val staticImageW = bitmap.width
-                    val staticImageH = bitmap.height
-                    bitmap.recycle()
+                    val so = CameraHook.resolveSensorOrientationDeg()
+                    val baked = CameraHook.bakeUprightBitmapForSensorNativePixels(bitmap, so)
+                    if (baked !== bitmap) {
+                        bitmap.recycle()
+                    }
+                    textureRenderer!!.loadBitmap(baked)
+                    val staticImageW = baked.width
+                    val staticImageH = baked.height
+                    baked.recycle()
                     
                     val matrix = FloatArray(16)
                     
