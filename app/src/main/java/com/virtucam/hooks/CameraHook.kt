@@ -136,6 +136,33 @@ object CameraHook {
     }
 
     /**
+     * Fresh [CameraCharacteristics.SENSOR_ORIENTATION] for [activeCameraId].
+     * Cached map can be stale or missing (e.g. Camera1); never rely on the render-thread snapshot alone.
+     */
+    fun resolveSensorOrientationDeg(): Int {
+        val id = activeCameraId
+        try {
+            val app = AndroidAppHelper.currentApplication()
+                ?: return normalizeOrientationDeg(cameraOrientations[id] ?: 90)
+            val mgr = app.getSystemService(android.content.Context.CAMERA_SERVICE)
+                as android.hardware.camera2.CameraManager
+            val chars = mgr.getCameraCharacteristics(id)
+            val o = chars.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
+            val normalized = normalizeOrientationDeg(o)
+            cameraOrientations[id] = normalized
+            return normalized
+        } catch (_: Throwable) {
+            val cached = cameraOrientations[id]
+            if (cached != null) return normalizeOrientationDeg(cached)
+            return 90
+        }
+    }
+
+    private fun normalizeOrientationDeg(deg: Int): Int = ((deg % 360) + 360) % 360
+
+    fun trackedSurfaceSize(surface: Surface): Pair<Int, Int>? = surfaceSizes[surface]
+
+    /**
      * Saves a stream preview frame to internal storage.
      * Called from StreamPlayer's onFirstFrame callback on the main looper.
      * The file is then served via VirtuCamProvider at content://com.virtucam.provider/stream_preview/stream_preview.jpg
@@ -1849,6 +1876,30 @@ object CameraHook {
     private fun hookCamera1(lpparam: XC_LoadPackage.LoadPackageParam) {
         val cameraClass = XposedHelpers.findClassIfExists("android.hardware.Camera", lpparam.classLoader) ?: return
 
+        XposedBridge.hookAllMethods(cameraClass, "open", object : XC_MethodHook() {
+            override fun afterHookedMethod(param: MethodHookParam) {
+                try {
+                    val cameraId = if (param.args.isNotEmpty() && param.args[0] is Int) {
+                        param.args[0] as Int
+                    } else {
+                        0
+                    }
+                    activeCameraId = cameraId.toString()
+                    val info = android.hardware.Camera.CameraInfo()
+                    android.hardware.Camera.getCameraInfo(cameraId, info)
+                    cameraOrientations[activeCameraId] = info.orientation
+                    cameraFacings[activeCameraId] =
+                        if (info.facing == android.hardware.Camera.CameraInfo.CAMERA_FACING_FRONT) 1 else 0
+                    Log.d(
+                        TAG,
+                        "VirtuCam_Hook: Camera1 open cameraId=$cameraId sensorOrient=${info.orientation} facing=${info.facing}"
+                    )
+                } catch (e: Throwable) {
+                    Log.e(TAG, "VirtuCam_Hook: Camera.open hook failed", e)
+                }
+            }
+        })
+
         XposedBridge.hookAllMethods(cameraClass, "setPreviewTexture", object : XC_MethodHook() {
             override fun beforeHookedMethod(param: MethodHookParam) {
                 try {
@@ -2439,7 +2490,7 @@ object CameraHook {
     private fun startRenderThreads(targetSurfaces: List<Triple<Surface, Boolean, Int>>) { // Changed to Triple
         val context = AndroidAppHelper.currentApplication() ?: return
         
-        var sensorOrientation = cameraOrientations[activeCameraId] ?: 270
+        val sensorOrientation = resolveSensorOrientationDeg()
         Log.d(TAG, "VirtuCam_Hook: Using SENSOR_ORIENTATION $sensorOrientation for camera $activeCameraId")
         
         if (targetSurfaces.isNotEmpty()) {
@@ -2737,30 +2788,47 @@ class VirtualRenderThread(
             val format = it_triple.third
             try {
                 eglCore!!.makeCurrent(es)
-                 val vw = eglCore!!.querySurface(es, android.opengl.EGL14.EGL_WIDTH)
-                 val vh = eglCore!!.querySurface(es, android.opengl.EGL14.EGL_HEIGHT)
-                 
-                  // [ABSOLUTE HARDWARE PARITY] 
-                  // We always pass the real physical sensor orientation to the renderer.
-                  // The renderer will mimic the "Sideways" pixels of the real hardware.
-                  val parityOrientation = sensorOrientation
-                  
-                  val finalUserRotation = 0
+                var vw = eglCore!!.querySurface(es, android.opengl.EGL14.EGL_WIDTH)
+                var vh = eglCore!!.querySurface(es, android.opengl.EGL14.EGL_HEIGHT)
+                // Before the first dequeue, eglQuerySurface often returns 0×0; then TextureRenderer
+                // skips rotation (identity MVP) and buffers stay "upright" wrongly.
+                val surfaceIdx = eglSurfaceTargets.indexOfFirst { triple -> triple.first === es }
+                if ((vw <= 0 || vh <= 0) && surfaceIdx >= 0 && surfaceIdx < originalSurfaceBackings.size) {
+                    CameraHook.trackedSurfaceSize(originalSurfaceBackings[surfaceIdx])?.let { (w, h) ->
+                        if (w > 0 && h > 0) {
+                            vw = w
+                            vh = h
+                        }
+                    }
+                }
+                if (vw <= 0 || vh <= 0) {
+                    vw = 1280
+                    vh = 720
+                }
 
-                  // DYNAMIC MIRRORING LOGIC (Axis-Swapping handled in TextureRenderer)
-                  val isActuallyFront = (isFrontCamera)
-                  val shouldMirror = if (isActuallyFront) {
-                      (format == 35 || format == 34 || format == 0x100 || format == 1 || format == 0)
-                  } else {
-                      CameraHook.isMirrored
-                  }
+                // Live sensor degrees (Camera1 / race-safe); apply user rotation_offset from prefs.
+                val parityOrientation = CameraHook.resolveSensorOrientationDeg()
+                val finalUserRotation = 0
 
-                   val ratio = getTargetRatio(vw, vh, isCapture, contentW, contentH)
-                   
-                   textureRenderer?.draw(matrix, contentW, contentH, vw, vh, ratio, parityOrientation, finalUserRotation, shouldMirror, CameraHook.zoomFactor, isCapture, CameraHook.compensationFactor, 0)
+                // DYNAMIC MIRRORING LOGIC (Axis-Swapping handled in TextureRenderer)
+                val isActuallyFront = (isFrontCamera)
+                val shouldMirror = if (isActuallyFront) {
+                    (format == 35 || format == 34 || format == 0x100 || format == 1 || format == 0)
+                } else {
+                    CameraHook.isMirrored
+                }
 
-                 eglCore?.setPresentationTime(es, System.nanoTime())
-                 if (eglCore?.swapBuffers(es) == false) {
+                val ratio = getTargetRatio(vw, vh, isCapture, contentW, contentH)
+
+                textureRenderer?.draw(
+                    matrix, contentW, contentH, vw, vh, ratio,
+                    parityOrientation, finalUserRotation, shouldMirror,
+                    CameraHook.zoomFactor, isCapture, CameraHook.compensationFactor,
+                    CameraHook.rotationOffset
+                )
+
+                eglCore?.setPresentationTime(es, System.nanoTime())
+                if (eglCore?.swapBuffers(es) == false) {
                     Log.w("VirtuCam_Render", "Surface abandoned, removing.")
                     it.remove()
                 }
