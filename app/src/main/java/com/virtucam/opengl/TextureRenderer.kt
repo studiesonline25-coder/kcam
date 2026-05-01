@@ -203,22 +203,10 @@ class TextureRenderer(private val isVideo: Boolean = true) {
         GLES20.glEnableVertexAttribArray(maTextureHandle)
 
         if (videoWidth > 0 && videoHeight > 0 && viewWidth > 0 && viewHeight > 0) {
-            // [ABSOLUTE HARDWARE PARITY]
-            // Goal: buffer in sensor native orientation (sideways for both cameras).
-            //
-            // Observed pipeline alone (totalRotation=0):
-            //   Back:  upright  (pipeline adds ~90° CCW internally)
-            //   Front: upside-down (pipeline adds ~270° CCW internally, over-rotates by 180°)
-            //
-            // We need: both SIDEWAYS (net 90° CCW for both)
-            //   Back:  upright  + 90° CCW = sideways ✓
-            //   Front: upside-down + 90° CCW = sideways ✓
-            //
-            // Formula that always produces 90°:
-            //   totalRotation = (360 - sensorOrientation + 180) % 360
-            //   Back (so=90):  (360 - 90 + 180) % 360 = 450 % 360 = 90° CCW ✓
-            //   Front (so=270): (360 - 270 + 180) % 360 = 270 % 360 = 90° CCW ✓
-            val totalRotation = ((360 - hardwareSensorOrientation) + 180 + userRotation + rotationOffset) % 360
+            // Hardware parity: same base rotation for video (OES + SurfaceTexture stMatrix) and
+            // static images (2D texture). Native sensor degrees; decoder/display hints stay in stMatrix.
+            val baseRotation = ((hardwareSensorOrientation % 360) + 360) % 360
+            val totalRotation = (baseRotation + userRotation + rotationOffset + 360) % 360
 
             // --- ISOTROPIC FITTING MATH ---
             fun drawQuad(isBackground: Boolean) {
