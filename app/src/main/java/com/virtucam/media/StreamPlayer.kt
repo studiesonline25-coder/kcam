@@ -9,16 +9,17 @@ import android.os.HandlerThread
 import android.util.Log
 import android.view.Surface
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaItem.RequestMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.VideoSize
+import androidx.media3.datasource.DataSource
+import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.MediaItem.RequestMetadata
+import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
-import androidx.media3.exoplayer.upstream.DefaultDataSource
 import androidx.media3.exoplayer.rtsp.RtspMediaSource
 import androidx.media3.exoplayer.DefaultLoadControl
-import androidx.media3.exoplayer.upstream.DataSource
 
 /**
  * ExoPlayer wrapper for broadcasting live RTSP/RTMP streams from OBS.
@@ -92,8 +93,8 @@ class StreamPlayer(
         val mediaSourceFactory = DefaultMediaSourceFactory(dataSourceFactory)
 
         // 4. Software decoders preferred to avoid hardware surface deadlocks in VMs
-        val renderersFactory = androidx.media3.exoplayer2.DefaultRenderersFactory(context)
-            .setExtensionRendererMode(androidx.media3.exoplayer2.DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
+        val renderersFactory = DefaultRenderersFactory(context)
+            .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
             .setEnableDecoderFallback(true)
 
         exoPlayer = ExoPlayer.Builder(context)
@@ -130,7 +131,7 @@ class StreamPlayer(
                 .let { mediaSourceFactory.createMediaSource(it) }
         }
 
-        exoPlayer?.setMediaItem(mediaSource)
+        exoPlayer?.setMediaSource(mediaSource)
 
         // 7. Player listeners
         exoPlayer?.addListener(object : Player.Listener {
@@ -172,7 +173,7 @@ class StreamPlayer(
             }
 
             override fun onPlayerError(error: PlaybackException) {
-                Log.e(TAG, "Stream error: ${error.message} (code: ${error.errorCodeName()})")
+                Log.e(TAG, "Stream error: ${error.message} (code: ${error.errorCodeName})")
                 isPlaying = false
             }
         })
@@ -194,7 +195,6 @@ class StreamPlayer(
                 // or grab pixels from the Surface directly.
                 // Since the surface content is GL-rendered, we grab it via a one-frame capture:
                 val surfaceBitmap = try {
-                    val arr = android.graphics.PixelFormat.BITMAP_FORMAT_RGBA_8888
                     val width  = videoWidth.takeIf { it > 0 }  ?: 1280
                     val height = videoHeight.takeIf { it > 0 } ?: 720
                     android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888)
