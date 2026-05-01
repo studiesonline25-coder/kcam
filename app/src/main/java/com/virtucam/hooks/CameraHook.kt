@@ -1,7 +1,6 @@
 package com.virtucam.hooks
 
 import android.app.AndroidAppHelper
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.ImageFormat
 import android.media.Image
@@ -161,26 +160,13 @@ object CameraHook {
 
     private fun normalizeOrientationDeg(deg: Int): Int = ((deg % 360) + 360) % 360
 
-    /**
-     * Rewrites an upright (display-oriented) bitmap into the same pixel layout as a raw
-     * camera buffer for this [sensorOrientationDeg] ([CameraCharacteristics.SENSOR_ORIENTATION]).
-     * GL MVP rotation alone is unreliable with 2D textures + Y-flipped tex coords; baking here
-     * makes RGBA→YUV copies and surface content match hardware.
-     */
-    fun bakeUprightBitmapForSensorNativePixels(src: Bitmap, sensorOrientationDeg: Int): Bitmap {
-        val d = normalizeOrientationDeg(sensorOrientationDeg)
-        if (d == 0) return src
-        return try {
-            val m = android.graphics.Matrix()
-            // SENSOR_ORIENTATION is CW degrees to rotate the *buffer* to upright; bake the inverse
-            // (CCW in same convention) so upright gallery pixels land in native sensor memory layout.
-            m.postRotate(-d.toFloat())
-            Bitmap.createBitmap(src, 0, 0, src.width, src.height, m, true)
-        } catch (e: Exception) {
-            Log.e(TAG, "bakeUprightBitmapForSensorNativePixels: failed, using source", e)
-            src
-        }
+    /** Camera2 [CameraCharacteristics.LENS_FACING]: BACK=0, FRONT=1, EXTERNAL=2 — map to our 0=back 1=front. */
+    private fun mapLensFacingForVirtuCam(facing: Int?): Int? {
+        if (facing == null) return null
+        return if (facing == android.hardware.camera2.CameraCharacteristics.LENS_FACING_FRONT) 1 else 0
     }
+
+    fun isActiveCameraFrontFacing(): Boolean = cameraFacings[activeCameraId] == 1
 
     fun trackedSurfaceSize(surface: Surface): Pair<Int, Int>? = surfaceSizes[surface]
 
@@ -1292,7 +1278,7 @@ object CameraHook {
                     val chars = manager.getCameraCharacteristics(cameraId)
                     discoverXiaomiVendorTags(chars)
                     val facing = chars.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
-                    if (facing != null) cameraFacings[cameraId] = if (facing == 0) 1 else 0
+                    if (facing != null) cameraFacings[cameraId] = mapLensFacingForVirtuCam(facing) ?: 0
                     cameraOrientations[cameraId] = chars.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
                 } catch (e: Throwable) {}
             }
@@ -1310,7 +1296,7 @@ object CameraHook {
                     val chars = manager.getCameraCharacteristics(cameraId)
                     discoverXiaomiVendorTags(chars)
                     val facing = chars.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
-                    if (facing != null) cameraFacings[cameraId] = if (facing == 0) 1 else 0
+                    if (facing != null) cameraFacings[cameraId] = mapLensFacingForVirtuCam(facing) ?: 0
                     cameraOrientations[cameraId] = chars.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
                 } catch (e: Throwable) {}
             }
@@ -1329,7 +1315,7 @@ object CameraHook {
                         val chars = manager.getCameraCharacteristics(cameraId)
                         discoverXiaomiVendorTags(chars)
                         val facing = chars.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
-                        if (facing != null) cameraFacings[cameraId] = if (facing == 0) 1 else 0
+                        if (facing != null) cameraFacings[cameraId] = mapLensFacingForVirtuCam(facing) ?: 0
                         cameraOrientations[cameraId] = chars.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
                     } catch (e: Throwable) {}
                 }
@@ -2203,7 +2189,7 @@ object CameraHook {
                                     val manager = AndroidAppHelper.currentApplication().getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
                                     val characteristics = manager.getCameraCharacteristics(activeCameraId)
                                     val facing = characteristics.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
-                                    if (facing != null) cameraFacings[activeCameraId] = if (facing == 0) 1 else 0
+                                    if (facing != null) cameraFacings[activeCameraId] = mapLensFacingForVirtuCam(facing) ?: 0
                                     cameraOrientations[activeCameraId] = characteristics.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
                                 } catch (_: Throwable) {}
                             }
@@ -2261,7 +2247,7 @@ object CameraHook {
                                 val manager = AndroidAppHelper.currentApplication().getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
                                 val characteristics = manager.getCameraCharacteristics(activeCameraId)
                                 val facing = characteristics.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
-                                if (facing != null) cameraFacings[activeCameraId] = if (facing == 0) 1 else 0
+                                if (facing != null) cameraFacings[activeCameraId] = mapLensFacingForVirtuCam(facing) ?: 0
                                 cameraOrientations[activeCameraId] = characteristics.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
                             } catch (e: Throwable) {
                                 Log.e(TAG, "VirtuCam_Hook: Failed direct sensing in createCaptureSession", e)
@@ -2338,7 +2324,7 @@ object CameraHook {
                                     val manager = AndroidAppHelper.currentApplication().getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
                                     val characteristics = manager.getCameraCharacteristics(activeCameraId)
                                     val facing = characteristics.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
-                                    if (facing != null) cameraFacings[activeCameraId] = if (facing == 0) 1 else 0
+                                    if (facing != null) cameraFacings[activeCameraId] = mapLensFacingForVirtuCam(facing) ?: 0
                                     cameraOrientations[activeCameraId] = characteristics.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
                                 } catch (_: Throwable) {}
                             }
@@ -2362,7 +2348,7 @@ object CameraHook {
                                 val manager = AndroidAppHelper.currentApplication().getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
                                 val characteristics = manager.getCameraCharacteristics(activeCameraId)
                                 val facing = characteristics.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
-                                if (facing != null) cameraFacings[activeCameraId] = if (facing == 0) 1 else 0
+                                if (facing != null) cameraFacings[activeCameraId] = mapLensFacingForVirtuCam(facing) ?: 0
                                 cameraOrientations[activeCameraId] = characteristics.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
                             } catch (e: Throwable) {
                                 Log.e(TAG, "VirtuCam_Hook: Failed direct sensing in OutputConfigs", e)
@@ -2416,7 +2402,7 @@ object CameraHook {
                                     val manager = AndroidAppHelper.currentApplication().getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
                                     val characteristics = manager.getCameraCharacteristics(activeCameraId)
                                     val facing = characteristics.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
-                                    if (facing != null) cameraFacings[activeCameraId] = if (facing == 0) 1 else 0
+                                    if (facing != null) cameraFacings[activeCameraId] = mapLensFacingForVirtuCam(facing) ?: 0
                                     cameraOrientations[activeCameraId] = characteristics.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
                                 } catch (_: Throwable) {}
                             }
@@ -2444,7 +2430,7 @@ object CameraHook {
                                     val manager = AndroidAppHelper.currentApplication().getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
                                     val characteristics = manager.getCameraCharacteristics(activeCameraId)
                                     val facing = characteristics.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
-                                    if (facing != null) cameraFacings[activeCameraId] = if (facing == 0) 1 else 0
+                                    if (facing != null) cameraFacings[activeCameraId] = mapLensFacingForVirtuCam(facing) ?: 0
                                     cameraOrientations[activeCameraId] = characteristics.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
                                 } catch (e: Throwable) {
                                     Log.e(TAG, "VirtuCam_Hook: Failed direct sensing in SessionConfig", e)
@@ -2716,15 +2702,10 @@ class VirtualRenderThread(
                 }
                 
                 if (bitmap != null) {
-                    val so = CameraHook.resolveSensorOrientationDeg()
-                    val baked = CameraHook.bakeUprightBitmapForSensorNativePixels(bitmap, so)
-                    if (baked !== bitmap) {
-                        bitmap.recycle()
-                    }
-                    textureRenderer!!.loadBitmap(baked)
-                    val staticImageW = baked.width
-                    val staticImageH = baked.height
-                    baked.recycle()
+                    textureRenderer!!.loadBitmap(bitmap)
+                    val staticImageW = bitmap.width
+                    val staticImageH = bitmap.height
+                    bitmap.recycle()
                     
                     val matrix = FloatArray(16)
                     
@@ -2838,7 +2819,7 @@ class VirtualRenderThread(
                 val finalUserRotation = 0
 
                 // DYNAMIC MIRRORING LOGIC (Axis-Swapping handled in TextureRenderer)
-                val isActuallyFront = (isFrontCamera)
+                val isActuallyFront = CameraHook.isActiveCameraFrontFacing()
                 val shouldMirror = if (isActuallyFront) {
                     (format == 35 || format == 34 || format == 0x100 || format == 1 || format == 0)
                 } else {
