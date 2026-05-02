@@ -2671,11 +2671,14 @@ class VirtualRenderThread(
                 mediaSurfaceTexture?.setOnFrameAvailableListener { hasNewFrame.set(true) }
                 
                 streamPlayer = StreamPlayer(
-                    context, streamUrl, mediaSurface!!, CameraHook.rtspUseTcp,
+                    context = context,
+                    streamUrl = streamUrl,
+                    outputSurface = mediaSurface!!,
+                    useTcp = CameraHook.rtspUseTcp,
                     onFrameAvailable = {
                         // onFrameAvailable callback
                     },
-                    onFirstFrame = { bitmap ->
+                    onFirstFrame = { bitmap: android.graphics.Bitmap ->
                         android.os.Handler(android.os.Looper.getMainLooper()).post {
                             saveStreamPreviewToProvider(bitmap)
                         }
