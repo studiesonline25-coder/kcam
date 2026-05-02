@@ -2817,11 +2817,9 @@ class VirtualRenderThread(
                     vh = 720
                 }
 
-                // Real hardware sensor orientation only.
-// EGL buffer IS the final capture output — direct 1:1 copy in FormatConverterBridge
-// means no additional rotation math is needed here. The buffer already matches
-// what real hardware would produce at this orientation, so metadata/EXIF pipeline
-// stays interference-free.
+                // Real hardware parity: output at native sensor orientation just like the real HAL does.
+                // The app's counter-rotation (via getTransformMatrix / configureTransform) will then
+                // automatically produce an upright display, same as with real hardware.
                 val parityOrientation = CameraHook.resolveSensorOrientationDeg()
                 val finalUserRotation = 0
 
