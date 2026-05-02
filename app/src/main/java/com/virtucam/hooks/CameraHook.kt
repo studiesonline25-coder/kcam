@@ -2080,9 +2080,12 @@ object CameraHook {
         val isVideoSurface = videoSurfaces.contains(targetSurface)
         
         val bridge = if (!isPreview && !isVideoSurface) {
-            val sourceSensorOrientation = cameraOrientations[activeCameraId] ?: 270
-            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Creating FormatConverterBridge for $w x $h (Format $format) SensorRot=$sourceSensorOrientation(source), RotOffset=$rotationOffset, ColorSwap=$isColorSwapped")
-            val b = FormatConverterBridge(w, h, targetSurface, format, sourceSensorOrientation, rotationOffset, isColorSwapped)
+            // Use the same fresh resolution as drawToAllSurfaces — both preview and capture
+            // should output at the real hardware sensor orientation so the framework handles
+            // all downstream transforms (metadata, JPEG EXIF, app-side matrices) correctly.
+            val realSensorOrientation = resolveSensorOrientationDeg()
+            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Creating FormatConverterBridge for $w x $h (Format $format) SensorRot=$realSensorOrientation, RotOffset=$rotationOffset, ColorSwap=$isColorSwapped")
+            val b = FormatConverterBridge(w, h, targetSurface, format, realSensorOrientation, rotationOffset, isColorSwapped)
             activeBridges.add(b)
             formatBridges[android.util.Size(w, h)] = b
             b
@@ -2814,7 +2817,11 @@ class VirtualRenderThread(
                     vh = 720
                 }
 
-                // Live sensor degrees (Camera1 / race-safe); apply user rotation_offset from prefs.
+                // Real hardware sensor orientation only.
+// EGL buffer IS the final capture output — direct 1:1 copy in FormatConverterBridge
+// means no additional rotation math is needed here. The buffer already matches
+// what real hardware would produce at this orientation, so metadata/EXIF pipeline
+// stays interference-free.
                 val parityOrientation = CameraHook.resolveSensorOrientationDeg()
                 val finalUserRotation = 0
 

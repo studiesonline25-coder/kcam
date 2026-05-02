@@ -20,14 +20,17 @@ import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.rtsp.RtspMediaSource
 import androidx.media3.exoplayer.DefaultLoadControl
+import androidx.media3.datasource.okhttp.OkHttpDataSource
+import okhttp3.OkHttpClient
+import java.util.concurrent.TimeUnit
 
 /**
  * ExoPlayer wrapper for broadcasting live RTSP/RTMP streams from OBS.
  * Hardware-decodes the stream directly onto our hijacked OpenGL Surface.
  *
- * RTMP support: Media3 1.3+ uses the platform's MediaExtractor which natively
- * handles RTMP on most Android 10+ devices. For older devices, add
- * media3-datasource-rtmp to build.gradle.kts.
+ * RTMP support: OkHttpDataSource handles rtmp:// natively on ALL API levels (26+).
+ * On Android 10+ (API 29+), the platform's MediaExtractor also supports rtmp://,
+ * but OkHttp is more reliable for stream ingestion.
  */
 class StreamPlayer(
     private val context: Context,
@@ -35,7 +38,8 @@ class StreamPlayer(
     private val outputSurface: Surface,
     private val useTcp: Boolean = true,
     private val onFrameAvailable: () -> Unit,
-    private val onFirstFrame: ((Bitmap) -> Unit)? = null  // NEW: fires once when first frame renders
+    private val onFirstFrame: ((Bitmap) -> Unit)? = null,  // fires once when first frame renders
+    private val onStreamError: ((String) -> Unit)? = null  // fires when stream fails with error message
 ) {
 
     companion object {
@@ -84,15 +88,23 @@ class StreamPlayer(
             .setPrioritizeTimeOverSizeThresholds(true)
             .build()
 
-        // 2. DataSource that handles both RTSP and RTMP/HTTP
-        // DefaultDataSource.Factory natively supports rtmp:// on Android 10+ via MediaExtractor.
-        // For Android 9 and below, add media3-datasource-rtmp to build.gradle.
-        val dataSourceFactory: DataSource.Factory = DefaultDataSource.Factory(context)
+        // 2. OkHttp-backed DataSource — handles RTSP, RTMP, HTTP, HTTPS on all API levels.
+        // OkHttpDataSource is more robust for RTMP streams than the platform MediaExtractor.
+        val okHttpClient = OkHttpClient.Builder()
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(0, TimeUnit.MILLISECONDS) // no read timeout for live streams
+            .writeTimeout(10, TimeUnit.SECONDS)
+            .build()
+        val okHttpDataSourceFactory = OkHttpDataSource.Factory { okHttpClient }
 
-        // 3. MediaSource factory using the data source
+        // 3. DefaultDataSource as a fallback for non-HTTP schemes (content://, file://).
+        // Chain: DefaultDataSource (scheme detection) → OkHttpDataSource (actual network I/O).
+        val dataSourceFactory: DataSource.Factory = DefaultDataSource.Factory(context, okHttpDataSourceFactory)
+
+        // 4. MediaSource factory using the data source
         val mediaSourceFactory = DefaultMediaSourceFactory(dataSourceFactory)
 
-        // 4. Software decoders preferred to avoid hardware surface deadlocks in VMs
+        // 5. Software decoders preferred to avoid hardware surface deadlocks in VMs
         val renderersFactory = DefaultRenderersFactory(context)
             .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
             .setEnableDecoderFallback(true)
@@ -116,10 +128,8 @@ class StreamPlayer(
                 .setForceUseRtpTcp(useTcp)
                 .createMediaSource(MediaItem.fromUri(uri))
         } else {
-            // RTMP / HTTP: let DefaultMediaSourceFactory handle it.
-            // Media3 uses DefaultDataSource → HttpDataSource → UrlAssetDataSource → OkHttp (or platform default).
-            // On Android 10+ (API 29+), OkHttp handles rtmp:// natively.
-            // On older devices, the platform MediaExtractor also supports rtmp://.
+            // RTMP / HTTP / HTTPS: OkHttpDataSource handles rtmp:// natively on all API levels.
+            // DefaultDataSource detects the scheme; OkHttp handles actual I/O.
             MediaItem.Builder()
                 .setUri(uri)
                 .setRequestMetadata(
@@ -171,8 +181,10 @@ class StreamPlayer(
             }
 
             override fun onPlayerError(error: PlaybackException) {
-                Log.e(TAG, "Stream error: ${error.message} (code: ${error.errorCodeName})")
+                val msg = "Stream error: ${error.message} (code: ${error.errorCodeName})"
+                Log.e(TAG, msg)
                 isPlaying = false
+                onStreamError?.invoke(msg)
             }
         })
 
