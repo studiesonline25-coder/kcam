@@ -143,7 +143,9 @@ class VideoPlayer(
             val outIndex = decoder!!.dequeueOutputBuffer(info, TIMEOUT_USEC)
             when (outIndex) {
                 MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> Log.d(TAG, "Format changed")
-                MediaCodec.INFO_TRY_AGAIN_LATER -> {} // Wait
+                MediaCodec.INFO_TRY_AGAIN_LATER -> {
+                    try { Thread.sleep(1) } catch (_: InterruptedException) { break }
+                }
                 else -> {
                     if (outIndex >= 0) {
                         // Sleep to maintain framerate
