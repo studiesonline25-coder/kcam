@@ -6,12 +6,13 @@ import android.media.MediaFormat
 import android.util.Log
 import android.view.Surface
 import java.io.FileDescriptor
+import java.util.concurrent.locks.LockSupport
 
 /**
  * Hardware-accelerated video player.
  * Uses MediaExtractor and MediaCodec to decode video from a FileDescriptor
  * and push frames to the provided Surface (which is linked to OpenGL).
- * Implements continuous looping.
+ * Implements continuous looping with high-performance frame pacing.
  */
 class VideoPlayer(
     private val fd: FileDescriptor,
@@ -28,7 +29,9 @@ class VideoPlayer(
 
     companion object {
         private const val TAG = "VideoPlayer"
-        private const val TIMEOUT_USEC = 10000L
+        // Short timeout: don't block the loop waiting for codec buffers
+        private const val INPUT_TIMEOUT_USEC = 0L
+        private const val OUTPUT_TIMEOUT_USEC = 5000L // 5ms max wait for output
     }
 
     private var extractor: MediaExtractor? = null
@@ -53,6 +56,7 @@ class VideoPlayer(
             }
         }.apply {
             name = "VirtuCam-VideoPlayer"
+            priority = Thread.MAX_PRIORITY // Elevate priority for smooth decode
             start()
         }
     }
@@ -62,6 +66,7 @@ class VideoPlayer(
      */
     fun stop() {
         isPlaying = false
+        playThread?.interrupt()
         playThread?.join(1000)
     }
 
@@ -102,9 +107,18 @@ class VideoPlayer(
                 val temp = videoWidth
                 videoWidth = videoHeight
                 videoHeight = temp
-                Log.d(TAG, "Swapped dimensions because EXIF rotation is $videoRotation. New size: \${videoWidth}x\${videoHeight}")
+                Log.d(TAG, "Swapped dimensions because EXIF rotation is $videoRotation. New size: ${videoWidth}x${videoHeight}")
             }
         }
+
+        // Extract framerate for fallback pacing
+        val frameRate = if (format.containsKey(MediaFormat.KEY_FRAME_RATE)) {
+            format.getInteger(MediaFormat.KEY_FRAME_RATE).coerceIn(1, 120)
+        } else {
+            30 // Default to 30fps
+        }
+        val frameDurationNs = 1_000_000_000L / frameRate
+        Log.d(TAG, "Video: ${videoWidth}x${videoHeight} @ ${frameRate}fps (frameDuration=${frameDurationNs/1_000_000}ms)")
 
         extractor!!.selectTrack(videoTrackIndex)
         val mime = format.getString(MediaFormat.KEY_MIME)!!
@@ -116,11 +130,14 @@ class VideoPlayer(
 
         val info = MediaCodec.BufferInfo()
         var isEOS = false
-        var startMs = System.currentTimeMillis()
+        // Use nanoTime for precise pacing (System.currentTimeMillis has ~10ms granularity)
+        var startNs = System.nanoTime()
+        var lastFrameNs = startNs
 
         while (isPlaying) {
+            // === INPUT: Feed data to the decoder (non-blocking) ===
             if (!isEOS) {
-                val inIndex = decoder!!.dequeueInputBuffer(TIMEOUT_USEC)
+                val inIndex = decoder!!.dequeueInputBuffer(INPUT_TIMEOUT_USEC)
                 if (inIndex >= 0) {
                     val buffer = decoder!!.getInputBuffer(inIndex)
                     if (buffer != null) {
@@ -130,7 +147,8 @@ class VideoPlayer(
                             Log.d(TAG, "Looping video")
                             extractor!!.seekTo(0, MediaExtractor.SEEK_TO_PREVIOUS_SYNC)
                             decoder!!.flush()
-                            startMs = System.currentTimeMillis()
+                            startNs = System.nanoTime()
+                            lastFrameNs = startNs
                         } else {
                             val presentationTimeUs = extractor!!.sampleTime
                             decoder!!.queueInputBuffer(inIndex, 0, sampleSize, presentationTimeUs, 0)
@@ -140,28 +158,39 @@ class VideoPlayer(
                 }
             }
 
-            val outIndex = decoder!!.dequeueOutputBuffer(info, TIMEOUT_USEC)
+            // === OUTPUT: Retrieve decoded frames ===
+            val outIndex = decoder!!.dequeueOutputBuffer(info, OUTPUT_TIMEOUT_USEC)
             when (outIndex) {
                 MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> Log.d(TAG, "Format changed")
                 MediaCodec.INFO_TRY_AGAIN_LATER -> {
-                    try { Thread.sleep(1) } catch (_: InterruptedException) { break }
+                    // Codec has no output yet — yield CPU briefly without the 10-15ms
+                    // penalty of Thread.sleep(1) on Android
+                    Thread.yield()
                 }
                 else -> {
                     if (outIndex >= 0) {
-                        // Sleep to maintain framerate
-                        val delayMs = (info.presentationTimeUs / 1000) - (System.currentTimeMillis() - startMs)
-                        if (delayMs > 0) {
-                            try {
-                                Thread.sleep(delayMs)
-                            } catch (e: InterruptedException) {
-                                break
+                        // === PRECISE FRAME PACING ===
+                        // Calculate when this frame should be displayed
+                        val targetNs = startNs + (info.presentationTimeUs * 1000L)
+                        val nowNs = System.nanoTime()
+                        val delayNs = targetNs - nowNs
+
+                        if (delayNs > 1_000_000L) {
+                            // More than 1ms ahead: use LockSupport for sub-ms precision
+                            LockSupport.parkNanos(delayNs)
+                        } else if (delayNs > 0) {
+                            // Under 1ms: spin-wait for maximum precision
+                            while (System.nanoTime() < targetNs && isPlaying) {
+                                Thread.yield()
                             }
                         }
+                        // If delayNs <= 0, we're behind schedule — render immediately (no drop)
 
                         val doRender = info.size != 0
                         // Release buffer and render it to surface
                         decoder!!.releaseOutputBuffer(outIndex, doRender)
                         if (doRender) {
+                            lastFrameNs = System.nanoTime()
                             onFrameAvailable()
                         }
                     }
