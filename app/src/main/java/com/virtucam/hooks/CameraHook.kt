@@ -2845,15 +2845,11 @@ class VirtualRenderThread(
 
                 // Emulate HAL auto-rotation for SurfaceView (0 = Upright), otherwise hardware parity (Raw sensor orientation)
                 val targetBufferRotation = if (isSurfaceView) 0 else CameraHook.resolveSensorOrientationDeg()
-                
-                // Intrinsic EXIF rotation from video
-                val intrinsicVideoRot = if (isVideo && videoPlayer != null) videoPlayer!!.videoRotation else 0
 
                 val parityOrientation = targetBufferRotation
                 val finalUserRotation = 0
 
-                // Counteract the intrinsic video rotation so raw sideways frames are correctly aligned
-                val finalRotationOffset = CameraHook.rotationOffset - intrinsicVideoRot
+                val finalRotationOffset = CameraHook.rotationOffset
 
                 // DYNAMIC MIRRORING LOGIC (Axis-Swapping handled in TextureRenderer)
                 val isActuallyFront = CameraHook.isActiveCameraFrontFacing()
