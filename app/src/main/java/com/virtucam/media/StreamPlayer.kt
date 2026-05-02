@@ -95,7 +95,7 @@ class StreamPlayer(
             .readTimeout(0, TimeUnit.MILLISECONDS) // no read timeout for live streams
             .writeTimeout(10, TimeUnit.SECONDS)
             .build()
-        val okHttpDataSourceFactory = OkHttpDataSource.Factory { okHttpClient }
+        val okHttpDataSourceFactory = OkHttpDataSource.Factory(okHttpClient)
 
         // 3. DefaultDataSource as a fallback for non-HTTP schemes (content://, file://).
         // Chain: DefaultDataSource (scheme detection) → OkHttpDataSource (actual network I/O).
