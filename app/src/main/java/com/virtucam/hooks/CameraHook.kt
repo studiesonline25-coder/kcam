@@ -2826,7 +2826,7 @@ class VirtualRenderThread(
                 // Before the first dequeue, eglQuerySurface often returns 0×0; then TextureRenderer
                 // skips rotation (identity MVP) and buffers stay "upright" wrongly.
                 val surfaceIdx = eglSurfaceTargets.indexOfFirst { triple -> triple.first === es }
-                val originalSurface = if (surfaceIdx >= 0 && surfaceIdx < originalSurfaceBackings.size) originalSurfaceBackings[surfaceIdx].first else null
+                val originalSurface = if (surfaceIdx >= 0 && surfaceIdx < originalSurfaceBackings.size) originalSurfaceBackings[surfaceIdx] else null
                 val isSurfaceTexture = originalSurface != null && surfaceSizes.containsKey(originalSurface)
                 val isSurfaceView = !isCapture && !isSurfaceTexture
 
