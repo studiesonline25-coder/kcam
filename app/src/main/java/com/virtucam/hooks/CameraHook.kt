@@ -1799,6 +1799,7 @@ object CameraHook {
                                 // Rotate around center (0,0 translated to 0.5,0.5)
                                 android.opengl.Matrix.translateM(matrix, 0, 0.5f, 0.5f, 0f)
                                 android.opengl.Matrix.scaleM(matrix, 0, 1f, -1f, 1f) // Standard SurfaceTexture Y-flip
+                                android.opengl.Matrix.rotateM(matrix, 0, sensorRot.toFloat(), 0f, 0f, 1f)
                                 android.opengl.Matrix.translateM(matrix, 0, -0.5f, -0.5f, 0f)
                             } else {
                                 // Audit-only: log the real matrix (throttled)
@@ -2847,8 +2848,7 @@ class VirtualRenderThread(
 
                 val parityOrientation = targetBufferRotation
                 val finalUserRotation = 0
-                val intrinsicVideoRot = if (isVideo && videoPlayer != null) videoPlayer!!.videoRotation else 0
-                val finalRotationOffset = CameraHook.rotationOffset + intrinsicVideoRot
+                val finalRotationOffset = CameraHook.rotationOffset
 
                 // DYNAMIC MIRRORING LOGIC (Axis-Swapping handled in TextureRenderer)
                 val isActuallyFront = CameraHook.isActiveCameraFrontFacing()
