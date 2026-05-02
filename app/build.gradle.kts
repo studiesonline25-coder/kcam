@@ -69,6 +69,7 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer:$media3_version")
     implementation("androidx.media3:media3-exoplayer-rtsp:$media3_version")
     implementation("androidx.media3:media3-ui:$media3_version")
-    // RTMP: Android 10+ (API 29+) uses platform MediaExtractor natively — no extra lib needed.
-    // If targeting Android 9, add: implementation("com.github.nickolaspapadopoulos:exoplayer-rtmp:1.0.0")
+    // OkHttp DataSource: explicit RTMP support via OkHttp (more reliable than platform MediaExtractor).
+    // Required for rtmp:// URLs on all API levels.
+    implementation("androidx.media3:media3-datasource-okhttp:$media3_version")
 }

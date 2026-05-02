@@ -1788,14 +1788,29 @@ object CameraHook {
                         
                         override fun afterHookedMethod(param: MethodHookParam) {
                             val matrix = param.args[0] as? FloatArray ?: return
-                            localFrameCount++
-                            if (!isEnabled && localFrameCount % 300 == 0) { // Throttled logging (approx every 10 seconds at 30fps)
-                                val mStr = matrix.joinToString(", ") { String.format("%.2f", it) }
-                                Log.e(TAG, "SURVEILLANCE: Real ST Matrix -> [$mStr]")
+
+                            if (isEnabled) {
+                                // Act as real hardware: return a transform matrix encoding the sensor orientation.
+                                // This makes preview look upright to the user — same as real camera behavior.
+                                // The EGL buffer content is rendered at sensor-native orientation, so the matrix
+                                // counter-rotates correctly (front=270°, back=180°).
+                                val sensorRot = resolveSensorOrientationDeg()
+                                android.opengl.Matrix.setIdentityM(matrix, 0)
+                                // Rotate around center (0,0 translated to 0.5,0.5)
+                                android.opengl.Matrix.translateM(matrix, 0, 0.5f, 0.5f, 0f)
+                                android.opengl.Matrix.rotateM(matrix, 0, sensorRot.toFloat(), 0f, 0f, 1f)
+                                android.opengl.Matrix.translateM(matrix, 0, -0.5f, -0.5f, 0f)
+                            } else {
+                                // Audit-only: log the real matrix (throttled)
+                                localFrameCount++
+                                if (localFrameCount % 300 == 0) {
+                                    val mStr = matrix.joinToString(", ") { String.format("%.2f", it) }
+                                    Log.e(TAG, "SURVEILLANCE: Real ST Matrix -> [$mStr]")
+                                }
+                                // Record for hardware parity analysis
+                                val isFront = (cameraFacings[activeCameraId] == 1)
+                                try { HardwareAuditLogger.logTransformMatrix(activeCameraId, isFront, matrix) } catch (_: Throwable) {}
                             }
-                            // [HARDWARE AUDIT] Record every unique matrix we observe
-                            val isFront = (cameraFacings[activeCameraId] == 1)
-                            try { HardwareAuditLogger.logTransformMatrix(activeCameraId, isFront, matrix) } catch (_: Throwable) {}
                         }
                     }
                 )
@@ -2270,7 +2285,7 @@ object CameraHook {
                                 val isPreview = (format == 0x22 || format == 0x1)
                                 
                                 val bridge = if (!isPreview && !isVideoSurface) {
-                                    val b = FormatConverterBridge(w, h, targetSurface, format, 0)
+                                    val b = FormatConverterBridge(w, h, targetSurface, format, resolveSensorOrientationDeg(), rotationOffset, isColorSwapped)
                                     activeBridges.add(b)
                                     formatBridges[android.util.Size(w, h)] = b
                                     b
@@ -2655,14 +2670,17 @@ class VirtualRenderThread(
                 val hasNewFrame = java.util.concurrent.atomic.AtomicBoolean(false)
                 mediaSurfaceTexture?.setOnFrameAvailableListener { hasNewFrame.set(true) }
                 
-                streamPlayer = StreamPlayer(context, streamUrl, mediaSurface!!, CameraHook.rtspUseTcp, {
-                    // onFrameAvailable callback — same as before
-                }) { bitmap ->
-                    // onFirstFrame callback — capture and save stream preview
-                    android.os.Handler(android.os.Looper.getMainLooper()).post {
-                        saveStreamPreviewToProvider(bitmap)
+                streamPlayer = StreamPlayer(
+                    context, streamUrl, mediaSurface!!, CameraHook.rtspUseTcp,
+                    onFrameAvailable = {
+                        // onFrameAvailable callback
+                    },
+                    onFirstFrame = { bitmap ->
+                        android.os.Handler(android.os.Looper.getMainLooper()).post {
+                            saveStreamPreviewToProvider(bitmap)
+                        }
                     }
-                }
+                )
                 streamPlayer!!.start()
                 
                 renderLoop(hasNewFrame) { streamPlayer!!.videoWidth to streamPlayer!!.videoHeight }
@@ -2817,9 +2835,11 @@ class VirtualRenderThread(
                     vh = 720
                 }
 
-                // Real hardware parity: output at native sensor orientation just like the real HAL does.
-                // The app's counter-rotation (via getTransformMatrix / configureTransform) will then
-                // automatically produce an upright display, same as with real hardware.
+                // Real hardware sensor orientation only.
+// EGL buffer IS the final capture output — direct 1:1 copy in FormatConverterBridge
+// means no additional rotation math is needed here. The buffer already matches
+// what real hardware would produce at this orientation, so metadata/EXIF pipeline
+// stays interference-free.
                 val parityOrientation = CameraHook.resolveSensorOrientationDeg()
                 val finalUserRotation = 0
 
