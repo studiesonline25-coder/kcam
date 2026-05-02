@@ -1798,6 +1798,7 @@ object CameraHook {
                                 android.opengl.Matrix.setIdentityM(matrix, 0)
                                 // Rotate around center (0,0 translated to 0.5,0.5)
                                 android.opengl.Matrix.translateM(matrix, 0, 0.5f, 0.5f, 0f)
+                                android.opengl.Matrix.scaleM(matrix, 0, 1f, -1f, 1f) // Standard SurfaceTexture Y-flip
                                 android.opengl.Matrix.rotateM(matrix, 0, sensorRot.toFloat(), 0f, 0f, 1f)
                                 android.opengl.Matrix.translateM(matrix, 0, -0.5f, -0.5f, 0f)
                             } else {
@@ -2676,7 +2677,7 @@ class VirtualRenderThread(
                     outputSurface = mediaSurface!!,
                     useTcp = CameraHook.rtspUseTcp,
                     onFrameAvailable = {
-                        // onFrameAvailable callback
+                        hasNewFrame.set(true)
                     },
                     onFirstFrame = { bitmap: android.graphics.Bitmap ->
                         android.os.Handler(android.os.Looper.getMainLooper()).post {
@@ -2825,8 +2826,12 @@ class VirtualRenderThread(
                 // Before the first dequeue, eglQuerySurface often returns 0×0; then TextureRenderer
                 // skips rotation (identity MVP) and buffers stay "upright" wrongly.
                 val surfaceIdx = eglSurfaceTargets.indexOfFirst { triple -> triple.first === es }
-                if ((vw <= 0 || vh <= 0) && surfaceIdx >= 0 && surfaceIdx < originalSurfaceBackings.size) {
-                    CameraHook.trackedSurfaceSize(originalSurfaceBackings[surfaceIdx])?.let { (w, h) ->
+                val originalSurface = if (surfaceIdx >= 0 && surfaceIdx < originalSurfaceBackings.size) originalSurfaceBackings[surfaceIdx].first else null
+                val isSurfaceTexture = originalSurface != null && surfaceSizes.containsKey(originalSurface)
+                val isSurfaceView = !isCapture && !isSurfaceTexture
+
+                if ((vw <= 0 || vh <= 0) && originalSurface != null) {
+                    CameraHook.trackedSurfaceSize(originalSurface)?.let { (w, h) ->
                         if (w > 0 && h > 0) {
                             vw = w
                             vh = h
@@ -2838,13 +2843,17 @@ class VirtualRenderThread(
                     vh = 720
                 }
 
-                // Real hardware sensor orientation only.
-// EGL buffer IS the final capture output — direct 1:1 copy in FormatConverterBridge
-// means no additional rotation math is needed here. The buffer already matches
-// what real hardware would produce at this orientation, so metadata/EXIF pipeline
-// stays interference-free.
-                val parityOrientation = CameraHook.resolveSensorOrientationDeg()
+                // Emulate HAL auto-rotation for SurfaceView (0 = Upright), otherwise hardware parity (Raw sensor orientation)
+                val targetBufferRotation = if (isSurfaceView) 0 else CameraHook.resolveSensorOrientationDeg()
+                
+                // Intrinsic EXIF rotation from video
+                val intrinsicVideoRot = if (isVideo && videoPlayer != null) videoPlayer!!.videoRotation else 0
+
+                val parityOrientation = targetBufferRotation
                 val finalUserRotation = 0
+
+                // Counteract the intrinsic video rotation so raw sideways frames are correctly aligned
+                val finalRotationOffset = CameraHook.rotationOffset - intrinsicVideoRot
 
                 // DYNAMIC MIRRORING LOGIC (Axis-Swapping handled in TextureRenderer)
                 val isActuallyFront = CameraHook.isActiveCameraFrontFacing()
@@ -2860,7 +2869,7 @@ class VirtualRenderThread(
                     matrix, contentW, contentH, vw, vh, ratio,
                     parityOrientation, finalUserRotation, shouldMirror,
                     CameraHook.zoomFactor, isCapture, CameraHook.compensationFactor,
-                    CameraHook.rotationOffset
+                    finalRotationOffset
                 )
 
                 eglCore?.setPresentationTime(es, System.nanoTime())
