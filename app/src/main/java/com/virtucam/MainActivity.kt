@@ -17,7 +17,7 @@ import com.virtucam.data.VirtuCamConfig
 import org.json.JSONObject
 
 /**
- * Main Activity - Updated for React/WebView Integration
+ * Main Activity - Refined UI Injection
  */
 class MainActivity : AppCompatActivity() {
     
@@ -173,16 +173,23 @@ class MainActivity : AppCompatActivity() {
     private fun injectStreamPreviewBridge() {
         val js = """
             (function() {
-                function injectPreviewUI() {
-                    if (document.getElementById('virtucam-stream-preview')) return;
-                    var inputs = document.querySelectorAll('input[type="text"]');
-                    var targetInput = null;
+                // Helper to find the stream URL input
+                function findStreamInput() {
+                    var inputs = document.querySelectorAll('input');
                     for (var i = 0; i < inputs.length; i++) {
-                        if (inputs[i].placeholder.toLowerCase().includes('stream') || inputs[i].placeholder.includes('rtmp://')) {
-                            targetInput = inputs[i]; break;
+                        var p = (inputs[i].placeholder || "").toLowerCase();
+                        if (p.includes('stream') || p.includes('rtmp') || p.includes('srt') || p.includes('url')) {
+                            return inputs[i];
                         }
                     }
+                    return null;
+                }
+
+                function injectPreviewUI() {
+                    if (document.getElementById('virtucam-stream-preview')) return;
+                    var targetInput = findStreamInput();
                     if (!targetInput) return;
+                    
                     var parent = targetInput.parentElement;
                     while (parent && parent.tagName !== 'DIV') parent = parent.parentElement;
                     if (!parent) return;
@@ -210,12 +217,12 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 function ensureUrlEditable() {
-                    var inputs = document.querySelectorAll('input[type="text"]');
-                    for (var i = 0; i < inputs.length; i++) {
-                        if (inputs[i].placeholder.toLowerCase().includes('stream') || inputs[i].placeholder.includes('rtmp://')) {
-                            if (inputs[i].disabled) { inputs[i].disabled = false; inputs[i].style.opacity = '1'; }
-                        }
+                    var input = findStreamInput();
+                    if (input) {
+                        if (input.disabled) { input.disabled = false; input.style.opacity = '1'; }
+                        input.oninput = function() { window.Android && window.Android.connectStream(this.value); };
                     }
+                    
                     var buttons = document.querySelectorAll('button');
                     var connectBtn = null;
                     for (var i = 0; i < buttons.length; i++) {
@@ -232,15 +239,32 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 function injectSettingsToggles() {
+                    // Hide original controls first
+                    var labels = ['Passthrough', 'Test Pattern', 'TestPattern', 'Pass-through'];
+                    var all = document.querySelectorAll('div, span, label, p');
+                    for (var i = 0; i < all.length; i++) {
+                        for (var j = 0; j < labels.length; j++) {
+                            if (all[i].innerText === labels[j]) {
+                                var row = all[i].parentElement;
+                                if (row && row.querySelectorAll('button, input[type="checkbox"]').length > 0) {
+                                    row.style.display = 'none';
+                                }
+                            }
+                        }
+                    }
+
                     if (document.getElementById('virtucam-settings-ext')) return;
+                    
                     var panels = document.querySelectorAll('div');
                     var targetPanel = null;
                     for (var i = 0; i < panels.length; i++) {
+                        // Heuristic: panel with "Settings" header or appearing as a dialog
                         if (panels[i].innerText.includes('Settings') && panels[i].querySelectorAll('button, input[type="checkbox"]').length > 2) {
                             targetPanel = panels[i];
                             if (window.getComputedStyle(panels[i]).position === 'fixed' || window.getComputedStyle(panels[i]).position === 'absolute') break;
                         }
                     }
+                    
                     if (!targetPanel) {
                         var lists = document.querySelectorAll('div, section');
                         for (var i = 0; i < lists.length; i++) {
@@ -249,6 +273,7 @@ class MainActivity : AppCompatActivity() {
                             }
                         }
                     }
+                    
                     if (!targetPanel) return;
 
                     var extContainer = document.createElement('div');
@@ -294,13 +319,13 @@ class MainActivity : AppCompatActivity() {
                 };
 
                 var initInterval = setInterval(function() {
-                    if (document.querySelectorAll('input[type="text"]').length > 0) {
+                    if (findStreamInput()) {
                         injectPreviewUI(); ensureUrlEditable();
-                        setInterval(injectSettingsToggles, 1000);
                         clearInterval(initInterval);
                     }
+                    // Monitor settings icon or panel
+                    injectSettingsToggles();
                 }, 1000);
-                setInterval(ensureUrlEditable, 2000);
 
                 window.onStreamConnecting = function() {
                     var container = document.getElementById('virtucam-stream-preview');
