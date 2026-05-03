@@ -17,21 +17,31 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
         ndk {
-            // Significant size reduction: only include mobile architectures
+            // Force universal build to only include arm64-v8a to minimize size
+            abiFilters.clear()
             abiFilters.add("arm64-v8a")
-            abiFilters.add("armeabi-v7a")
         }
     }
 
     buildTypes {
+        debug {
+            ndk {
+                abiFilters.clear()
+                abiFilters.add("arm64-v8a")
+            }
+        }
         release {
-            isMinifyEnabled = true // Enable shrinking
+            isMinifyEnabled = true 
             isShrinkResources = true
             signingConfig = signingConfigs.getByName("debug")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            ndk {
+                abiFilters.clear()
+                abiFilters.add("arm64-v8a")
+            }
         }
     }
 
@@ -50,9 +60,13 @@ android {
 
     packaging {
         jniLibs {
-            // Force removal of non-mobile architectures
+            // Aggressively exclude all other architectures to ensure size reduction
             excludes.add("lib/x86/**")
             excludes.add("lib/x86_64/**")
+            excludes.add("lib/armeabi-v7a/**")
+            excludes.add("**/lib/x86/**")
+            excludes.add("**/lib/x86_64/**")
+            excludes.add("**/lib/armeabi-v7a/**")
         }
     }
 }
