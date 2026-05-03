@@ -17,7 +17,7 @@ import com.virtucam.data.VirtuCamConfig
 import org.json.JSONObject
 
 /**
- * Main Activity - Refined UI Injection
+ * Main Activity - Professional UI Bridge Implementation
  */
 class MainActivity : AppCompatActivity() {
     
@@ -51,6 +51,7 @@ class MainActivity : AppCompatActivity() {
             allowFileAccessFromFileURLs = true
             allowUniversalAccessFromFileURLs = true
             databaseEnabled = true
+            mediaPlaybackRequiresUserGesture = false
         }
 
         webView.webChromeClient = object : WebChromeClient() {
@@ -173,14 +174,22 @@ class MainActivity : AppCompatActivity() {
     private fun injectStreamPreviewBridge() {
         val js = """
             (function() {
-                // Helper to find the stream URL input
+                console.log("VirtuCam Bridge: Initializing...");
+                
+                // Helper to find the stream URL input by any means
                 function findStreamInput() {
                     var inputs = document.querySelectorAll('input');
                     for (var i = 0; i < inputs.length; i++) {
                         var p = (inputs[i].placeholder || "").toLowerCase();
-                        if (p.includes('stream') || p.includes('rtmp') || p.includes('srt') || p.includes('url')) {
+                        var v = (inputs[i].value || "").toLowerCase();
+                        if (p.includes('stream') || p.includes('rtmp') || p.includes('srt') || p.includes('url') || 
+                            v.startsWith('rtmp') || v.startsWith('srt') || v.startsWith('http')) {
                             return inputs[i];
                         }
+                    }
+                    // Fallback: Check if the current visible tab is "Stream" and pick the first input
+                    if (document.body.innerText.includes('Stream')) {
+                        return document.querySelector('input');
                     }
                     return null;
                 }
@@ -219,10 +228,20 @@ class MainActivity : AppCompatActivity() {
                 function ensureUrlEditable() {
                     var input = findStreamInput();
                     if (input) {
-                        if (input.disabled) { input.disabled = false; input.style.opacity = '1'; }
-                        input.oninput = function() { window.Android && window.Android.connectStream(this.value); };
+                        input.disabled = false;
+                        input.readOnly = false;
+                        input.style.opacity = '1';
+                        input.style.pointerEvents = 'auto';
+                        // Intercept value changes
+                        if (!input.dataset.hooked) {
+                            input.dataset.hooked = "true";
+                            input.addEventListener('input', function() {
+                                if (window.Android) window.Android.connectStream(this.value);
+                            });
+                        }
                     }
                     
+                    // Disconnect Button Logic
                     var buttons = document.querySelectorAll('button');
                     var connectBtn = null;
                     for (var i = 0; i < buttons.length; i++) {
@@ -239,41 +258,33 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 function injectSettingsToggles() {
-                    // Hide original controls first
+                    // 1. Hide original controls wherever they are
                     var labels = ['Passthrough', 'Test Pattern', 'TestPattern', 'Pass-through'];
-                    var all = document.querySelectorAll('div, span, label, p');
-                    for (var i = 0; i < all.length; i++) {
-                        for (var j = 0; j < labels.length; j++) {
-                            if (all[i].innerText === labels[j]) {
-                                var row = all[i].parentElement;
-                                if (row && row.querySelectorAll('button, input[type="checkbox"]').length > 0) {
+                    document.querySelectorAll('div, span, label, p').forEach(el => {
+                        labels.forEach(label => {
+                            if (el.innerText === label) {
+                                var row = el.closest('div'); // Find nearest div row
+                                if (row && row.querySelectorAll('button, input').length > 0) {
                                     row.style.display = 'none';
                                 }
                             }
-                        }
-                    }
+                        });
+                    });
 
                     if (document.getElementById('virtucam-settings-ext')) return;
                     
-                    var panels = document.querySelectorAll('div');
+                    // 2. Find the Settings Panel (Top Right context)
                     var targetPanel = null;
-                    for (var i = 0; i < panels.length; i++) {
-                        // Heuristic: panel with "Settings" header or appearing as a dialog
-                        if (panels[i].innerText.includes('Settings') && panels[i].querySelectorAll('button, input[type="checkbox"]').length > 2) {
-                            targetPanel = panels[i];
-                            if (window.getComputedStyle(panels[i]).position === 'fixed' || window.getComputedStyle(panels[i]).position === 'absolute') break;
-                        }
-                    }
+                    // Look for a panel that is currently visible and contains "Settings"
+                    var panels = Array.from(document.querySelectorAll('div')).filter(d => 
+                        (d.innerText.includes('Settings') || d.innerText.includes('Mirrored')) && 
+                        window.getComputedStyle(d).display !== 'none'
+                    );
                     
-                    if (!targetPanel) {
-                        var lists = document.querySelectorAll('div, section');
-                        for (var i = 0; i < lists.length; i++) {
-                            if (lists[i].innerText.includes('Mirrored') || lists[i].innerText.includes('Liveness')) {
-                                targetPanel = lists[i]; break;
-                            }
-                        }
-                    }
-                    
+                    // Pick the most specific panel (usually the one with less text)
+                    panels.sort((a,b) => a.innerText.length - b.innerText.length);
+                    targetPanel = panels[0];
+
                     if (!targetPanel) return;
 
                     var extContainer = document.createElement('div');
@@ -311,43 +322,31 @@ class MainActivity : AppCompatActivity() {
                 window.onAndroidSync = function(stateStr) {
                     var state = JSON.parse(stateStr);
                     window.virtucamState = state;
-                    var bufferToggle = document.getElementById('toggle-buffer');
-                    if (bufferToggle) {
-                        bufferToggle.style.backgroundColor = state.bufferCapture ? '#28a745' : '#444';
-                        bufferToggle.firstChild.style.left = state.bufferCapture ? '22px' : '2px';
-                    }
+                    // Update toggles if they exist
+                    ['buffer', 'passthrough', 'testpattern'].forEach(id => {
+                        var t = document.getElementById('toggle-' + id);
+                        if (t) {
+                            var val = id === 'buffer' ? state.bufferCapture : (id === 'passthrough' ? state.passthrough : state.testPattern);
+                            t.style.backgroundColor = val ? '#28a745' : '#444';
+                            t.firstChild.style.left = val ? '22px' : '2px';
+                        }
+                    });
                 };
 
-                var initInterval = setInterval(function() {
-                    if (findStreamInput()) {
-                        injectPreviewUI(); ensureUrlEditable();
-                        clearInterval(initInterval);
-                    }
-                    // Monitor settings icon or panel
+                // Observer to handle dynamic content (like settings panel opening)
+                var observer = new MutationObserver(() => {
+                    injectPreviewUI();
+                    ensureUrlEditable();
+                    injectSettingsToggles();
+                });
+                observer.observe(document.body, { childList: true, subtree: true });
+
+                // Initial run
+                setTimeout(() => {
+                    injectPreviewUI();
+                    ensureUrlEditable();
                     injectSettingsToggles();
                 }, 1000);
-
-                window.onStreamConnecting = function() {
-                    var container = document.getElementById('virtucam-stream-preview');
-                    var status = document.getElementById('virtucam-stream-status');
-                    if (container) container.style.display = 'flex';
-                    if (status) { status.innerText = 'Connecting...'; status.style.backgroundColor = '#ffc107'; status.style.color = '#000'; }
-                };
-
-                window.onStreamPreviewReady = function(uri) {
-                    if (uri === 'pending') return;
-                    var container = document.getElementById('virtucam-stream-preview');
-                    var status = document.getElementById('virtucam-stream-status');
-                    var img = document.getElementById('virtucam-stream-img');
-                    if (container) container.style.display = 'flex';
-                    if (status) { status.innerText = 'Live ✓'; status.style.backgroundColor = '#28a745'; status.style.color = '#fff'; }
-                    if (img && uri) { img.src = uri + '?t=' + new Date().getTime(); img.style.display = 'block'; }
-                };
-
-                window.onStreamDisconnected = function() {
-                    var container = document.getElementById('virtucam-stream-preview');
-                    if (container) container.style.display = 'none';
-                };
             })();
         """.trimIndent()
         webView.evaluateJavascript(js, null)
