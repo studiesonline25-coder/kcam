@@ -74,5 +74,5 @@ dependencies {
     implementation("androidx.media3:media3-datasource-okhttp:$media3_version")
     
     // FFmpeg-kit for SRT Protocol Support (Feature 12)
-    implementation("com.arthenica:ffmpeg-kit-full:6.0-2")
+    implementation("com.mrljdx:ffmpeg-kit-full:6.1.4")
 }
