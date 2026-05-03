@@ -17,7 +17,7 @@ import com.virtucam.data.VirtuCamConfig
 import org.json.JSONObject
 
 /**
- * Main Activity - Professional UI Bridge with Debug Banner
+ * Main Activity - Professional UI Bridge (Clean Version)
  */
 class MainActivity : AppCompatActivity() {
     
@@ -52,6 +52,7 @@ class MainActivity : AppCompatActivity() {
             allowUniversalAccessFromFileURLs = true
             databaseEnabled = true
             mediaPlaybackRequiresUserGesture = false
+            mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
         }
 
         webView.webChromeClient = object : WebChromeClient() {
@@ -62,6 +63,9 @@ class MainActivity : AppCompatActivity() {
         }
         
         webView.webViewClient = object : WebViewClient() {
+            override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
+                injectStreamPreviewBridge()
+            }
             override fun onPageFinished(view: WebView?, url: String?) {
                 injectStreamPreviewBridge()
                 syncConfigToWeb()
@@ -174,27 +178,13 @@ class MainActivity : AppCompatActivity() {
     private fun injectStreamPreviewBridge() {
         val js = """
             (function() {
-                console.log("VIRTU-CAM EXTENSION LOADING...");
-                
-                // 1. VISIBLE DEBUG BANNER (Proves code is running)
-                if (!document.getElementById('virtucam-active-banner')) {
-                    var banner = document.createElement('div');
-                    banner.id = 'virtucam-active-banner';
-                    banner.innerText = 'VIRTU-CAM UI EXTENSION ACTIVE';
-                    banner.style.position = 'fixed'; banner.style.top = '0'; banner.style.left = '0'; banner.style.right = '0';
-                    banner.style.backgroundColor = 'rgba(220, 53, 69, 0.9)'; banner.style.color = 'white';
-                    banner.style.fontSize = '10px'; banner.style.textAlign = 'center'; banner.style.zIndex = '99999';
-                    banner.style.padding = '2px'; banner.style.pointerEvents = 'none';
-                    document.body.appendChild(banner);
-                }
-
+                // Find stream URL input
                 function findStreamInput() {
                     var inputs = document.querySelectorAll('input');
                     for (var i = 0; i < inputs.length; i++) {
                         var p = (inputs[i].placeholder || "").toLowerCase();
                         if (p.includes('stream') || p.includes('rtmp') || p.includes('srt') || p.includes('url')) return inputs[i];
                     }
-                    // Find input next to a "Connect" button
                     var buttons = document.querySelectorAll('button');
                     for (var i = 0; i < buttons.length; i++) {
                         if (buttons[i].innerText.toLowerCase().includes('connect')) {
@@ -253,7 +243,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 function injectSettingsToggles() {
-                    // Hide original controls
+                    // Hide original controls to avoid duplication
                     ['Passthrough', 'Test Pattern'].forEach(label => {
                         document.querySelectorAll('div, span, label, p').forEach(el => {
                             if (el.innerText === label) {
@@ -265,11 +255,11 @@ class MainActivity : AppCompatActivity() {
 
                     if (document.getElementById('virtucam-settings-ext')) return;
                     
-                    // Find ANY visible panel containing "Settings" OR a panel opened from the top-right
+                    // Find visible panel (Settings/Preferences)
                     var panels = Array.from(document.querySelectorAll('div')).filter(d => 
                         (d.innerText.includes('Settings') || d.innerText.includes('Mirrored')) && 
                         window.getComputedStyle(d).display !== 'none' &&
-                        d.innerText.length < 1000 // Heuristic: small enough to be a menu
+                        d.innerText.length < 1000
                     );
                     
                     panels.sort((a,b) => a.innerText.length - b.innerText.length);
@@ -329,7 +319,7 @@ class MainActivity : AppCompatActivity() {
                 
                 setInterval(() => {
                     injectPreviewUI(); ensureUrlEditable(); injectSettingsToggles();
-                }, 2000);
+                }, 1000);
             })();
         """.trimIndent()
         webView.evaluateJavascript(js, null)

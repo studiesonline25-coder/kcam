@@ -18,13 +18,15 @@ android {
         
         ndk {
             // Significant size reduction: only include mobile architectures
-            abiFilters.addAll(listOf("arm64-v8a", "armeabi-v7a"))
+            abiFilters.add("arm64-v8a")
+            abiFilters.add("armeabi-v7a")
         }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true // Enable shrinking
+            isShrinkResources = true
             signingConfig = signingConfigs.getByName("debug")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -48,8 +50,9 @@ android {
 
     packaging {
         jniLibs {
-            excludes += "lib/x86/**"
-            excludes += "lib/x86_64/**"
+            // Force removal of non-mobile architectures
+            excludes.add("lib/x86/**")
+            excludes.add("lib/x86_64/**")
         }
     }
 }
@@ -63,7 +66,7 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.8.2")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     
-    // Xposed API (compile only - provided by framework at runtime)
+    // Xposed API
     compileOnly("de.robv.android.xposed:api:82")
     compileOnly("de.robv.android.xposed:api:82:sources")
     
@@ -81,10 +84,11 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer:$media3_version")
     implementation("androidx.media3:media3-exoplayer-rtsp:$media3_version")
     implementation("androidx.media3:media3-ui:$media3_version")
-    // OkHttp DataSource: explicit RTMP support via OkHttp (more reliable than platform MediaExtractor).
-    // Required for rtmp:// URLs on all API levels.
+    
+    // OkHttp DataSource for better stream reliability
     implementation("androidx.media3:media3-datasource-okhttp:$media3_version")
     
-    // FFmpeg-kit for SRT Protocol Support (Feature 12)
+    // FFmpeg Proxy for SRT/RTMP (Proxying to local UDP)
+    // Using ABI-specific filters and packaging excludes to keep size down
     implementation("com.mrljdx:ffmpeg-kit-full:6.1.4")
 }
