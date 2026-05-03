@@ -23,6 +23,8 @@ import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
+import com.arthenica.ffmpegkit.FFmpegKit
+import com.arthenica.ffmpegkit.FFmpegSession
 
 /**
  * ExoPlayer wrapper for broadcasting live RTSP/RTMP streams from OBS.
@@ -60,6 +62,9 @@ class StreamPlayer(
 
     // Track if we've already fired onFirstFrame to avoid duplicates
     private var firstFrameFired = false
+    
+    // FFmpeg proxy session for SRT streams
+    private var ffmpegSession: FFmpegSession? = null
 
     /**
      * Start connecting to the live stream
@@ -120,18 +125,31 @@ class StreamPlayer(
 
         // 6. Configure the stream
         val trimmedUrl = streamUrl.trim()
-        val uri = Uri.parse(trimmedUrl)
+        var finalUri = Uri.parse(trimmedUrl)
 
-        val mediaSource = if (trimmedUrl.startsWith("rtsp", ignoreCase = true)) {
+        if (trimmedUrl.startsWith("srt", ignoreCase = true)) {
+            // SRT: Proxy via FFmpegKit to local UDP since ExoPlayer lacks native SRT without custom build
+            val udpUrl = "udp://127.0.0.1:9998?pkt_size=1316"
+            // Start async proxy: -i srt://... -c copy -f mpegts udp://...
+            Log.d(TAG, "Starting FFmpeg SRT proxy for $trimmedUrl")
+            ffmpegSession = FFmpegKit.executeAsync("-i \"$trimmedUrl\" -c copy -f mpegts \"$udpUrl\"") { session ->
+                val state = session.state
+                val returnCode = session.returnCode
+                Log.d(TAG, "FFmpeg SRT Proxy finished with state $state and return code $returnCode")
+            }
+            finalUri = Uri.parse(udpUrl)
+        }
+
+        val mediaSource = if (finalUri.scheme?.startsWith("rtsp", ignoreCase = true) == true) {
             // RTSP: use dedicated RtspMediaSource for better control
             RtspMediaSource.Factory()
                 .setForceUseRtpTcp(useTcp)
-                .createMediaSource(MediaItem.fromUri(uri))
+                .createMediaSource(MediaItem.fromUri(finalUri))
         } else {
-            // RTMP / HTTP / HTTPS: OkHttpDataSource handles rtmp:// natively on all API levels.
-            // DefaultDataSource detects the scheme; OkHttp handles actual I/O.
+            // RTMP / HTTP / HTTPS / UDP: OkHttpDataSource handles HTTP/RTMP natively.
+            // DefaultDataSource handles UDP via UdpDataSource.
             MediaItem.Builder()
-                .setUri(uri)
+                .setUri(finalUri)
                 .setRequestMetadata(
                     RequestMetadata.Builder().build()
                 )
@@ -253,15 +271,19 @@ class StreamPlayer(
     fun stop() {
         handler?.post {
             try {
+                isPlaying = false
                 exoPlayer?.stop()
                 exoPlayer?.release()
                 exoPlayer = null
-                isPlaying = false
-                firstFrameFired = false
-            } finally {
+                
+                ffmpegSession?.cancel()
+                ffmpegSession = null
+                
                 handlerThread?.quitSafely()
                 handlerThread = null
                 handler = null
+            } catch (e: Exception) {
+                Log.e(TAG, "Error during stop: ${e.message}")
             }
         }
     }

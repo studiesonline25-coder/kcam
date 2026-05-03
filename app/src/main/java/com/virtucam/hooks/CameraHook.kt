@@ -117,6 +117,9 @@ object CameraHook {
     var isGeneratingJpeg: Boolean = false
 
     @Volatile
+    var isBufferCaptureEnabled: Boolean = true
+
+    @Volatile
     var compensationFactor: Float = 1.0f
     
     @Volatile
@@ -2165,6 +2168,7 @@ object CameraHook {
                         isTestPatternMode = if (it.columnCount > 13) it.getInt(13) == 1 else false
                         isPassthroughMode = if (it.columnCount > 14) it.getInt(14) == 1 else false
                         rotationOffset = if (it.columnCount > 15) it.getInt(15) else 0
+                        isBufferCaptureEnabled = if (it.columnCount > 16) it.getInt(16) == 1 else true
                         
                         Log.d(TAG, "VirtuCam_Hook: Config loaded. Enabled: $isEnabled, Zoom: $zoomFactor, Stretch: $compensationFactor, liveness: $isLivenessEnabled, passthrough: $isPassthroughMode, offset: $rotationOffset")
                     } catch (innerE: Exception) {
@@ -2589,6 +2593,16 @@ class VirtualRenderThread(
     @Volatile
     private var isRunning = true
     
+    // Anti-Detection Sensor State
+    private var sensorManager: android.hardware.SensorManager? = null
+    private var gyroListener: android.hardware.SensorEventListener? = null
+    private var lightListener: android.hardware.SensorEventListener? = null
+    
+    @Volatile private var gyroOffsetX = 0f
+    @Volatile private var gyroOffsetY = 0f
+    @Volatile private var ambientLightMultiplier = 1.0f
+    private val renderStartTime = System.currentTimeMillis()
+    
     private var eglCore: EglCore? = null
     // Triple: EGLSurface, isCapture, format
     private val eglSurfaceTargets = mutableListOf<Triple<android.opengl.EGLSurface, Boolean, Int>>()
@@ -2617,6 +2631,45 @@ class VirtualRenderThread(
 
     override fun run() {
         try {
+            // Anti-Detection Setup
+            sensorManager = context.getSystemService(android.content.Context.SENSOR_SERVICE) as? android.hardware.SensorManager
+            if (sensorManager != null) {
+                // Gyroscope Shake (Feature 6)
+                val gyro = sensorManager!!.getDefaultSensor(android.hardware.Sensor.TYPE_GYROSCOPE)
+                if (gyro != null) {
+                    gyroListener = object : android.hardware.SensorEventListener {
+                        override fun onSensorChanged(event: android.hardware.SensorEvent) {
+                            // Accumulate micro-movements, slowly decay to center
+                            val dx = event.values[1] * 0.002f // Y-axis rotation maps to X translation
+                            val dy = event.values[0] * 0.002f // X-axis rotation maps to Y translation
+                            gyroOffsetX = (gyroOffsetX + dx).coerceIn(-0.05f, 0.05f)
+                            gyroOffsetY = (gyroOffsetY + dy).coerceIn(-0.05f, 0.05f)
+                            // Decay
+                            gyroOffsetX *= 0.9f
+                            gyroOffsetY *= 0.9f
+                        }
+                        override fun onAccuracyChanged(s: android.hardware.Sensor?, a: Int) {}
+                    }
+                    sensorManager!!.registerListener(gyroListener, gyro, android.hardware.SensorManager.SENSOR_DELAY_UI)
+                }
+
+                // Ambient Light Correlation (Feature 8)
+                val light = sensorManager!!.getDefaultSensor(android.hardware.Sensor.TYPE_LIGHT)
+                if (light != null) {
+                    lightListener = object : android.hardware.SensorEventListener {
+                        override fun onSensorChanged(event: android.hardware.SensorEvent) {
+                            val lux = event.values[0]
+                            // Normal indoor light is ~100-300 lux. We vary brightness from 0.85 to 1.15
+                            val target = 0.85f + (lux.coerceIn(0f, 1000f) / 1000f) * 0.3f
+                            // Smooth interpolation
+                            ambientLightMultiplier += (target - ambientLightMultiplier) * 0.1f
+                        }
+                        override fun onAccuracyChanged(s: android.hardware.Sensor?, a: Int) {}
+                    }
+                    sensorManager!!.registerListener(lightListener, light, android.hardware.SensorManager.SENSOR_DELAY_UI)
+                }
+            }
+
             eglCore = EglCore()
             
             // Create EGL surfaces for ALL targets
@@ -2819,6 +2872,13 @@ class VirtualRenderThread(
             val es = it_triple.first
             val isCapture = it_triple.second
             val format = it_triple.third
+
+            // Buffer Capture Toggle (Feature 4): Skip capture surfaces if disabled to save system resources
+            if (isCapture && !CameraHook.isBufferCaptureEnabled) {
+                continue
+            }
+
+            val tStart = System.nanoTime()
             try {
                 eglCore!!.makeCurrent(es)
                 var vw = eglCore!!.querySurface(es, android.opengl.EGL14.EGL_WIDTH)
@@ -2859,19 +2919,31 @@ class VirtualRenderThread(
                     CameraHook.isMirrored
                 }
 
+                // Front/Back Camera Differentiation (Feature 10)
+                // Slight crop/zoom applied only to front camera to mimic lens variation
+                val finalZoom = if (isActuallyFront) CameraHook.zoomFactor * 1.05f else CameraHook.zoomFactor
+
                 val ratio = getTargetRatio(vw, vh, isCapture, contentW, contentH)
+
+                val timeValue = (System.currentTimeMillis() - renderStartTime) / 1000.0f
 
                 textureRenderer?.draw(
                     matrix, contentW, contentH, vw, vh, ratio,
                     parityOrientation, finalUserRotation, shouldMirror,
-                    CameraHook.zoomFactor, isCapture, CameraHook.compensationFactor,
-                    finalRotationOffset
+                    finalZoom, isCapture, CameraHook.compensationFactor,
+                    finalRotationOffset, ambientLightMultiplier, timeValue,
+                    gyroOffsetX, gyroOffsetY
                 )
 
                 eglCore?.setPresentationTime(es, System.nanoTime())
                 if (eglCore?.swapBuffers(es) == false) {
                     Log.w("VirtuCam_Render", "Surface abandoned, removing.")
                     it.remove()
+                }
+
+                if (frameCount % 60 == 0) {
+                    val tEnd = System.nanoTime()
+                    Log.d("VIRTUCAM_PERF", "Render target $vw x $vh took ${(tEnd - tStart)/1_000_000}ms")
                 }
             } catch (e: Exception) {
                 it.remove()
@@ -2922,7 +2994,18 @@ class VirtualRenderThread(
 
     private fun releaseResources() {
         isRunning = false
-        videoPlayer?.stop()
+
+        if (sensorManager != null) {
+            gyroListener?.let { sensorManager!!.unregisterListener(it) }
+            lightListener?.let { sensorManager!!.unregisterListener(it) }
+            gyroListener = null
+            lightListener = null
+            sensorManager = null
+        }
+
+        try {
+            videoPlayer?.stop()
+        } catch (e: Exception) {}
         streamPlayer?.stop()
         mediaSurface?.release()
         mediaSurfaceTexture?.release()

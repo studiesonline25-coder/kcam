@@ -39,7 +39,13 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             varying vec2 vTextureCoord;
             uniform samplerExternalOES sTexture;
             uniform int uIsBackground;
-            const float blurSize = 0.02; // Blur radius
+            uniform float uBrightness;
+            uniform float uTime;
+            const float blurSize = 0.02;
+            // Pseudo-random hash for temporal dithering (anti frame-comparison)
+            float hash(vec2 p) {
+                return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+            }
             void main() {
                 if (uIsBackground == 1) {
                     vec4 sum = vec4(0.0);
@@ -52,9 +58,12 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                     sum += texture2D(sTexture, vec2(vTextureCoord.x - blurSize, vTextureCoord.y + blurSize));
                     sum += texture2D(sTexture, vec2(vTextureCoord.x, vTextureCoord.y + blurSize)) * 2.0;
                     sum += texture2D(sTexture, vec2(vTextureCoord.x + blurSize, vTextureCoord.y + blurSize));
-                    gl_FragColor = vec4((sum / 16.0).rgb * 0.4, 1.0);
+                    gl_FragColor = vec4((sum / 16.0).rgb * 0.4 * uBrightness, 1.0);
                 } else {
-                    gl_FragColor = texture2D(sTexture, vTextureCoord);
+                    vec4 color = texture2D(sTexture, vTextureCoord);
+                    // Temporal dithering: ±1 LSB per channel per frame (imperceptible, defeats exact frame comparison)
+                    float dither = (hash(gl_FragCoord.xy + vec2(uTime, uTime * 0.7)) - 0.5) / 255.0;
+                    gl_FragColor = vec4(color.rgb * uBrightness + dither, 1.0);
                 }
             }
         """
@@ -65,7 +74,12 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             varying vec2 vTextureCoord;
             uniform sampler2D sTexture;
             uniform int uIsBackground;
-            const float blurSize = 0.02; // Blur radius
+            uniform float uBrightness;
+            uniform float uTime;
+            const float blurSize = 0.02;
+            float hash(vec2 p) {
+                return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+            }
             void main() {
                 if (uIsBackground == 1) {
                     vec4 sum = vec4(0.0);
@@ -78,9 +92,11 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                     sum += texture2D(sTexture, vec2(vTextureCoord.x - blurSize, vTextureCoord.y + blurSize));
                     sum += texture2D(sTexture, vec2(vTextureCoord.x, vTextureCoord.y + blurSize)) * 2.0;
                     sum += texture2D(sTexture, vec2(vTextureCoord.x + blurSize, vTextureCoord.y + blurSize));
-                    gl_FragColor = vec4((sum / 16.0).rgb * 0.4, 1.0);
+                    gl_FragColor = vec4((sum / 16.0).rgb * 0.4 * uBrightness, 1.0);
                 } else {
-                    gl_FragColor = texture2D(sTexture, vTextureCoord);
+                    vec4 color = texture2D(sTexture, vTextureCoord);
+                    float dither = (hash(gl_FragCoord.xy + vec2(uTime, uTime * 0.7)) - 0.5) / 255.0;
+                    gl_FragColor = vec4(color.rgb * uBrightness + dither, 1.0);
                 }
             }
         """
@@ -116,6 +132,8 @@ class TextureRenderer(private val isVideo: Boolean = true) {
     private var maPositionHandle = 0
     private var maTextureHandle = 0
     private var muIsBackgroundHandle = 0
+    private var muBrightnessHandle = 0
+    private var muTimeHandle = 0
     
     internal var textureId = -1
     private var frameCount = 0
@@ -154,6 +172,8 @@ class TextureRenderer(private val isVideo: Boolean = true) {
         muMVPMatrixHandle = GLES20.glGetUniformLocation(program, "uMVPMatrix")
         muSTMatrixHandle = GLES20.glGetUniformLocation(program, "uSTMatrix")
         muIsBackgroundHandle = GLES20.glGetUniformLocation(program, "uIsBackground")
+        muBrightnessHandle = GLES20.glGetUniformLocation(program, "uBrightness")
+        muTimeHandle = GLES20.glGetUniformLocation(program, "uTime")
 
         // Create texture
         val textures = IntArray(1)
@@ -175,7 +195,9 @@ class TextureRenderer(private val isVideo: Boolean = true) {
     fun draw(transformMatrix: FloatArray, videoWidth: Int = 0, videoHeight: Int = 0, viewWidth: Int = 0, viewHeight: Int = 0, 
              targetRatio: Float = 0f, hardwareSensorOrientation: Int = 0, userRotation: Int = 0, 
              isMirrored: Boolean = false, zoomFactor: Float = 1.0f, isCapture: Boolean = false,
-             compensationFactor: Float = 1.0f, rotationOffset: Int = 0) {
+             compensationFactor: Float = 1.0f, rotationOffset: Int = 0,
+             brightnessMultiplier: Float = 1.0f, timeValue: Float = 0.0f,
+             gyroOffsetX: Float = 0f, gyroOffsetY: Float = 0f) {
         if (viewWidth > 0 && viewHeight > 0) {
             GLES20.glViewport(0, 0, viewWidth, viewHeight)
         }
@@ -227,13 +249,16 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                 
                 val scaleToFit = java.lang.Math.min(scaleXToFill, scaleYToFill)
                 val scaleToFill = java.lang.Math.max(scaleXToFill, scaleYToFill)
-                val baseScale = if (isBackground || isCapture) scaleToFill else scaleToFit
+                val baseScale = if (isBackground) scaleToFill else scaleToFit
 
                 // Mirroring and Stretch (PRE-ROTATION)
                 val mirrorSignX = if (isMirrored) -1.0f else 1.0f
                 
                 // --- MATRIX ORDER (Right-to-Left) ---
                 
+                // 5. Gyroscope translation (Anti-detection)
+                Matrix.translateM(modelMatrix, 0, gyroOffsetX, gyroOffsetY, 0f)
+
                 // 4. Final Viewport Scale (Fit/Fill/Zoom)
                 Matrix.scaleM(modelMatrix, 0, baseScale * zoomFactor, baseScale * zoomFactor, 1.0f)
                 
@@ -252,6 +277,8 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                 Matrix.multiplyMM(mvpMatrix, 0, projMatrix, 0, modelMatrix, 0)
 
                 GLES20.glUniform1i(muIsBackgroundHandle, if (isBackground) 1 else 0)
+                GLES20.glUniform1f(muBrightnessHandle, brightnessMultiplier)
+                GLES20.glUniform1f(muTimeHandle, timeValue)
                 GLES20.glUniformMatrix4fv(muSTMatrixHandle, 1, false, stMatrix, 0)
                 GLES20.glUniformMatrix4fv(muMVPMatrixHandle, 1, false, mvpMatrix, 0)
 

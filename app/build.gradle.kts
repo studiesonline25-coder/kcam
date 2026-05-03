@@ -72,4 +72,7 @@ dependencies {
     // OkHttp DataSource: explicit RTMP support via OkHttp (more reliable than platform MediaExtractor).
     // Required for rtmp:// URLs on all API levels.
     implementation("androidx.media3:media3-datasource-okhttp:$media3_version")
+    
+    // FFmpeg-kit for SRT Protocol Support (Feature 12)
+    implementation("com.arthenica:ffmpeg-kit-full:6.0-2")
 }

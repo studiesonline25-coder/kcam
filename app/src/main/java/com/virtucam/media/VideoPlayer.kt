@@ -169,9 +169,10 @@ class VideoPlayer(
                 }
                 else -> {
                     if (outIndex >= 0) {
-                        // === PRECISE FRAME PACING ===
-                        // Calculate when this frame should be displayed
-                        val targetNs = startNs + (info.presentationTimeUs * 1000L)
+                        // === PRECISE FRAME PACING WITH JITTER (Feature 7) ===
+                        // Natural hardware frame delivery has ±1-3ms jitter. Perfect pacing = synthetic detection.
+                        val jitterNs = (Math.random() * 6_000_000L - 3_000_000L).toLong()
+                        val targetNs = startNs + (info.presentationTimeUs * 1000L) + jitterNs
                         val nowNs = System.nanoTime()
                         val delayNs = targetNs - nowNs
 
@@ -187,11 +188,18 @@ class VideoPlayer(
                         // If delayNs <= 0, we're behind schedule — render immediately (no drop)
 
                         val doRender = info.size != 0
+                        
+                        val tBeforeRender = System.nanoTime()
                         // Release buffer and render it to surface
                         decoder!!.releaseOutputBuffer(outIndex, doRender)
                         if (doRender) {
                             lastFrameNs = System.nanoTime()
                             onFrameAvailable()
+                            
+                            val tAfterRender = System.nanoTime()
+                            if (info.presentationTimeUs % 30 == 0L) { // Sample logs
+                                Log.d(TAG, "Decode+Pacing took ${(tBeforeRender - nowNs)/1_000_000}ms, Handoff took ${(tAfterRender - tBeforeRender)/1_000_000}ms")
+                            }
                         }
                     }
                 }

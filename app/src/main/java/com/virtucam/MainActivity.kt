@@ -109,6 +109,7 @@ class MainActivity : AppCompatActivity() {
             put("mediaPreview", mediaPreviewBase64 ?: "")
             put("streamPreview", streamPreviewUriStr)
             put("isSpoofVideo", config.isSpoofVideo)
+            put("bufferCapture", config.isBufferCaptureEnabled)
         }
 
         webView.evaluateJavascript("window.onAndroidSync('$state')", null)
@@ -136,6 +137,11 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun setPassthroughMode(enabled: Boolean) {
             config.isPassthroughMode = enabled
+        }
+
+        @JavascriptInterface
+        fun setBufferCapture(enabled: Boolean) {
+            config.isBufferCaptureEnabled = enabled
         }
 
         @JavascriptInterface
@@ -187,6 +193,20 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this@MainActivity, "Stream Connected: $url", Toast.LENGTH_SHORT).show()
                 // Tell Web UI to show "connecting" state for stream
                 webView.evaluateJavascript("window.onStreamConnecting && window.onStreamConnecting()", null)
+                syncConfigToWeb()
+            }
+        }
+
+        @JavascriptInterface
+        fun disconnectStream() {
+            config.isStream = false
+            config.streamUrl = null
+            try {
+                java.io.File(filesDir, "stream_preview.jpg").delete()
+            } catch (_: Exception) {}
+            runOnUiThread {
+                Toast.makeText(this@MainActivity, "Stream Disconnected", Toast.LENGTH_SHORT).show()
+                webView.evaluateJavascript("window.onStreamDisconnected && window.onStreamDisconnected()", null)
                 syncConfigToWeb()
             }
         }
@@ -280,8 +300,8 @@ class MainActivity : AppCompatActivity() {
                 android.util.Log.d("VirtuCam_Web", "Stream preview saved: ${file.absolutePath}")
                 runOnUiThread {
                     // Notify Web UI that stream preview is ready
-                    val base64 = "data:image/jpeg;base64,not_needed"
-                    webView.evaluateJavascript("window.onStreamPreviewReady && window.onStreamPreviewReady('$base64')", null)
+                    val uri = "content://com.virtucam.provider/stream_preview/stream_preview.jpg"
+                    webView.evaluateJavascript("window.onStreamPreviewReady && window.onStreamPreviewReady('$uri')", null)
                 }
             } catch (e: Exception) {
                 android.util.Log.e("VirtuCam_Web", "Stream preview save fail: ${e.message}")
@@ -326,41 +346,187 @@ class MainActivity : AppCompatActivity() {
         // then update the stream preview img element.
         val js = """
             (function() {
-                var pollInterval;
-                function tryInject() {
-                    // Try multiple possible selectors for the stream preview element
-                    var candidates = [
-                        document.querySelector('img[alt*="stream"]'),
-                        document.querySelector('img[src*="stream_preview"]'),
-                        document.querySelector('.stream-preview img'),
-                        document.querySelector('[class*="stream"] img'),
-                    ];
-                    var found = null;
-                    for (var i = 0; i < candidates.length; i++) {
-                        if (candidates[i]) { found = candidates[i]; break; }
+                // 1. Feature 3: Inject Stream Preview Container
+                function injectPreviewUI() {
+                    if (document.getElementById('virtucam-stream-preview')) return;
+                    
+                    // Find a good place to inject. The React app probably has an input container for the stream.
+                    var inputs = document.querySelectorAll('input[type="text"]');
+                    var targetInput = null;
+                    for (var i = 0; i < inputs.length; i++) {
+                        if (inputs[i].placeholder.toLowerCase().includes('stream') || 
+                            inputs[i].placeholder.includes('rtmp://')) {
+                            targetInput = inputs[i];
+                            break;
+                        }
                     }
-                    if (!found) return; // Not rendered yet
+                    
+                    if (!targetInput) return;
+                    
+                    var parent = targetInput.parentElement;
+                    while (parent && parent.tagName !== 'DIV') {
+                        parent = parent.parentElement;
+                    }
+                    if (!parent) return;
 
-                    clearInterval(pollInterval);
-
-                    // If a content:// URI was injected, use it directly
-                    var contentUri = 'content://com.virtucam.provider/stream_preview/stream_preview.jpg';
-                    found.src = contentUri;
-                    found.style.display = 'block';
+                    var container = document.createElement('div');
+                    container.id = 'virtucam-stream-preview';
+                    container.style.marginTop = '16px';
+                    container.style.padding = '12px';
+                    container.style.backgroundColor = '#1a1a1a';
+                    container.style.borderRadius = '8px';
+                    container.style.border = '1px solid #333';
+                    container.style.display = 'none'; // Hidden initially
+                    container.style.flexDirection = 'column';
+                    container.style.gap = '8px';
+                    
+                    var header = document.createElement('div');
+                    header.style.display = 'flex';
+                    header.style.justifyContent = 'space-between';
+                    header.style.alignItems = 'center';
+                    
+                    var title = document.createElement('span');
+                    title.innerText = 'Stream Preview';
+                    title.style.color = '#ccc';
+                    title.style.fontSize = '14px';
+                    
+                    var status = document.createElement('span');
+                    status.id = 'virtucam-stream-status';
+                    status.innerText = 'Waiting...';
+                    status.style.fontSize = '12px';
+                    status.style.padding = '4px 8px';
+                    status.style.borderRadius = '12px';
+                    status.style.backgroundColor = '#333';
+                    
+                    header.appendChild(title);
+                    header.appendChild(status);
+                    
+                    var img = document.createElement('img');
+                    img.id = 'virtucam-stream-img';
+                    img.style.width = '100%';
+                    img.style.borderRadius = '4px';
+                    img.style.display = 'none';
+                    img.style.backgroundColor = '#000';
+                    img.style.minHeight = '120px';
+                    img.style.objectFit = 'contain';
+                    
+                    container.appendChild(header);
+                    container.appendChild(img);
+                    
+                    // Append after the input container
+                    parent.parentElement.insertBefore(container, parent.nextSibling);
                 }
 
-                pollInterval = setInterval(tryInject, 2000);
-
-                // Also expose a global function the Android Java side can call directly
-                window.onStreamPreviewReady = function(uri) {
-                    if (uri === 'pending') return; // Connection in progress, ignore
-                    var img = document.querySelector('img[alt*="stream"]') ||
-                              document.querySelector('.stream-preview img') ||
-                              document.querySelector('[class*="stream"] img');
-                    if (img && uri) {
-                        img.src = uri;
-                        img.style.display = 'block';
+                // 2. Feature 2: Fix URL Editability
+                function ensureUrlEditable() {
+                    var inputs = document.querySelectorAll('input[type="text"]');
+                    for (var i = 0; i < inputs.length; i++) {
+                        if (inputs[i].placeholder.toLowerCase().includes('stream') || 
+                            inputs[i].placeholder.includes('rtmp://')) {
+                            // Force it to be editable even if React disabled it
+                            if (inputs[i].disabled) {
+                                inputs[i].disabled = false;
+                                inputs[i].style.opacity = '1';
+                            }
+                        }
                     }
+                    
+                    // Find buttons to see if we need a disconnect button
+                    var buttons = document.querySelectorAll('button');
+                    var connectBtn = null;
+                    for (var i = 0; i < buttons.length; i++) {
+                        if (buttons[i].innerText.toLowerCase().includes('connect')) {
+                            connectBtn = buttons[i];
+                            break;
+                        }
+                    }
+                    
+                    if (connectBtn && !document.getElementById('virtucam-disconnect-btn')) {
+                        var disconnectBtn = document.createElement('button');
+                        disconnectBtn.id = 'virtucam-disconnect-btn';
+                        disconnectBtn.innerText = 'Disconnect';
+                        disconnectBtn.className = connectBtn.className;
+                        disconnectBtn.style.backgroundColor = '#dc3545';
+                        disconnectBtn.style.marginTop = '8px';
+                        disconnectBtn.style.display = 'none';
+                        disconnectBtn.onclick = function() {
+                            window.Android && window.Android.disconnectStream();
+                        };
+                        connectBtn.parentElement.insertBefore(disconnectBtn, connectBtn.nextSibling);
+                    }
+                }
+
+                // Inject UI once the React DOM is ready
+                var initInterval = setInterval(function() {
+                    var inputs = document.querySelectorAll('input[type="text"]');
+                    if (inputs.length > 0) {
+                        injectPreviewUI();
+                        ensureUrlEditable();
+                        clearInterval(initInterval);
+                    }
+                }, 1000);
+                
+                // Repeatedly ensure editability in case React re-renders and disables it
+                setInterval(ensureUrlEditable, 2000);
+
+                // 3. Status Callbacks for Android
+                window.onStreamConnecting = function() {
+                    var container = document.getElementById('virtucam-stream-preview');
+                    var status = document.getElementById('virtucam-stream-status');
+                    var img = document.getElementById('virtucam-stream-img');
+                    var disconnectBtn = document.getElementById('virtucam-disconnect-btn');
+                    
+                    if (container) container.style.display = 'flex';
+                    if (status) {
+                        status.innerText = 'Connecting...';
+                        status.style.backgroundColor = '#ffc107';
+                        status.style.color = '#000';
+                    }
+                    if (img) img.style.opacity = '0.5';
+                    if (disconnectBtn) disconnectBtn.style.display = 'block';
+                };
+
+                window.onStreamPreviewReady = function(uri) {
+                    if (uri === 'pending') return;
+                    var container = document.getElementById('virtucam-stream-preview');
+                    var status = document.getElementById('virtucam-stream-status');
+                    var img = document.getElementById('virtucam-stream-img');
+                    
+                    if (container) container.style.display = 'flex';
+                    if (status) {
+                        status.innerText = 'Live ✓';
+                        status.style.backgroundColor = '#28a745';
+                        status.style.color = '#fff';
+                    }
+                    if (img && uri) {
+                        // Bust cache by adding timestamp
+                        img.src = uri + (uri.includes('content://') ? '?t=' + new Date().getTime() : '');
+                        img.style.display = 'block';
+                        img.style.opacity = '1';
+                    }
+                };
+
+                window.onStreamError = function(errorMsg) {
+                    var container = document.getElementById('virtucam-stream-preview');
+                    var status = document.getElementById('virtucam-stream-status');
+                    
+                    if (container) container.style.display = 'flex';
+                    if (status) {
+                        status.innerText = 'Error ✗';
+                        status.style.backgroundColor = '#dc3545';
+                        status.style.color = '#fff';
+                    }
+                    console.error("Stream Error: " + errorMsg);
+                };
+                
+                window.onStreamDisconnected = function() {
+                    var container = document.getElementById('virtucam-stream-preview');
+                    var disconnectBtn = document.getElementById('virtucam-disconnect-btn');
+                    var img = document.getElementById('virtucam-stream-img');
+                    
+                    if (container) container.style.display = 'none';
+                    if (disconnectBtn) disconnectBtn.style.display = 'none';
+                    if (img) img.src = '';
                 };
             })();
         """.trimIndent()

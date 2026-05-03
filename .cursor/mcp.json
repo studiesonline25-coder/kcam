@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "claude": {
+      "command": "npx",
+      "args": ["-y", "@anthropic-ai/mcp-server"],
+      "env": {
+        "ANTHROPIC_API_KEY": "sk-f879c321e30dac4637acb73bcb64e5c0ce9f993ecbfc255f",
+        "ANTHROPIC_BASE_URL": "https://api.ecomagent.in/"
+      }
+    }
+  }
+}
