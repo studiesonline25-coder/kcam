@@ -17,7 +17,8 @@ import com.virtucam.data.VirtuCamConfig
 import org.json.JSONObject
 
 /**
- * Main Activity - Professional UI Bridge (Clean Version)
+ * Main Activity - Ultra-Robust UI Bridge
+ * Fixed: Settings Injection, Media Preview, and Tab Reset issues.
  */
 class MainActivity : AppCompatActivity() {
     
@@ -53,6 +54,11 @@ class MainActivity : AppCompatActivity() {
             databaseEnabled = true
             mediaPlaybackRequiresUserGesture = false
             mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+            
+            // Critical for SPA stability and preventing resets
+            useWideViewPort = true
+            loadWithOverviewMode = true
+            cacheMode = WebSettings.LOAD_DEFAULT
         }
 
         webView.webChromeClient = object : WebChromeClient() {
@@ -64,10 +70,10 @@ class MainActivity : AppCompatActivity() {
         
         webView.webViewClient = object : WebViewClient() {
             override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
-                injectStreamPreviewBridge()
+                injectBridgeLogic()
             }
             override fun onPageFinished(view: WebView?, url: String?) {
-                injectStreamPreviewBridge()
+                injectBridgeLogic()
                 syncConfigToWeb()
             }
         }
@@ -175,151 +181,146 @@ class MainActivity : AppCompatActivity() {
         }.start()
     }
 
-    private fun injectStreamPreviewBridge() {
+    private fun injectBridgeLogic() {
         val js = """
             (function() {
-                // Find stream URL input
-                function findStreamInput() {
-                    var inputs = document.querySelectorAll('input');
-                    for (var i = 0; i < inputs.length; i++) {
-                        var p = (inputs[i].placeholder || "").toLowerCase();
-                        if (p.includes('stream') || p.includes('rtmp') || p.includes('srt') || p.includes('url')) return inputs[i];
-                    }
-                    var buttons = document.querySelectorAll('button');
-                    for (var i = 0; i < buttons.length; i++) {
-                        if (buttons[i].innerText.toLowerCase().includes('connect')) {
-                            var row = buttons[i].closest('div');
-                            if (row) {
-                                var input = row.querySelector('input');
-                                if (input) return input;
-                            }
+                if (window.VIRTUCAM_BRIDGE_INITIALIZED) return;
+                window.VIRTUCAM_BRIDGE_INITIALIZED = true;
+
+                console.log("VIRTU-CAM BRIDGE BOOTING...");
+
+                // Helper to find input/buttons by text or icon
+                function findByText(text, selector = '*') {
+                    return Array.from(document.querySelectorAll(selector)).find(el => el.innerText && el.innerText.includes(text));
+                }
+
+                // 1. SETTINGS PANEL INJECTION
+                function injectSettingsUI() {
+                    // Hide original "Investigation Tools" and specifically Passthrough/Test Pattern from main view
+                    ['PASSTHROUGH', 'TEST PATTERN', 'INVESTIGATION TOOLS'].forEach(text => {
+                        let el = findByText(text);
+                        if (el) {
+                            let parent = el.closest('div'); 
+                            if (parent && parent.children.length < 5) parent.style.display = 'none';
                         }
-                    }
-                    return null;
-                }
-
-                function injectPreviewUI() {
-                    if (document.getElementById('virtucam-stream-preview')) return;
-                    var targetInput = findStreamInput();
-                    if (!targetInput) return;
-                    
-                    var parent = targetInput.closest('div');
-                    if (!parent) return;
-
-                    var container = document.createElement('div');
-                    container.id = 'virtucam-stream-preview';
-                    container.style.marginTop = '16px'; container.style.padding = '12px';
-                    container.style.backgroundColor = '#1a1a1a'; container.style.borderRadius = '8px';
-                    container.style.border = '1px solid #333'; container.style.display = 'none';
-                    container.style.flexDirection = 'column'; container.style.gap = '8px';
-                    
-                    var header = document.createElement('div');
-                    header.style.display = 'flex'; header.style.justifyContent = 'space-between'; header.style.alignItems = 'center';
-                    var title = document.createElement('span'); title.innerText = 'Stream Preview'; title.style.color = '#ccc'; title.style.fontSize = '14px';
-                    var status = document.createElement('span'); status.id = 'virtucam-stream-status'; status.innerText = 'Waiting...';
-                    status.style.fontSize = '12px'; status.style.padding = '4px 8px'; status.style.borderRadius = '12px'; status.style.backgroundColor = '#333';
-                    
-                    header.appendChild(title); header.appendChild(status);
-                    var img = document.createElement('img'); img.id = 'virtucam-stream-img';
-                    img.style.width = '100%'; img.style.borderRadius = '4px'; img.style.display = 'none';
-                    img.style.backgroundColor = '#000'; img.style.minHeight = '120px'; img.style.objectFit = 'contain';
-                    
-                    container.appendChild(header); container.appendChild(img);
-                    parent.parentElement.insertBefore(container, parent.nextSibling);
-                }
-
-                function ensureUrlEditable() {
-                    var input = findStreamInput();
-                    if (input) {
-                        input.disabled = false; input.readOnly = false;
-                        input.style.opacity = '1'; input.style.pointerEvents = 'auto';
-                        if (!input.dataset.hooked) {
-                            input.dataset.hooked = "true";
-                            input.addEventListener('input', function() {
-                                if (window.Android) window.Android.connectStream(this.value);
-                            });
-                        }
-                    }
-                }
-
-                function injectSettingsToggles() {
-                    // Hide original controls to avoid duplication
-                    ['Passthrough', 'Test Pattern'].forEach(label => {
-                        document.querySelectorAll('div, span, label, p').forEach(el => {
-                            if (el.innerText === label) {
-                                var row = el.closest('div');
-                                if (row && row.querySelectorAll('button, input').length > 0) row.style.display = 'none';
-                            }
-                        });
                     });
 
-                    if (document.getElementById('virtucam-settings-ext')) return;
-                    
-                    // Find visible panel (Settings/Preferences)
-                    var panels = Array.from(document.querySelectorAll('div')).filter(d => 
-                        (d.innerText.includes('Settings') || d.innerText.includes('Mirrored')) && 
-                        window.getComputedStyle(d).display !== 'none' &&
-                        d.innerText.length < 1000
-                    );
-                    
-                    panels.sort((a,b) => a.innerText.length - b.innerText.length);
-                    var targetPanel = panels[0];
+                    // Detect Settings Panel (Look for "ADVANCED SETTINGS" header)
+                    let settingsHeader = findByText('ADVANCED SETTINGS');
+                    if (!settingsHeader) return;
 
-                    if (!targetPanel) return;
+                    let panel = settingsHeader.parentElement;
+                    if (!panel || document.getElementById('vc-injected-settings')) return;
 
-                    var extContainer = document.createElement('div');
-                    extContainer.id = 'virtucam-settings-ext';
-                    extContainer.style.borderTop = '1px solid #333'; extContainer.style.marginTop = '12px'; extContainer.style.paddingTop = '12px';
+                    let container = document.createElement('div');
+                    container.id = 'vc-injected-settings';
+                    container.style.borderTop = '1px solid #333';
+                    container.style.marginTop = '20px';
+                    container.style.paddingTop = '10px';
                     
-                    function createToggle(label, id, initialValue, callbackName) {
-                        var row = document.createElement('div');
-                        row.style.display = 'flex'; row.style.justifyContent = 'space-between'; row.style.alignItems = 'center'; row.style.marginBottom = '12px';
-                        var text = document.createElement('span'); text.innerText = label; text.style.fontSize = '14px'; text.style.color = '#ccc';
-                        var toggle = document.createElement('div'); toggle.id = 'toggle-' + id;
-                        toggle.style.width = '40px'; toggle.style.height = '20px'; toggle.style.borderRadius = '10px';
-                        toggle.style.backgroundColor = initialValue ? '#28a745' : '#444';
+                    function createRow(label, stateKey, callback) {
+                        let row = document.createElement('div');
+                        row.style.display = 'flex'; row.style.justifyContent = 'space-between'; row.style.alignItems = 'center';
+                        row.style.padding = '12px 0';
+                        row.innerHTML = '<span>' + label + '</span>';
+                        let toggle = document.createElement('div');
+                        toggle.style.width = '44px'; toggle.style.height = '24px'; toggle.style.borderRadius = '12px';
+                        toggle.style.backgroundColor = window.vcState && window.vcState[stateKey] ? '#22c55e' : '#444';
                         toggle.style.position = 'relative'; toggle.style.cursor = 'pointer';
-                        var knob = document.createElement('div'); knob.style.width = '16px'; knob.style.height = '16px'; knob.style.borderRadius = '50%';
+                        let knob = document.createElement('div');
+                        knob.style.width = '20px'; knob.style.height = '20px'; knob.style.borderRadius = '10px';
                         knob.style.backgroundColor = '#fff'; knob.style.position = 'absolute'; knob.style.top = '2px';
-                        knob.style.left = initialValue ? '22px' : '2px'; knob.style.transition = 'left 0.2s';
-                        toggle.appendChild(knob); row.appendChild(text); row.appendChild(toggle);
-                        var current = initialValue;
-                        toggle.onclick = function() {
-                            current = !current;
-                            toggle.style.backgroundColor = current ? '#28a745' : '#444';
-                            knob.style.left = current ? '22px' : '2px';
-                            if (window.Android && window.Android[callbackName]) window.Android[callbackName](current);
+                        knob.style.left = window.vcState && window.vcState[stateKey] ? '22px' : '2px';
+                        knob.style.transition = '0.2s';
+                        toggle.appendChild(knob);
+                        toggle.onclick = () => {
+                            let newVal = !(window.vcState && window.vcState[stateKey]);
+                            if (!window.vcState) window.vcState = {};
+                            window.vcState[stateKey] = newVal;
+                            toggle.style.backgroundColor = newVal ? '#22c55e' : '#444';
+                            knob.style.left = newVal ? '22px' : '2px';
+                            if (window.Android) window.Android[callback](newVal);
                         };
+                        row.appendChild(toggle);
                         return row;
                     }
-                    var state = window.virtucamState || {};
-                    extContainer.appendChild(createToggle('Buffer Capture', 'buffer', state.bufferCapture !== false, 'setBufferCapture'));
-                    extContainer.appendChild(createToggle('Passthrough Mode', 'passthrough', !!state.passthrough, 'setPassthroughMode'));
-                    extContainer.appendChild(createToggle('Test Pattern', 'testpattern', !!state.testPattern, 'setTestPatternMode'));
-                    targetPanel.appendChild(extContainer);
+
+                    container.appendChild(createRow('Buffer Capture', 'bufferCapture', 'setBufferCapture'));
+                    container.appendChild(createRow('Passthrough Mode', 'passthrough', 'setPassthroughMode'));
+                    container.appendChild(createRow('Test Pattern', 'testPattern', 'setTestPatternMode'));
+                    panel.appendChild(container);
+                }
+
+                // 2. MEDIA PREVIEW RESTORATION
+                function updateMediaPreview() {
+                    let selectArea = findByText('SELECT MEDIA');
+                    if (!selectArea) return;
+                    
+                    let container = selectArea.closest('div');
+                    if (!container || !window.vcState || !window.vcState.mediaPreview) return;
+
+                    let existingImg = container.querySelector('#vc-media-preview-img');
+                    if (!existingImg) {
+                        let icon = container.querySelector('svg');
+                        if (icon) icon.style.display = 'none';
+                        let img = document.createElement('img');
+                        img.id = 'vc-media-preview-img';
+                        img.style.width = '80px'; img.style.height = '80px'; img.style.borderRadius = '12px';
+                        img.style.objectFit = 'cover';
+                        container.prepend(img);
+                        existingImg = img;
+                    }
+                    existingImg.src = window.vcState.mediaPreview;
+                }
+
+                // 3. TAB STABILITY
+                // Intercept hash changes to prevent full reloads
+                window.addEventListener('hashchange', () => {
+                    console.log("Tab changed: " + window.location.hash);
+                    // Force a re-run of injection logic
+                    setTimeout(runAll, 100);
+                });
+
+                // 4. STREAM URL FIELD
+                function fixStreamField() {
+                    let inputs = document.querySelectorAll('input');
+                    inputs.forEach(input => {
+                        let p = (input.placeholder || "").toLowerCase();
+                        if (p.includes('rtmp') || p.includes('srt') || p.includes('stream')) {
+                            input.disabled = false;
+                            input.readOnly = false;
+                            input.style.pointerEvents = 'auto';
+                            if (!input.dataset.vcHooked) {
+                                input.dataset.vcHooked = "true";
+                                input.addEventListener('input', (e) => {
+                                    if (window.Android) window.Android.connectStream(e.target.value);
+                                });
+                            }
+                        }
+                    });
                 }
 
                 window.onAndroidSync = function(stateStr) {
-                    var state = JSON.parse(stateStr);
-                    window.virtucamState = state;
-                    ['buffer', 'passthrough', 'testpattern'].forEach(id => {
-                        var t = document.getElementById('toggle-' + id);
-                        if (t) {
-                            var val = id === 'buffer' ? state.bufferCapture : (id === 'passthrough' ? state.passthrough : state.testPattern);
-                            t.style.backgroundColor = val ? '#28a745' : '#444';
-                            t.firstChild.style.left = val ? '22px' : '2px';
-                        }
-                    });
+                    window.vcState = JSON.parse(stateStr);
+                    runAll();
                 };
 
-                var observer = new MutationObserver(() => {
-                    injectPreviewUI(); ensureUrlEditable(); injectSettingsToggles();
-                });
+                let isRunning = false;
+                function runAll() {
+                    if (isRunning) return;
+                    isRunning = true;
+                    try {
+                        injectSettingsUI();
+                        updateMediaPreview();
+                        fixStreamField();
+                    } finally {
+                        setTimeout(() => isRunning = false, 200);
+                    }
+                }
+
+                const observer = new MutationObserver(runAll);
                 observer.observe(document.body, { childList: true, subtree: true });
-                
-                setInterval(() => {
-                    injectPreviewUI(); ensureUrlEditable(); injectSettingsToggles();
-                }, 1000);
+                setInterval(runAll, 1000);
             })();
         """.trimIndent()
         webView.evaluateJavascript(js, null)
