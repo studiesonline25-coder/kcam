@@ -45,6 +45,13 @@ android {
     buildFeatures {
         viewBinding = true
     }
+
+    packaging {
+        jniLibs {
+            excludes += "lib/x86/**"
+            excludes += "lib/x86_64/**"
+        }
+    }
 }
 
 dependencies {

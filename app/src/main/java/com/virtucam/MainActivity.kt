@@ -17,7 +17,7 @@ import com.virtucam.data.VirtuCamConfig
 import org.json.JSONObject
 
 /**
- * Main Activity - Professional UI Bridge Implementation
+ * Main Activity - Professional UI Bridge with Debug Banner
  */
 class MainActivity : AppCompatActivity() {
     
@@ -174,22 +174,36 @@ class MainActivity : AppCompatActivity() {
     private fun injectStreamPreviewBridge() {
         val js = """
             (function() {
-                console.log("VirtuCam Bridge: Initializing...");
+                console.log("VIRTU-CAM EXTENSION LOADING...");
                 
-                // Helper to find the stream URL input by any means
+                // 1. VISIBLE DEBUG BANNER (Proves code is running)
+                if (!document.getElementById('virtucam-active-banner')) {
+                    var banner = document.createElement('div');
+                    banner.id = 'virtucam-active-banner';
+                    banner.innerText = 'VIRTU-CAM UI EXTENSION ACTIVE';
+                    banner.style.position = 'fixed'; banner.style.top = '0'; banner.style.left = '0'; banner.style.right = '0';
+                    banner.style.backgroundColor = 'rgba(220, 53, 69, 0.9)'; banner.style.color = 'white';
+                    banner.style.fontSize = '10px'; banner.style.textAlign = 'center'; banner.style.zIndex = '99999';
+                    banner.style.padding = '2px'; banner.style.pointerEvents = 'none';
+                    document.body.appendChild(banner);
+                }
+
                 function findStreamInput() {
                     var inputs = document.querySelectorAll('input');
                     for (var i = 0; i < inputs.length; i++) {
                         var p = (inputs[i].placeholder || "").toLowerCase();
-                        var v = (inputs[i].value || "").toLowerCase();
-                        if (p.includes('stream') || p.includes('rtmp') || p.includes('srt') || p.includes('url') || 
-                            v.startsWith('rtmp') || v.startsWith('srt') || v.startsWith('http')) {
-                            return inputs[i];
-                        }
+                        if (p.includes('stream') || p.includes('rtmp') || p.includes('srt') || p.includes('url')) return inputs[i];
                     }
-                    // Fallback: Check if the current visible tab is "Stream" and pick the first input
-                    if (document.body.innerText.includes('Stream')) {
-                        return document.querySelector('input');
+                    // Find input next to a "Connect" button
+                    var buttons = document.querySelectorAll('button');
+                    for (var i = 0; i < buttons.length; i++) {
+                        if (buttons[i].innerText.toLowerCase().includes('connect')) {
+                            var row = buttons[i].closest('div');
+                            if (row) {
+                                var input = row.querySelector('input');
+                                if (input) return input;
+                            }
+                        }
                     }
                     return null;
                 }
@@ -199,8 +213,7 @@ class MainActivity : AppCompatActivity() {
                     var targetInput = findStreamInput();
                     if (!targetInput) return;
                     
-                    var parent = targetInput.parentElement;
-                    while (parent && parent.tagName !== 'DIV') parent = parent.parentElement;
+                    var parent = targetInput.closest('div');
                     if (!parent) return;
 
                     var container = document.createElement('div');
@@ -228,11 +241,8 @@ class MainActivity : AppCompatActivity() {
                 function ensureUrlEditable() {
                     var input = findStreamInput();
                     if (input) {
-                        input.disabled = false;
-                        input.readOnly = false;
-                        input.style.opacity = '1';
-                        input.style.pointerEvents = 'auto';
-                        // Intercept value changes
+                        input.disabled = false; input.readOnly = false;
+                        input.style.opacity = '1'; input.style.pointerEvents = 'auto';
                         if (!input.dataset.hooked) {
                             input.dataset.hooked = "true";
                             input.addEventListener('input', function() {
@@ -240,50 +250,30 @@ class MainActivity : AppCompatActivity() {
                             });
                         }
                     }
-                    
-                    // Disconnect Button Logic
-                    var buttons = document.querySelectorAll('button');
-                    var connectBtn = null;
-                    for (var i = 0; i < buttons.length; i++) {
-                        if (buttons[i].innerText.toLowerCase().includes('connect')) { connectBtn = buttons[i]; break; }
-                    }
-                    if (connectBtn && !document.getElementById('virtucam-disconnect-btn')) {
-                        var disconnectBtn = document.createElement('button');
-                        disconnectBtn.id = 'virtucam-disconnect-btn'; disconnectBtn.innerText = 'Disconnect';
-                        disconnectBtn.className = connectBtn.className; disconnectBtn.style.backgroundColor = '#dc3545';
-                        disconnectBtn.style.marginTop = '8px'; disconnectBtn.style.display = 'none';
-                        disconnectBtn.onclick = function() { window.Android && window.Android.disconnectStream(); };
-                        connectBtn.parentElement.insertBefore(disconnectBtn, connectBtn.nextSibling);
-                    }
                 }
 
                 function injectSettingsToggles() {
-                    // 1. Hide original controls wherever they are
-                    var labels = ['Passthrough', 'Test Pattern', 'TestPattern', 'Pass-through'];
-                    document.querySelectorAll('div, span, label, p').forEach(el => {
-                        labels.forEach(label => {
+                    // Hide original controls
+                    ['Passthrough', 'Test Pattern'].forEach(label => {
+                        document.querySelectorAll('div, span, label, p').forEach(el => {
                             if (el.innerText === label) {
-                                var row = el.closest('div'); // Find nearest div row
-                                if (row && row.querySelectorAll('button, input').length > 0) {
-                                    row.style.display = 'none';
-                                }
+                                var row = el.closest('div');
+                                if (row && row.querySelectorAll('button, input').length > 0) row.style.display = 'none';
                             }
                         });
                     });
 
                     if (document.getElementById('virtucam-settings-ext')) return;
                     
-                    // 2. Find the Settings Panel (Top Right context)
-                    var targetPanel = null;
-                    // Look for a panel that is currently visible and contains "Settings"
+                    // Find ANY visible panel containing "Settings" OR a panel opened from the top-right
                     var panels = Array.from(document.querySelectorAll('div')).filter(d => 
                         (d.innerText.includes('Settings') || d.innerText.includes('Mirrored')) && 
-                        window.getComputedStyle(d).display !== 'none'
+                        window.getComputedStyle(d).display !== 'none' &&
+                        d.innerText.length < 1000 // Heuristic: small enough to be a menu
                     );
                     
-                    // Pick the most specific panel (usually the one with less text)
                     panels.sort((a,b) => a.innerText.length - b.innerText.length);
-                    targetPanel = panels[0];
+                    var targetPanel = panels[0];
 
                     if (!targetPanel) return;
 
@@ -322,7 +312,6 @@ class MainActivity : AppCompatActivity() {
                 window.onAndroidSync = function(stateStr) {
                     var state = JSON.parse(stateStr);
                     window.virtucamState = state;
-                    // Update toggles if they exist
                     ['buffer', 'passthrough', 'testpattern'].forEach(id => {
                         var t = document.getElementById('toggle-' + id);
                         if (t) {
@@ -333,20 +322,14 @@ class MainActivity : AppCompatActivity() {
                     });
                 };
 
-                // Observer to handle dynamic content (like settings panel opening)
                 var observer = new MutationObserver(() => {
-                    injectPreviewUI();
-                    ensureUrlEditable();
-                    injectSettingsToggles();
+                    injectPreviewUI(); ensureUrlEditable(); injectSettingsToggles();
                 });
                 observer.observe(document.body, { childList: true, subtree: true });
-
-                // Initial run
-                setTimeout(() => {
-                    injectPreviewUI();
-                    ensureUrlEditable();
-                    injectSettingsToggles();
-                }, 1000);
+                
+                setInterval(() => {
+                    injectPreviewUI(); ensureUrlEditable(); injectSettingsToggles();
+                }, 2000);
             })();
         """.trimIndent()
         webView.evaluateJavascript(js, null)
