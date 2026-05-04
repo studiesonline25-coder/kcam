@@ -2912,8 +2912,8 @@ class VirtualRenderThread(
 
                 val parityOrientation = targetBufferRotation
                 val finalUserRotation = 0
-                val videoCompensation = if (isVideo) 90 else 0
-                val finalRotationOffset = CameraHook.rotationOffset + videoCompensation
+                // We no longer hardcode 90 for videos. We treat them EXACTLY like images.
+                val finalRotationOffset = CameraHook.rotationOffset
 
                 // DYNAMIC MIRRORING LOGIC (Axis-Swapping handled in TextureRenderer)
                 val isActuallyFront = CameraHook.isActiveCameraFrontFacing()
@@ -2930,6 +2930,14 @@ class VirtualRenderThread(
                 val ratio = getTargetRatio(vw, vh, isSurfaceView)
 
                 val timeValue = (System.currentTimeMillis() - renderStartTime) / 1000.0f
+
+                // Pre-rotate the texture matrix for videos so they behave exactly like static images
+                if (isVideo && com.virtucam.media.VideoPlayer.videoRotation != 0) {
+                    Matrix.translateM(matrix, 0, 0.5f, 0.5f, 0f)
+                    // We negate the rotation because OpenGL texture coordinates map CCW but EXIF expects CW
+                    Matrix.rotateM(matrix, 0, -com.virtucam.media.VideoPlayer.videoRotation.toFloat(), 0f, 0f, 1f)
+                    Matrix.translateM(matrix, 0, -0.5f, -0.5f, 0f)
+                }
 
                 textureRenderer?.draw(
                     matrix, contentW, contentH, vw, vh, ratio,
