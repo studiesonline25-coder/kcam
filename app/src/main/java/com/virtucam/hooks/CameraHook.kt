@@ -2932,10 +2932,11 @@ class VirtualRenderThread(
                 val timeValue = (System.currentTimeMillis() - renderStartTime) / 1000.0f
 
                 // Pre-rotate the texture matrix for videos so they behave exactly like static images
-                if (isVideo && com.virtucam.media.VideoPlayer.videoRotation != 0) {
+                val vRot = videoPlayer?.videoRotation ?: 0
+                if (isVideo && vRot != 0) {
                     Matrix.translateM(matrix, 0, 0.5f, 0.5f, 0f)
                     // We negate the rotation because OpenGL texture coordinates map CCW but EXIF expects CW
-                    Matrix.rotateM(matrix, 0, -com.virtucam.media.VideoPlayer.videoRotation.toFloat(), 0f, 0f, 1f)
+                    Matrix.rotateM(matrix, 0, -vRot.toFloat(), 0f, 0f, 1f)
                     Matrix.translateM(matrix, 0, -0.5f, -0.5f, 0f)
                 }
 
