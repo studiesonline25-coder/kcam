@@ -242,17 +242,8 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                 Matrix.setIdentityM(modelMatrix, 0)
                 
                 // Calculate scales needed to fill/fit the viewport
-                // Videos require inverted isotropic mapping because their raw textures are hardware-bound
-                // to landscape orientation regardless of the intended EXIF rotation.
-                val rotatedW: Float
-                val rotatedH: Float
-                if (isVideo) {
-                    rotatedW = if (totalRotation % 180 != 0) (2.0f * videoRatio) else 2.0f
-                    rotatedH = if (totalRotation % 180 != 0) 2.0f else (2.0f * videoRatio)
-                } else {
-                    rotatedW = if (totalRotation % 180 != 0) 2.0f else (2.0f * videoRatio)
-                    rotatedH = if (totalRotation % 180 != 0) (2.0f * videoRatio) else 2.0f
-                }
+                val rotatedW = if (totalRotation % 180 != 0) 2.0f else (2.0f * videoRatio)
+                val rotatedH = if (totalRotation % 180 != 0) (2.0f * videoRatio) else 2.0f
                 
                 val scaleXToFill = (2.0f * viewRatio) / rotatedW
                 val scaleYToFill = 2.0f / rotatedH
