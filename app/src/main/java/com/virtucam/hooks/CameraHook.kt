@@ -198,7 +198,9 @@ object CameraHook {
     private val hookedListenerClasses = java.util.Collections.newSetFromMap(java.util.WeakHashMap<Class<*>, Boolean>())
     private val captureSurfaces = java.util.Collections.newSetFromMap(java.util.WeakHashMap<Surface, Boolean>())
     private val videoSurfaces = java.util.Collections.newSetFromMap(java.util.WeakHashMap<Surface, Boolean>())
-    private val knownSurfaceTextures = java.util.Collections.newSetFromMap(java.util.WeakHashMap<Surface, Boolean>())
+    private val knownSurfaceTextures = java.util.Collections.synchronizedSet(
+        java.util.Collections.newSetFromMap(java.util.WeakHashMap<Surface, Boolean>())
+    )
 
     /**
      * Initialize all camera hooks
