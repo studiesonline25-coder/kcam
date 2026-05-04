@@ -198,6 +198,7 @@ object CameraHook {
     private val hookedListenerClasses = java.util.Collections.newSetFromMap(java.util.WeakHashMap<Class<*>, Boolean>())
     private val captureSurfaces = java.util.Collections.newSetFromMap(java.util.WeakHashMap<Surface, Boolean>())
     private val videoSurfaces = java.util.Collections.newSetFromMap(java.util.WeakHashMap<Surface, Boolean>())
+    private val knownSurfaceTextures = java.util.Collections.newSetFromMap(java.util.WeakHashMap<Surface, Boolean>())
 
     /**
      * Initialize all camera hooks
@@ -1765,9 +1766,9 @@ object CameraHook {
                         val s = param.thisObject as? Surface ?: return
                         val st = param.args[0] as? SurfaceTexture ?: return
                         
-                        // [TOTAL SURVEILLANCE - MOVED OUTSIDE] We no longer hook this inside the constructor
-                        // to prevent redundant layering and crashes (fixes Phoenix).
-                        // Instead, we just associate the size below.
+                        // Robust tracking: Remember this is a SurfaceTexture regardless of whether
+                        // setDefaultBufferSize was called.
+                        knownSurfaceTextures.add(s)
 
                         val size = surfaceTextureSizes[st]
                         if (size != null) {
@@ -2619,11 +2620,16 @@ class VirtualRenderThread(
 
     private fun getTargetRatio(vW: Int, vH: Int, isCapture: Boolean, mediaW: Int, mediaH: Int, mediaRotation: Int = 0): Float {
         return try {
-            // [Zero-Error Accuracy Fix] 
-            // We no longer "Guess" the target ratio (16:9). 
-            // We use the AUTHENTIC geometric ratio of the destination buffer.
-            // The Renderer will handle logic to swap these if the screen is rotated.
-            vW.toFloat() / vH.toFloat()
+            val isSurfaceView = !isCapture
+            val sensorOrientation = CameraHook.resolveSensorOrientationDeg()
+            
+            if (isSurfaceView && (sensorOrientation == 90 || sensorOrientation == 270) && vW > vH) {
+                // Return inverted logical ratio (e.g. 1080/1920 = 0.56) instead of physical (1920/1080 = 1.77)
+                // This pre-squishes the image so SurfaceFlinger's landscape-to-portrait stretch restores it.
+                vH.toFloat() / vW.toFloat()
+            } else {
+                vW.toFloat() / vH.toFloat()
+            }
         } catch (e: Exception) {
             vW.toFloat() / vH.toFloat()
         }
@@ -2887,7 +2893,11 @@ class VirtualRenderThread(
                 // skips rotation (identity MVP) and buffers stay "upright" wrongly.
                 val surfaceIdx = eglSurfaceTargets.indexOfFirst { triple -> triple.first === es }
                 val originalSurface = if (surfaceIdx >= 0 && surfaceIdx < originalSurfaceBackings.size) originalSurfaceBackings[surfaceIdx] else null
-                val isSurfaceTexture = originalSurface != null && surfaceSizes.containsKey(originalSurface)
+                val isSurfaceTexture = originalSurface != null && (
+                    knownSurfaceTextures.contains(originalSurface) ||
+                    surfaceSizes.containsKey(originalSurface) || 
+                    originalSurface.toString().contains("SurfaceTexture", ignoreCase = true)
+                )
                 val isSurfaceView = !isCapture && !isSurfaceTexture
 
                 if ((vw <= 0 || vh <= 0) && originalSurface != null) {
