@@ -2912,7 +2912,7 @@ class VirtualRenderThread(
 
                 val parityOrientation = targetBufferRotation
                 val finalUserRotation = 0
-                val videoCompensation = if (isVideo) (90 - (videoPlayer?.videoRotation ?: 0)) else 0
+                val videoCompensation = 0
                 val finalRotationOffset = CameraHook.rotationOffset + videoCompensation
 
                 // DYNAMIC MIRRORING LOGIC (Axis-Swapping handled in TextureRenderer)
@@ -2930,6 +2930,17 @@ class VirtualRenderThread(
                 val ratio = getTargetRatio(vw, vh, isSurfaceView)
 
                 val timeValue = (System.currentTimeMillis() - renderStartTime) / 1000.0f
+
+                // Pivot the texture matrix to center, rotate to upright, then unpivot.
+                // This correctly applies EXIF rotation without warping the geometry scaling.
+                if (isVideo) {
+                    val vRot = videoPlayer?.videoRotation ?: 0
+                    if (vRot != 0) {
+                        android.opengl.Matrix.translateM(matrix, 0, 0.5f, 0.5f, 0f)
+                        android.opengl.Matrix.rotateM(matrix, 0, -vRot.toFloat(), 0f, 0f, 1f)
+                        android.opengl.Matrix.translateM(matrix, 0, -0.5f, -0.5f, 0f)
+                    }
+                }
 
                 textureRenderer?.draw(
                     matrix, contentW, contentH, vw, vh, ratio,
