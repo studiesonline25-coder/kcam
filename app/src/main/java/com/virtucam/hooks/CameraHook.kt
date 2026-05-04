@@ -2903,9 +2903,10 @@ class VirtualRenderThread(
                     vh = 720
                 }
 
-                // [ASPECT RATIO FIX] Real cameras ALWAYS output buffers at sensor orientation
-                // regardless of consumer type (TextureView or SurfaceView). Apps handle rotation themselves.
-                val parityOrientation = CameraHook.resolveSensorOrientationDeg()
+                // SurfaceView: Camera2 HAL delivers upright (0°) buffers — no rotation needed.
+                // TextureView: receives raw sensor-oriented buffers — must match sensor orientation.
+                val targetBufferRotation = if (isSurfaceView) 0 else CameraHook.resolveSensorOrientationDeg()
+                val parityOrientation = targetBufferRotation
                 val finalUserRotation = 0
                 // [ASPECT RATIO FIX] Removed videoCompensation=90. SurfaceTexture.getTransformMatrix()
                 // already handles codec rotation, and VideoPlayer already reports display dimensions.
