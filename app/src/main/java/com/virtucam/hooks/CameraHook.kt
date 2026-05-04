@@ -2903,13 +2903,14 @@ class VirtualRenderThread(
                     vh = 720
                 }
 
-                // Emulate HAL auto-rotation for SurfaceView (0 = Upright), otherwise hardware parity (Raw sensor orientation)
-                val targetBufferRotation = if (isSurfaceView) 0 else CameraHook.resolveSensorOrientationDeg()
-
-                val parityOrientation = targetBufferRotation
+                // [ASPECT RATIO FIX] Real cameras ALWAYS output buffers at sensor orientation
+                // regardless of consumer type (TextureView or SurfaceView). Apps handle rotation themselves.
+                val parityOrientation = CameraHook.resolveSensorOrientationDeg()
                 val finalUserRotation = 0
-                val videoCompensation = if (isVideo) 90 else 0
-                val finalRotationOffset = CameraHook.rotationOffset + videoCompensation
+                // [ASPECT RATIO FIX] Removed videoCompensation=90. SurfaceTexture.getTransformMatrix()
+                // already handles codec rotation, and VideoPlayer already reports display dimensions.
+                // Adding an extra 90° was causing double-rotation (180° total), compressing video vertically.
+                val finalRotationOffset = CameraHook.rotationOffset
 
                 // DYNAMIC MIRRORING LOGIC (Axis-Swapping handled in TextureRenderer)
                 val isActuallyFront = CameraHook.isActiveCameraFrontFacing()
