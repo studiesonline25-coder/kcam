@@ -2619,11 +2619,20 @@ class VirtualRenderThread(
 
     private fun getTargetRatio(vW: Int, vH: Int, isCapture: Boolean, mediaW: Int, mediaH: Int, mediaRotation: Int = 0): Float {
         return try {
-            // [Zero-Error Accuracy Fix] 
-            // We no longer "Guess" the target ratio (16:9). 
-            // We use the AUTHENTIC geometric ratio of the destination buffer.
-            // The Renderer will handle logic to swap these if the screen is rotated.
-            vW.toFloat() / vH.toFloat()
+            // [ASPECT RATIO FIX for SurfaceView]
+            // If this is a SurfaceView (!isCapture), the physical buffer is typically landscape (e.g. 1920x1080).
+            // However, the app displays it in a portrait View (1080x1920). SurfaceFlinger stretches the buffer to fit.
+            // If we use the physical landscape ratio, the image gets stretched vertically by SurfaceFlinger.
+            // To fix this, we must pass the LOGICAL (inverted) ratio so TextureRenderer pre-compensates for the stretch.
+            val isSurfaceView = !isCapture
+            val sensorOrientation = CameraHook.resolveSensorOrientationDeg()
+            
+            if (isSurfaceView && (sensorOrientation == 90 || sensorOrientation == 270)) {
+                // Return inverted logical ratio (e.g. 1080/1920 = 0.56) instead of physical (1920/1080 = 1.77)
+                vH.toFloat() / vW.toFloat()
+            } else {
+                vW.toFloat() / vH.toFloat()
+            }
         } catch (e: Exception) {
             vW.toFloat() / vH.toFloat()
         }
