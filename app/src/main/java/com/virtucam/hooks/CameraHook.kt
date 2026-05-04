@@ -2617,13 +2617,17 @@ class VirtualRenderThread(
     private var mediaSurface: Surface? = null
     private var frameCount = 0
 
-    private fun getTargetRatio(vW: Int, vH: Int, isCapture: Boolean, mediaW: Int, mediaH: Int, mediaRotation: Int = 0): Float {
+    private fun getTargetRatio(vW: Int, vH: Int, isSurfaceView: Boolean): Float {
         return try {
-            // [Zero-Error Accuracy Fix] 
-            // We no longer "Guess" the target ratio (16:9). 
-            // We use the AUTHENTIC geometric ratio of the destination buffer.
-            // The Renderer will handle logic to swap these if the screen is rotated.
-            vW.toFloat() / vH.toFloat()
+            val sensorOrientation = CameraHook.resolveSensorOrientationDeg()
+            
+            if (isSurfaceView && (sensorOrientation == 90 || sensorOrientation == 270) && vW > vH) {
+                // Return inverted logical ratio (e.g. 1080/1920 = 0.56) instead of physical (1920/1080 = 1.77)
+                // This pre-squishes the image so SurfaceFlinger's landscape-to-portrait stretch restores it.
+                vH.toFloat() / vW.toFloat()
+            } else {
+                vW.toFloat() / vH.toFloat()
+            }
         } catch (e: Exception) {
             vW.toFloat() / vH.toFloat()
         }
@@ -2923,7 +2927,7 @@ class VirtualRenderThread(
                 // Slight crop/zoom applied only to front camera to mimic lens variation
                 val finalZoom = if (isActuallyFront) CameraHook.zoomFactor * 1.05f else CameraHook.zoomFactor
 
-                val ratio = getTargetRatio(vw, vh, isCapture, contentW, contentH)
+                val ratio = getTargetRatio(vw, vh, isSurfaceView)
 
                 val timeValue = (System.currentTimeMillis() - renderStartTime) / 1000.0f
 

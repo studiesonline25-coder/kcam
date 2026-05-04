@@ -233,7 +233,7 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             fun drawQuad(isBackground: Boolean) {
                 // 1. Establish the Viewport Projection Matrix (Orthographic)
                 val projMatrix = FloatArray(16)
-                val viewRatio = viewWidth.toFloat() / viewHeight.toFloat()
+                val viewRatio = if (targetRatio > 0f) targetRatio else (viewWidth.toFloat() / viewHeight.toFloat())
                 Matrix.orthoM(projMatrix, 0, -viewRatio, viewRatio, -1f, 1f, -1f, 1f)
 
                 // 2. Establish Base Media Geometry
