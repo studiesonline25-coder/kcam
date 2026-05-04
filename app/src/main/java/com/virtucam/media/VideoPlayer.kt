@@ -100,15 +100,13 @@ class VideoPlayer(
             videoHeight = format.getInteger(MediaFormat.KEY_HEIGHT)
         }
         
-        // Correct dimensions if the video has an EXIF rotation metadata
+        // Read rotation metadata (used by render thread for orientation)
+        // Do NOT swap dimensions — MediaCodec outputs raw codec pixels regardless of rotation.
+        // The render thread's videoCompensation=90 handles the visual rotation via MVP matrix.
+        // Swapping here would mismatch videoRatio vs actual texture data, causing aspect distortion.
         if (format.containsKey(MediaFormat.KEY_ROTATION)) {
             videoRotation = format.getInteger(MediaFormat.KEY_ROTATION)
-            if (videoRotation == 90 || videoRotation == 270) {
-                val temp = videoWidth
-                videoWidth = videoHeight
-                videoHeight = temp
-                Log.d(TAG, "Swapped dimensions because EXIF rotation is $videoRotation. New size: ${videoWidth}x${videoHeight}")
-            }
+            Log.d(TAG, "Video EXIF rotation is $videoRotation (dimensions kept as raw codec: ${videoWidth}x${videoHeight})")
         }
 
         // Extract framerate for fallback pacing
