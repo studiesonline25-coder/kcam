@@ -103,9 +103,12 @@ class VideoPlayer(
         // Correct dimensions if the video has an EXIF rotation metadata
         if (format.containsKey(MediaFormat.KEY_ROTATION)) {
             videoRotation = format.getInteger(MediaFormat.KEY_ROTATION)
-            // Removed dimension swapping: we want to report the RAW codec dimensions to the renderer.
-            // The renderer's videoCompensation=90 will orient the frame visually, and the isotropic
-            // math requires the raw physical dimensions to calculate aspect-fit correctly.
+            if (videoRotation == 90 || videoRotation == 270) {
+                val temp = videoWidth
+                videoWidth = videoHeight
+                videoHeight = temp
+                Log.d(TAG, "Swapped dimensions because EXIF rotation is $videoRotation. New size: ${videoWidth}x${videoHeight}")
+            }
         }
 
         // Extract framerate for fallback pacing

@@ -2912,7 +2912,7 @@ class VirtualRenderThread(
 
                 val parityOrientation = targetBufferRotation
                 val finalUserRotation = 0
-                val videoCompensation = if (isVideo) (videoPlayer?.videoRotation ?: 0) else 0
+                val videoCompensation = if (isVideo) ((videoPlayer?.videoRotation ?: 0) + 90) else 0
                 val finalRotationOffset = CameraHook.rotationOffset + videoCompensation
 
                 // DYNAMIC MIRRORING LOGIC (Axis-Swapping handled in TextureRenderer)
