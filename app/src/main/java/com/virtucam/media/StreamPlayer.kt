@@ -183,8 +183,17 @@ class StreamPlayer(
             }
         })
 
-        exoPlayer?.playWhenReady = true
-        exoPlayer?.prepare()
+        val isLocalProxy = finalUri.toString().startsWith("http://127.0.0.1:9998")
+        if (isLocalProxy) {
+            // Give FFmpeg 500ms to boot up and bind the TCP listener socket before ExoPlayer tries to connect
+            handler?.postDelayed({
+                exoPlayer?.playWhenReady = true
+                exoPlayer?.prepare()
+            }, 500)
+        } else {
+            exoPlayer?.playWhenReady = true
+            exoPlayer?.prepare()
+        }
     }
 
     private fun captureFirstFrame(onBitmap: (Bitmap) -> Unit) {
