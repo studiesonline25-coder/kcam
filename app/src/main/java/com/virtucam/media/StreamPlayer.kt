@@ -25,6 +25,8 @@ import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 import com.arthenica.ffmpegkit.FFmpegKit
 import com.arthenica.ffmpegkit.FFmpegSession
+import com.arthenica.ffmpegkit.Config
+import com.arthenica.ffmpegkit.ReturnCode
 
 /**
  * ExoPlayer wrapper for broadcasting live RTSP/RTMP/SRT streams from OBS.
@@ -106,9 +108,23 @@ class StreamPlayer(
         if (trimmedUrl.startsWith("srt", ignoreCase = true) || trimmedUrl.startsWith("rtmp", ignoreCase = true)) {
             val udpUrl = "udp://127.0.0.1:9998?pkt_size=1316"
             Log.d(TAG, "Starting FFmpeg proxy for $trimmedUrl")
-            ffmpegSession = FFmpegKit.executeAsync("-i \"$trimmedUrl\" -c copy -f mpegts \"$udpUrl\"") { session ->
-                Log.d(TAG, "FFmpeg Proxy finished with state ${session.state} and return code ${session.returnCode}")
-            }
+            
+            // Use array-based execution to avoid shell/quote escaping issues
+            val cmd = arrayOf("-i", trimmedUrl, "-c", "copy", "-f", "mpegts", udpUrl)
+            
+            ffmpegSession = FFmpegKit.executeAsync(cmd, { session ->
+                val state = session.state
+                val returnCode = session.returnCode
+                Log.d(TAG, "FFmpeg Proxy finished. State: $state, ReturnCode: $returnCode")
+                if (ReturnCode.isError(returnCode)) {
+                    Log.e(TAG, "FFmpeg Proxy Error logs: ${session.allLogsAsString}")
+                }
+            }, { log ->
+                Log.v("FFmpegProxy", log.message)
+            }, { statistics ->
+                // Progress stats if needed
+            })
+            
             finalUri = Uri.parse(udpUrl)
         }
 
@@ -117,11 +133,15 @@ class StreamPlayer(
                 .setForceUseRtpTcp(useTcp)
                 .createMediaSource(MediaItem.fromUri(finalUri))
         } else {
-            MediaItem.Builder()
+            val builder = MediaItem.Builder()
                 .setUri(finalUri)
-                .setRequestMetadata(RequestMetadata.Builder().build())
-                .build()
-                .let { mediaSourceFactory.createMediaSource(it) }
+            
+            // For local UDP proxy, explicitly tell ExoPlayer to use MPEG-TS extractor
+            if (finalUri.toString().contains("127.0.0.1:9998")) {
+                builder.setMimeType(androidx.media3.common.MimeTypes.VIDEO_MP2T)
+            }
+            
+            builder.build().let { mediaSourceFactory.createMediaSource(it) }
         }
 
         exoPlayer?.setMediaSource(mediaSource)
