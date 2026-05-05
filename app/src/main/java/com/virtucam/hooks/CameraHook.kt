@@ -2224,29 +2224,12 @@ object CameraHook {
                 globalStreamPlayer?.start()
             }
         } else if (isVideo) {
-            if (globalVideoPlayer == null) {
-                Log.d(TAG, "Starting persistent global VideoPlayer for zero-latency reconnects")
-                globalStreamPlayer?.stop()
-                globalStreamPlayer = null
-                
-                try {
-                    val uri = Uri.parse("content://com.virtucam.provider/file")
-                    val fd = context.contentResolver.openFileDescriptor(uri, "r")?.fileDescriptor
-                    if (fd != null) {
-                        globalVideoPlayer = com.virtucam.media.VideoPlayer(
-                            fd = fd,
-                            outputSurface = null,
-                            onFrameAvailable = {
-                                hasNewFrame.set(true)
-                                synchronized(frameSync) { frameSync.notifyAll() }
-                            }
-                        )
-                        globalVideoPlayer?.start()
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Failed to start global VideoPlayer: ${e.message}")
-                }
-            }
+            // Revert to local instantiation for VideoPlayer because users can dynamically select new files,
+            // and the contentResolver FD must be read correctly from the Hook context when requested.
+            globalStreamPlayer?.stop()
+            globalStreamPlayer = null
+            globalVideoPlayer?.updateSurface(null)
+            globalVideoPlayer = null
         } else {
             globalStreamPlayer?.stop()
             globalStreamPlayer = null
@@ -2809,29 +2792,39 @@ class VirtualRenderThread(
                 CameraHook.globalStreamPlayer?.updateSurface(mediaSurface)
                 
                 renderLoop(CameraHook.hasNewFrame) { 
-                    Pair(CameraHook.globalStreamPlayer?.videoWidth ?: 1280, CameraHook.globalStreamPlayer?.videoHeight ?: 720) 
+                    val w = CameraHook.globalStreamPlayer?.videoWidth?.takeIf { it > 0 } ?: 720
+                    val h = CameraHook.globalStreamPlayer?.videoHeight?.takeIf { it > 0 } ?: 1280
+                    Pair(w, h)
                 }
                 
                 CameraHook.globalStreamPlayer?.updateSurface(null)
                 
             } else if (isVideo) {
-                // Local Video Pipeline (Persistent Background Player)
+                // Local Video Pipeline (MediaCodec) - Scoped locally to ensure fresh FileDescriptor
                 mediaSurfaceTexture = SurfaceTexture(textureRenderer!!.textureId)
                 mediaSurface = Surface(mediaSurfaceTexture)
                 
-                CameraHook.hasNewFrame.set(false)
-                mediaSurfaceTexture?.setOnFrameAvailableListener {
-                    CameraHook.hasNewFrame.set(true)
-                    synchronized(CameraHook.frameSync) { CameraHook.frameSync.notifyAll() }
+                val pfd = context.contentResolver.openFileDescriptor(uri, "r")
+                if (pfd != null) {
+                    val fd = pfd.fileDescriptor
+                    CameraHook.hasNewFrame.set(false)
+                    mediaSurfaceTexture?.setOnFrameAvailableListener {
+                        CameraHook.hasNewFrame.set(true)
+                        synchronized(CameraHook.frameSync) { CameraHook.frameSync.notifyAll() }
+                    }
+                    
+                    val localVideoPlayer = com.virtucam.media.VideoPlayer(fd, mediaSurface!!) {}
+                    localVideoPlayer.start()
+                    
+                    renderLoop(CameraHook.hasNewFrame) { 
+                        val w = localVideoPlayer.videoWidth.takeIf { it > 0 } ?: 720
+                        val h = localVideoPlayer.videoHeight.takeIf { it > 0 } ?: 1280
+                        Pair(w, h)
+                    }
+                    
+                    localVideoPlayer.stop()
+                    pfd.close()
                 }
-                
-                CameraHook.globalVideoPlayer?.updateSurface(mediaSurface)
-                
-                renderLoop(CameraHook.hasNewFrame) { 
-                    Pair(CameraHook.globalVideoPlayer?.videoWidth ?: 1280, CameraHook.globalVideoPlayer?.videoHeight ?: 720) 
-                }
-                
-                CameraHook.globalVideoPlayer?.updateSurface(null)
             } else {
                 // Static Image Mode Pipeline
                 // [INVESTIGATION] If test pattern mode is enabled, replace user media
