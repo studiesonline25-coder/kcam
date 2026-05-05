@@ -26,6 +26,8 @@ class VideoPlayer(
         private set
     var videoRotation: Int = 0
         private set
+    var rawRotation: Int = 0
+        private set
 
     companion object {
         private const val TAG = "VideoPlayer"
@@ -101,12 +103,22 @@ class VideoPlayer(
         }
         
         if (format.containsKey(MediaFormat.KEY_ROTATION)) {
-            videoRotation = format.getInteger(MediaFormat.KEY_ROTATION)
-            if (videoRotation == 90 || videoRotation == 270) {
-                val temp = videoWidth
-                videoWidth = videoHeight
-                videoHeight = temp
-            }
+            rawRotation = format.getInteger(MediaFormat.KEY_ROTATION)
+        } else {
+            rawRotation = 0
+        }
+        
+        videoRotation = rawRotation
+        
+        // Trick the pipeline: Make 0 EXIF videos behave exactly like perfectly working 90 EXIF videos
+        if (rawRotation == 0) {
+            videoRotation = 90
+        }
+
+        if (videoRotation == 90 || videoRotation == 270) {
+            val temp = videoWidth
+            videoWidth = videoHeight
+            videoHeight = temp
         }
 
         // Extract framerate for fallback pacing
