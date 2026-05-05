@@ -108,15 +108,24 @@ class StreamPlayer(
 
         // Feature: SRT and RTMP Proxy via FFmpeg (higher reliability than platform/ExoPlayer native)
         if (trimmedUrl.startsWith("srt", ignoreCase = true) || trimmedUrl.startsWith("rtmp", ignoreCase = true)) {
-            // Use HTTP (TCP) instead of UDP for the localhost loopback. 
-            // TCP guarantees lossless delivery between FFmpeg and ExoPlayer, eliminating macroblocking/smearing caused by UDP buffer overflows.
-            val httpUrl = "http://127.0.0.1:9998"
-            Log.d(TAG, "Starting FFmpeg proxy for $trimmedUrl")
-            // -fflags +genpts and -flags low_delay stabilize the stream, while HTTP ensures reliable transport
-            ffmpegSession = FFmpegKit.executeAsync("-flags low_delay -i \"$trimmedUrl\" -c copy -f mpegts -listen 1 \"$httpUrl\"") { session ->
+            // SRT drops packets over the internet (causing macroblocking) if the latency buffer is too low.
+            // FFmpeg defaults to 120ms. We inject 1000ms (1000000 microseconds) if not specified by the user.
+            var optimizedUrl = trimmedUrl
+            if (trimmedUrl.startsWith("srt", ignoreCase = true) && !trimmedUrl.contains("latency=")) {
+                val separator = if (trimmedUrl.contains("?")) "&" else "?"
+                optimizedUrl = "$trimmedUrl${separator}latency=1000000"
+            }
+
+            // Revert to UDP loopback: HTTP requires strict headers causing black screens. 
+            // UDP connects instantly. We use a massive buffer to prevent local packet drops.
+            val udpUrl = "udp://127.0.0.1:9998?pkt_size=1316&buffer_size=10485760&fifo_size=500000&overrun_nonfatal=1"
+            Log.d(TAG, "Starting FFmpeg proxy for $optimizedUrl")
+            
+            // -probesize 32000 -analyzeduration 0 forces FFmpeg to start proxying instantly
+            ffmpegSession = FFmpegKit.executeAsync("-probesize 32000 -analyzeduration 0 -flags low_delay -i \"$optimizedUrl\" -c copy -f mpegts \"$udpUrl\"") { session ->
                 Log.d(TAG, "FFmpeg Proxy finished with state ${session.state} and return code ${session.returnCode}")
             }
-            finalUri = Uri.parse(httpUrl)
+            finalUri = Uri.parse(udpUrl)
         }
 
         val mediaSource = if (finalUri.scheme?.startsWith("rtsp", ignoreCase = true) == true) {
@@ -183,17 +192,8 @@ class StreamPlayer(
             }
         })
 
-        val isLocalProxy = finalUri.toString().startsWith("http://127.0.0.1:9998")
-        if (isLocalProxy) {
-            // Give FFmpeg 500ms to boot up and bind the TCP listener socket before ExoPlayer tries to connect
-            handler?.postDelayed({
-                exoPlayer?.playWhenReady = true
-                exoPlayer?.prepare()
-            }, 500)
-        } else {
-            exoPlayer?.playWhenReady = true
-            exoPlayer?.prepare()
-        }
+        exoPlayer?.playWhenReady = true
+        exoPlayer?.prepare()
     }
 
     private fun captureFirstFrame(onBitmap: (Bitmap) -> Unit) {
