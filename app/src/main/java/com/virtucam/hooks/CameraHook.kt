@@ -2744,7 +2744,7 @@ class VirtualRenderThread(
                 )
                 streamPlayer!!.start()
                 
-                renderLoop(hasNewFrame) { streamPlayer!!.videoHeight to streamPlayer!!.videoWidth }
+                renderLoop(hasNewFrame) { streamPlayer!!.videoWidth to streamPlayer!!.videoHeight }
                 streamPlayer!!.stop()
                 
             } else if (isVideo) {
