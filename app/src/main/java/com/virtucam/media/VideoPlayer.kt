@@ -24,6 +24,10 @@ class VideoPlayer(
         private set
     var videoHeight: Int = 0
         private set
+    var rawWidth: Int = 0
+        private set
+    var rawHeight: Int = 0
+        private set
     var videoRotation: Int = 0
         private set
 
