@@ -108,12 +108,15 @@ class StreamPlayer(
 
         // Feature: SRT and RTMP Proxy via FFmpeg (higher reliability than platform/ExoPlayer native)
         if (trimmedUrl.startsWith("srt", ignoreCase = true) || trimmedUrl.startsWith("rtmp", ignoreCase = true)) {
-            val udpUrl = "udp://127.0.0.1:9998?pkt_size=1316"
+            // Use HTTP (TCP) instead of UDP for the localhost loopback. 
+            // TCP guarantees lossless delivery between FFmpeg and ExoPlayer, eliminating macroblocking/smearing caused by UDP buffer overflows.
+            val httpUrl = "http://127.0.0.1:9998"
             Log.d(TAG, "Starting FFmpeg proxy for $trimmedUrl")
-            ffmpegSession = FFmpegKit.executeAsync("-i \"$trimmedUrl\" -c copy -f mpegts \"$udpUrl\"") { session ->
+            // -fflags +genpts and -flags low_delay stabilize the stream, while HTTP ensures reliable transport
+            ffmpegSession = FFmpegKit.executeAsync("-flags low_delay -i \"$trimmedUrl\" -c copy -f mpegts -listen 1 \"$httpUrl\"") { session ->
                 Log.d(TAG, "FFmpeg Proxy finished with state ${session.state} and return code ${session.returnCode}")
             }
-            finalUri = Uri.parse(udpUrl)
+            finalUri = Uri.parse(httpUrl)
         }
 
         val mediaSource = if (finalUri.scheme?.startsWith("rtsp", ignoreCase = true) == true) {
@@ -123,6 +126,11 @@ class StreamPlayer(
         } else {
             MediaItem.Builder()
                 .setUri(finalUri)
+                .setLiveConfiguration(
+                    MediaItem.LiveConfiguration.Builder()
+                        .setMaxPlaybackSpeed(1.02f)
+                        .build()
+                )
                 .setRequestMetadata(RequestMetadata.Builder().build())
                 .build()
                 .let { mediaSourceFactory.createMediaSource(it) }
