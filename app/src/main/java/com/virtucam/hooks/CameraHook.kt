@@ -2193,7 +2193,7 @@ object CameraHook {
     @Synchronized
     private fun updateGlobalPlayers(context: android.content.Context) {
         if (!isEnabled) {
-            globalStreamPlayer?.isPlaying = false
+            globalStreamPlayer?.stop()
             globalStreamPlayer = null
             globalVideoPlayer?.updateSurface(null)
             globalVideoPlayer = null
@@ -2226,7 +2226,7 @@ object CameraHook {
         } else if (isVideo) {
             if (globalVideoPlayer == null) {
                 Log.d(TAG, "Starting persistent global VideoPlayer for zero-latency reconnects")
-                globalStreamPlayer?.isPlaying = false
+                globalStreamPlayer?.stop()
                 globalStreamPlayer = null
                 
                 try {
@@ -2248,7 +2248,7 @@ object CameraHook {
                 }
             }
         } else {
-            globalStreamPlayer?.isPlaying = false
+            globalStreamPlayer?.stop()
             globalStreamPlayer = null
             globalVideoPlayer?.updateSurface(null)
             globalVideoPlayer = null
@@ -2808,7 +2808,9 @@ class VirtualRenderThread(
                 
                 CameraHook.globalStreamPlayer?.updateSurface(mediaSurface)
                 
-                renderLoop(CameraHook.hasNewFrame) { CameraHook.globalStreamPlayer?.videoWidth ?: 1280 to (CameraHook.globalStreamPlayer?.videoHeight ?: 720) }
+                renderLoop(CameraHook.hasNewFrame) { 
+                    Pair(CameraHook.globalStreamPlayer?.videoWidth ?: 1280, CameraHook.globalStreamPlayer?.videoHeight ?: 720) 
+                }
                 
                 CameraHook.globalStreamPlayer?.updateSurface(null)
                 
@@ -2825,7 +2827,9 @@ class VirtualRenderThread(
                 
                 CameraHook.globalVideoPlayer?.updateSurface(mediaSurface)
                 
-                renderLoop(CameraHook.hasNewFrame) { CameraHook.globalVideoPlayer?.videoWidth ?: 1280 to (CameraHook.globalVideoPlayer?.videoHeight ?: 720) }
+                renderLoop(CameraHook.hasNewFrame) { 
+                    Pair(CameraHook.globalVideoPlayer?.videoWidth ?: 1280, CameraHook.globalVideoPlayer?.videoHeight ?: 720) 
+                }
                 
                 CameraHook.globalVideoPlayer?.updateSurface(null)
             } else {
