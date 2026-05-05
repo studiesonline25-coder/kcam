@@ -115,7 +115,9 @@ class VideoPlayer(
             videoRotation = 90
         }
 
-        if (videoRotation == 90 || videoRotation == 270) {
+        // Only swap dimensions if the hardware actually encoded them sideways (true EXIF 90/270)
+        // Downloaded videos (0 EXIF) are already physically encoded in their correct dimensions!
+        if ((videoRotation == 90 || videoRotation == 270) && rawRotation != 0) {
             val temp = videoWidth
             videoWidth = videoHeight
             videoHeight = temp
