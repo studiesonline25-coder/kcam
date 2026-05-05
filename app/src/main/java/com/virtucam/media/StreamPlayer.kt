@@ -106,7 +106,7 @@ class StreamPlayer(
         if (trimmedUrl.startsWith("srt", ignoreCase = true) || trimmedUrl.startsWith("rtmp", ignoreCase = true)) {
             val udpUrl = "udp://127.0.0.1:9998?pkt_size=1316"
             Log.d(TAG, "Starting FFmpeg proxy for $trimmedUrl")
-            ffmpegSession = FFmpegKit.executeAsync("-fflags nobuffer -i \"$trimmedUrl\" -c copy -f mpegts \"$udpUrl\"") { session ->
+            ffmpegSession = FFmpegKit.executeAsync("-i \"$trimmedUrl\" -c copy -f mpegts \"$udpUrl\"") { session ->
                 Log.d(TAG, "FFmpeg Proxy finished with state ${session.state} and return code ${session.returnCode}")
             }
             finalUri = Uri.parse(udpUrl)
