@@ -2744,7 +2744,10 @@ class VirtualRenderThread(
                 )
                 streamPlayer!!.start()
                 
-                renderLoop(hasNewFrame) { streamPlayer!!.videoWidth to streamPlayer!!.videoHeight }
+                // Swap dimensions: renderer applies 90° sensor rotation in its scaling math,
+                // so we feed landscape dims (H×W) so the rotation math produces correct portrait scaling.
+                // This does NOT change visual orientation — only fixes the aspect ratio calculation.
+                renderLoop(hasNewFrame) { streamPlayer!!.videoHeight to streamPlayer!!.videoWidth }
                 streamPlayer!!.stop()
                 
             } else if (isVideo) {
