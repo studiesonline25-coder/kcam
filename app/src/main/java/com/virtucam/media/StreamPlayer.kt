@@ -108,17 +108,16 @@ class StreamPlayer(
 
         // Feature: SRT and RTMP Proxy via FFmpeg (higher reliability than platform/ExoPlayer native)
         if (trimmedUrl.startsWith("srt", ignoreCase = true) || trimmedUrl.startsWith("rtmp", ignoreCase = true)) {
-            // SRT drops packets over the internet (causing macroblocking) if the latency buffer is too low.
-            // FFmpeg defaults to 120ms. We inject 1000ms (1000000 microseconds) if not specified by the user.
+            // Match the other app's 300ms SRT latency buffer (300000 microseconds)
             var optimizedUrl = trimmedUrl
             if (trimmedUrl.startsWith("srt", ignoreCase = true) && !trimmedUrl.contains("latency=")) {
                 val separator = if (trimmedUrl.contains("?")) "&" else "?"
-                optimizedUrl = "$trimmedUrl${separator}latency=1000000"
+                optimizedUrl = "$trimmedUrl${separator}latency=300000"
             }
 
-            // Revert to UDP loopback: HTTP requires strict headers causing black screens. 
-            // UDP connects instantly. We use a massive buffer to prevent local packet drops.
-            val udpUrl = "udp://127.0.0.1:9998?pkt_size=1316&buffer_size=10485760&fifo_size=500000&overrun_nonfatal=1"
+            // To prevent local macroblocking (ExoPlayer's UDP receive buffer overflowing during SRT network bursts),
+            // we use the UDP 'bitrate' parameter to pace FFmpeg's output to a smooth 10 Mbps.
+            val udpUrl = "udp://127.0.0.1:9998?pkt_size=1316&buffer_size=10485760&fifo_size=500000&overrun_nonfatal=1&bitrate=10000000"
             Log.d(TAG, "Starting FFmpeg proxy for $optimizedUrl")
             
             // -probesize 32000 -analyzeduration 0 forces FFmpeg to start proxying instantly
