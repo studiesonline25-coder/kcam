@@ -2716,7 +2716,7 @@ class VirtualRenderThread(
             // Make the first one current for init
             eglCore!!.makeCurrent(eglSurfaceTargets[0].first)
             
-            textureRenderer = TextureRenderer(isVideo)
+            textureRenderer = TextureRenderer(isVideo || isStream)
             textureRenderer!!.init()
             
             val uri = Uri.parse("content://com.virtucam.provider/file")
