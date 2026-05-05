@@ -109,7 +109,7 @@ class StreamPlayer(
 
         // Feature: SRT and RTMP Proxy via FFmpeg (higher reliability than platform/ExoPlayer native)
         if (trimmedUrl.startsWith("srt", ignoreCase = true) || trimmedUrl.startsWith("rtmp", ignoreCase = true)) {
-            val udpUrl = "udp://127.0.0.1:9998?pkt_size=1316&buffer_size=1048576"
+            val udpUrl = "udp://127.0.0.1:9998?pkt_size=1316"
             Log.d(TAG, "Starting FFmpeg proxy for $trimmedUrl")
             
             val cmd = "-i \"$trimmedUrl\" -c copy -f mpegts \"$udpUrl\""
@@ -137,11 +137,6 @@ class StreamPlayer(
         } else {
             val builder = MediaItem.Builder()
                 .setUri(finalUri)
-            
-            // For local UDP proxy, explicitly tell ExoPlayer to use MPEG-TS extractor
-            if (finalUri.toString().contains("127.0.0.1:9998")) {
-                builder.setMimeType(androidx.media3.common.MimeTypes.VIDEO_MP2T)
-            }
             
             builder.build().let { mediaSourceFactory.createMediaSource(it) }
         }
