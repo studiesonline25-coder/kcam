@@ -138,6 +138,12 @@ object CameraHook {
         return metadataCourierMap.values.firstOrNull() // Fallback
     }
 
+    // [Persistent Media Architecture]
+    var globalStreamPlayer: com.virtucam.media.StreamPlayer? = null
+    var globalVideoPlayer: com.virtucam.media.VideoPlayer? = null
+    val frameSync = Object()
+    val hasNewFrame = java.util.concurrent.atomic.AtomicBoolean(false)
+
     /**
      * Fresh [CameraCharacteristics.SENSOR_ORIENTATION] for [activeCameraId].
      * Cached map can be stale or missing (e.g. Camera1); never rely on the render-thread snapshot alone.
@@ -2171,6 +2177,9 @@ object CameraHook {
                         isBufferCaptureEnabled = if (it.columnCount > 16) it.getInt(16) == 1 else true
                         
                         Log.d(TAG, "VirtuCam_Hook: Config loaded. Enabled: $isEnabled, Zoom: $zoomFactor, Stretch: $compensationFactor, liveness: $isLivenessEnabled, passthrough: $isPassthroughMode, offset: $rotationOffset")
+                        
+                        // Dynamically manage persistent players
+                        updateGlobalPlayers(context)
                     } catch (innerE: Exception) {
                         Log.e(TAG, "VirtuCam_Hook: Error parsing cursor columns", innerE)
                     }
@@ -2178,6 +2187,71 @@ object CameraHook {
             }
         } catch (e: Exception) {
             Log.e(TAG, "VirtuCam_Hook: Failed to load configuration (Provider possibly blocked)", e)
+        }
+    }
+
+    @Synchronized
+    private fun updateGlobalPlayers(context: android.content.Context) {
+        if (!isEnabled) {
+            globalStreamPlayer?.isPlaying = false
+            globalStreamPlayer = null
+            globalVideoPlayer?.updateSurface(null)
+            globalVideoPlayer = null
+            return
+        }
+        
+        if (isStream && streamUrl.isNotEmpty()) {
+            if (globalStreamPlayer == null) {
+                Log.d(TAG, "Starting persistent global StreamPlayer for zero-latency reconnects")
+                globalVideoPlayer?.updateSurface(null)
+                globalVideoPlayer = null
+                
+                globalStreamPlayer = com.virtucam.media.StreamPlayer(
+                    context = context,
+                    streamUrl = streamUrl,
+                    outputSurface = null,
+                    useTcp = rtspUseTcp,
+                    onFrameAvailable = {
+                        hasNewFrame.set(true)
+                        synchronized(frameSync) { frameSync.notifyAll() }
+                    },
+                    onFirstFrame = { bitmap ->
+                        android.os.Handler(android.os.Looper.getMainLooper()).post {
+                            saveStreamPreviewToProvider(bitmap)
+                        }
+                    }
+                )
+                globalStreamPlayer?.start()
+            }
+        } else if (isVideo) {
+            if (globalVideoPlayer == null) {
+                Log.d(TAG, "Starting persistent global VideoPlayer for zero-latency reconnects")
+                globalStreamPlayer?.isPlaying = false
+                globalStreamPlayer = null
+                
+                try {
+                    val uri = Uri.parse("content://com.virtucam.provider/file")
+                    val fd = context.contentResolver.openFileDescriptor(uri, "r")?.fileDescriptor
+                    if (fd != null) {
+                        globalVideoPlayer = com.virtucam.media.VideoPlayer(
+                            fd = fd,
+                            outputSurface = null,
+                            onFrameAvailable = {
+                                hasNewFrame.set(true)
+                                synchronized(frameSync) { frameSync.notifyAll() }
+                            }
+                        )
+                        globalVideoPlayer?.start()
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to start global VideoPlayer: ${e.message}")
+                }
+            }
+        } else {
+            globalStreamPlayer?.isPlaying = false
+            globalStreamPlayer = null
+            globalVideoPlayer?.updateSurface(null)
+            globalVideoPlayer = null
         }
     }
 
@@ -2722,50 +2796,38 @@ class VirtualRenderThread(
             val uri = Uri.parse("content://com.virtucam.provider/file")
             
             if (isStream) {
-                // Live Stream Pipeline (ExoPlayer)
+                // Live Stream Pipeline (Persistent Background Player)
                 mediaSurfaceTexture = SurfaceTexture(textureRenderer!!.textureId)
                 mediaSurface = Surface(mediaSurfaceTexture)
-                val hasNewFrame = java.util.concurrent.atomic.AtomicBoolean(false)
-                mediaSurfaceTexture?.setOnFrameAvailableListener { hasNewFrame.set(true) }
                 
-                streamPlayer = StreamPlayer(
-                    context = context,
-                    streamUrl = streamUrl,
-                    outputSurface = mediaSurface!!,
-                    useTcp = CameraHook.rtspUseTcp,
-                    onFrameAvailable = {
-                        hasNewFrame.set(true)
-                    },
-                    onFirstFrame = { bitmap: android.graphics.Bitmap ->
-                        android.os.Handler(android.os.Looper.getMainLooper()).post {
-                            saveStreamPreviewToProvider(bitmap)
-                        }
-                    }
-                )
-                streamPlayer!!.start()
+                CameraHook.hasNewFrame.set(false)
+                mediaSurfaceTexture?.setOnFrameAvailableListener {
+                    CameraHook.hasNewFrame.set(true)
+                    synchronized(CameraHook.frameSync) { CameraHook.frameSync.notifyAll() }
+                }
                 
-                renderLoop(hasNewFrame) { streamPlayer!!.videoWidth to streamPlayer!!.videoHeight }
-                streamPlayer!!.stop()
+                CameraHook.globalStreamPlayer?.updateSurface(mediaSurface)
+                
+                renderLoop(CameraHook.hasNewFrame) { CameraHook.globalStreamPlayer?.videoWidth ?: 1280 to (CameraHook.globalStreamPlayer?.videoHeight ?: 720) }
+                
+                CameraHook.globalStreamPlayer?.updateSurface(null)
                 
             } else if (isVideo) {
-                // Local Video Pipeline (MediaCodec)
+                // Local Video Pipeline (Persistent Background Player)
                 mediaSurfaceTexture = SurfaceTexture(textureRenderer!!.textureId)
                 mediaSurface = Surface(mediaSurfaceTexture)
                 
-                val pfd = context.contentResolver.openFileDescriptor(uri, "r")
-                if (pfd != null) {
-                    val fd = pfd.fileDescriptor
-                    val hasNewFrame = java.util.concurrent.atomic.AtomicBoolean(false)
-                    mediaSurfaceTexture?.setOnFrameAvailableListener { hasNewFrame.set(true) }
-                    
-                    videoPlayer = VideoPlayer(fd, mediaSurface!!) {}
-                    videoPlayer!!.start()
-                    
-                    renderLoop(hasNewFrame) { videoPlayer!!.videoWidth to videoPlayer!!.videoHeight }
-                    
-                    videoPlayer!!.stop()
-                    pfd.close()
+                CameraHook.hasNewFrame.set(false)
+                mediaSurfaceTexture?.setOnFrameAvailableListener {
+                    CameraHook.hasNewFrame.set(true)
+                    synchronized(CameraHook.frameSync) { CameraHook.frameSync.notifyAll() }
                 }
+                
+                CameraHook.globalVideoPlayer?.updateSurface(mediaSurface)
+                
+                renderLoop(CameraHook.hasNewFrame) { CameraHook.globalVideoPlayer?.videoWidth ?: 1280 to (CameraHook.globalVideoPlayer?.videoHeight ?: 720) }
+                
+                CameraHook.globalVideoPlayer?.updateSurface(null)
             } else {
                 // Static Image Mode Pipeline
                 // [INVESTIGATION] If test pattern mode is enabled, replace user media
@@ -2860,8 +2922,12 @@ class VirtualRenderThread(
                     CameraHook.captureCount--
                 }
             }
-            
-            sleep(30)
+            // Precise Frame Pacing: Wait for the exact microsecond the decoder provides a frame
+            synchronized(CameraHook.frameSync) {
+                if (!hasNewFrame.get()) {
+                    try { CameraHook.frameSync.wait(30) } catch (_: Exception) {}
+                }
+            }
         }
     }
 
