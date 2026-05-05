@@ -2912,7 +2912,9 @@ class VirtualRenderThread(
 
                 val parityOrientation = targetBufferRotation
                 val finalUserRotation = 0
-                val videoCompensation = if (isVideo) (90 - (videoPlayer?.videoRotation ?: 0)) else 0
+                val videoCompensation = if (isVideo) (90 - (videoPlayer?.videoRotation ?: 0)) 
+                                        else if (isStream) (90 - (streamPlayer?.videoRotation ?: 0))
+                                        else 0
                 val finalRotationOffset = CameraHook.rotationOffset + videoCompensation
 
                 // DYNAMIC MIRRORING LOGIC (Axis-Swapping handled in TextureRenderer)
@@ -2931,8 +2933,8 @@ class VirtualRenderThread(
 
                 val timeValue = (System.currentTimeMillis() - renderStartTime) / 1000.0f
 
-                // Emulate missing hardware EXIF rotation (-90 deg CW) for downloaded videos
-                val renderMatrix = if (isVideo && (videoPlayer?.rawRotation == 0)) {
+                // Emulate missing hardware EXIF rotation (-90 deg CW) for downloaded videos AND streams
+                val renderMatrix = if ((isVideo && videoPlayer?.rawRotation == 0) || (isStream && streamPlayer?.rawRotation == 0)) {
                     val rotatedMatrix = FloatArray(16)
                     System.arraycopy(matrix, 0, rotatedMatrix, 0, 16)
                     android.opengl.Matrix.translateM(rotatedMatrix, 0, 0.5f, 0.5f, 0f)

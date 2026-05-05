@@ -52,6 +52,10 @@ class StreamPlayer(
         private set
     var videoHeight: Int = 0
         private set
+    var videoRotation: Int = 0
+        private set
+    var rawRotation: Int = 0
+        private set
 
     var isPlaying: Boolean = false
         private set
@@ -129,10 +133,26 @@ class StreamPlayer(
         exoPlayer?.addListener(object : Player.Listener {
             override fun onVideoSizeChanged(videoSize: VideoSize) {
                 if (videoSize.width == 0 || videoSize.height == 0) return
-                val rotated = videoSize.unappliedRotationDegrees == 90 ||
-                              videoSize.unappliedRotationDegrees == 270
-                videoWidth  = if (rotated) videoSize.height else videoSize.width
-                videoHeight = if (rotated) videoSize.width  else videoSize.height
+                
+                rawRotation = videoSize.unappliedRotationDegrees
+                videoRotation = rawRotation
+                
+                // Spoof 0 rotation to 90 for upright streams so CameraHook treats them like recorded videos.
+                if (videoRotation == 0) {
+                    videoRotation = 90
+                }
+
+                val rotated = videoRotation == 90 || videoRotation == 270
+                
+                // IMPORTANT: Only swap dimensions if it's a physically-sideways video (rawRotation 90/270).
+                // If it's physically portrait (rawRotation 0), keep dimensions as-is.
+                if (rotated && rawRotation != 0) {
+                    videoWidth  = videoSize.height
+                    videoHeight = videoSize.width
+                } else {
+                    videoWidth  = videoSize.width
+                    videoHeight = videoSize.height
+                }
             }
 
             override fun onRenderedFirstFrame() {
