@@ -2931,20 +2931,8 @@ class VirtualRenderThread(
 
                 val timeValue = (System.currentTimeMillis() - renderStartTime) / 1000.0f
 
-                // Apply texture matrix rotation for 0 EXIF videos to align with the swapped bounds
-                val renderMatrix = if (isVideo && (videoPlayer?.videoRotation == 0)) {
-                    val rotatedMatrix = FloatArray(16)
-                    System.arraycopy(matrix, 0, rotatedMatrix, 0, 16)
-                    android.opengl.Matrix.translateM(rotatedMatrix, 0, 0.5f, 0.5f, 0f)
-                    android.opengl.Matrix.rotateM(rotatedMatrix, 0, 90f, 0f, 0f, 1f)
-                    android.opengl.Matrix.translateM(rotatedMatrix, 0, -0.5f, -0.5f, 0f)
-                    rotatedMatrix
-                } else {
-                    matrix
-                }
-
                 textureRenderer?.draw(
-                    renderMatrix, contentW, contentH, vw, vh, ratio,
+                    matrix, contentW, contentH, vw, vh, ratio,
                     parityOrientation, finalUserRotation, shouldMirror,
                     finalZoom, isCapture, CameraHook.compensationFactor,
                     finalRotationOffset, ambientLightMultiplier, timeValue,
