@@ -54,6 +54,10 @@ class StreamPlayer(
         private set
     var videoHeight: Int = 0
         private set
+    var videoRotation: Int = 0
+        private set
+    var rawRotation: Int = 0
+        private set
 
     var isPlaying: Boolean = false
         private set
@@ -106,11 +110,19 @@ class StreamPlayer(
 
         // Feature: SRT and RTMP Proxy via FFmpeg (higher reliability than platform/ExoPlayer native)
         if (trimmedUrl.startsWith("srt", ignoreCase = true) || trimmedUrl.startsWith("rtmp", ignoreCase = true)) {
-            val udpUrl = "udp://127.0.0.1:9998?pkt_size=1316"
+            val udpUrl = "udp://127.0.0.1:9998?pkt_size=1316&buffer_size=10000000"
             Log.d(TAG, "Starting FFmpeg proxy for $trimmedUrl")
             
             // Use array-based execution to avoid shell/quote escaping issues
-            val cmd = arrayOf("-i", trimmedUrl, "-c", "copy", "-f", "mpegts", udpUrl)
+            // Added low_delay flags and increased thread_queue_size to prevent glitching
+            val cmd = arrayOf(
+                "-fflags", "nobuffer+low_delay",
+                "-thread_queue_size", "1024",
+                "-i", trimmedUrl, 
+                "-c", "copy", 
+                "-f", "mpegts", 
+                udpUrl
+            )
             
             ffmpegSession = FFmpegKit.executeAsync(cmd, { session ->
                 val state = session.state
@@ -149,10 +161,27 @@ class StreamPlayer(
         exoPlayer?.addListener(object : Player.Listener {
             override fun onVideoSizeChanged(videoSize: VideoSize) {
                 if (videoSize.width == 0 || videoSize.height == 0) return
-                val rotated = videoSize.unappliedRotationDegrees == 90 ||
-                              videoSize.unappliedRotationDegrees == 270
-                videoWidth  = if (rotated) videoSize.height else videoSize.width
-                videoHeight = if (rotated) videoSize.width  else videoSize.height
+                
+                rawRotation = videoSize.unappliedRotationDegrees
+                videoRotation = rawRotation
+                
+                // Flawless Aspect Ratio Fix: 
+                // Spoof 0 rotation to 90 for upright streams so CameraHook treats them like recorded videos.
+                if (videoRotation == 0) {
+                    videoRotation = 90
+                }
+
+                val rotated = videoRotation == 90 || videoRotation == 270
+                
+                // IMPORTANT: Only swap dimensions if it's a physically-sideways video (rawRotation 90/270).
+                // If it's physically portrait (rawRotation 0), keep dimensions as-is.
+                if (rotated && rawRotation != 0) {
+                    videoWidth  = videoSize.height
+                    videoHeight = videoSize.width
+                } else {
+                    videoWidth  = videoSize.width
+                    videoHeight = videoSize.height
+                }
             }
 
             override fun onRenderedFirstFrame() {
