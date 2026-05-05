@@ -25,7 +25,6 @@ import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 import com.arthenica.ffmpegkit.FFmpegKit
 import com.arthenica.ffmpegkit.FFmpegSession
-import com.arthenica.ffmpegkit.Config
 import com.arthenica.ffmpegkit.ReturnCode
 
 /**
@@ -124,11 +123,11 @@ class StreamPlayer(
                 udpUrl
             )
             
-            ffmpegSession = FFmpegKit.executeAsync(cmd, { session ->
+            ffmpegSession = FFmpegKit.executeAsync(cmd.joinToString(" "), { session ->
                 val state = session.state
                 val returnCode = session.returnCode
                 Log.d(TAG, "FFmpeg Proxy finished. State: $state, ReturnCode: $returnCode")
-                if (ReturnCode.isError(returnCode)) {
+                if (returnCode == null || !returnCode.isSuccess) {
                     Log.e(TAG, "FFmpeg Proxy Error logs: ${session.allLogsAsString}")
                 }
             }, { log ->
