@@ -94,15 +94,19 @@ class VideoPlayer(
         }
 
         if (format.containsKey(MediaFormat.KEY_WIDTH)) {
-            videoWidth = format.getInteger(MediaFormat.KEY_WIDTH)
+            rawWidth = format.getInteger(MediaFormat.KEY_WIDTH)
+            videoWidth = rawWidth
         }
         if (format.containsKey(MediaFormat.KEY_HEIGHT)) {
-            videoHeight = format.getInteger(MediaFormat.KEY_HEIGHT)
+            rawHeight = format.getInteger(MediaFormat.KEY_HEIGHT)
+            videoHeight = rawHeight
         }
         
         if (format.containsKey(MediaFormat.KEY_ROTATION)) {
             videoRotation = format.getInteger(MediaFormat.KEY_ROTATION)
-            if (videoRotation == 90 || videoRotation == 270) {
+            // Swap dimensions for recorded videos (90/270) AND downloaded videos (0)
+            // This forces the geometry bounds to correctly align with the target buffer
+            if (videoRotation == 90 || videoRotation == 270 || videoRotation == 0) {
                 val temp = videoWidth
                 videoWidth = videoHeight
                 videoHeight = temp
