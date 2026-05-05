@@ -127,7 +127,7 @@ class StreamPlayer(
                 val state = session.state
                 val returnCode = session.returnCode
                 Log.d(TAG, "FFmpeg Proxy finished. State: $state, ReturnCode: $returnCode")
-                if (returnCode == null || !returnCode.isSuccess) {
+                if (returnCode == null || returnCode.value != 0) {
                     Log.e(TAG, "FFmpeg Proxy Error logs: ${session.allLogsAsString}")
                 }
             }, { log ->
