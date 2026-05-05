@@ -109,21 +109,12 @@ class StreamPlayer(
 
         // Feature: SRT and RTMP Proxy via FFmpeg (higher reliability than platform/ExoPlayer native)
         if (trimmedUrl.startsWith("srt", ignoreCase = true) || trimmedUrl.startsWith("rtmp", ignoreCase = true)) {
-            val udpUrl = "udp://127.0.0.1:9998?pkt_size=1316&buffer_size=10000000"
+            val udpUrl = "udp://127.0.0.1:9998?pkt_size=1316&buffer_size=1048576"
             Log.d(TAG, "Starting FFmpeg proxy for $trimmedUrl")
             
-            // Use array-based execution to avoid shell/quote escaping issues
-            // Added low_delay flags and increased thread_queue_size to prevent glitching
-            val cmd = arrayOf(
-                "-fflags", "nobuffer+low_delay",
-                "-thread_queue_size", "1024",
-                "-i", trimmedUrl, 
-                "-c", "copy", 
-                "-f", "mpegts", 
-                udpUrl
-            )
+            val cmd = "-i \"$trimmedUrl\" -c copy -f mpegts \"$udpUrl\""
             
-            ffmpegSession = FFmpegKit.executeAsync(cmd.joinToString(" "), { session ->
+            ffmpegSession = FFmpegKit.executeAsync(cmd, { session ->
                 val state = session.state
                 val returnCode = session.returnCode
                 Log.d(TAG, "FFmpeg Proxy finished. State: $state, ReturnCode: $returnCode")
