@@ -42,10 +42,20 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             uniform float uBrightness;
             uniform float uTime;
             const float blurSize = 0.02;
-            // Pseudo-random hash for temporal dithering (anti frame-comparison)
-            float hash(vec2 p) {
-                return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+            
+            // Box-Muller transform for Gaussian distributed thermal noise
+            float gaussianNoise(vec2 p) {
+                float u1 = fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+                float u2 = fract(sin(dot(p, vec2(269.5, 183.3))) * 43758.5453);
+                return sqrt(-2.0 * log(u1 + 0.00001)) * cos(6.2831853 * u2);
             }
+            
+            // Fixed Pattern Noise (Hot pixels / Sensor impurities)
+            float fixedPatternNoise(vec2 p) {
+                float n = fract(sin(dot(p, vec2(41.1, 289.3))) * 43758.5453);
+                return step(0.999, n) * 0.015; // 0.1% of pixels are slightly 'hot'
+            }
+            
             void main() {
                 if (uIsBackground == 1) {
                     vec4 sum = vec4(0.0);
@@ -61,9 +71,10 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                     gl_FragColor = vec4((sum / 16.0).rgb * 0.4 * uBrightness, 1.0);
                 } else {
                     vec4 color = texture2D(sTexture, vTextureCoord);
-                    // Temporal dithering: ±1 LSB per channel per frame (imperceptible, defeats exact frame comparison)
-                    float dither = (hash(gl_FragCoord.xy + vec2(uTime, uTime * 0.7)) - 0.5) / 255.0;
-                    gl_FragColor = vec4(color.rgb * uBrightness + dither, 1.0);
+                    // Soft Gaussian thermal noise + Static fixed pattern noise
+                    float gNoise = gaussianNoise(gl_FragCoord.xy + vec2(uTime * 100.0, uTime * 70.0)) * 0.003;
+                    float fpn = fixedPatternNoise(gl_FragCoord.xy);
+                    gl_FragColor = vec4(color.rgb * uBrightness + gNoise + fpn, 1.0);
                 }
             }
         """
@@ -77,9 +88,18 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             uniform float uBrightness;
             uniform float uTime;
             const float blurSize = 0.02;
-            float hash(vec2 p) {
-                return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+            
+            float gaussianNoise(vec2 p) {
+                float u1 = fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+                float u2 = fract(sin(dot(p, vec2(269.5, 183.3))) * 43758.5453);
+                return sqrt(-2.0 * log(u1 + 0.00001)) * cos(6.2831853 * u2);
             }
+            
+            float fixedPatternNoise(vec2 p) {
+                float n = fract(sin(dot(p, vec2(41.1, 289.3))) * 43758.5453);
+                return step(0.999, n) * 0.015;
+            }
+            
             void main() {
                 if (uIsBackground == 1) {
                     vec4 sum = vec4(0.0);
@@ -95,8 +115,9 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                     gl_FragColor = vec4((sum / 16.0).rgb * 0.4 * uBrightness, 1.0);
                 } else {
                     vec4 color = texture2D(sTexture, vTextureCoord);
-                    float dither = (hash(gl_FragCoord.xy + vec2(uTime, uTime * 0.7)) - 0.5) / 255.0;
-                    gl_FragColor = vec4(color.rgb * uBrightness + dither, 1.0);
+                    float gNoise = gaussianNoise(gl_FragCoord.xy + vec2(uTime * 100.0, uTime * 70.0)) * 0.003;
+                    float fpn = fixedPatternNoise(gl_FragCoord.xy);
+                    gl_FragColor = vec4(color.rgb * uBrightness + gNoise + fpn, 1.0);
                 }
             }
         """
