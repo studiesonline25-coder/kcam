@@ -189,9 +189,6 @@ class FormatConverterBridge(
         // [SHUTTER OPTIMIZATION] Throttle: only one bridge processes JPEG at a time
         if (CameraHook.isGeneratingJpeg) return
         
-        val w = width
-        val h = height
-        
         Thread {
             try {
                 CameraHook.isGeneratingJpeg = true
