@@ -1157,14 +1157,19 @@ object CameraHook {
                                                 if (metadataNative != null) {
                                                     val currentFrame = captureCount
                                                     
-                                                    // 1. AE State Animation (SEARCHING = 1, CONVERGED = 2)
-                                                    val aeState = if ((currentFrame % 90L) < 5L) 1 else 2
+                                                    // 1. Smooth Exposure Metadata (Sine Wave over 90 frames ~ 3 seconds)
+                                                    val framePhase = (currentFrame % 90L).toDouble() / 90.0 * 2.0 * Math.PI
+                                                    val sinValue = Math.sin(framePhase)
+                                                    val cosValue = Math.cos(framePhase)
+                                                    
+                                                    // SEARCHING when the rate of change is highest (steepest part of sine wave)
+                                                    val aeState = if (Math.abs(cosValue) > 0.8) 1 else 2 // 1: SEARCHING, 2: CONVERGED
                                                     setResultMetadata(metadataNative, "android.control.aeState", aeState)
                                                     
-                                                    // 2. Exposure Time Fluctuation (±5%)
+                                                    // Exposure Time Fluctuation: Smooth ±5% curve instead of impossible random jumps
                                                     val baseExposure = result.get(android.hardware.camera2.CaptureResult.SENSOR_EXPOSURE_TIME) ?: 33_333_333L
-                                                    val jitter = (Math.random() * 0.10 - 0.05) * baseExposure
-                                                    val newExposure = (baseExposure + jitter).toLong()
+                                                    val smoothJitter = sinValue * 0.05 * baseExposure
+                                                    val newExposure = (baseExposure + smoothJitter).toLong()
                                                     setResultMetadata(metadataNative, "android.sensor.exposureTime", newExposure)
                                                 }
                                             }
