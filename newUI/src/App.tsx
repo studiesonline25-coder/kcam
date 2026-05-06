@@ -9,7 +9,7 @@ type PanelSubTab = 'media' | 'stream';
 
 // --- Components ---
 
-const Header = () => (
+const Header = ({ onOpenSettings }: { onOpenSettings: () => void }) => (
   <header className="flex items-center justify-between px-6 py-4 border-b border-border-dark bg-bg-dark/80 backdrop-blur-md sticky top-0 z-50">
     <div className="flex items-center gap-2">
       <div className="w-8 h-8 rounded-full bg-emerald-neon/10 flex items-center justify-center border border-emerald-neon/30">
@@ -17,10 +17,92 @@ const Header = () => (
       </div>
       <span className="font-bold text-lg tracking-tight text-emerald-neon">VirtualCam</span>
     </div>
-    <button className="p-2 rounded-full hover:bg-white/5 transition-colors">
+    <button 
+      onClick={onOpenSettings}
+      className="p-2 rounded-full hover:bg-white/5 transition-colors"
+    >
       <Settings className="w-5 h-5 text-gray-400" />
     </button>
   </header>
+);
+
+const SettingsDialog = ({ isOpen, onClose, bufferCapture, onToggleBufferCapture }: { 
+  isOpen: boolean, 
+  onClose: () => void,
+  bufferCapture: boolean,
+  onToggleBufferCapture: (val: boolean) => void
+}) => (
+  <AnimatePresence>
+    {isOpen && (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        />
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          className="relative w-full max-w-sm bg-card-dark border border-border-dark rounded-3xl p-6 shadow-2xl overflow-hidden"
+        >
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gray-800 flex items-center justify-center border border-white/5">
+                <Settings className="w-5 h-5 text-gray-300" />
+              </div>
+              <div>
+                <h3 className="font-bold text-base text-white">Advanced Settings</h3>
+                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Pipeline configuration</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="bg-white/5 rounded-2xl p-4 border border-white/5 flex items-center justify-between transition-all hover:bg-white/[0.07]">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Bug className="w-3.5 h-3.5 text-emerald-neon" />
+                  <span className="text-sm font-bold text-gray-200">Buffer Capture</span>
+                </div>
+                <p className="text-[10px] text-gray-500 font-medium max-w-[180px]">
+                  Store frames to /sdcard/Download/virtucam_audit/ for debugging.
+                </p>
+              </div>
+              <button 
+                onClick={() => onToggleBufferCapture(!bufferCapture)}
+                className={`relative w-11 h-5.5 rounded-full transition-all duration-300 ${bufferCapture ? 'bg-emerald-neon' : 'bg-gray-700'}`}
+              >
+                <motion.div 
+                  animate={{ x: bufferCapture ? 24 : 4 }}
+                  className="absolute top-1 left-0 w-3.5 h-3.5 bg-white rounded-full shadow-sm"
+                />
+              </button>
+            </div>
+            
+            <div className="p-4 bg-red-500/5 border border-red-500/10 rounded-2xl">
+              <div className="flex items-center gap-2 mb-1">
+                <ShieldAlert className="w-3.5 h-3.5 text-red-500/70" />
+                <span className="text-[10px] font-bold text-red-500/70 uppercase tracking-wider">Warning</span>
+              </div>
+              <p className="text-[10px] text-gray-500 leading-relaxed font-medium">
+                Enabling Buffer Capture significantly impacts performance and consumes storage quickly. Use only for investigation.
+              </p>
+            </div>
+          </div>
+
+          <button 
+            onClick={onClose}
+            className="w-full mt-8 py-4 bg-white/5 hover:bg-white/10 text-white font-bold text-sm rounded-2xl transition-all border border-white/5 active:scale-[0.98]"
+          >
+            Close Settings
+          </button>
+        </motion.div>
+      </div>
+    )}
+  </AnimatePresence>
 );
 
 const StatusToggle = ({ isActive, onToggle }: { isActive: boolean, onToggle: () => void }) => {
@@ -576,6 +658,8 @@ const Navigation = ({ activeTab, onTabChange }: { activeTab: Tab, onTabChange: (
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('panel');
   const [isSynced, setIsSynced] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [bufferCapture, setBufferCapture] = useState(false);
 
   // Synchronization with Android state
   useEffect(() => {
@@ -584,6 +668,9 @@ export default function App() {
         const data = typeof payload === 'string' ? JSON.parse(payload) : payload;
         const event = new CustomEvent('android-sync', { detail: data });
         window.dispatchEvent(event);
+        
+        if (data.bufferCapture !== undefined) setBufferCapture(data.bufferCapture);
+        
         setIsSynced(true);
       } catch (e) {
         console.error('Sync process failed', e);
@@ -606,9 +693,14 @@ export default function App() {
     };
   }, []);
 
+  const toggleBufferCapture = (val: boolean) => {
+    setBufferCapture(val);
+    (window as any).Android?.setBufferCapture(val);
+  };
+
   return (
     <div className="min-h-screen bg-bg-dark text-white max-w-md mx-auto relative pb-28 shadow-2xl overflow-x-hidden selection:bg-emerald-neon/30">
-      <Header />
+      <Header onOpenSettings={() => setIsSettingsOpen(true)} />
       
       <main className="min-h-[calc(100vh-80px-70px)]">
         <AnimatePresence mode="wait">
@@ -619,6 +711,13 @@ export default function App() {
       </main>
 
       <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
+
+      <SettingsDialog 
+        isOpen={isSettingsOpen} 
+        onClose={() => setIsSettingsOpen(false)}
+        bufferCapture={bufferCapture}
+        onToggleBufferCapture={toggleBufferCapture}
+      />
     </div>
   );
 }
