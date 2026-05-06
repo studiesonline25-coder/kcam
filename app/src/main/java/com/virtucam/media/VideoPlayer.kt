@@ -195,7 +195,16 @@ class VideoPlayer(
                         }
                         // If delayNs <= 0, we're behind schedule — render immediately (no drop)
 
-                        val doRender = info.size != 0
+                        var doRender = info.size != 0
+                        
+                        // === ORGANIC MICRO-STUTTER SIMULATION (Feature 8) ===
+                        // A perfectly 30.000 FPS feed with 0 drops is synthetically perfect.
+                        // We simulate a 1-frame GC stall / thermal throttle roughly every ~400 frames (0.25% chance).
+                        // This causes a single 66ms interval, making the pacing curve organic.
+                        if (doRender && Math.random() < 0.0025) {
+                            doRender = false
+                            Log.d(TAG, "Simulating organic frame drop (thermal/GC stutter)")
+                        }
                         
                         val tBeforeRender = System.nanoTime()
                         // Release buffer and render it to surface
