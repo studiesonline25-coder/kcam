@@ -1,18 +1,24 @@
 package com.virtucam.media
 
 import android.media.MediaCodec
+import android.media.MediaCodecList
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.util.Log
 import android.view.Surface
 import java.io.FileDescriptor
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.locks.LockSupport
 
 /**
- * Hardware-accelerated video player.
- * Uses MediaExtractor and MediaCodec to decode video from a FileDescriptor
- * and push frames to the provided Surface (which is linked to OpenGL).
- * Implements continuous looping with high-performance frame pacing.
+ * Hardware-accelerated video player with separated decode/inject pipeline.
+ *
+ * FIX 1: Explicitly selects a hardware MediaCodec decoder (skips OMX.google.* / c2.android.*).
+ * FIX 2: Decode thread fills an ArrayBlockingQueue(4), inject thread drains it.
+ *        They never block each other — decode drops frames if queue is full,
+ *        inject waits up to 30ms if queue is empty.
  */
 class VideoPlayer(
     private val fd: FileDescriptor,
@@ -31,213 +37,173 @@ class VideoPlayer(
 
     companion object {
         private const val TAG = "VideoPlayer"
-        // Short timeout: don't block the loop waiting for codec buffers
         private const val INPUT_TIMEOUT_USEC = 0L
-        private const val OUTPUT_TIMEOUT_USEC = 5000L // 5ms max wait for output
+        private const val OUTPUT_TIMEOUT_USEC = 5000L
+        private const val QUEUE_CAPACITY = 4
     }
+
+    /** Lightweight descriptor passed through the BlockingQueue */
+    private data class DecodedFrame(
+        val bufferIndex: Int,
+        val presentationTimeUs: Long,
+        val size: Int,
+        val generation: Int
+    )
 
     private var extractor: MediaExtractor? = null
     private var decoder: MediaCodec? = null
+    private var decodeThread: Thread? = null
+    private var injectThread: Thread? = null
 
-    private var playThread: Thread? = null
-    @Volatile
-    private var isPlaying = false
+    @Volatile private var isPlaying = false
+    @Volatile private var loopGeneration = 0
 
-    /**
-     * Start playback in a background thread
-     */
+    private val frameQueue = ArrayBlockingQueue<DecodedFrame>(QUEUE_CAPACITY)
+    private val loopStartNs = AtomicLong(0L)
+
     fun start() {
         if (isPlaying) return
         isPlaying = true
+        initDecoder()
 
-        playThread = Thread {
-            try {
-                decodeLoop()
-            } finally {
-                release()
-            }
-        }.apply {
-            name = "VirtuCam-VideoPlayer"
-            priority = Thread.MAX_PRIORITY // Elevate priority for smooth decode
-            start()
-        }
+        decodeThread = Thread {
+            try { decodeLoop() } catch (t: Throwable) { Log.e(TAG, "Decode thread error", t) }
+        }.apply { name = "VirtuCam-VP-Decode"; priority = Thread.MAX_PRIORITY; start() }
+
+        injectThread = Thread {
+            try { injectLoop() } catch (t: Throwable) { Log.e(TAG, "Inject thread error", t) }
+            finally { release() }
+        }.apply { name = "VirtuCam-VP-Inject"; priority = Thread.MAX_PRIORITY; start() }
     }
 
-    /**
-     * Stop playback
-     */
     fun stop() {
         isPlaying = false
-        playThread?.interrupt()
-        playThread?.join(1000)
+        decodeThread?.interrupt()
+        injectThread?.interrupt()
+        decodeThread?.join(1000)
+        injectThread?.join(1000)
     }
 
-    private fun decodeLoop() {
+    // ── FIX 1: Explicit hardware decoder selection ──────────────────────
+    private fun findHardwareDecoder(mime: String): MediaCodec {
+        val codecList = MediaCodecList(MediaCodecList.REGULAR_CODECS)
+        for (info in codecList.codecInfos) {
+            if (info.isEncoder) continue
+            if (!info.supportedTypes.any { it.equals(mime, ignoreCase = true) }) continue
+            val name = info.name
+            if (name.startsWith("OMX.google.", true) ||
+                name.startsWith("c2.android.", true) ||
+                name.contains("sw", true)) continue
+            try {
+                val codec = MediaCodec.createByCodecName(name)
+                Log.d(TAG, "FIX1: Using HARDWARE decoder: $name for $mime")
+                return codec
+            } catch (e: Exception) {
+                Log.w(TAG, "FIX1: Failed to create codec $name: ${e.message}")
+            }
+        }
+        Log.w(TAG, "FIX1: No HW decoder found for $mime, falling back to default")
+        return MediaCodec.createDecoderByType(mime)
+    }
+
+    private fun initDecoder() {
         extractor = MediaExtractor()
         extractor!!.setDataSource(fd)
 
         var videoTrackIndex = -1
         var format: MediaFormat? = null
-
-        // Find video track
         for (i in 0 until extractor!!.trackCount) {
             val f = extractor!!.getTrackFormat(i)
             val mime = f.getString(MediaFormat.KEY_MIME) ?: continue
-            if (mime.startsWith("video/")) {
-                videoTrackIndex = i
-                format = f
-                break
-            }
+            if (mime.startsWith("video/")) { videoTrackIndex = i; format = f; break }
         }
+        if (videoTrackIndex < 0 || format == null) { Log.e(TAG, "No video track found"); return }
 
-        if (videoTrackIndex < 0 || format == null) {
-            Log.e(TAG, "No video track found")
-            return
-        }
+        if (format.containsKey(MediaFormat.KEY_WIDTH))  videoWidth  = format.getInteger(MediaFormat.KEY_WIDTH)
+        if (format.containsKey(MediaFormat.KEY_HEIGHT)) videoHeight = format.getInteger(MediaFormat.KEY_HEIGHT)
 
-        if (format.containsKey(MediaFormat.KEY_WIDTH)) {
-            videoWidth = format.getInteger(MediaFormat.KEY_WIDTH)
-        }
-        if (format.containsKey(MediaFormat.KEY_HEIGHT)) {
-            videoHeight = format.getInteger(MediaFormat.KEY_HEIGHT)
-        }
-        
-        if (format.containsKey(MediaFormat.KEY_ROTATION)) {
-            rawRotation = format.getInteger(MediaFormat.KEY_ROTATION)
-        } else {
-            rawRotation = 0
-        }
-        
+        rawRotation = if (format.containsKey(MediaFormat.KEY_ROTATION)) format.getInteger(MediaFormat.KEY_ROTATION) else 0
         videoRotation = rawRotation
-        
-        // Trick the pipeline: Make 0 EXIF videos behave exactly like perfectly working 90 EXIF videos
-        if (rawRotation == 0) {
-            videoRotation = 90
-        }
-
-        // Only swap dimensions if the hardware actually encoded them sideways (true EXIF 90/270)
-        // Downloaded videos (0 EXIF) are already physically encoded in their correct dimensions!
+        if (rawRotation == 0) videoRotation = 90
         if ((videoRotation == 90 || videoRotation == 270) && rawRotation != 0) {
-            val temp = videoWidth
-            videoWidth = videoHeight
-            videoHeight = temp
+            val tmp = videoWidth; videoWidth = videoHeight; videoHeight = tmp
         }
 
-        // Extract framerate for fallback pacing
-        val frameRate = if (format.containsKey(MediaFormat.KEY_FRAME_RATE)) {
-            format.getInteger(MediaFormat.KEY_FRAME_RATE).coerceIn(1, 120)
-        } else {
-            30 // Default to 30fps
-        }
-        val frameDurationNs = 1_000_000_000L / frameRate
-        Log.d(TAG, "Video: ${videoWidth}x${videoHeight} @ ${frameRate}fps (frameDuration=${frameDurationNs/1_000_000}ms)")
+        val fps = if (format.containsKey(MediaFormat.KEY_FRAME_RATE)) format.getInteger(MediaFormat.KEY_FRAME_RATE).coerceIn(1,120) else 30
+        Log.d(TAG, "Video: ${videoWidth}x${videoHeight} @ ${fps}fps")
 
         extractor!!.selectTrack(videoTrackIndex)
         val mime = format.getString(MediaFormat.KEY_MIME)!!
-        decoder = MediaCodec.createDecoderByType(mime)
-        
-        // Configure decoder to output to our Surface
+        decoder = findHardwareDecoder(mime)
         decoder!!.configure(format, outputSurface, null, 0)
         decoder!!.start()
+        loopStartNs.set(System.nanoTime())
+    }
 
+    // ── FIX 2a: Decode thread ──────────────────────────────────────────
+    private fun decodeLoop() {
         val info = MediaCodec.BufferInfo()
-        var isEOS = false
-        // Use nanoTime for precise pacing (System.currentTimeMillis has ~10ms granularity)
-        var startNs = System.nanoTime()
-        var lastFrameNs = startNs
-
         while (isPlaying) {
-            // === INPUT: Feed data to the decoder (non-blocking) ===
-            if (!isEOS) {
-                val inIndex = decoder!!.dequeueInputBuffer(INPUT_TIMEOUT_USEC)
-                if (inIndex >= 0) {
-                    val buffer = decoder!!.getInputBuffer(inIndex)
-                    if (buffer != null) {
-                        val sampleSize = extractor!!.readSampleData(buffer, 0)
-                        if (sampleSize < 0) {
-                            // End of stream, loop back!
-                            Log.d(TAG, "Looping video")
-                            extractor!!.seekTo(0, MediaExtractor.SEEK_TO_PREVIOUS_SYNC)
-                            decoder!!.flush()
-                            startNs = System.nanoTime()
-                            lastFrameNs = startNs
-                        } else {
-                            val presentationTimeUs = extractor!!.sampleTime
-                            decoder!!.queueInputBuffer(inIndex, 0, sampleSize, presentationTimeUs, 0)
-                            extractor!!.advance()
-                        }
+            val inIndex = decoder!!.dequeueInputBuffer(INPUT_TIMEOUT_USEC)
+            if (inIndex >= 0) {
+                val buf = decoder!!.getInputBuffer(inIndex)
+                if (buf != null) {
+                    val sz = extractor!!.readSampleData(buf, 0)
+                    if (sz < 0) {
+                        Log.d(TAG, "Looping video")
+                        frameQueue.clear()
+                        decoder!!.flush()
+                        loopGeneration++
+                        loopStartNs.set(System.nanoTime())
+                        extractor!!.seekTo(0, MediaExtractor.SEEK_TO_PREVIOUS_SYNC)
+                    } else {
+                        decoder!!.queueInputBuffer(inIndex, 0, sz, extractor!!.sampleTime, 0)
+                        extractor!!.advance()
                     }
                 }
             }
 
-            // === OUTPUT: Retrieve decoded frames ===
             val outIndex = decoder!!.dequeueOutputBuffer(info, OUTPUT_TIMEOUT_USEC)
-            when (outIndex) {
-                MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> Log.d(TAG, "Format changed")
-                MediaCodec.INFO_TRY_AGAIN_LATER -> {
-                    // Codec has no output yet — yield CPU briefly without the 10-15ms
-                    // penalty of Thread.sleep(1) on Android
-                    Thread.yield()
-                }
-                else -> {
-                    if (outIndex >= 0) {
-                        // === PRECISE FRAME PACING WITH JITTER (Feature 7) ===
-                        // Natural hardware frame delivery has ±1-3ms jitter. Perfect pacing = synthetic detection.
-                        val jitterNs = (Math.random() * 6_000_000L - 3_000_000L).toLong()
-                        val targetNs = startNs + (info.presentationTimeUs * 1000L) + jitterNs
-                        val nowNs = System.nanoTime()
-                        val delayNs = targetNs - nowNs
-
-                        if (delayNs > 1_000_000L) {
-                            // More than 1ms ahead: use LockSupport for sub-ms precision
-                            LockSupport.parkNanos(delayNs)
-                        } else if (delayNs > 0) {
-                            // Under 1ms: spin-wait for maximum precision
-                            while (System.nanoTime() < targetNs && isPlaying) {
-                                Thread.yield()
-                            }
-                        }
-                        // If delayNs <= 0, we're behind schedule — render immediately (no drop)
-
-                        val doRender = info.size != 0
-                        
-                        val tBeforeRender = System.nanoTime()
-                        // Release buffer and render it to surface
-                        decoder!!.releaseOutputBuffer(outIndex, doRender)
-                        if (doRender) {
-                            lastFrameNs = System.nanoTime()
-                            onFrameAvailable()
-                            
-                            val tAfterRender = System.nanoTime()
-                            if (info.presentationTimeUs % 30 == 0L) { // Sample logs
-                                Log.d(TAG, "Decode+Pacing took ${(tBeforeRender - nowNs)/1_000_000}ms, Handoff took ${(tAfterRender - tBeforeRender)/1_000_000}ms")
-                            }
-                        }
+            when {
+                outIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> Log.d(TAG, "Format changed")
+                outIndex == MediaCodec.INFO_TRY_AGAIN_LATER -> Thread.yield()
+                outIndex >= 0 && info.size != 0 -> {
+                    val frame = DecodedFrame(outIndex, info.presentationTimeUs, info.size, loopGeneration)
+                    if (!frameQueue.offer(frame, 5, TimeUnit.MILLISECONDS)) {
+                        decoder!!.releaseOutputBuffer(outIndex, false)
                     }
                 }
-            }
-
-            // Handle loop logic in buffer flags (fallback)
-            if (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) {
-                isEOS = true
+                outIndex >= 0 -> decoder!!.releaseOutputBuffer(outIndex, false)
             }
         }
     }
 
-    private fun release() {
-        try {
-            decoder?.stop()
-            decoder?.release()
-        } catch (e: Exception) {
-            // Ignore
-        }
-        decoder = null
+    // ── FIX 2b: Inject thread ──────────────────────────────────────────
+    private fun injectLoop() {
+        while (isPlaying) {
+            val frame = try { frameQueue.poll(30, TimeUnit.MILLISECONDS) } catch (_: InterruptedException) { null } ?: continue
+            if (frame.generation != loopGeneration) continue
 
-        try {
-            extractor?.release()
-        } catch (e: Exception) {
-            // Ignore
+            val startNs = loopStartNs.get()
+            val jitterNs = (Math.random() * 6_000_000L - 3_000_000L).toLong()
+            val targetNs = startNs + (frame.presentationTimeUs * 1000L) + jitterNs
+            val nowNs = System.nanoTime()
+            val delayNs = targetNs - nowNs
+
+            if (delayNs > 1_000_000L) LockSupport.parkNanos(delayNs)
+            else if (delayNs > 0) while (System.nanoTime() < targetNs && isPlaying) Thread.yield()
+
+            try {
+                decoder!!.releaseOutputBuffer(frame.bufferIndex, true)
+                onFrameAvailable()
+            } catch (_: Exception) {}
         }
+    }
+
+    private fun release() {
+        try { decoder?.stop(); decoder?.release() } catch (_: Exception) {}
+        decoder = null
+        try { extractor?.release() } catch (_: Exception) {}
         extractor = null
     }
 }

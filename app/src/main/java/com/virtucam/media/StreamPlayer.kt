@@ -91,8 +91,10 @@ class StreamPlayer(
         val dataSourceFactory: DataSource.Factory = DefaultDataSource.Factory(context, okHttpDataSourceFactory)
         val mediaSourceFactory = DefaultMediaSourceFactory(dataSourceFactory)
 
+        // FIX 1: Force hardware decoders. EXTENSION_RENDERER_MODE_PREFER wrongly
+        // prioritizes software FFmpeg decoders; OFF = only built-in HW codecs.
         val renderersFactory = DefaultRenderersFactory(context)
-            .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
+            .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF)
             .setEnableDecoderFallback(true)
 
         exoPlayer = ExoPlayer.Builder(context)
