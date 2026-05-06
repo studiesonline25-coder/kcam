@@ -110,7 +110,7 @@ class FormatConverterBridge(
                     // [INVESTIGATION] Periodic buffer dump for rotation analysis.
                     // Throttled to once per 5 seconds per bridge to avoid spamming disk.
                     val nowMs = System.currentTimeMillis()
-                    if (nowMs - lastBufferDumpMs > 5_000L) {
+                    if (CameraHook.isBufferCaptureEnabled && nowMs - lastBufferDumpMs > 5_000L) {
                         lastBufferDumpMs = nowMs
                         try {
                             BufferDumper.dumpRgba(width, height, cachedRgbaData!!.copyOf(), "bridge_${width}x${height}")
@@ -118,7 +118,7 @@ class FormatConverterBridge(
                     }
 
                     // [STAGE DUMP 1] Post-GL RGBA — one-shot per session
-                    if (!didDumpStage1 && cachedRgbaData != null && cachedRgbaData!!.isNotEmpty()) {
+                    if (CameraHook.isBufferCaptureEnabled && !didDumpStage1 && cachedRgbaData != null && cachedRgbaData!!.isNotEmpty()) {
                         didDumpStage1 = true
                         try {
                             BufferDumper.dumpRgba(width, height, cachedRgbaData!!.copyOf(), "stage1_gl_rgba_${width}x${height}")
@@ -364,13 +364,13 @@ class FormatConverterBridge(
             }
             
             // diagnostic dump (YUV is hard to view directly, so we just log metadata or dump raw bytes)
-            if (debugCounter % 5 == 0) {
+            if (CameraHook.isBufferCaptureEnabled && debugCounter % 5 == 0) {
                 dumpRawBuffer(targetImage, "capture_yuv_${System.currentTimeMillis()}.raw")
             }
             debugCounter++
 
             // [STAGE DUMP 2] Post-bridge YUV — one-shot per session
-            if (!didDumpStage2) {
+            if (CameraHook.isBufferCaptureEnabled && !didDumpStage2) {
                 didDumpStage2 = true
                 try {
                     // Dump the target YUV as-is (our rewritten buffer)
@@ -430,7 +430,9 @@ class FormatConverterBridge(
             jpegBuffer.limit(bytesToWrite)
             
             // DIAGNOSTIC DUMP: Save the spoofed JPEG to SD card to see exactly what Veriff sees
-            saveDebugImage(jpegBytes, "capture_jpeg_${System.currentTimeMillis()}.jpg")
+            if (CameraHook.isBufferCaptureEnabled) {
+                saveDebugImage(jpegBytes, "capture_jpeg_${System.currentTimeMillis()}.jpg")
+            }
             
             Log.d(TAG, "FormatConverterBridge: Overwrote JPEG image (${jpegBytes.size} bytes) Target=${tW}x${tH}")
     }
