@@ -41,8 +41,11 @@ class FormatConverterBridge(
     val hasImageWriter: Boolean
         get() = imageWriter != null
 
-    @Volatile
-    private var cachedRgbaData: ByteArray? = null
+    private val bufferLock = Any()
+    @Volatile private var isBufferReady = false
+    private var writeBuffer: ByteArray? = null
+    private var readyBuffer: ByteArray? = null
+    private var conversionBuffer: ByteArray? = null
 
     private var debugCounter = 0
     private var lastBufferDumpMs = 0L
@@ -88,23 +91,30 @@ class FormatConverterBridge(
                         val pixelStride = planes[0].pixelStride
                         
                         val expectedSize = width * height * 4
-                        var data = cachedRgbaData
-                        if (data == null || data.size != expectedSize) {
-                            data = ByteArray(expectedSize)
-                            cachedRgbaData = data
+                        var wBuf = writeBuffer
+                        if (wBuf == null || wBuf.size != expectedSize) {
+                            wBuf = ByteArray(expectedSize)
+                            writeBuffer = wBuf
+                            readyBuffer = ByteArray(expectedSize)
+                            conversionBuffer = ByteArray(expectedSize)
                         }
                         
                         // Copy row-by-row to handle stride correctly
                         buffer.position(0)
                         if (rowStride == width * 4 && pixelStride == 4) {
                             // Fast path: no padding
-                            buffer.get(data)
+                            buffer.get(wBuf)
                         } else {
                             // Slow path: copy row by row ignoring padding
                             for (row in 0 until height) {
                                 buffer.position(row * rowStride)
-                                buffer.get(data, row * width * 4, width * 4)
+                                buffer.get(wBuf, row * width * 4, width * 4)
                             }
+                        }
+                        
+                        synchronized(bufferLock) {
+                            System.arraycopy(wBuf, 0, readyBuffer!!, 0, expectedSize)
+                            isBufferReady = true
                         }
                     }
                     // [INVESTIGATION] Periodic buffer dump for rotation analysis.
@@ -112,18 +122,24 @@ class FormatConverterBridge(
                     val nowMs = System.currentTimeMillis()
                     if (CameraHook.isBufferCaptureEnabled && nowMs - lastBufferDumpMs > 5_000L) {
                         lastBufferDumpMs = nowMs
-                        try {
-                            BufferDumper.dumpRgba(width, height, cachedRgbaData!!.copyOf(), "bridge_${width}x${height}")
-                        } catch (_: Throwable) {}
+                        val dumpBuf = synchronized(bufferLock) { readyBuffer?.copyOf() }
+                        if (dumpBuf != null) {
+                            try {
+                                BufferDumper.dumpRgba(width, height, dumpBuf, "bridge_${width}x${height}")
+                            } catch (_: Throwable) {}
+                        }
                     }
 
                     // [STAGE DUMP 1] Post-GL RGBA — one-shot per session
-                    if (CameraHook.isBufferCaptureEnabled && !didDumpStage1 && cachedRgbaData != null && cachedRgbaData!!.isNotEmpty()) {
+                    if (CameraHook.isBufferCaptureEnabled && !didDumpStage1 && isBufferReady) {
                         didDumpStage1 = true
-                        try {
-                            BufferDumper.dumpRgba(width, height, cachedRgbaData!!.copyOf(), "stage1_gl_rgba_${width}x${height}")
-                            Log.i(TAG, "[STAGE_DUMP_1] Saved post-GL RGBA buffer to virtucam_audit/buffers/stage1_gl_rgba_${width}x${height}_*.png")
-                        } catch (_: Throwable) {}
+                        val dumpBuf = synchronized(bufferLock) { readyBuffer?.copyOf() }
+                        if (dumpBuf != null) {
+                            try {
+                                BufferDumper.dumpRgba(width, height, dumpBuf, "stage1_gl_rgba_${width}x${height}")
+                                Log.i(TAG, "[STAGE_DUMP_1] Saved post-GL RGBA buffer to virtucam_audit/buffers/stage1_gl_rgba_${width}x${height}_*.png")
+                            } catch (_: Throwable) {}
+                        }
                     }
                 } catch (e: Throwable) {
                     Log.e(TAG, "Cache loop error: ${e.message}")
@@ -156,8 +172,19 @@ class FormatConverterBridge(
      * but writes JPEGs to the sandboxed disk later.
      */
     private fun generateAndStoreSpoofedJpeg() {
-        val rgbaBytes = cachedRgbaData
-        if (rgbaBytes == null || !checkDataIntegrity(rgbaBytes)) return
+        if (!isBufferReady || readyBuffer == null || conversionBuffer == null) return
+        
+        val w = width
+        val h = height
+        val expectedSize = w * h * 4
+        
+        // Fast synchronized copy into conversion buffer
+        synchronized(bufferLock) {
+            System.arraycopy(readyBuffer!!, 0, conversionBuffer!!, 0, expectedSize)
+        }
+        val rgbaBytes = conversionBuffer!!
+        
+        if (!checkDataIntegrity(rgbaBytes)) return
         
         // [SHUTTER OPTIMIZATION] Throttle: only one bridge processes JPEG at a time
         if (CameraHook.isGeneratingJpeg) return
@@ -216,9 +243,19 @@ class FormatConverterBridge(
             generateAndStoreSpoofedJpeg()
         }
         
-        val rgbaBytes = cachedRgbaData
-        if (rgbaBytes == null || !checkDataIntegrity(rgbaBytes)) {
+        if (!isBufferReady || readyBuffer == null || conversionBuffer == null) {
             Log.e(TAG, "FormatConverterBridge: Cannot overwrite YUV - source data is missing or blank (all zeros)!")
+            return
+        }
+        
+        val expectedSize = width * height * 4
+        synchronized(bufferLock) {
+            System.arraycopy(readyBuffer!!, 0, conversionBuffer!!, 0, expectedSize)
+        }
+        val rgbaBytes = conversionBuffer!!
+        
+        if (!checkDataIntegrity(rgbaBytes)) {
+            Log.e(TAG, "FormatConverterBridge: Cannot overwrite YUV - source data is blank (all zeros)!")
             return
         }
         
@@ -389,11 +426,12 @@ class FormatConverterBridge(
      * Overwrite a JPEG-format Image buffer with our spoofed content.
      */
     fun overwriteImageWithLatestJpeg(targetImage: Image) {
-        val rgbaBytes = cachedRgbaData
-        if (rgbaBytes == null || !checkDataIntegrity(rgbaBytes)) {
-            Log.e(TAG, "FormatConverterBridge: Cannot overwrite JPEG - source data is missing or blank (all zeros)!")
+        if (!isBufferReady || readyBuffer == null) {
+            Log.e(TAG, "FormatConverterBridge: Cannot overwrite JPEG - source data is missing!")
             return
         }
+        
+        // Note: checkDataIntegrity is done inside generateAndStoreSpoofedJpeg
         
         val planes = targetImage.planes
         if (planes.isEmpty()) return

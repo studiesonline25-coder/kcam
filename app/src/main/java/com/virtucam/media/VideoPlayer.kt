@@ -181,21 +181,17 @@ class VideoPlayer(
                 }
                 else -> {
                     if (outIndex >= 0) {
-                        // === PRECISE FRAME PACING WITH JITTER (Feature 7) ===
-                        // Natural hardware frame delivery has ±1-3ms jitter. Perfect pacing = synthetic detection.
-                        val jitterNs = (Math.random() * 6_000_000L - 3_000_000L).toLong()
-                        val targetNs = startNs + (info.presentationTimeUs * 1000L) + jitterNs
+                        // === PRECISE FRAME PACING (Feature 7 - Updated) ===
+                        // Real hardware delivers frames with strict microsecond precision.
+                        // Removed random synthetic jitter that triggers "screensharing" flags.
+                        val targetNs = startNs + (info.presentationTimeUs * 1000L)
                         val nowNs = System.nanoTime()
                         val delayNs = targetNs - nowNs
 
-                        if (delayNs > 1_000_000L) {
-                            // More than 1ms ahead: use LockSupport for sub-ms precision
+                        if (delayNs > 0) {
+                            // Use LockSupport for absolute hardware-like precision without
+                            // busy-waiting/spin-waiting which causes CPU thermal throttling.
                             LockSupport.parkNanos(delayNs)
-                        } else if (delayNs > 0) {
-                            // Under 1ms: spin-wait for maximum precision
-                            while (System.nanoTime() < targetNs && isPlaying) {
-                                Thread.yield()
-                            }
                         }
                         // If delayNs <= 0, we're behind schedule — render immediately (no drop)
 

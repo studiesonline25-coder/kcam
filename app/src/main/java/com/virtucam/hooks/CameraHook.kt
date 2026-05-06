@@ -1153,6 +1153,31 @@ object CameraHook {
                                             }
                                         }
 
+                                        // === ANTI-DETECTION: Hardware Metadata Animation ===
+                                        // Static metadata flags synthetic models. Animate AE state and exposure time.
+                                        try {
+                                            val mResultsField = XposedHelpers.findFieldIfExists(result.javaClass, "mResults")
+                                            if (mResultsField != null) {
+                                                mResultsField.isAccessible = true
+                                                val metadataNative = mResultsField.get(result)
+                                                if (metadataNative != null) {
+                                                    val currentFrame = captureCount
+                                                    
+                                                    // 1. AE State Animation (SEARCHING = 1, CONVERGED = 2)
+                                                    val aeState = if ((currentFrame % 90L) < 5L) 1 else 2
+                                                    setResultMetadata(metadataNative, "android.control.aeState", aeState)
+                                                    
+                                                    // 2. Exposure Time Fluctuation (±5%)
+                                                    val baseExposure = result.get(android.hardware.camera2.CaptureResult.SENSOR_EXPOSURE_TIME) ?: 33_333_333L
+                                                    val jitter = (Math.random() * 0.10 - 0.05) * baseExposure
+                                                    val newExposure = (baseExposure + jitter).toLong()
+                                                    setResultMetadata(metadataNative, "android.sensor.exposureTime", newExposure)
+                                                }
+                                            }
+                                        } catch (e: Exception) {
+                                            Log.e(TAG, "Failed to animate metadata", e)
+                                        }
+
                                 // [HARDWARE AUDIT] Always log CaptureResult (read-only surveillance)
                                 try { HardwareAuditLogger.logCaptureResult(result) } catch (_: Throwable) {}
 
@@ -1528,6 +1553,23 @@ object CameraHook {
     private fun setVendorTagInternal(settings: Any, name: String, value: Any) {
         try {
             val keyClass = Class.forName("android.hardware.camera2.CaptureRequest\$Key")
+            val keyConstructor = keyClass.getDeclaredConstructor(String::class.java, Class::class.java)
+            keyConstructor.isAccessible = true
+            val valueClass = when(value) {
+                is Byte -> java.lang.Byte.TYPE
+                is Int -> java.lang.Integer.TYPE
+                is Boolean -> java.lang.Boolean.TYPE
+                is Long -> java.lang.Long.TYPE
+                else -> value::class.java
+            }
+            val key = keyConstructor.newInstance(name, valueClass)
+            XposedHelpers.callMethod(settings, "set", key, value)
+        } catch (_: Throwable) {}
+    }
+
+    private fun setResultMetadata(settings: Any, name: String, value: Any) {
+        try {
+            val keyClass = Class.forName("android.hardware.camera2.CaptureResult\$Key")
             val keyConstructor = keyClass.getDeclaredConstructor(String::class.java, Class::class.java)
             keyConstructor.isAccessible = true
             val valueClass = when(value) {
