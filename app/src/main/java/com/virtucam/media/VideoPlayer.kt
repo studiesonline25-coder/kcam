@@ -16,7 +16,7 @@ import java.util.concurrent.locks.LockSupport
  */
 class VideoPlayer(
     private val fd: FileDescriptor,
-    private var outputSurface: Surface?,
+    private val outputSurface: Surface,
     private val onFrameAvailable: () -> Unit
 ) {
 
@@ -239,16 +239,5 @@ class VideoPlayer(
             // Ignore
         }
         extractor = null
-    }
-
-    fun updateSurface(newSurface: Surface?) {
-        this.outputSurface = newSurface
-        if (newSurface != null && decoder != null) {
-            try {
-                decoder?.setOutputSurface(newSurface)
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to update output surface: ${e.message}")
-            }
-        }
     }
 }

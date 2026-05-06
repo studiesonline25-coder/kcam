@@ -1,4 +1,4 @@
-import { Eye, Settings, LayoutGrid, Sparkles, Info, Upload, Network, Play, CheckCircle2, Zap, SlidersHorizontal, Copy, Palette, Globe, ShieldAlert, Bug, RotateCcw } from 'lucide-react';
+import { Eye, Settings, LayoutGrid, Sparkles, Info, Upload, Network, Play, CheckCircle2, Zap, SlidersHorizontal, Copy, Palette, Globe, ShieldAlert, Bug, RotateCcw, X, Save, HardDrive } from 'lucide-react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -9,7 +9,7 @@ type PanelSubTab = 'media' | 'stream';
 
 // --- Components ---
 
-const Header = () => (
+const Header = ({ onSettingsClick }: { onSettingsClick: () => void }) => (
   <header className="flex items-center justify-between px-6 py-4 border-b border-border-dark bg-bg-dark/80 backdrop-blur-md sticky top-0 z-50">
     <div className="flex items-center gap-2">
       <div className="w-8 h-8 rounded-full bg-emerald-neon/10 flex items-center justify-center border border-emerald-neon/30">
@@ -17,11 +17,100 @@ const Header = () => (
       </div>
       <span className="font-bold text-lg tracking-tight text-emerald-neon">VirtualCam</span>
     </div>
-    <button className="p-2 rounded-full hover:bg-white/5 transition-colors">
+    <button 
+      onClick={onSettingsClick}
+      className="p-2 rounded-full hover:bg-white/5 transition-colors"
+    >
       <Settings className="w-5 h-5 text-gray-400" />
     </button>
   </header>
 );
+
+const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
+  const [bufferCapture, setBufferCapture] = useState(true);
+
+  useEffect(() => {
+    const handleSync = (e: any) => {
+      const data = typeof e.detail === 'string' ? JSON.parse(e.detail) : e.detail;
+      if (data.isBufferCaptureEnabled !== undefined) setBufferCapture(data.isBufferCaptureEnabled);
+    };
+    window.addEventListener('android-sync', handleSync as any);
+    return () => window.removeEventListener('android-sync', handleSync as any);
+  }, []);
+
+  const toggleBufferCapture = () => {
+    const next = !bufferCapture;
+    setBufferCapture(next);
+    (window as any).Android?.setBufferCapture(next);
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="absolute inset-0 bg-bg-dark/90 backdrop-blur-sm"
+          />
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className="w-full bg-card-dark border border-border-dark rounded-3xl p-6 relative shadow-2xl space-y-6"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Settings className="w-4 h-4 text-emerald-neon" />
+                <h3 className="text-xs uppercase tracking-widest font-bold text-gray-400">Settings</h3>
+              </div>
+              <button onClick={onClose} className="p-1 rounded-full hover:bg-white/5">
+                <X className="w-4 h-4 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-bg-dark/50 border border-border-dark rounded-2xl p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-neon/10 flex items-center justify-center border border-emerald-neon/20">
+                    <HardDrive className="w-4 h-4 text-emerald-neon" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Buffer Capture</span>
+                    <p className="text-[8px] text-gray-500 leading-tight uppercase">Audit buffers at /sdcard/Download/virtucam_audit/</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={toggleBufferCapture}
+                  className={`relative w-10 h-5 rounded-full transition-colors duration-300 ${bufferCapture ? 'bg-emerald-neon' : 'bg-gray-700'}`}
+                >
+                  <motion.div 
+                    animate={{ x: bufferCapture ? 20 : 4 }}
+                    className="absolute top-1 left-0 w-3 h-3 bg-white rounded-full shadow-sm"
+                  />
+                </button>
+              </div>
+              
+              <p className="text-[8px] text-gray-600 italic px-2">
+                Disabling Buffer Capture will stop writing YUV/JPEG frames to storage, which saves battery and prevents storage overflow.
+              </p>
+            </div>
+
+            <button 
+              onClick={onClose}
+              className="w-full py-3 rounded-xl bg-emerald-neon text-bg-dark font-bold text-[10px] uppercase tracking-widest hover:brightness-110 transition-all flex items-center justify-center gap-2"
+            >
+              <Save className="w-3 h-3" />
+              Close & Apply
+            </button>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+};
 
 const StatusToggle = ({ isActive, onToggle }: { isActive: boolean, onToggle: () => void }) => {
   const handleToggle = () => {
@@ -346,8 +435,7 @@ const PanelScreen = () => {
                 <button 
                   onClick={() => (window as any).Android?.pickMedia()}
                   className="w-full py-3 rounded-2xl bg-emerald-neon/10 border border-emerald-neon/20 text-emerald-neon font-bold text-[10px] uppercase tracking-widest hover:bg-emerald-neon/20 transition-all flex items-center justify-center gap-2"
-                >
-                  <RotateCw className="w-3 h-3" />
+                >                  <RotateCcw className="w-3 h-3" />
                   Reupload Media
                 </button>
               </div>
@@ -412,7 +500,7 @@ const PanelScreen = () => {
                     onClick={() => (window as any).Android?.connectStream(streamUrl)}
                     className="w-full py-3 rounded-2xl bg-emerald-neon/10 border border-emerald-neon/20 text-emerald-neon font-bold text-[10px] uppercase tracking-widest hover:bg-emerald-neon/20 transition-all flex items-center justify-center gap-2"
                   >
-                    <RotateCw className="w-3 h-3" />
+                    <RotateCcw className="w-3 h-3" />
                     Reconnect Stream
                   </button>
                 </div>
@@ -576,6 +664,7 @@ const Navigation = ({ activeTab, onTabChange }: { activeTab: Tab, onTabChange: (
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('panel');
   const [isSynced, setIsSynced] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   // Synchronization with Android state
   useEffect(() => {
@@ -608,7 +697,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-bg-dark text-white max-w-md mx-auto relative pb-28 shadow-2xl overflow-x-hidden selection:bg-emerald-neon/30">
-      <Header />
+      <Header onSettingsClick={() => setSettingsOpen(true)} />
+      <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
       
       <main className="min-h-[calc(100vh-80px-70px)]">
         <AnimatePresence mode="wait">

@@ -33,7 +33,7 @@ import com.arthenica.ffmpegkit.FFmpegSession
 class StreamPlayer(
     private val context: Context,
     private val streamUrl: String,
-    private var outputSurface: Surface?,
+    private val outputSurface: Surface,
     private val useTcp: Boolean = true,
     private val onFrameAvailable: () -> Unit,
     private val onFirstFrame: ((Bitmap) -> Unit)? = null,
@@ -236,13 +236,6 @@ class StreamPlayer(
                 handlerThread = null
                 handler = null
             } catch (_: Exception) {}
-        }
-    }
-
-    fun updateSurface(newSurface: Surface?) {
-        this.outputSurface = newSurface
-        handler?.post {
-            exoPlayer?.setVideoSurface(newSurface)
         }
     }
 }
