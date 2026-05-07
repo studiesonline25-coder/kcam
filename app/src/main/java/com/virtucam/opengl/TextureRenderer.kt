@@ -53,7 +53,7 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             // Fixed Pattern Noise (Hot pixels / Sensor impurities)
             float fixedPatternNoise(vec2 p) {
                 float n = fract(sin(dot(p, vec2(41.1, 289.3))) * 43758.5453);
-                return step(0.999, n) * 0.015; // 0.1% of pixels are slightly 'hot'
+                return step(0.9992, n) * 0.012; // Subtle static hot pixels
             }
             
             void main() {
@@ -70,11 +70,19 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                     sum += texture2D(sTexture, vec2(vTextureCoord.x + blurSize, vTextureCoord.y + blurSize));
                     gl_FragColor = vec4((sum / 16.0).rgb * 0.4 * uBrightness, 1.0);
                 } else {
-                    vec4 color = texture2D(sTexture, vTextureCoord);
-                    // Soft Gaussian thermal noise + Static fixed pattern noise
-                    float gNoise = gaussianNoise(gl_FragCoord.xy + vec2(uTime * 100.0, uTime * 70.0)) * 0.003;
+                    // Feature: Chromatic Aberration (Simulates lens imperfections)
+                    vec2 caOffset = (vTextureCoord - 0.5) * 0.0012;
+                    float r = texture2D(sTexture, vTextureCoord + caOffset).r;
+                    float g = texture2D(sTexture, vTextureCoord).g;
+                    float b = texture2D(sTexture, vTextureCoord - caOffset).b;
+                    vec3 baseColor = vec3(r, g, b);
+                    
+                    // Soft Gaussian thermal noise (scales with brightness/gain simulation)
+                    float noiseScale = 0.0025 + (uBrightness - 1.0) * 0.005;
+                    float gNoise = gaussianNoise(gl_FragCoord.xy + vec2(uTime * 100.0, uTime * 70.0)) * noiseScale;
                     float fpn = fixedPatternNoise(gl_FragCoord.xy);
-                    gl_FragColor = vec4(color.rgb * uBrightness + gNoise + fpn, 1.0);
+                    
+                    gl_FragColor = vec4(baseColor * uBrightness + gNoise + fpn, 1.0);
                 }
             }
         """
@@ -97,7 +105,7 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             
             float fixedPatternNoise(vec2 p) {
                 float n = fract(sin(dot(p, vec2(41.1, 289.3))) * 43758.5453);
-                return step(0.999, n) * 0.015;
+                return step(0.9992, n) * 0.012;
             }
             
             void main() {
@@ -114,10 +122,17 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                     sum += texture2D(sTexture, vec2(vTextureCoord.x + blurSize, vTextureCoord.y + blurSize));
                     gl_FragColor = vec4((sum / 16.0).rgb * 0.4 * uBrightness, 1.0);
                 } else {
-                    vec4 color = texture2D(sTexture, vTextureCoord);
-                    float gNoise = gaussianNoise(gl_FragCoord.xy + vec2(uTime * 100.0, uTime * 70.0)) * 0.003;
+                    vec2 caOffset = (vTextureCoord - 0.5) * 0.0012;
+                    float r = texture2D(sTexture, vTextureCoord + caOffset).r;
+                    float g = texture2D(sTexture, vTextureCoord).g;
+                    float b = texture2D(sTexture, vTextureCoord - caOffset).b;
+                    vec3 baseColor = vec3(r, g, b);
+                    
+                    float noiseScale = 0.0025 + (uBrightness - 1.0) * 0.005;
+                    float gNoise = gaussianNoise(gl_FragCoord.xy + vec2(uTime * 100.0, uTime * 70.0)) * noiseScale;
                     float fpn = fixedPatternNoise(gl_FragCoord.xy);
-                    gl_FragColor = vec4(color.rgb * uBrightness + gNoise + fpn, 1.0);
+                    
+                    gl_FragColor = vec4(baseColor * uBrightness + gNoise + fpn, 1.0);
                 }
             }
         """

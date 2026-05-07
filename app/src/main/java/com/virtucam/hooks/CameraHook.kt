@@ -1361,29 +1361,32 @@ object CameraHook {
             })
         } catch (_: Throwable) {}
 
-        XposedBridge.hookAllMethods(managerClass, "getCameraCharacteristics", object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam) {
-                val cameraId = param.args[0] as? String ?: "unknown"
-                val char = param.result as? android.hardware.camera2.CameraCharacteristics ?: return
-                
-                // DIAGNOSTIC: Log key characteristics Veriff might be checking
-                val facing = char.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
-                val orientation = char.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
-                val level = char.get(android.hardware.camera2.CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)
-                
-                cameraOrientations[cameraId] = orientation
-                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics($cameraId) -> Facing=$facing, Orient=$orientation, HW_Level=$level")
-                
-                val streamMap = char.get(android.hardware.camera2.CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-                if (streamMap != null) {
-                    val sizes = streamMap.getOutputSizes(android.graphics.ImageFormat.JPEG)
-                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Camera $cameraId supports ${sizes?.size ?: 0} JPEG sizes. Max: ${sizes?.firstOrNull()}")
-                }
-
-                // [HARDWARE AUDIT] Always record real characteristics regardless of enabled state
-                try { HardwareAuditLogger.logCharacteristics(cameraId, char) } catch (_: Throwable) {}
-            }
         })
+
+        // [HARDWARE PARITY] Hook the lowest level metadata storage to ensure Veriff/Sumsub 
+        // see a consistent "Full" or "Level 3" hardware profile.
+        val metadataNativeClass = XposedHelpers.findClassIfExists("android.hardware.camera2.impl.CameraMetadataNative", lpparam.classLoader)
+        if (metadataNativeClass != null) {
+            XposedHelpers.findAndHookMethod(metadataNativeClass, "get", "android.hardware.camera2.impl.CameraMetadataNative$Key", object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    if (!isEnabled) return
+                    val key = param.args[0] ?: return
+                    val keyName = key.toString() // e.g. "android.info.supportedHardwareLevel"
+
+                    // Force Hardware Level 3 (Highest) to look like a premium device
+                    if (keyName.contains("info.supportedHardwareLevel")) {
+                        param.result = 3 // INFO_SUPPORTED_HARDWARE_LEVEL_3
+                        return
+                    }
+
+                    // Ensure SENSOR_ORIENTATION matches our current capture configuration
+                    if (keyName.contains("sensor.orientation")) {
+                        val cameraId = activeCameraId ?: "0"
+                        param.result = cameraOrientations[cameraId] ?: 270
+                    }
+                }
+            })
+        }
     }
 
     /**
@@ -2720,6 +2723,14 @@ class VirtualRenderThread(
     private var mediaSurfaceTexture: SurfaceTexture? = null
     private var mediaSurface: Surface? = null
     private var frameCount = 0
+    private var renderStartTime = 0L
+    
+    // [HARDENING] Micro-tremor state (Persistent random walk)
+    private var tremorX = 0f
+    private var tremorY = 0f
+    private var tremorTargetX = 0f
+    private var tremorTargetY = 0f
+    private val tremorRandom = java.util.Random()
 
     private fun getTargetRatio(vW: Int, vH: Int, isSurfaceView: Boolean): Float {
         return try {
@@ -3052,7 +3063,21 @@ class VirtualRenderThread(
                     android.opengl.Matrix.translateM(rotatedMatrix, 0, -0.5f, -0.5f, 0f)
                     rotatedMatrix
                 } else {
-                    matrix
+                    matrix.clone()
+                }
+
+                // [HARDENING] Persistent Micro-Tremors (Simulates handheld camera shake)
+                // We use a slow random walk to ensure the 'background' is never perfectly static.
+                if (CameraHook.isLivenessEnabled) {
+                    if (Math.abs(tremorX - tremorTargetX) < 0.001f) {
+                        tremorTargetX = (tremorRandom.nextFloat() - 0.5f) * 0.006f
+                        tremorTargetY = (tremorRandom.nextFloat() - 0.5f) * 0.006f
+                    }
+                    tremorX += (tremorTargetX - tremorX) * 0.1f
+                    tremorY += (tremorTargetY - tremorY) * 0.1f
+                    
+                    // Apply tremor to the final render matrix
+                    android.opengl.Matrix.translateM(renderMatrix, 0, tremorX, tremorY, 0f)
                 }
 
                 textureRenderer?.draw(
