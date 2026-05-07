@@ -253,6 +253,24 @@ class TextureRenderer(private val isVideo: Boolean = true) {
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
     }
 
+    fun loadBitmap(bitmap: android.graphics.Bitmap) {
+        val target = GLES20.GL_TEXTURE_2D
+        GLES20.glBindTexture(target, textureId)
+        android.opengl.GLUtils.texImage2D(target, 0, bitmap, 0)
+    }
+
+    fun release() {
+        if (textureId != -1) {
+            val textures = intArrayOf(textureId)
+            GLES20.glDeleteTextures(1, textures, 0)
+            textureId = -1
+        }
+        if (program != 0) {
+            GLES20.glDeleteProgram(program)
+            program = 0
+        }
+    }
+
     private fun createProgram(vertexSource: String, fragmentSource: String): Int {
         val vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexSource)
         if (vertexShader == 0) return 0
