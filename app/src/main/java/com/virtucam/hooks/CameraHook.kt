@@ -2774,23 +2774,46 @@ class VirtualRenderThread(
             // Anti-Detection Setup
             sensorManager = context.getSystemService(android.content.Context.SENSOR_SERVICE) as? android.hardware.SensorManager
             if (sensorManager != null) {
-                // Gyroscope Shake (Feature 6)
+                // Gyroscope Shake (Problem 4: Correlation)
+                // We use a mathematical breathing pattern that will be applied to both pixels and sensors.
                 val gyro = sensorManager!!.getDefaultSensor(android.hardware.Sensor.TYPE_GYROSCOPE)
                 if (gyro != null) {
                     gyroListener = object : android.hardware.SensorEventListener {
                         override fun onSensorChanged(event: android.hardware.SensorEvent) {
-                            // Accumulate micro-movements, slowly decay to center
-                            val dx = event.values[1] * 0.002f // Y-axis rotation maps to X translation
-                            val dy = event.values[0] * 0.002f // X-axis rotation maps to Y translation
-                            gyroOffsetX = (gyroOffsetX + dx).coerceIn(-0.05f, 0.05f)
-                            gyroOffsetY = (gyroOffsetY + dy).coerceIn(-0.05f, 0.05f)
-                            // Decay
-                            gyroOffsetX *= 0.9f
-                            gyroOffsetY *= 0.9f
+                            // We don't just read the sensor; we hijack the event values to match our virtual shake.
+                            // This ensures Pixel Movement == Sensor Movement.
+                            val time = System.currentTimeMillis() - renderStartTime
+                            val virtualShakeX = Math.sin(time * 0.0015).toFloat() * 0.0008f
+                            val virtualShakeY = Math.cos(time * 0.0012).toFloat() * 0.0008f
+                            
+                            // Inject into the actual event if we were hooking at the HAL level, 
+                            // but here we just store it to return via our method hook below.
+                            gyroOffsetX = virtualShakeX
+                            gyroOffsetY = virtualShakeY
                         }
                         override fun onAccuracyChanged(s: android.hardware.Sensor?, a: Int) {}
                     }
                     sensorManager!!.registerListener(gyroListener, gyro, android.hardware.SensorManager.SENSOR_DELAY_UI)
+                }
+
+                // [HARDENING] Hook SensorEventListener to ensure ALL apps see our virtual movement
+                val sensorEventClass = XposedHelpers.findClassIfExists("android.hardware.SensorEvent", context.classLoader)
+                val sensorListenerClass = XposedHelpers.findClassIfExists("android.hardware.SensorEventListener", context.classLoader)
+                if (sensorListenerClass != null && sensorEventClass != null) {
+                    XposedHelpers.findAndHookMethod(sensorListenerClass, "onSensorChanged", sensorEventClass, object : XC_MethodHook() {
+                        override fun beforeHookedMethod(param: MethodHookParam) {
+                            if (!isEnabled) return
+                            val event = param.args[0] as android.hardware.SensorEvent
+                            val type = event.sensor.type
+                            
+                            // Synchronize with the pixels!
+                            if (type == android.hardware.Sensor.TYPE_GYROSCOPE || type == android.hardware.Sensor.TYPE_ACCELEROMETER) {
+                                val values = event.values
+                                values[0] += gyroOffsetX * 50.0f // Scale to look like real degrees/sec
+                                values[1] += gyroOffsetY * 50.0f
+                            }
+                        }
+                    })
                 }
 
                 // Ambient Light Correlation (Feature 8)
@@ -2799,9 +2822,7 @@ class VirtualRenderThread(
                     lightListener = object : android.hardware.SensorEventListener {
                         override fun onSensorChanged(event: android.hardware.SensorEvent) {
                             val lux = event.values[0]
-                            // Normal indoor light is ~100-300 lux. We vary brightness from 0.85 to 1.15
                             val target = 0.85f + (lux.coerceIn(0f, 1000f) / 1000f) * 0.3f
-                            // Smooth interpolation
                             ambientLightMultiplier += (target - ambientLightMultiplier) * 0.1f
                         }
                         override fun onAccuracyChanged(s: android.hardware.Sensor?, a: Int) {}
@@ -3107,10 +3128,8 @@ class VirtualRenderThread(
                 }
 
                 textureRenderer?.draw(
-                    renderMatrix, contentW, contentH, vw, vh, ratio,
-                    parityOrientation, finalUserRotation, shouldMirror,
-                    finalZoom, isCapture, CameraHook.compensationFactor,
-                    finalRotationOffset, ambientLightMultiplier, timeValue,
+                    renderMatrix, vw, vh, 
+                    ambientLightMultiplier, timeValue, 
                     gyroOffsetX, gyroOffsetY
                 )
 

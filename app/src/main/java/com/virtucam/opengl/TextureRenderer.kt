@@ -53,7 +53,7 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             // Fixed Pattern Noise (Hot pixels / Sensor impurities)
             float fixedPatternNoise(vec2 p) {
                 float n = fract(sin(dot(p, vec2(41.1, 289.3))) * 43758.5453);
-                return step(0.9992, n) * 0.012; // Subtle static hot pixels
+                return step(0.9992, n) * 0.012; 
             }
             
             void main() {
@@ -144,8 +144,6 @@ class TextureRenderer(private val isVideo: Boolean = true) {
              1.0f,  1.0f    // 3 top right
         )
 
-        // Android's SurfaceTexture getTransformMatrix() automatically handles the vertical flip
-        // between OpenGL origin (bottom-left) and Android origin (top-left).
         private val OES_TEXTURE_COORDS = floatArrayOf(
             0.0f, 0.0f,     // 0 bottom left
             1.0f, 0.0f,     // 1 bottom right
@@ -153,12 +151,11 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             1.0f, 1.0f      // 3 top right
         )
 
-        // For static images (2D Texture), we must manually flip the V-axis.
         private val IMAGE_TEXTURE_COORDS = floatArrayOf(
-            0.0f, 1.0f,     // 0 bottom left  → sample from top
-            1.0f, 1.0f,     // 1 bottom right → sample from top
-            0.0f, 0.0f,     // 2 top left     → sample from bottom
-            1.0f, 0.0f      // 3 top right    → sample from bottom
+            0.0f, 1.0f,     // 0 bottom left 
+            1.0f, 1.0f,     // 1 bottom right
+            0.0f, 0.0f,     // 2 top left 
+            1.0f, 0.0f      // 3 top right 
         )
     }
 
@@ -194,9 +191,6 @@ class TextureRenderer(private val isVideo: Boolean = true) {
         Matrix.setIdentityM(mvpMatrix, 0)
     }
 
-    /**
-     * Compile shaders and create OpenGL program
-     */
     fun init() {
         val fragmentShaderCode = if (isVideo) OES_FRAGMENT_SHADER else IMAGE_FRAGMENT_SHADER
         
@@ -211,7 +205,6 @@ class TextureRenderer(private val isVideo: Boolean = true) {
         muBrightnessHandle = GLES20.glGetUniformLocation(program, "uBrightness")
         muTimeHandle = GLES20.glGetUniformLocation(program, "uTime")
 
-        // Create texture
         val textures = IntArray(1)
         GLES20.glGenTextures(1, textures, 0)
         textureId = textures[0]
@@ -225,15 +218,10 @@ class TextureRenderer(private val isVideo: Boolean = true) {
         GLES20.glTexParameteri(target, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE)
     }
 
-    /**
-     * Draw the texture to currently bound frame buffer
-     */
-    fun draw(transformMatrix: FloatArray, videoWidth: Int = 0, videoHeight: Int = 0, viewWidth: Int = 0, viewHeight: Int = 0, 
-             targetRatio: Float = 0f, hardwareSensorOrientation: Int = 0, userRotation: Int = 0, 
-             isMirrored: Boolean = false, zoomFactor: Float = 1.0f, isCapture: Boolean = false,
-             compensationFactor: Float = 1.0f, rotationOffset: Int = 0,
+    fun draw(transformMatrix: FloatArray, viewWidth: Int = 0, viewHeight: Int = 0, 
              brightnessMultiplier: Float = 1.0f, timeValue: Float = 0.0f,
-             gyroOffsetX: Float = 0f, gyroOffsetY: Float = 0f) {
+             shakeX: Float = 0f, shakeY: Float = 0f) {
+        
         if (viewWidth > 0 && viewHeight > 0) {
             GLES20.glViewport(0, 0, viewWidth, viewHeight)
         }
@@ -243,128 +231,49 @@ class TextureRenderer(private val isVideo: Boolean = true) {
 
         GLES20.glUseProgram(program)
 
-        // Set texture target
         val target = if (isVideo) GLES11Ext.GL_TEXTURE_EXTERNAL_OES else GLES20.GL_TEXTURE_2D
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
         GLES20.glBindTexture(target, textureId)
 
-        // Copy transform matrix from SurfaceTexture which Android natively encodes with EXIF Video rotators
-        System.arraycopy(transformMatrix, 0, stMatrix, 0, 16)
+        Matrix.setIdentityM(mvpMatrix, 0)
+        // Apply Virtual Shake to the Matrix
+        Matrix.translateM(mvpMatrix, 0, shakeX, shakeY, 0f)
 
-        // Bind attributes/uniforms
-        vertexBuffer.position(0)
+        GLES20.glUniformMatrix4fv(muMVPMatrixHandle, 1, false, mvpMatrix, 0)
+        GLES20.glUniformMatrix4fv(muSTMatrixHandle, 1, false, transformMatrix, 0)
+        GLES20.glUniform1i(muIsBackgroundHandle, 0)
+        GLES20.glUniform1f(muBrightnessHandle, brightnessMultiplier)
+        GLES20.glUniform1f(muTimeHandle, timeValue)
+
         GLES20.glVertexAttribPointer(maPositionHandle, 2, GLES20.GL_FLOAT, false, 0, vertexBuffer)
         GLES20.glEnableVertexAttribArray(maPositionHandle)
-
-        textureBuffer.position(0)
         GLES20.glVertexAttribPointer(maTextureHandle, 2, GLES20.GL_FLOAT, false, 0, textureBuffer)
         GLES20.glEnableVertexAttribArray(maTextureHandle)
 
-        if (videoWidth > 0 && videoHeight > 0 && viewWidth > 0 && viewHeight > 0) {
-            // Native sensor degrees in MVP for both video (OES + stMatrix) and static 2D textures.
-            val baseRotation = ((hardwareSensorOrientation % 360) + 360) % 360
-            val totalRotation = (baseRotation + userRotation + rotationOffset + 360) % 360
-
-            // --- ISOTROPIC FITTING MATH ---
-            fun drawQuad(isBackground: Boolean) {
-                // 1. Establish the Viewport Projection Matrix (Orthographic)
-                val projMatrix = FloatArray(16)
-                val viewRatio = if (targetRatio > 0f) targetRatio else (viewWidth.toFloat() / viewHeight.toFloat())
-                Matrix.orthoM(projMatrix, 0, -viewRatio, viewRatio, -1f, 1f, -1f, 1f)
-
-                // 2. Establish Base Media Geometry
-                val videoRatio = videoWidth.toFloat() / videoHeight.toFloat()
-                val modelMatrix = FloatArray(16)
-                Matrix.setIdentityM(modelMatrix, 0)
-                
-                // Calculate scales needed to fill/fit the viewport
-                val rotatedW = if (totalRotation % 180 != 0) 2.0f else (2.0f * videoRatio)
-                val rotatedH = if (totalRotation % 180 != 0) (2.0f * videoRatio) else 2.0f
-                
-                val scaleXToFill = (2.0f * viewRatio) / rotatedW
-                val scaleYToFill = 2.0f / rotatedH
-                
-                val scaleToFit = java.lang.Math.min(scaleXToFill, scaleYToFill)
-                val scaleToFill = java.lang.Math.max(scaleXToFill, scaleYToFill)
-                val baseScale = if (isBackground) scaleToFill else scaleToFit
-
-                // Mirroring and Stretch (PRE-ROTATION)
-                val mirrorSignX = if (isMirrored) -1.0f else 1.0f
-                
-                // --- MATRIX ORDER (Right-to-Left) ---
-                
-                // 5. Gyroscope translation (Anti-detection)
-                Matrix.translateM(modelMatrix, 0, gyroOffsetX, gyroOffsetY, 0f)
-
-                // 4. Final Viewport Scale (Fit/Fill/Zoom)
-                Matrix.scaleM(modelMatrix, 0, baseScale * zoomFactor, baseScale * zoomFactor, 1.0f)
-                
-                // 3. Sensor/User Rotation
-                if (totalRotation != 0) {
-                    Matrix.rotateM(modelMatrix, 0, totalRotation.toFloat(), 0f, 0f, 1f)
-                }
-                
-                // 2. Mirroring and Manual Aspect Correction (BEFORE Rotation to prevent axis-swap)
-                Matrix.scaleM(modelMatrix, 0, mirrorSignX * compensationFactor, 1.0f, 1.0f)
-                
-                // 1. Initial Video Geometry (Square Pixels)
-                Matrix.scaleM(modelMatrix, 0, videoRatio, 1.0f, 1.0f)
-
-                // Combine
-                Matrix.multiplyMM(mvpMatrix, 0, projMatrix, 0, modelMatrix, 0)
-
-                GLES20.glUniform1i(muIsBackgroundHandle, if (isBackground) 1 else 0)
-                GLES20.glUniform1f(muBrightnessHandle, brightnessMultiplier)
-                GLES20.glUniform1f(muTimeHandle, timeValue)
-                GLES20.glUniformMatrix4fv(muSTMatrixHandle, 1, false, stMatrix, 0)
-                GLES20.glUniformMatrix4fv(muMVPMatrixHandle, 1, false, mvpMatrix, 0)
-
-                GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
-            }
-
-            // === 1. DRAW BACKGROUND (Edge-Fill via CENTER_CROP) ===
-            drawQuad(true)
-
-            // === 2. DRAW FOREGROUND (Video layer via FIT_CENTER) ===
-            drawQuad(false)
-
-            if (frameCount++ % 60 == 0) {
-                Log.d("VirtuCam_Render", "Draw Isotropic: media=${videoWidth}x${videoHeight} view=${viewWidth}x${viewHeight} rot=$totalRotation zoom=$zoomFactor isCapture=$isCapture mirror=$isMirrored")
-            }
-        } else {
-            // Draw default if dimensions are zero
-            Matrix.setIdentityM(mvpMatrix, 0)
-            GLES20.glUniform1i(muIsBackgroundHandle, 0)
-            GLES20.glUniformMatrix4fv(muSTMatrixHandle, 1, false, stMatrix, 0)
-            GLES20.glUniformMatrix4fv(muMVPMatrixHandle, 1, false, mvpMatrix, 0)
-            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
-        }
-
-        GLES20.glDisableVertexAttribArray(maPositionHandle)
-        GLES20.glDisableVertexAttribArray(maTextureHandle)
-        GLES20.glBindTexture(target, 0)
-        GLES20.glUseProgram(0)
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
     }
 
-    /**
-     * Upload a Bitmap to the 2D texture (for Static Image Mode)
-     */
-    fun loadBitmap(bitmap: android.graphics.Bitmap) {
-        if (isVideo) return
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId)
-        android.opengl.GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0)
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
-    }
+    private fun createProgram(vertexSource: String, fragmentSource: String): Int {
+        val vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexSource)
+        if (vertexShader == 0) return 0
+        val pixelShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentSource)
+        if (pixelShader == 0) return 0
 
-    fun release() {
+        val program = GLES20.glCreateProgram()
         if (program != 0) {
-            GLES20.glDeleteProgram(program)
-            program = 0
+            GLES20.glAttachShader(program, vertexShader)
+            GLES20.glAttachShader(program, pixelShader)
+            GLES20.glLinkProgram(program)
+            val linkStatus = IntArray(1)
+            GLES20.glGetProgramiv(program, GLES20.GL_LINK_STATUS, linkStatus, 0)
+            if (linkStatus[0] != GLES20.GL_TRUE) {
+                Log.e(TAG, "Could not link program: ")
+                Log.e(TAG, GLES20.glGetProgramInfoLog(program))
+                GLES20.glDeleteProgram(program)
+                return 0
+            }
         }
-        if (textureId != -1) {
-            GLES20.glDeleteTextures(1, intArrayOf(textureId), 0)
-            textureId = -1
-        }
+        return program
     }
 
     private fun loadShader(shaderType: Int, source: String): Int {
@@ -383,28 +292,4 @@ class TextureRenderer(private val isVideo: Boolean = true) {
         }
         return shader
     }
-
-    private fun createProgram(vertexSource: String, fragmentSource: String): Int {
-        val vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexSource)
-        if (vertexShader == 0) return 0
-        val pixelShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentSource)
-        if (pixelShader == 0) return 0
-
-        var program = GLES20.glCreateProgram()
-        if (program != 0) {
-            GLES20.glAttachShader(program, vertexShader)
-            GLES20.glAttachShader(program, pixelShader)
-            GLES20.glLinkProgram(program)
-            val linkStatus = IntArray(1)
-            GLES20.glGetProgramiv(program, GLES20.GL_LINK_STATUS, linkStatus, 0)
-            if (linkStatus[0] != GLES20.GL_TRUE) {
-                Log.e(TAG, "Could not link program: ")
-                Log.e(TAG, GLES20.glGetProgramInfoLog(program))
-                GLES20.glDeleteProgram(program)
-                program = 0
-            }
-        }
-        return program
-    }
 }
-
