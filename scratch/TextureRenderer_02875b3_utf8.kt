@@ -1,4 +1,4 @@
-package com.virtucam.opengl
+﻿package com.virtucam.opengl
 
 import android.opengl.GLES11Ext
 import android.opengl.GLES20
@@ -11,12 +11,12 @@ import java.nio.FloatBuffer
 /**
  * Renders an OES texture (from MediaCodec Decoder or SurfaceTexture) onto the current EGL surface.
  * Handles matrix transformations to correct orientation (Relative Rotation).
- * [MERGED VERSION] 02875b3 Orientation Engine + a55de38 Hardening
  */
 class TextureRenderer(private val isVideo: Boolean = true) {
 
     companion object {
         private const val TAG = "TextureRenderer"
+
         private const val FLOAT_SIZE_BYTES = 4
         
         // Simple vertex shader
@@ -43,15 +43,17 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             uniform float uTime;
             const float blurSize = 0.02;
             
+            // Box-Muller transform for Gaussian distributed thermal noise
             float gaussianNoise(vec2 p) {
                 float u1 = fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
                 float u2 = fract(sin(dot(p, vec2(269.5, 183.3))) * 43758.5453);
                 return sqrt(-2.0 * log(u1 + 0.00001)) * cos(6.2831853 * u2);
             }
             
+            // Fixed Pattern Noise (Hot pixels / Sensor impurities)
             float fixedPatternNoise(vec2 p) {
                 float n = fract(sin(dot(p, vec2(41.1, 289.3))) * 43758.5453);
-                return step(0.9992, n) * 0.012; 
+                return step(0.999, n) * 0.015; // 0.1% of pixels are slightly 'hot'
             }
             
             void main() {
@@ -68,17 +70,11 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                     sum += texture2D(sTexture, vec2(vTextureCoord.x + blurSize, vTextureCoord.y + blurSize));
                     gl_FragColor = vec4((sum / 16.0).rgb * 0.4 * uBrightness, 1.0);
                 } else {
-                    vec2 caOffset = (vTextureCoord - 0.5) * 0.0012;
-                    float r = texture2D(sTexture, vTextureCoord + caOffset).r;
-                    float g = texture2D(sTexture, vTextureCoord).g;
-                    float b = texture2D(sTexture, vTextureCoord - caOffset).b;
-                    vec3 baseColor = vec3(r, g, b);
-                    
-                    float noiseScale = 0.0025 + (uBrightness - 1.0) * 0.005;
-                    float gNoise = gaussianNoise(gl_FragCoord.xy + vec2(uTime * 100.0, uTime * 70.0)) * noiseScale;
+                    vec4 color = texture2D(sTexture, vTextureCoord);
+                    // Soft Gaussian thermal noise + Static fixed pattern noise
+                    float gNoise = gaussianNoise(gl_FragCoord.xy + vec2(uTime * 100.0, uTime * 70.0)) * 0.003;
                     float fpn = fixedPatternNoise(gl_FragCoord.xy);
-                    
-                    gl_FragColor = vec4(baseColor * uBrightness + gNoise + fpn, 1.0);
+                    gl_FragColor = vec4(color.rgb * uBrightness + gNoise + fpn, 1.0);
                 }
             }
         """
@@ -101,7 +97,7 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             
             float fixedPatternNoise(vec2 p) {
                 float n = fract(sin(dot(p, vec2(41.1, 289.3))) * 43758.5453);
-                return step(0.9992, n) * 0.012;
+                return step(0.999, n) * 0.015;
             }
             
             void main() {
@@ -118,17 +114,10 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                     sum += texture2D(sTexture, vec2(vTextureCoord.x + blurSize, vTextureCoord.y + blurSize));
                     gl_FragColor = vec4((sum / 16.0).rgb * 0.4 * uBrightness, 1.0);
                 } else {
-                    vec2 caOffset = (vTextureCoord - 0.5) * 0.0012;
-                    float r = texture2D(sTexture, vTextureCoord + caOffset).r;
-                    float g = texture2D(sTexture, vTextureCoord).g;
-                    float b = texture2D(sTexture, vTextureCoord - caOffset).b;
-                    vec3 baseColor = vec3(r, g, b);
-                    
-                    float noiseScale = 0.0025 + (uBrightness - 1.0) * 0.005;
-                    float gNoise = gaussianNoise(gl_FragCoord.xy + vec2(uTime * 100.0, uTime * 70.0)) * noiseScale;
+                    vec4 color = texture2D(sTexture, vTextureCoord);
+                    float gNoise = gaussianNoise(gl_FragCoord.xy + vec2(uTime * 100.0, uTime * 70.0)) * 0.003;
                     float fpn = fixedPatternNoise(gl_FragCoord.xy);
-                    
-                    gl_FragColor = vec4(baseColor * uBrightness + gNoise + fpn, 1.0);
+                    gl_FragColor = vec4(color.rgb * uBrightness + gNoise + fpn, 1.0);
                 }
             }
         """
@@ -140,6 +129,8 @@ class TextureRenderer(private val isVideo: Boolean = true) {
              1.0f,  1.0f    // 3 top right
         )
 
+        // Android's SurfaceTexture getTransformMatrix() automatically handles the vertical flip
+        // between OpenGL origin (bottom-left) and Android origin (top-left).
         private val OES_TEXTURE_COORDS = floatArrayOf(
             0.0f, 0.0f,     // 0 bottom left
             1.0f, 0.0f,     // 1 bottom right
@@ -147,11 +138,12 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             1.0f, 1.0f      // 3 top right
         )
 
+        // For static images (2D Texture), we must manually flip the V-axis.
         private val IMAGE_TEXTURE_COORDS = floatArrayOf(
-            0.0f, 1.0f,     // 0 bottom left 
-            1.0f, 1.0f,     // 1 bottom right
-            0.0f, 0.0f,     // 2 top left 
-            1.0f, 0.0f      // 3 top right 
+            0.0f, 1.0f,     // 0 bottom left  ΓåÆ sample from top
+            1.0f, 1.0f,     // 1 bottom right ΓåÆ sample from top
+            0.0f, 0.0f,     // 2 top left     ΓåÆ sample from bottom
+            1.0f, 0.0f      // 3 top right    ΓåÆ sample from bottom
         )
     }
 
@@ -187,6 +179,9 @@ class TextureRenderer(private val isVideo: Boolean = true) {
         Matrix.setIdentityM(mvpMatrix, 0)
     }
 
+    /**
+     * Compile shaders and create OpenGL program
+     */
     fun init() {
         val fragmentShaderCode = if (isVideo) OES_FRAGMENT_SHADER else IMAGE_FRAGMENT_SHADER
         
@@ -201,6 +196,7 @@ class TextureRenderer(private val isVideo: Boolean = true) {
         muBrightnessHandle = GLES20.glGetUniformLocation(program, "uBrightness")
         muTimeHandle = GLES20.glGetUniformLocation(program, "uTime")
 
+        // Create texture
         val textures = IntArray(1)
         GLES20.glGenTextures(1, textures, 0)
         textureId = textures[0]
@@ -335,6 +331,9 @@ class TextureRenderer(private val isVideo: Boolean = true) {
         GLES20.glUseProgram(0)
     }
 
+    /**
+     * Upload a Bitmap to the 2D texture (for Static Image Mode)
+     */
     fun loadBitmap(bitmap: android.graphics.Bitmap) {
         if (isVideo) return
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId)
@@ -393,3 +392,4 @@ class TextureRenderer(private val isVideo: Boolean = true) {
         return program
     }
 }
+

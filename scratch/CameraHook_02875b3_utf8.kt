@@ -1,4 +1,4 @@
-package com.virtucam.hooks
+﻿package com.virtucam.hooks
 
 import android.app.AndroidAppHelper
 import android.graphics.BitmapFactory
@@ -138,12 +138,6 @@ object CameraHook {
         return metadataCourierMap.values.firstOrNull() // Fallback
     }
 
-    // [Persistent Media Architecture]
-    var globalStreamPlayer: com.virtucam.media.StreamPlayer? = null
-    var globalVideoPlayer: com.virtucam.media.VideoPlayer? = null
-    val frameSync = Object()
-    val hasNewFrame = java.util.concurrent.atomic.AtomicBoolean(false)
-
     /**
      * Fresh [CameraCharacteristics.SENSOR_ORIENTATION] for [activeCameraId].
      * Cached map can be stale or missing (e.g. Camera1); never rely on the render-thread snapshot alone.
@@ -169,7 +163,7 @@ object CameraHook {
 
     private fun normalizeOrientationDeg(deg: Int): Int = ((deg % 360) + 360) % 360
 
-    /** Camera2 [CameraCharacteristics.LENS_FACING]: BACK=0, FRONT=1, EXTERNAL=2 — map to our 0=back 1=front. */
+    /** Camera2 [CameraCharacteristics.LENS_FACING]: BACK=0, FRONT=1, EXTERNAL=2 ΓÇö map to our 0=back 1=front. */
     private fun mapLensFacingForVirtuCam(facing: Int?): Int? {
         if (facing == null) return null
         return if (facing == android.hardware.camera2.CameraCharacteristics.LENS_FACING_FRONT) 1 else 0
@@ -716,7 +710,7 @@ object CameraHook {
                          Log.e("DIAGNOSTIC_VIRTUCAM", "ContentResolver: Forced orientation=0 in ContentValues")
                     }
 
-                    // 3. Construct scan path (but DON'T scan yet — file hasn't been written)
+                    // 3. Construct scan path (but DON'T scan yet ΓÇö file hasn't been written)
                     // Store the path for afterHookedMethod to use with a delay
                     var scanPath: String? = values.getAsString("_data")
                     if (scanPath == null) {
@@ -1077,7 +1071,7 @@ object CameraHook {
             "android.hardware.camera2.impl.CameraCaptureSessionImpl", lpparam.classLoader
         )
         if (sessionClass == null) {
-            Log.e(TAG, "AUDIT: CameraCaptureSessionImpl class NOT FOUND — capture callback hook will not engage")
+            Log.e(TAG, "AUDIT: CameraCaptureSessionImpl class NOT FOUND ΓÇö capture callback hook will not engage")
             return
         }
         Log.e(TAG, "AUDIT: CameraCaptureSessionImpl found, installing capture hooks")
@@ -1172,7 +1166,7 @@ object CameraHook {
                                                     val aeState = if (Math.abs(cosValue) > 0.8) 1 else 2 // 1: SEARCHING, 2: CONVERGED
                                                     setResultMetadata(metadataNative, "android.control.aeState", aeState)
                                                     
-                                                    // Exposure Time Fluctuation: Smooth ±5% curve instead of impossible random jumps
+                                                    // Exposure Time Fluctuation: Smooth ┬▒5% curve instead of impossible random jumps
                                                     val baseExposure = result.get(android.hardware.camera2.CaptureResult.SENSOR_EXPOSURE_TIME) ?: 33_333_333L
                                                     val smoothJitter = sinValue * 0.05 * baseExposure
                                                     val newExposure = (baseExposure + smoothJitter).toLong()
@@ -1361,54 +1355,30 @@ object CameraHook {
             })
         } catch (_: Throwable) {}
 
-        // [HARDWARE PARITY] Hook the lowest level metadata storage to ensure Veriff/Sumsub 
-        // see a consistent "Full" or "Level 3" hardware profile.
-        val metadataNativeClass = XposedHelpers.findClassIfExists("android.hardware.camera2.impl.CameraMetadataNative", lpparam.classLoader)
-        if (metadataNativeClass != null) {
-            // [HARDENING] 1. Intercept 'get' for specific high-value keys
-            XposedHelpers.findAndHookMethod(metadataNativeClass, "get", "android.hardware.camera2.impl.CameraMetadataNative\$Key", object : XC_MethodHook() {
-                override fun afterHookedMethod(param: MethodHookParam) {
-                    if (!isEnabled) return
-                    val key = param.args[0] ?: return
-                    val keyName = key.toString()
-
-                    // Force Hardware Level 3 (Highest) to look like a premium device
-                    if (keyName.contains("info.supportedHardwareLevel")) {
-                        param.result = 3 // INFO_SUPPORTED_HARDWARE_LEVEL_3
-                        return
-                    }
-
-                    // Ensure SENSOR_ORIENTATION matches our current capture configuration
-                    if (keyName.contains("sensor.orientation")) {
-                        val cameraId = activeCameraId ?: "0"
-                        param.result = cameraOrientations[cameraId] ?: 270
-                        return
-                    }
-
-                    // [PARITY] Spoofing missing focal lengths and apertures to look like a real lens
-                    if (keyName.contains("lens.info.availableFocalLengths")) {
-                        param.result = floatArrayOf(4.74f)
-                        return
-                    }
-                    if (keyName.contains("lens.info.availableApertures")) {
-                        param.result = floatArrayOf(1.8f)
-                        return
-                    }
+        XposedBridge.hookAllMethods(managerClass, "getCameraCharacteristics", object : XC_MethodHook() {
+            override fun afterHookedMethod(param: MethodHookParam) {
+                val cameraId = param.args[0] as? String ?: "unknown"
+                val char = param.result as? android.hardware.camera2.CameraCharacteristics ?: return
+                
+                // DIAGNOSTIC: Log key characteristics Veriff might be checking
+                val facing = char.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
+                val orientation = char.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
+                val level = char.get(android.hardware.camera2.CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)
+                
+                cameraOrientations[cameraId] = orientation
+                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics($cameraId) -> Facing=$facing, Orient=$orientation, HW_Level=$level")
+                
+                val streamMap = char.get(android.hardware.camera2.CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
+                if (streamMap != null) {
+                    val sizes = streamMap.getOutputSizes(android.graphics.ImageFormat.JPEG)
+                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Camera $cameraId supports ${sizes?.size ?: 0} JPEG sizes. Max: ${sizes?.firstOrNull()}")
                 }
-            })
 
-            val listHook = object : XC_MethodHook() {
-                override fun afterHookedMethod(param: MethodHookParam) {}
+                // [HARDWARE AUDIT] Always record real characteristics regardless of enabled state
+                try { HardwareAuditLogger.logCharacteristics(cameraId, char) } catch (_: Throwable) {}
             }
-            try {
-                XposedHelpers.findAndHookMethod(metadataNativeClass, "getAvailableCaptureRequestKeys", listHook)
-                XposedHelpers.findAndHookMethod(metadataNativeClass, "getAvailableCaptureResultKeys", listHook)
-                XposedHelpers.findAndHookMethod(metadataNativeClass, "getAvailableCharacteristicsKeys", listHook)
-            } catch (e: Throwable) {}
-        }
+        })
     }
-
-
 
     /**
      * Hook CaptureRequest.Builder.addTarget() to swap original surfaces with dummy ones.
@@ -1461,7 +1431,7 @@ object CameraHook {
                     
                     val dummySurface = surfaceMap[originalSurface]
                     if (dummySurface != null) {
-                        Log.d(TAG, "VirtuCam_Hook: CaptureRequest.addTarget() → swapped to dummy surface")
+                        Log.d(TAG, "VirtuCam_Hook: CaptureRequest.addTarget() ΓåÆ swapped to dummy surface")
                         param.args[0] = dummySurface
                     }
                 } catch (t: Throwable) {
@@ -1871,9 +1841,9 @@ object CameraHook {
 
                             if (isEnabled) {
                                 // Act as real hardware: return a transform matrix encoding the sensor orientation.
-                                // This makes preview look upright to the user — same as real camera behavior.
+                                // This makes preview look upright to the user ΓÇö same as real camera behavior.
                                 // The EGL buffer content is rendered at sensor-native orientation, so the matrix
-                                // counter-rotates correctly (front=270°, back=180°).
+                                // counter-rotates correctly (front=270┬░, back=180┬░).
                                 val sensorRot = resolveSensorOrientationDeg()
                                 android.opengl.Matrix.setIdentityM(matrix, 0)
                                 // Rotate around center (0,0 translated to 0.5,0.5)
@@ -1938,7 +1908,7 @@ object CameraHook {
                             if (bridge != null && !bridge.hasImageWriter) {
                                 bridge.overwriteImageWithLatestYuv(image, image.timestamp)
                                 Log.d(TAG, "VirtuCam_Hook: Overwrote YUV image ${image.width}x${image.height}")
-                                // [STAGE DUMP 3] Final consumed buffer — one-shot per session
+                                // [STAGE DUMP 3] Final consumed buffer ΓÇö one-shot per session
                                 try {
                                     val stage3Tag = "stage3_final_yuv_${image.width}x${image.height}"
                                     BufferDumper.dumpYuvImage(image, stage3Tag)
@@ -2095,11 +2065,11 @@ object CameraHook {
         
         val surface = reader.surface
         
-        // Retain strong references — prevents GC from destroying surfaces
+        // Retain strong references ΓÇö prevents GC from destroying surfaces
         // while the native camera pipeline is still writing to them
         dummyImageReaders.add(reader)
         dummySurfaces.add(surface)
-        // Track original→dummy mapping for CaptureRequest swapping
+        // Track originalΓåÆdummy mapping for CaptureRequest swapping
         if (targetSurface != null) {
             surfaceMap[targetSurface] = surface
         }
@@ -2176,7 +2146,7 @@ object CameraHook {
         val isVideoSurface = videoSurfaces.contains(targetSurface)
         
         val bridge = if (!isPreview && !isVideoSurface) {
-            // Use the same fresh resolution as drawToAllSurfaces — both preview and capture
+            // Use the same fresh resolution as drawToAllSurfaces ΓÇö both preview and capture
             // should output at the real hardware sensor orientation so the framework handles
             // all downstream transforms (metadata, JPEG EXIF, app-side matrices) correctly.
             val realSensorOrientation = resolveSensorOrientationDeg()
@@ -2248,9 +2218,6 @@ object CameraHook {
                         isBufferCaptureEnabled = if (it.columnCount > 16) it.getInt(16) == 1 else true
                         
                         Log.d(TAG, "VirtuCam_Hook: Config loaded. Enabled: $isEnabled, Zoom: $zoomFactor, Stretch: $compensationFactor, liveness: $isLivenessEnabled, passthrough: $isPassthroughMode, offset: $rotationOffset")
-                        
-                        // Dynamically manage persistent players
-                        updateGlobalPlayers(context)
                     } catch (innerE: Exception) {
                         Log.e(TAG, "VirtuCam_Hook: Error parsing cursor columns", innerE)
                     }
@@ -2258,54 +2225,6 @@ object CameraHook {
             }
         } catch (e: Exception) {
             Log.e(TAG, "VirtuCam_Hook: Failed to load configuration (Provider possibly blocked)", e)
-        }
-    }
-
-    @Synchronized
-    private fun updateGlobalPlayers(context: android.content.Context) {
-        if (!isEnabled) {
-            globalStreamPlayer?.stop()
-            globalStreamPlayer = null
-            globalVideoPlayer?.updateSurface(null)
-            globalVideoPlayer = null
-            return
-        }
-        
-        if (isStream && streamUrl.isNotEmpty()) {
-            if (globalStreamPlayer == null) {
-                Log.d(TAG, "Starting persistent global StreamPlayer for zero-latency reconnects")
-                globalVideoPlayer?.updateSurface(null)
-                globalVideoPlayer = null
-                
-                globalStreamPlayer = com.virtucam.media.StreamPlayer(
-                    context = context,
-                    streamUrl = streamUrl,
-                    outputSurface = null,
-                    useTcp = rtspUseTcp,
-                    onFrameAvailable = {
-                        hasNewFrame.set(true)
-                        synchronized(frameSync) { frameSync.notifyAll() }
-                    },
-                    onFirstFrame = { bitmap ->
-                        android.os.Handler(android.os.Looper.getMainLooper()).post {
-                            saveStreamPreviewToProvider(bitmap)
-                        }
-                    }
-                )
-                globalStreamPlayer?.start()
-            }
-        } else if (isVideo) {
-            // Revert to local instantiation for VideoPlayer because users can dynamically select new files,
-            // and the contentResolver FD must be read correctly from the Hook context when requested.
-            globalStreamPlayer?.stop()
-            globalStreamPlayer = null
-            globalVideoPlayer?.updateSurface(null)
-            globalVideoPlayer = null
-        } else {
-            globalStreamPlayer?.stop()
-            globalStreamPlayer = null
-            globalVideoPlayer?.updateSurface(null)
-            globalVideoPlayer = null
         }
     }
 
@@ -2744,14 +2663,6 @@ class VirtualRenderThread(
     private var mediaSurfaceTexture: SurfaceTexture? = null
     private var mediaSurface: Surface? = null
     private var frameCount = 0
-    
-    // [HARDENING] Micro-tremor state (Persistent random walk)
-
-    private var tremorX = 0f
-    private var tremorY = 0f
-    private var tremorTargetX = 0f
-    private var tremorTargetY = 0f
-    private val tremorRandom = java.util.Random()
 
     private fun getTargetRatio(vW: Int, vH: Int, isSurfaceView: Boolean): Float {
         return try {
@@ -2774,46 +2685,23 @@ class VirtualRenderThread(
             // Anti-Detection Setup
             sensorManager = context.getSystemService(android.content.Context.SENSOR_SERVICE) as? android.hardware.SensorManager
             if (sensorManager != null) {
-                // Gyroscope Shake (Problem 4: Correlation)
-                // We use a mathematical breathing pattern that will be applied to both pixels and sensors.
+                // Gyroscope Shake (Feature 6)
                 val gyro = sensorManager!!.getDefaultSensor(android.hardware.Sensor.TYPE_GYROSCOPE)
                 if (gyro != null) {
                     gyroListener = object : android.hardware.SensorEventListener {
                         override fun onSensorChanged(event: android.hardware.SensorEvent) {
-                            // We don't just read the sensor; we hijack the event values to match our virtual shake.
-                            // This ensures Pixel Movement == Sensor Movement.
-                            val time = System.currentTimeMillis() - renderStartTime
-                            val virtualShakeX = Math.sin(time * 0.0015).toFloat() * 0.0008f
-                            val virtualShakeY = Math.cos(time * 0.0012).toFloat() * 0.0008f
-                            
-                            // Inject into the actual event if we were hooking at the HAL level, 
-                            // but here we just store it to return via our method hook below.
-                            gyroOffsetX = virtualShakeX
-                            gyroOffsetY = virtualShakeY
+                            // Accumulate micro-movements, slowly decay to center
+                            val dx = event.values[1] * 0.002f // Y-axis rotation maps to X translation
+                            val dy = event.values[0] * 0.002f // X-axis rotation maps to Y translation
+                            gyroOffsetX = (gyroOffsetX + dx).coerceIn(-0.05f, 0.05f)
+                            gyroOffsetY = (gyroOffsetY + dy).coerceIn(-0.05f, 0.05f)
+                            // Decay
+                            gyroOffsetX *= 0.9f
+                            gyroOffsetY *= 0.9f
                         }
                         override fun onAccuracyChanged(s: android.hardware.Sensor?, a: Int) {}
                     }
                     sensorManager!!.registerListener(gyroListener, gyro, android.hardware.SensorManager.SENSOR_DELAY_UI)
-                }
-
-                // [HARDENING] Hook SensorEventListener to ensure ALL apps see our virtual movement
-                val sensorEventClass = XposedHelpers.findClassIfExists("android.hardware.SensorEvent", context.classLoader)
-                val sensorListenerClass = XposedHelpers.findClassIfExists("android.hardware.SensorEventListener", context.classLoader)
-                if (sensorListenerClass != null && sensorEventClass != null) {
-                    XposedHelpers.findAndHookMethod(sensorListenerClass, "onSensorChanged", sensorEventClass, object : XC_MethodHook() {
-                        override fun beforeHookedMethod(param: MethodHookParam) {
-                            if (!isEnabled) return
-                            val event = param.args[0] as android.hardware.SensorEvent
-                            val type = event.sensor.type
-                            
-                            // Synchronize with the pixels!
-                            if (type == android.hardware.Sensor.TYPE_GYROSCOPE || type == android.hardware.Sensor.TYPE_ACCELEROMETER) {
-                                val values = event.values
-                                values[0] += gyroOffsetX * 50.0f // Scale to look like real degrees/sec
-                                values[1] += gyroOffsetY * 50.0f
-                            }
-                        }
-                    })
                 }
 
                 // Ambient Light Correlation (Feature 8)
@@ -2822,7 +2710,9 @@ class VirtualRenderThread(
                     lightListener = object : android.hardware.SensorEventListener {
                         override fun onSensorChanged(event: android.hardware.SensorEvent) {
                             val lux = event.values[0]
+                            // Normal indoor light is ~100-300 lux. We vary brightness from 0.85 to 1.15
                             val target = 0.85f + (lux.coerceIn(0f, 1000f) / 1000f) * 0.3f
+                            // Smooth interpolation
                             ambientLightMultiplier += (target - ambientLightMultiplier) * 0.1f
                         }
                         override fun onAccuracyChanged(s: android.hardware.Sensor?, a: Int) {}
@@ -2879,50 +2769,48 @@ class VirtualRenderThread(
             val uri = Uri.parse("content://com.virtucam.provider/file")
             
             if (isStream) {
-                // Live Stream Pipeline (Persistent Background Player)
+                // Live Stream Pipeline (ExoPlayer)
                 mediaSurfaceTexture = SurfaceTexture(textureRenderer!!.textureId)
                 mediaSurface = Surface(mediaSurfaceTexture)
+                val hasNewFrame = java.util.concurrent.atomic.AtomicBoolean(false)
+                mediaSurfaceTexture?.setOnFrameAvailableListener { hasNewFrame.set(true) }
                 
-                CameraHook.hasNewFrame.set(false)
-                mediaSurfaceTexture?.setOnFrameAvailableListener {
-                    CameraHook.hasNewFrame.set(true)
-                    synchronized(CameraHook.frameSync) { CameraHook.frameSync.notifyAll() }
-                }
+                streamPlayer = StreamPlayer(
+                    context = context,
+                    streamUrl = streamUrl,
+                    outputSurface = mediaSurface!!,
+                    useTcp = CameraHook.rtspUseTcp,
+                    onFrameAvailable = {
+                        hasNewFrame.set(true)
+                    },
+                    onFirstFrame = { bitmap: android.graphics.Bitmap ->
+                        android.os.Handler(android.os.Looper.getMainLooper()).post {
+                            saveStreamPreviewToProvider(bitmap)
+                        }
+                    }
+                )
+                streamPlayer!!.start()
                 
-                CameraHook.globalStreamPlayer?.updateSurface(mediaSurface)
-                
-                renderLoop(CameraHook.hasNewFrame) { 
-                    val w = CameraHook.globalStreamPlayer?.videoWidth?.takeIf { it > 0 } ?: 720
-                    val h = CameraHook.globalStreamPlayer?.videoHeight?.takeIf { it > 0 } ?: 1280
-                    Pair(w, h)
-                }
-                
-                CameraHook.globalStreamPlayer?.updateSurface(null)
+                renderLoop(hasNewFrame) { streamPlayer!!.videoWidth to streamPlayer!!.videoHeight }
+                streamPlayer!!.stop()
                 
             } else if (isVideo) {
-                // Local Video Pipeline (MediaCodec) - Scoped locally to ensure fresh FileDescriptor
+                // Local Video Pipeline (MediaCodec)
                 mediaSurfaceTexture = SurfaceTexture(textureRenderer!!.textureId)
                 mediaSurface = Surface(mediaSurfaceTexture)
                 
                 val pfd = context.contentResolver.openFileDescriptor(uri, "r")
                 if (pfd != null) {
                     val fd = pfd.fileDescriptor
-                    CameraHook.hasNewFrame.set(false)
-                    mediaSurfaceTexture?.setOnFrameAvailableListener {
-                        CameraHook.hasNewFrame.set(true)
-                        synchronized(CameraHook.frameSync) { CameraHook.frameSync.notifyAll() }
-                    }
+                    val hasNewFrame = java.util.concurrent.atomic.AtomicBoolean(false)
+                    mediaSurfaceTexture?.setOnFrameAvailableListener { hasNewFrame.set(true) }
                     
-                    val localVideoPlayer = com.virtucam.media.VideoPlayer(fd, mediaSurface!!) {}
-                    localVideoPlayer.start()
+                    videoPlayer = VideoPlayer(fd, mediaSurface!!) {}
+                    videoPlayer!!.start()
                     
-                    renderLoop(CameraHook.hasNewFrame) { 
-                        val w = localVideoPlayer.videoWidth.takeIf { it > 0 } ?: 720
-                        val h = localVideoPlayer.videoHeight.takeIf { it > 0 } ?: 1280
-                        Pair(w, h)
-                    }
+                    renderLoop(hasNewFrame) { videoPlayer!!.videoWidth to videoPlayer!!.videoHeight }
                     
-                    localVideoPlayer.stop()
+                    videoPlayer!!.stop()
                     pfd.close()
                 }
             } else {
@@ -2932,7 +2820,7 @@ class VirtualRenderThread(
                 // empirically against a reference.
                 val bitmap: android.graphics.Bitmap? = if (CameraHook.isTestPatternMode) {
                     Log.e("VirtuCam_Render", "[INVESTIGATION] Using TEST PATTERN as source media")
-                    // Render at 720x1280 (portrait, 9:16) — common selfie aspect.
+                    // Render at 720x1280 (portrait, 9:16) ΓÇö common selfie aspect.
                     // The renderer's aspect-fit math will scale it appropriately.
                     TestPattern.generate(720, 1280)
                 } else {
@@ -3019,12 +2907,8 @@ class VirtualRenderThread(
                     CameraHook.captureCount--
                 }
             }
-            // Precise Frame Pacing: Wait for the exact microsecond the decoder provides a frame
-            synchronized(CameraHook.frameSync) {
-                if (!hasNewFrame.get()) {
-                    try { CameraHook.frameSync.wait(30) } catch (_: Exception) {}
-                }
-            }
+            
+            sleep(30)
         }
     }
 
@@ -3050,7 +2934,7 @@ class VirtualRenderThread(
                 eglCore!!.makeCurrent(es)
                 var vw = eglCore!!.querySurface(es, android.opengl.EGL14.EGL_WIDTH)
                 var vh = eglCore!!.querySurface(es, android.opengl.EGL14.EGL_HEIGHT)
-                // Before the first dequeue, eglQuerySurface often returns 0×0; then TextureRenderer
+                // Before the first dequeue, eglQuerySurface often returns 0├ù0; then TextureRenderer
                 // skips rotation (identity MVP) and buffers stay "upright" wrongly.
                 val surfaceIdx = eglSurfaceTargets.indexOfFirst { triple -> triple.first === es }
                 val originalSurface = if (surfaceIdx >= 0 && surfaceIdx < originalSurfaceBackings.size) originalSurfaceBackings[surfaceIdx] else null
@@ -3070,7 +2954,6 @@ class VirtualRenderThread(
                     vh = 720
                 }
 
-                // [RESTORED] Relative Rotation Engine (from 02875b3)
                 // Emulate HAL auto-rotation for SurfaceView (0 = Upright), otherwise hardware parity (Raw sensor orientation)
                 val targetBufferRotation = if (isSurfaceView) 0 else CameraHook.resolveSensorOrientationDeg()
 
@@ -3088,7 +2971,11 @@ class VirtualRenderThread(
                 } else {
                     CameraHook.isMirrored
                 }
+
+                // Front/Back Camera Differentiation (Feature 10)
+                // Slight crop/zoom applied only to front camera to mimic lens variation
                 val finalZoom = if (isActuallyFront) CameraHook.zoomFactor * 1.05f else CameraHook.zoomFactor
+
                 val ratio = getTargetRatio(vw, vh, isSurfaceView)
 
                 val timeValue = (System.currentTimeMillis() - renderStartTime) / 1000.0f
@@ -3102,21 +2989,7 @@ class VirtualRenderThread(
                     android.opengl.Matrix.translateM(rotatedMatrix, 0, -0.5f, -0.5f, 0f)
                     rotatedMatrix
                 } else {
-                    matrix.clone()
-                }
-
-                // [HARDENING] Persistent Micro-Tremors (Simulates handheld camera shake)
-                // We use a slow random walk to ensure the 'background' is never perfectly static.
-                if (CameraHook.isLivenessEnabled) {
-                    if (Math.abs(tremorX - tremorTargetX) < 0.001f) {
-                        tremorTargetX = (tremorRandom.nextFloat() - 0.5f) * 0.006f
-                        tremorTargetY = (tremorRandom.nextFloat() - 0.5f) * 0.006f
-                    }
-                    tremorX += (tremorTargetX - tremorX) * 0.1f
-                    tremorY += (tremorTargetY - tremorY) * 0.1f
-                    
-                    // Apply tremor to the final render matrix
-                    android.opengl.Matrix.translateM(renderMatrix, 0, tremorX, tremorY, 0f)
+                    matrix
                 }
 
                 textureRenderer?.draw(
@@ -3147,7 +3020,7 @@ class VirtualRenderThread(
     /**
      * Recreate all EGL surfaces from their original Surface backings.
      * Called when the browser renegotiates the video stream resolution
-     * (e.g. Veriff resizes from 1280x720 → 720x720 via applyConstraints).
+     * (e.g. Veriff resizes from 1280x720 ΓåÆ 720x720 via applyConstraints).
      * The new EGL surface picks up the updated native window dimensions.
      */
     private fun recreateEglSurfaces() {
@@ -3232,14 +3105,14 @@ class VirtualRenderThread(
      * [INVESTIGATION] Surface display-layer instrumentation.
      *
      * Logs what consumer apps do AFTER they receive our buffer:
-     *   - TextureView.setTransform(Matrix) — apps like scanners use this to rotate
+     *   - TextureView.setTransform(Matrix) ΓÇö apps like scanners use this to rotate
      *     the displayed texture independent of the buffer content
-     *   - Display.getRotation() at session begin — host activity orientation context
+     *   - Display.getRotation() at session begin ΓÇö host activity orientation context
      *
      * Output goes to the existing audit JSON via HardwareAuditLogger.
      */
     private fun hookDisplayLayer(lpparam: XC_LoadPackage.LoadPackageParam) {
-        // 1) TextureView.setTransform(Matrix) — captures app-applied display matrix
+        // 1) TextureView.setTransform(Matrix) ΓÇö captures app-applied display matrix
         try {
             val textureViewCls = XposedHelpers.findClassIfExists(
                 "android.view.TextureView", lpparam.classLoader
@@ -3263,7 +3136,7 @@ class VirtualRenderThread(
             }
         } catch (_: Throwable) {}
 
-        // 2) View.setRotation(float) — captures direct view rotation calls (less common but possible)
+        // 2) View.setRotation(float) ΓÇö captures direct view rotation calls (less common but possible)
         try {
             val viewCls = XposedHelpers.findClassIfExists(
                 "android.view.View", lpparam.classLoader
