@@ -151,7 +151,6 @@ class StreamPlayer(
                     MediaItem.LiveConfiguration.Builder()
                         .setMaxPlaybackSpeed(1.05f)
                         .setMinPlaybackSpeed(0.95f)
-                        .setFallbackMaxPlaybackSpeed(1.1f)
                         .build()
                 )
                 .setRequestMetadata(RequestMetadata.Builder().build())

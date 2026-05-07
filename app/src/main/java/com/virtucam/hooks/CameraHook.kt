@@ -1365,11 +1365,12 @@ object CameraHook {
         // see a consistent "Full" or "Level 3" hardware profile.
         val metadataNativeClass = XposedHelpers.findClassIfExists("android.hardware.camera2.impl.CameraMetadataNative", lpparam.classLoader)
         if (metadataNativeClass != null) {
+            // [HARDENING] 1. Intercept 'get' for specific high-value keys
             XposedHelpers.findAndHookMethod(metadataNativeClass, "get", "android.hardware.camera2.impl.CameraMetadataNative\$Key", object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     if (!isEnabled) return
                     val key = param.args[0] ?: return
-                    val keyName = key.toString() // e.g. "android.info.supportedHardwareLevel"
+                    val keyName = key.toString()
 
                     // Force Hardware Level 3 (Highest) to look like a premium device
                     if (keyName.contains("info.supportedHardwareLevel")) {
@@ -1381,9 +1382,29 @@ object CameraHook {
                     if (keyName.contains("sensor.orientation")) {
                         val cameraId = activeCameraId ?: "0"
                         param.result = cameraOrientations[cameraId] ?: 270
+                        return
+                    }
+
+                    // [PARITY] Spoofing missing focal lengths and apertures to look like a real lens
+                    if (keyName.contains("lens.info.availableFocalLengths")) {
+                        param.result = floatArrayOf(4.74f)
+                        return
+                    }
+                    if (keyName.contains("lens.info.availableApertures")) {
+                        param.result = floatArrayOf(1.8f)
+                        return
                     }
                 }
             })
+
+            val listHook = object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {}
+            }
+            try {
+                XposedHelpers.findAndHookMethod(metadataNativeClass, "getAvailableCaptureRequestKeys", listHook)
+                XposedHelpers.findAndHookMethod(metadataNativeClass, "getAvailableCaptureResultKeys", listHook)
+                XposedHelpers.findAndHookMethod(metadataNativeClass, "getAvailableCharacteristicsKeys", listHook)
+            } catch (e: Throwable) {}
         }
     }
 
