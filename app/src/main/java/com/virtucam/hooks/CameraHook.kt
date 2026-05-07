@@ -1361,8 +1361,6 @@ object CameraHook {
             })
         } catch (_: Throwable) {}
 
-        })
-
         // [HARDWARE PARITY] Hook the lowest level metadata storage to ensure Veriff/Sumsub 
         // see a consistent "Full" or "Level 3" hardware profile.
         val metadataNativeClass = XposedHelpers.findClassIfExists("android.hardware.camera2.impl.CameraMetadataNative", lpparam.classLoader)
@@ -1388,6 +1386,8 @@ object CameraHook {
             })
         }
     }
+
+
 
     /**
      * Hook CaptureRequest.Builder.addTarget() to swap original surfaces with dummy ones.
@@ -2723,9 +2723,9 @@ class VirtualRenderThread(
     private var mediaSurfaceTexture: SurfaceTexture? = null
     private var mediaSurface: Surface? = null
     private var frameCount = 0
-    private var renderStartTime = 0L
     
     // [HARDENING] Micro-tremor state (Persistent random walk)
+
     private var tremorX = 0f
     private var tremorY = 0f
     private var tremorTargetX = 0f
