@@ -1365,7 +1365,7 @@ object CameraHook {
         // see a consistent "Full" or "Level 3" hardware profile.
         val metadataNativeClass = XposedHelpers.findClassIfExists("android.hardware.camera2.impl.CameraMetadataNative", lpparam.classLoader)
         if (metadataNativeClass != null) {
-            XposedHelpers.findAndHookMethod(metadataNativeClass, "get", "android.hardware.camera2.impl.CameraMetadataNative$Key", object : XC_MethodHook() {
+            XposedHelpers.findAndHookMethod(metadataNativeClass, "get", "android.hardware.camera2.impl.CameraMetadataNative\$Key", object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     if (!isEnabled) return
                     val key = param.args[0] ?: return
