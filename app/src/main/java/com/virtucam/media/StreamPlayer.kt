@@ -116,24 +116,21 @@ class StreamPlayer(
                 val separator = if (trimmedUrl.contains("?")) "&" else "?"
                 optimizedUrl = "$trimmedUrl${separator}latency=300000"
             }
-            
-            // Handle RTMP Server Mode (Listen mode)
-            // If the URL is rtmp://0.0.0.0... or has ?listen=1, we act as a server for OBS to connect to.
-            if (trimmedUrl.startsWith("rtmp", ignoreCase = true)) {
+            // Handle RTSP/RTMP Server/Client Mode
+            // For RTSP, we force TCP transport to prevent UDP packet loss distortion.
+            if (trimmedUrl.startsWith("rtsp", ignoreCase = true)) {
+                ffmpegInputArgs = "-rtsp_transport tcp "
+            } else if (trimmedUrl.startsWith("rtmp", ignoreCase = true)) {
                 if (trimmedUrl.contains("0.0.0.0") || trimmedUrl.contains("listen=1")) {
                     ffmpegInputArgs = "-listen 1 "
-                    // Strip the listen parameter if it was just a flag for us
                     optimizedUrl = optimizedUrl.replace("?listen=1", "").replace("&listen=1", "")
                 }
             }
 
-            // For RTMP client pulls (like OBS plugin), we increase the probe size and use a larger buffer
-            // to prevent the "distortion" caused by UDP packet loss in the local loopback.
+            // For RTSP/RTMP client pulls, we increase the probe size and use a larger buffer
             val udpUrl = "udp://127.0.0.1:9998?pkt_size=1316&buffer_size=20971520&fifo_size=1000000&overrun_nonfatal=1"
-            Log.d(TAG, "Starting FFmpeg proxy for RTMP/SRT: $optimizedUrl")
+            Log.d(TAG, "Starting FFmpeg proxy for RTSP/RTMP: $optimizedUrl")
             
-            // Optimized command: removed -bitrate pacing for RTMP as TCP handles it better, 
-            // increased probesize for OBS metadata detection.
             val command = "$ffmpegInputArgs -probesize 1000000 -analyzeduration 1000000 -flags low_delay -i \"$optimizedUrl\" -c copy -f mpegts \"$udpUrl\""
             ffmpegSession = FFmpegKit.executeAsync(command) { session ->
                 Log.d(TAG, "FFmpeg Proxy finished with state ${session.state} and return code ${session.returnCode}")
@@ -143,7 +140,7 @@ class StreamPlayer(
 
         val mediaSource = if (finalUri.scheme?.startsWith("rtsp", ignoreCase = true) == true) {
             RtspMediaSource.Factory()
-                .setForceUseRtpTcp(useTcp)
+                .setForceUseRtpTcp(true) // Force TCP for native ExoPlayer RTSP too
                 .createMediaSource(MediaItem.fromUri(finalUri))
         } else {
             MediaItem.Builder()
