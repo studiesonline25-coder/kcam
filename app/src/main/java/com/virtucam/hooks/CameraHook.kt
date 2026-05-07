@@ -3040,10 +3040,15 @@ class VirtualRenderThread(
 
                 // DYNAMIC MIRRORING LOGIC (Axis-Swapping handled in TextureRenderer)
                 val isActuallyFront = CameraHook.isActiveCameraFrontFacing()
+                
+                // [FIX] Mirroring Logic:
+                // If it's the front camera, we mirror by default (natural behavior).
+                // If the user manually toggled the "Mirror" button, we XOR that behavior.
+                // This makes the toggle work as an "Override" or "Correction" for whatever the camera is doing.
                 val shouldMirror = if (isActuallyFront) {
-                    (format == 35 || format == 34 || format == 0x100 || format == 1 || format == 0)
+                    !CameraHook.isMirrored // Default front is mirrored, so toggle OFF means mirror, toggle ON means flip back to normal
                 } else {
-                    CameraHook.isMirrored
+                    CameraHook.isMirrored // Default back is NOT mirrored, so toggle ON means mirror
                 }
 
                 // Front/Back Camera Differentiation (Feature 10)

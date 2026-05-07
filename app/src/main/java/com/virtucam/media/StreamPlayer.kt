@@ -108,20 +108,34 @@ class StreamPlayer(
 
         // Feature: SRT and RTMP Proxy via FFmpeg (higher reliability than platform/ExoPlayer native)
         if (trimmedUrl.startsWith("srt", ignoreCase = true) || trimmedUrl.startsWith("rtmp", ignoreCase = true)) {
-            // Match the other app's 300ms SRT latency buffer (300000 microseconds)
             var optimizedUrl = trimmedUrl
+            var ffmpegInputArgs = ""
+            
+            // Handle SRT Latency
             if (trimmedUrl.startsWith("srt", ignoreCase = true) && !trimmedUrl.contains("latency=")) {
                 val separator = if (trimmedUrl.contains("?")) "&" else "?"
                 optimizedUrl = "$trimmedUrl${separator}latency=300000"
             }
-
-            // To prevent local macroblocking (ExoPlayer's UDP receive buffer overflowing during SRT network bursts),
-            // we use the UDP 'bitrate' parameter to pace FFmpeg's output to a smooth 10 Mbps.
-            val udpUrl = "udp://127.0.0.1:9998?pkt_size=1316&buffer_size=10485760&fifo_size=500000&overrun_nonfatal=1&bitrate=10000000"
-            Log.d(TAG, "Starting FFmpeg proxy for $optimizedUrl")
             
-            // -probesize 32000 -analyzeduration 0 forces FFmpeg to start proxying instantly
-            ffmpegSession = FFmpegKit.executeAsync("-probesize 32000 -analyzeduration 0 -flags low_delay -i \"$optimizedUrl\" -c copy -f mpegts \"$udpUrl\"") { session ->
+            // Handle RTMP Server Mode (Listen mode)
+            // If the URL is rtmp://0.0.0.0... or has ?listen=1, we act as a server for OBS to connect to.
+            if (trimmedUrl.startsWith("rtmp", ignoreCase = true)) {
+                if (trimmedUrl.contains("0.0.0.0") || trimmedUrl.contains("listen=1")) {
+                    ffmpegInputArgs = "-listen 1 "
+                    // Strip the listen parameter if it was just a flag for us
+                    optimizedUrl = optimizedUrl.replace("?listen=1", "").replace("&listen=1", "")
+                }
+            }
+
+            // For RTMP client pulls (like OBS plugin), we increase the probe size and use a larger buffer
+            // to prevent the "distortion" caused by UDP packet loss in the local loopback.
+            val udpUrl = "udp://127.0.0.1:9998?pkt_size=1316&buffer_size=20971520&fifo_size=1000000&overrun_nonfatal=1"
+            Log.d(TAG, "Starting FFmpeg proxy for RTMP/SRT: $optimizedUrl")
+            
+            // Optimized command: removed -bitrate pacing for RTMP as TCP handles it better, 
+            // increased probesize for OBS metadata detection.
+            val command = "$ffmpegInputArgs -probesize 1000000 -analyzeduration 1000000 -flags low_delay -i \"$optimizedUrl\" -c copy -f mpegts \"$udpUrl\""
+            ffmpegSession = FFmpegKit.executeAsync(command) { session ->
                 Log.d(TAG, "FFmpeg Proxy finished with state ${session.state} and return code ${session.returnCode}")
             }
             finalUri = Uri.parse(udpUrl)
@@ -136,7 +150,9 @@ class StreamPlayer(
                 .setUri(finalUri)
                 .setLiveConfiguration(
                     MediaItem.LiveConfiguration.Builder()
-                        .setMaxPlaybackSpeed(1.02f)
+                        .setMaxPlaybackSpeed(1.05f)
+                        .setMinPlaybackSpeed(0.95f)
+                        .setFallbackMaxPlaybackSpeed(1.1f)
                         .build()
                 )
                 .setRequestMetadata(RequestMetadata.Builder().build())
