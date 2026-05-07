@@ -3070,6 +3070,7 @@ class VirtualRenderThread(
                     vh = 720
                 }
 
+                // [RESTORED] Relative Rotation Engine (from 02875b3)
                 // Emulate HAL auto-rotation for SurfaceView (0 = Upright), otherwise hardware parity (Raw sensor orientation)
                 val targetBufferRotation = if (isSurfaceView) 0 else CameraHook.resolveSensorOrientationDeg()
 
@@ -3082,21 +3083,8 @@ class VirtualRenderThread(
 
                 // DYNAMIC MIRRORING LOGIC (Axis-Swapping handled in TextureRenderer)
                 val isActuallyFront = CameraHook.isActiveCameraFrontFacing()
-                
-                // [FIX] Mirroring Logic:
-                // If it's the front camera, we mirror by default (natural behavior).
-                // If the user manually toggled the "Mirror" button, we XOR that behavior.
-                // This makes the toggle work as an "Override" or "Correction" for whatever the camera is doing.
-                val shouldMirror = if (isActuallyFront) {
-                    !CameraHook.isMirrored // Default front is mirrored, so toggle OFF means mirror, toggle ON means flip back to normal
-                } else {
-                    CameraHook.isMirrored // Default back is NOT mirrored, so toggle ON means mirror
-                }
-
-                // Front/Back Camera Differentiation (Feature 10)
-                // Slight crop/zoom applied only to front camera to mimic lens variation
+                val shouldMirror = if (isActuallyFront) !CameraHook.isMirrored else CameraHook.isMirrored
                 val finalZoom = if (isActuallyFront) CameraHook.zoomFactor * 1.05f else CameraHook.zoomFactor
-
                 val ratio = getTargetRatio(vw, vh, isSurfaceView)
 
                 val timeValue = (System.currentTimeMillis() - renderStartTime) / 1000.0f
@@ -3128,8 +3116,10 @@ class VirtualRenderThread(
                 }
 
                 textureRenderer?.draw(
-                    renderMatrix, vw, vh, 
-                    ambientLightMultiplier, timeValue, 
+                    renderMatrix, contentW, contentH, vw, vh, ratio,
+                    parityOrientation, finalUserRotation, shouldMirror,
+                    finalZoom, isCapture, CameraHook.compensationFactor,
+                    finalRotationOffset, ambientLightMultiplier, timeValue,
                     gyroOffsetX, gyroOffsetY
                 )
 
