@@ -107,6 +107,10 @@ class StreamPlayer(
         var finalUri = Uri.parse(trimmedUrl)
 
         // Feature: SRT and RTMP Proxy via FFmpeg (higher reliability than platform/ExoPlayer native)
+        if (trimmedUrl.startsWith("srt", ignoreCase = true) || trimmedUrl.startsWith("rtmp", ignoreCase = true) || trimmedUrl.startsWith("rtsp", ignoreCase = true)) {
+            var optimizedUrl = trimmedUrl
+            var ffmpegInputArgs = ""
+            
             // Handle Protocol-Specific Optimizations
             if (trimmedUrl.startsWith("srt", ignoreCase = true)) {
                 // Increase SRT latency to 1000ms (1,000,000 microseconds) for maximum stability on WiFi
