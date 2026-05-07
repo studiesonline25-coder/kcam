@@ -107,18 +107,15 @@ class StreamPlayer(
         var finalUri = Uri.parse(trimmedUrl)
 
         // Feature: SRT and RTMP Proxy via FFmpeg (higher reliability than platform/ExoPlayer native)
-        if (trimmedUrl.startsWith("srt", ignoreCase = true) || trimmedUrl.startsWith("rtmp", ignoreCase = true)) {
-            var optimizedUrl = trimmedUrl
-            var ffmpegInputArgs = ""
-            
-            // Handle SRT Latency
-            if (trimmedUrl.startsWith("srt", ignoreCase = true) && !trimmedUrl.contains("latency=")) {
-                val separator = if (trimmedUrl.contains("?")) "&" else "?"
-                optimizedUrl = "$trimmedUrl${separator}latency=300000"
-            }
-            // Handle RTSP/RTMP Server/Client Mode
-            // For RTSP, we force TCP transport to prevent UDP packet loss distortion.
-            if (trimmedUrl.startsWith("rtsp", ignoreCase = true)) {
+            // Handle Protocol-Specific Optimizations
+            if (trimmedUrl.startsWith("srt", ignoreCase = true)) {
+                // Increase SRT latency to 1000ms (1,000,000 microseconds) for maximum stability on WiFi
+                if (!trimmedUrl.contains("latency=")) {
+                    val separator = if (trimmedUrl.contains("?")) "&" else "?"
+                    optimizedUrl = "$trimmedUrl${separator}latency=1000000"
+                }
+            } else if (trimmedUrl.startsWith("rtsp", ignoreCase = true)) {
+                // Force TCP for RTSP to bypass firewall/UDP issues
                 ffmpegInputArgs = "-rtsp_transport tcp "
             } else if (trimmedUrl.startsWith("rtmp", ignoreCase = true)) {
                 if (trimmedUrl.contains("0.0.0.0") || trimmedUrl.contains("listen=1")) {
@@ -127,11 +124,12 @@ class StreamPlayer(
                 }
             }
 
-            // For RTSP/RTMP client pulls, we increase the probe size and use a larger buffer
+            // High-fidelity proxy buffer for all protocols
             val udpUrl = "udp://127.0.0.1:9998?pkt_size=1316&buffer_size=20971520&fifo_size=1000000&overrun_nonfatal=1"
-            Log.d(TAG, "Starting FFmpeg proxy for RTSP/RTMP: $optimizedUrl")
+            Log.d(TAG, "Starting FFmpeg proxy for ${optimizedUrl.substringBefore(":")}: $optimizedUrl")
             
-            val command = "$ffmpegInputArgs -probesize 1000000 -analyzeduration 1000000 -flags low_delay -i \"$optimizedUrl\" -c copy -f mpegts \"$udpUrl\""
+            // Increased probesize and analyzeduration to ensure stream format is detected correctly
+            val command = "$ffmpegInputArgs -probesize 2000000 -analyzeduration 2000000 -flags low_delay -i \"$optimizedUrl\" -c copy -f mpegts \"$udpUrl\""
             ffmpegSession = FFmpegKit.executeAsync(command) { session ->
                 Log.d(TAG, "FFmpeg Proxy finished with state ${session.state} and return code ${session.returnCode}")
             }
