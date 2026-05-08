@@ -3093,34 +3093,8 @@ class VirtualRenderThread(
 
                 val timeValue = (System.currentTimeMillis() - renderStartTime) / 1000.0f
 
-                // Emulate missing hardware EXIF rotation (-90 deg CW) for downloaded videos AND streams
-                val renderMatrix = if ((isVideo && videoPlayer?.rawRotation == 0) || (isStream && streamPlayer?.rawRotation == 0)) {
-                    val rotatedMatrix = FloatArray(16)
-                    System.arraycopy(matrix, 0, rotatedMatrix, 0, 16)
-                    android.opengl.Matrix.translateM(rotatedMatrix, 0, 0.5f, 0.5f, 0f)
-                    android.opengl.Matrix.rotateM(rotatedMatrix, 0, -90f, 0f, 0f, 1f)
-                    android.opengl.Matrix.translateM(rotatedMatrix, 0, -0.5f, -0.5f, 0f)
-                    rotatedMatrix
-                } else {
-                    matrix.clone()
-                }
-
-                // [HARDENING] Persistent Micro-Tremors (Simulates handheld camera shake)
-                // We use a slow random walk to ensure the 'background' is never perfectly static.
-                if (CameraHook.isLivenessEnabled) {
-                    if (Math.abs(tremorX - tremorTargetX) < 0.001f) {
-                        tremorTargetX = (tremorRandom.nextFloat() - 0.5f) * 0.006f
-                        tremorTargetY = (tremorRandom.nextFloat() - 0.5f) * 0.006f
-                    }
-                    tremorX += (tremorTargetX - tremorX) * 0.1f
-                    tremorY += (tremorTargetY - tremorY) * 0.1f
-                    
-                    // Apply tremor to the final render matrix
-                    android.opengl.Matrix.translateM(renderMatrix, 0, tremorX, tremorY, 0f)
-                }
-
                 textureRenderer?.draw(
-                    renderMatrix, contentW, contentH, vw, vh, ratio,
+                    matrix, contentW, contentH, vw, vh, ratio,
                     parityOrientation, finalUserRotation, shouldMirror,
                     finalZoom, isCapture, CameraHook.compensationFactor,
                     finalRotationOffset, ambientLightMultiplier, timeValue,
