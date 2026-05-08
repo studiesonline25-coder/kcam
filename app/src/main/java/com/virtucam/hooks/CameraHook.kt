@@ -138,12 +138,6 @@ object CameraHook {
         return metadataCourierMap.values.firstOrNull() // Fallback
     }
 
-    // [Persistent Media Architecture]
-    var globalStreamPlayer: com.virtucam.media.StreamPlayer? = null
-    var globalVideoPlayer: com.virtucam.media.VideoPlayer? = null
-    val frameSync = Object()
-    val hasNewFrame = java.util.concurrent.atomic.AtomicBoolean(false)
-
     /**
      * Fresh [CameraCharacteristics.SENSOR_ORIENTATION] for [activeCameraId].
      * Cached map can be stale or missing (e.g. Camera1); never rely on the render-thread snapshot alone.
@@ -1361,54 +1355,30 @@ object CameraHook {
             })
         } catch (_: Throwable) {}
 
-        // [HARDWARE PARITY] Hook the lowest level metadata storage to ensure Veriff/Sumsub 
-        // see a consistent "Full" or "Level 3" hardware profile.
-        val metadataNativeClass = XposedHelpers.findClassIfExists("android.hardware.camera2.impl.CameraMetadataNative", lpparam.classLoader)
-        if (metadataNativeClass != null) {
-            // [HARDENING] 1. Intercept 'get' for specific high-value keys
-            XposedHelpers.findAndHookMethod(metadataNativeClass, "get", "android.hardware.camera2.impl.CameraMetadataNative\$Key", object : XC_MethodHook() {
-                override fun afterHookedMethod(param: MethodHookParam) {
-                    if (!isEnabled) return
-                    val key = param.args[0] ?: return
-                    val keyName = key.toString()
-
-                    // Force Hardware Level 3 (Highest) to look like a premium device
-                    if (keyName.contains("info.supportedHardwareLevel")) {
-                        param.result = 3 // INFO_SUPPORTED_HARDWARE_LEVEL_3
-                        return
-                    }
-
-                    // Ensure SENSOR_ORIENTATION matches our current capture configuration
-                    if (keyName.contains("sensor.orientation")) {
-                        val cameraId = activeCameraId ?: "0"
-                        param.result = cameraOrientations[cameraId] ?: 270
-                        return
-                    }
-
-                    // [PARITY] Spoofing missing focal lengths and apertures to look like a real lens
-                    if (keyName.contains("lens.info.availableFocalLengths")) {
-                        param.result = floatArrayOf(4.74f)
-                        return
-                    }
-                    if (keyName.contains("lens.info.availableApertures")) {
-                        param.result = floatArrayOf(1.8f)
-                        return
-                    }
+        XposedBridge.hookAllMethods(managerClass, "getCameraCharacteristics", object : XC_MethodHook() {
+            override fun afterHookedMethod(param: MethodHookParam) {
+                val cameraId = param.args[0] as? String ?: "unknown"
+                val char = param.result as? android.hardware.camera2.CameraCharacteristics ?: return
+                
+                // DIAGNOSTIC: Log key characteristics Veriff might be checking
+                val facing = char.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
+                val orientation = char.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
+                val level = char.get(android.hardware.camera2.CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)
+                
+                cameraOrientations[cameraId] = orientation
+                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics($cameraId) -> Facing=$facing, Orient=$orientation, HW_Level=$level")
+                
+                val streamMap = char.get(android.hardware.camera2.CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
+                if (streamMap != null) {
+                    val sizes = streamMap.getOutputSizes(android.graphics.ImageFormat.JPEG)
+                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Camera $cameraId supports ${sizes?.size ?: 0} JPEG sizes. Max: ${sizes?.firstOrNull()}")
                 }
-            })
 
-            val listHook = object : XC_MethodHook() {
-                override fun afterHookedMethod(param: MethodHookParam) {}
+                // [HARDWARE AUDIT] Always record real characteristics regardless of enabled state
+                try { HardwareAuditLogger.logCharacteristics(cameraId, char) } catch (_: Throwable) {}
             }
-            try {
-                XposedHelpers.findAndHookMethod(metadataNativeClass, "getAvailableCaptureRequestKeys", listHook)
-                XposedHelpers.findAndHookMethod(metadataNativeClass, "getAvailableCaptureResultKeys", listHook)
-                XposedHelpers.findAndHookMethod(metadataNativeClass, "getAvailableCharacteristicsKeys", listHook)
-            } catch (e: Throwable) {}
-        }
+        })
     }
-
-
 
     /**
      * Hook CaptureRequest.Builder.addTarget() to swap original surfaces with dummy ones.
@@ -1698,9 +1668,21 @@ object CameraHook {
                             if (mSettingsField != null) {
                                 mSettingsField.isAccessible = true
                                 val settings = mSettingsField.get(reqObj) // CameraMetadataNative
-                                
-                                // [Metadata Sync] Store current state for future lookup by Bridge
-                                // No longer injecting into LENS_FOCUS_DISTANCE to avoid hardware collision.
+                                val cameraMetadataNativeClass = Class.forName("android.hardware.camera2.impl.CameraMetadataNative")
+                                XposedHelpers.findAndHookMethod(cameraMetadataNativeClass, "get", XposedHelpers.findClass("android.hardware.camera2.CameraMetadata\$Key", lpparam.classLoader), object : XC_MethodHook() {
+                                    override fun afterHookedMethod(param: MethodHookParam) {
+                                        val key = param.args[0] as? android.hardware.camera2.CameraMetadata.Key<*>
+                                        val keyName = key?.name ?: return
+                                        
+                                        if (keyName == "android.info.supportedHardwareLevel") {
+                                            param.result = android.hardware.camera2.CameraMetadata.INFO_SUPPORTED_HARDWARE_LEVEL_3
+                                        } else if (keyName == "android.lens.availableFocalLengths") {
+                                            param.result = floatArrayOf(4.74f)
+                                        } else if (keyName == "android.lens.availableApertures") {
+                                            param.result = floatArrayOf(1.8f)
+                                        }
+                                    }
+                                })
                                 
                                 // [TRUTH LOG] This confirms the Camera App process HAS the updated slider value.
                                 Log.d(TAG, "DIAGNOSTIC_VIRTUCAM: State Captured for Courier: (Stretch: $compensationFactor, RotOffset: $rotationOffset, Mirror: $isMirrored)")
@@ -2248,9 +2230,6 @@ object CameraHook {
                         isBufferCaptureEnabled = if (it.columnCount > 16) it.getInt(16) == 1 else true
                         
                         Log.d(TAG, "VirtuCam_Hook: Config loaded. Enabled: $isEnabled, Zoom: $zoomFactor, Stretch: $compensationFactor, liveness: $isLivenessEnabled, passthrough: $isPassthroughMode, offset: $rotationOffset")
-                        
-                        // Dynamically manage persistent players
-                        updateGlobalPlayers(context)
                     } catch (innerE: Exception) {
                         Log.e(TAG, "VirtuCam_Hook: Error parsing cursor columns", innerE)
                     }
@@ -2258,54 +2237,6 @@ object CameraHook {
             }
         } catch (e: Exception) {
             Log.e(TAG, "VirtuCam_Hook: Failed to load configuration (Provider possibly blocked)", e)
-        }
-    }
-
-    @Synchronized
-    private fun updateGlobalPlayers(context: android.content.Context) {
-        if (!isEnabled) {
-            globalStreamPlayer?.stop()
-            globalStreamPlayer = null
-            globalVideoPlayer?.updateSurface(null)
-            globalVideoPlayer = null
-            return
-        }
-        
-        if (isStream && streamUrl.isNotEmpty()) {
-            if (globalStreamPlayer == null) {
-                Log.d(TAG, "Starting persistent global StreamPlayer for zero-latency reconnects")
-                globalVideoPlayer?.updateSurface(null)
-                globalVideoPlayer = null
-                
-                globalStreamPlayer = com.virtucam.media.StreamPlayer(
-                    context = context,
-                    streamUrl = streamUrl,
-                    outputSurface = null,
-                    useTcp = rtspUseTcp,
-                    onFrameAvailable = {
-                        hasNewFrame.set(true)
-                        synchronized(frameSync) { frameSync.notifyAll() }
-                    },
-                    onFirstFrame = { bitmap ->
-                        android.os.Handler(android.os.Looper.getMainLooper()).post {
-                            saveStreamPreviewToProvider(bitmap)
-                        }
-                    }
-                )
-                globalStreamPlayer?.start()
-            }
-        } else if (isVideo) {
-            // Revert to local instantiation for VideoPlayer because users can dynamically select new files,
-            // and the contentResolver FD must be read correctly from the Hook context when requested.
-            globalStreamPlayer?.stop()
-            globalStreamPlayer = null
-            globalVideoPlayer?.updateSurface(null)
-            globalVideoPlayer = null
-        } else {
-            globalStreamPlayer?.stop()
-            globalStreamPlayer = null
-            globalVideoPlayer?.updateSurface(null)
-            globalVideoPlayer = null
         }
     }
 
@@ -2744,14 +2675,6 @@ class VirtualRenderThread(
     private var mediaSurfaceTexture: SurfaceTexture? = null
     private var mediaSurface: Surface? = null
     private var frameCount = 0
-    
-    // [HARDENING] Micro-tremor state (Persistent random walk)
-
-    private var tremorX = 0f
-    private var tremorY = 0f
-    private var tremorTargetX = 0f
-    private var tremorTargetY = 0f
-    private val tremorRandom = java.util.Random()
 
     private fun getTargetRatio(vW: Int, vH: Int, isSurfaceView: Boolean): Float {
         return try {
@@ -2774,46 +2697,61 @@ class VirtualRenderThread(
             // Anti-Detection Setup
             sensorManager = context.getSystemService(android.content.Context.SENSOR_SERVICE) as? android.hardware.SensorManager
             if (sensorManager != null) {
-                // Gyroscope Shake (Problem 4: Correlation)
-                // We use a mathematical breathing pattern that will be applied to both pixels and sensors.
+                // Gyroscope Shake (Feature 6)
                 val gyro = sensorManager!!.getDefaultSensor(android.hardware.Sensor.TYPE_GYROSCOPE)
                 if (gyro != null) {
                     gyroListener = object : android.hardware.SensorEventListener {
                         override fun onSensorChanged(event: android.hardware.SensorEvent) {
-                            // We don't just read the sensor; we hijack the event values to match our virtual shake.
-                            // This ensures Pixel Movement == Sensor Movement.
-                            val time = System.currentTimeMillis() - renderStartTime
-                            val virtualShakeX = Math.sin(time * 0.0015).toFloat() * 0.0008f
-                            val virtualShakeY = Math.cos(time * 0.0012).toFloat() * 0.0008f
-                            
-                            // Inject into the actual event if we were hooking at the HAL level, 
-                            // but here we just store it to return via our method hook below.
-                            gyroOffsetX = virtualShakeX
-                            gyroOffsetY = virtualShakeY
+                            // Accumulate micro-movements, slowly decay to center
+                            val dx = event.values[1] * 0.002f // Y-axis rotation maps to X translation
+                            val dy = event.values[0] * 0.002f // X-axis rotation maps to Y translation
+                            gyroOffsetX = (gyroOffsetX + dx).coerceIn(-0.05f, 0.05f)
+                            gyroOffsetY = (gyroOffsetY + dy).coerceIn(-0.05f, 0.05f)
+                            // Decay
+                            gyroOffsetX *= 0.9f
+                            gyroOffsetY *= 0.9f
                         }
                         override fun onAccuracyChanged(s: android.hardware.Sensor?, a: Int) {}
                     }
                     sensorManager!!.registerListener(gyroListener, gyro, android.hardware.SensorManager.SENSOR_DELAY_UI)
                 }
 
-                // [HARDENING] Hook SensorEventListener to ensure ALL apps see our virtual movement
-                val sensorEventClass = XposedHelpers.findClassIfExists("android.hardware.SensorEvent", context.classLoader)
-                val sensorListenerClass = XposedHelpers.findClassIfExists("android.hardware.SensorEventListener", context.classLoader)
-                if (sensorListenerClass != null && sensorEventClass != null) {
-                    XposedHelpers.findAndHookMethod(sensorListenerClass, "onSensorChanged", sensorEventClass, object : XC_MethodHook() {
-                        override fun beforeHookedMethod(param: MethodHookParam) {
-                            if (!isEnabled) return
-                            val event = param.args[0] as android.hardware.SensorEvent
-                            val type = event.sensor.type
-                            
-                            // Synchronize with the pixels!
-                            if (type == android.hardware.Sensor.TYPE_GYROSCOPE || type == android.hardware.Sensor.TYPE_ACCELEROMETER) {
-                                val values = event.values
-                                values[0] += gyroOffsetX * 50.0f // Scale to look like real degrees/sec
-                                values[1] += gyroOffsetY * 50.0f
-                            }
+                // Ambient Light Correlation (Feature 8)
+                val light = sensorManager!!.getDefaultSensor(android.hardware.Sensor.TYPE_LIGHT)
+                if (light != null) {
+                    lightListener = object : android.hardware.SensorEventListener {
+                        override fun onSensorChanged(event: android.hardware.SensorEvent) {
+                            val lux = event.values[0]
+                            // Normal indoor light is ~100-300 lux. We vary brightness from 0.85 to 1.15
+                            val target = 0.85f + (lux.coerceIn(0f, 1000f) / 1000f) * 0.3f
+                            // Smooth interpolation
+                            ambientLightMultiplier += (target - ambientLightMultiplier) * 0.1f
                         }
-                    })
+                        override fun onAccuracyChanged(s: android.hardware.Sensor?, a: Int) {}
+                    }
+                    sensorManager!!.registerListener(lightListener, light, android.hardware.SensorManager.SENSOR_DELAY_UI)
+                }
+            }
+
+            // [HARDENING] Anti-Detection Setup
+            sensorManager = context.getSystemService(android.content.Context.SENSOR_SERVICE) as? android.hardware.SensorManager
+            if (sensorManager != null) {
+                // Gyroscope Shake (Feature 6)
+                val gyro = sensorManager!!.getDefaultSensor(android.hardware.Sensor.TYPE_GYROSCOPE)
+                if (gyro != null) {
+                    gyroListener = object : android.hardware.SensorEventListener {
+                        override fun onSensorChanged(event: android.hardware.SensorEvent) {
+                            // Accumulate micro-movements, slowly decay to center
+                            val dx = event.values[1] * 0.002f 
+                            val dy = event.values[0] * 0.002f 
+                            gyroOffsetX = (gyroOffsetX + dx).coerceIn(-0.05f, 0.05f)
+                            gyroOffsetY = (gyroOffsetY + dy).coerceIn(-0.05f, 0.05f)
+                            gyroOffsetX *= 0.9f
+                            gyroOffsetY *= 0.9f
+                        }
+                        override fun onAccuracyChanged(s: android.hardware.Sensor?, a: Int) {}
+                    }
+                    sensorManager!!.registerListener(gyroListener, gyro, android.hardware.SensorManager.SENSOR_DELAY_UI)
                 }
 
                 // Ambient Light Correlation (Feature 8)
@@ -2879,50 +2817,48 @@ class VirtualRenderThread(
             val uri = Uri.parse("content://com.virtucam.provider/file")
             
             if (isStream) {
-                // Live Stream Pipeline (Persistent Background Player)
+                // Live Stream Pipeline (ExoPlayer)
                 mediaSurfaceTexture = SurfaceTexture(textureRenderer!!.textureId)
                 mediaSurface = Surface(mediaSurfaceTexture)
+                val hasNewFrame = java.util.concurrent.atomic.AtomicBoolean(false)
+                mediaSurfaceTexture?.setOnFrameAvailableListener { hasNewFrame.set(true) }
                 
-                CameraHook.hasNewFrame.set(false)
-                mediaSurfaceTexture?.setOnFrameAvailableListener {
-                    CameraHook.hasNewFrame.set(true)
-                    synchronized(CameraHook.frameSync) { CameraHook.frameSync.notifyAll() }
-                }
+                streamPlayer = StreamPlayer(
+                    context = context,
+                    streamUrl = streamUrl,
+                    outputSurface = mediaSurface!!,
+                    useTcp = CameraHook.rtspUseTcp,
+                    onFrameAvailable = {
+                        hasNewFrame.set(true)
+                    },
+                    onFirstFrame = { bitmap: android.graphics.Bitmap ->
+                        android.os.Handler(android.os.Looper.getMainLooper()).post {
+                            saveStreamPreviewToProvider(bitmap)
+                        }
+                    }
+                )
+                streamPlayer!!.start()
                 
-                CameraHook.globalStreamPlayer?.updateSurface(mediaSurface)
-                
-                renderLoop(CameraHook.hasNewFrame) { 
-                    val w = CameraHook.globalStreamPlayer?.videoWidth?.takeIf { it > 0 } ?: 720
-                    val h = CameraHook.globalStreamPlayer?.videoHeight?.takeIf { it > 0 } ?: 1280
-                    Pair(w, h)
-                }
-                
-                CameraHook.globalStreamPlayer?.updateSurface(null)
+                renderLoop(hasNewFrame) { streamPlayer!!.videoWidth to streamPlayer!!.videoHeight }
+                streamPlayer!!.stop()
                 
             } else if (isVideo) {
-                // Local Video Pipeline (MediaCodec) - Scoped locally to ensure fresh FileDescriptor
+                // Local Video Pipeline (MediaCodec)
                 mediaSurfaceTexture = SurfaceTexture(textureRenderer!!.textureId)
                 mediaSurface = Surface(mediaSurfaceTexture)
                 
                 val pfd = context.contentResolver.openFileDescriptor(uri, "r")
                 if (pfd != null) {
                     val fd = pfd.fileDescriptor
-                    CameraHook.hasNewFrame.set(false)
-                    mediaSurfaceTexture?.setOnFrameAvailableListener {
-                        CameraHook.hasNewFrame.set(true)
-                        synchronized(CameraHook.frameSync) { CameraHook.frameSync.notifyAll() }
-                    }
+                    val hasNewFrame = java.util.concurrent.atomic.AtomicBoolean(false)
+                    mediaSurfaceTexture?.setOnFrameAvailableListener { hasNewFrame.set(true) }
                     
-                    val localVideoPlayer = com.virtucam.media.VideoPlayer(fd, mediaSurface!!) {}
-                    localVideoPlayer.start()
+                    videoPlayer = VideoPlayer(fd, mediaSurface!!) {}
+                    videoPlayer!!.start()
                     
-                    renderLoop(CameraHook.hasNewFrame) { 
-                        val w = localVideoPlayer.videoWidth.takeIf { it > 0 } ?: 720
-                        val h = localVideoPlayer.videoHeight.takeIf { it > 0 } ?: 1280
-                        Pair(w, h)
-                    }
+                    renderLoop(hasNewFrame) { videoPlayer!!.videoWidth to videoPlayer!!.videoHeight }
                     
-                    localVideoPlayer.stop()
+                    videoPlayer!!.stop()
                     pfd.close()
                 }
             } else {
@@ -3019,12 +2955,8 @@ class VirtualRenderThread(
                     CameraHook.captureCount--
                 }
             }
-            // Precise Frame Pacing: Wait for the exact microsecond the decoder provides a frame
-            synchronized(CameraHook.frameSync) {
-                if (!hasNewFrame.get()) {
-                    try { CameraHook.frameSync.wait(30) } catch (_: Exception) {}
-                }
-            }
+            
+            sleep(30)
         }
     }
 
@@ -3070,7 +3002,6 @@ class VirtualRenderThread(
                     vh = 720
                 }
 
-                // [RESTORED] Relative Rotation Engine (from 02875b3)
                 // Emulate HAL auto-rotation for SurfaceView (0 = Upright), otherwise hardware parity (Raw sensor orientation)
                 val targetBufferRotation = if (isSurfaceView) 0 else CameraHook.resolveSensorOrientationDeg()
 
@@ -3088,13 +3019,29 @@ class VirtualRenderThread(
                 } else {
                     CameraHook.isMirrored
                 }
+
+                // Front/Back Camera Differentiation (Feature 10)
+                // Slight crop/zoom applied only to front camera to mimic lens variation
                 val finalZoom = if (isActuallyFront) CameraHook.zoomFactor * 1.05f else CameraHook.zoomFactor
+
                 val ratio = getTargetRatio(vw, vh, isSurfaceView)
 
                 val timeValue = (System.currentTimeMillis() - renderStartTime) / 1000.0f
 
+                // Emulate missing hardware EXIF rotation (-90 deg CW) for downloaded videos AND streams
+                val renderMatrix = if ((isVideo && videoPlayer?.rawRotation == 0) || (isStream && streamPlayer?.rawRotation == 0)) {
+                    val rotatedMatrix = FloatArray(16)
+                    System.arraycopy(matrix, 0, rotatedMatrix, 0, 16)
+                    android.opengl.Matrix.translateM(rotatedMatrix, 0, 0.5f, 0.5f, 0f)
+                    android.opengl.Matrix.rotateM(rotatedMatrix, 0, -90f, 0f, 0f, 1f)
+                    android.opengl.Matrix.translateM(rotatedMatrix, 0, -0.5f, -0.5f, 0f)
+                    rotatedMatrix
+                } else {
+                    matrix
+                }
+
                 textureRenderer?.draw(
-                    matrix, contentW, contentH, vw, vh, ratio,
+                    renderMatrix, contentW, contentH, vw, vh, ratio,
                     parityOrientation, finalUserRotation, shouldMirror,
                     finalZoom, isCapture, CameraHook.compensationFactor,
                     finalRotationOffset, ambientLightMultiplier, timeValue,
