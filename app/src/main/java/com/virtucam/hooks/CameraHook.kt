@@ -2980,10 +2980,9 @@ class VirtualRenderThread(
 
                 val timeValue = (System.currentTimeMillis() - renderStartTime) / 1000.0f
 
-                // Emulate missing hardware EXIF rotation (-90 deg CW) for downloaded videos AND streams
-                val renderMatrix = if ((isVideo && videoPlayer?.rawRotation == 0) || (isStream && streamPlayer?.rawRotation == 0)) {
-                    val rotatedMatrix = FloatArray(16)
-                    System.arraycopy(matrix, 0, rotatedMatrix, 0, 16)
+                // Emulate missing hardware EXIF rotation (-90 deg CW) for downloaded videos
+                val renderMatrix = if (isVideo && videoPlayer?.rawRotation == 0) {
+                    val rotatedMatrix = matrix.copyOf()
                     android.opengl.Matrix.translateM(rotatedMatrix, 0, 0.5f, 0.5f, 0f)
                     android.opengl.Matrix.rotateM(rotatedMatrix, 0, -90f, 0f, 0f, 1f)
                     android.opengl.Matrix.translateM(rotatedMatrix, 0, -0.5f, -0.5f, 0f)
