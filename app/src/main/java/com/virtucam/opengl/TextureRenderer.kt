@@ -2,6 +2,7 @@ package com.virtucam.opengl
 
 import android.opengl.GLES11Ext
 import android.opengl.GLES20
+import android.opengl.GLUtils
 import android.opengl.Matrix
 import android.util.Log
 import java.nio.ByteBuffer
@@ -220,5 +221,16 @@ class TextureRenderer(private val isVideo: Boolean = true) {
         GLES20.glShaderSource(shader, source)
         GLES20.glCompileShader(shader)
         return shader
+    }
+
+    fun release() {
+        if (program != 0) {
+            GLES20.glDeleteProgram(program)
+            program = 0
+        }
+        if (textureId != -1) {
+            GLES20.glDeleteTextures(1, intArrayOf(textureId), 0)
+            textureId = -1
+        }
     }
 }
