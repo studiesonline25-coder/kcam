@@ -164,13 +164,9 @@ class StreamPlayer(
             override fun onVideoSizeChanged(videoSize: VideoSize) {
                 if (videoSize.width == 0 || videoSize.height == 0) return
                 
+                // Use the real unapplied rotation from the stream
                 rawRotation = videoSize.unappliedRotationDegrees
                 videoRotation = rawRotation
-                
-                // Spoof 0 rotation to 90 for upright streams so CameraHook treats them like recorded videos.
-                if (videoRotation == 0) {
-                    videoRotation = 90
-                }
 
                 val rotated = videoRotation == 90 || videoRotation == 270
                 
