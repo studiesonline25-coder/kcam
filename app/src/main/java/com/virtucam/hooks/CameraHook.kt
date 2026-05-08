@@ -2960,7 +2960,7 @@ class VirtualRenderThread(
                 val parityOrientation = targetBufferRotation
                 val finalUserRotation = 0
                 val videoCompensation = if (isVideo) (CameraHook.resolveSensorOrientationDeg() - (videoPlayer?.videoRotation ?: 0)) 
-                                        else if (isStream) (-90 - (streamPlayer?.videoRotation ?: 0))
+                                        else if (isStream) (CameraHook.resolveSensorOrientationDeg() - 90 - (streamPlayer?.videoRotation ?: 0))
                                         else 0
                 val finalRotationOffset = CameraHook.rotationOffset + videoCompensation
 
