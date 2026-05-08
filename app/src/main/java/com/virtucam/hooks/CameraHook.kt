@@ -98,13 +98,7 @@ object CameraHook {
 
     private val discoveredXiaomiKeys = java.util.concurrent.ConcurrentHashMap<String, android.hardware.camera2.CaptureRequest.Key<*>>()
 
-    // [HARDENING] Sensor State
-    @Volatile var gyroOffsetX = 0f
-    @Volatile var gyroOffsetY = 0f
-    @Volatile var ambientLightMultiplier = 1.0f
-    private var sensorManager: android.hardware.SensorManager? = null
-    private var gyroListener: android.hardware.SensorEventListener? = null
-    private var lightListener: android.hardware.SensorEventListener? = null
+    // [HARDENING] Sensor State - Handled per-thread in VirtualRenderThread
     
     @Volatile var zoomFactor: Float = 1.0f
     @Volatile var rtspUseTcp: Boolean = true
@@ -2738,42 +2732,6 @@ class VirtualRenderThread(
                         }
                         override fun onAccuracyChanged(s: android.hardware.Sensor?, a: Int) {}
                     }
-                    sensorManager!!.registerListener(lightListener, light, android.hardware.SensorManager.SENSOR_DELAY_UI)
-                }
-            }
-
-            // [HARDENING] Anti-Detection Setup
-            sensorManager = context.getSystemService(android.content.Context.SENSOR_SERVICE) as? android.hardware.SensorManager
-            if (sensorManager != null) {
-                val gyro = sensorManager!!.getDefaultSensor(android.hardware.Sensor.TYPE_GYROSCOPE)
-                if (gyro != null) {
-                    gyroListener = object : android.hardware.SensorEventListener {
-                        override fun onSensorChanged(event: android.hardware.SensorEvent) {
-                            val dx = event.values[1] * 0.002f 
-                            val dy = event.values[0] * 0.002f 
-                            gyroOffsetX = (gyroOffsetX + dx).coerceIn(-0.05f, 0.05f)
-                            gyroOffsetY = (gyroOffsetY + dy).coerceIn(-0.05f, 0.05f)
-                            gyroOffsetX *= 0.9f
-                            gyroOffsetY *= 0.9f
-                        }
-                        override fun onAccuracyChanged(s: android.hardware.Sensor?, a: Int) {}
-                    }
-                    sensorManager!!.registerListener(gyroListener, gyro, android.hardware.SensorManager.SENSOR_DELAY_UI)
-                }
-                val light = sensorManager!!.getDefaultSensor(android.hardware.Sensor.TYPE_LIGHT)
-                if (light != null) {
-                    lightListener = object : android.hardware.SensorEventListener {
-                        override fun onSensorChanged(event: android.hardware.SensorEvent) {
-                            val lux = event.values[0]
-                            val target = 0.85f + (lux.coerceIn(0f, 1000f) / 1000f) * 0.3f
-                            ambientLightMultiplier += (target - ambientLightMultiplier) * 0.1f
-                        }
-                        override fun onAccuracyChanged(s: android.hardware.Sensor?, a: Int) {}
-                    }
-                    sensorManager!!.registerListener(lightListener, light, android.hardware.SensorManager.SENSOR_DELAY_UI)
-                }
-            }
-
             // [HARDENING] Anti-Detection Setup
             sensorManager = context.getSystemService(android.content.Context.SENSOR_SERVICE) as? android.hardware.SensorManager
             if (sensorManager != null) {

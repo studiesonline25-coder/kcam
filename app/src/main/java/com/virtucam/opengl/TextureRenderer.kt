@@ -176,6 +176,9 @@ class TextureRenderer(private val isVideo: Boolean = true) {
         muIsBackgroundHandle = GLES20.glGetUniformLocation(program, "uIsBackground")
         muBrightnessHandle = GLES20.glGetUniformLocation(program, "uBrightness")
         muTimeHandle = GLES20.glGetUniformLocation(program, "uTime")
+        uTimeLoc = GLES20.glGetUniformLocation(program, "uTime")
+        uGyroOffsetLoc = GLES20.glGetUniformLocation(program, "uGyroOffset")
+        uBrightnessLoc = GLES20.glGetUniformLocation(program, "uBrightness")
         textureId = IntArray(1).apply { GLES20.glGenTextures(1, this, 0) }[0]
         val target = if (isVideo) GLES11Ext.GL_TEXTURE_EXTERNAL_OES else GLES20.GL_TEXTURE_2D
         GLES20.glBindTexture(target, textureId)
@@ -189,7 +192,7 @@ class TextureRenderer(private val isVideo: Boolean = true) {
              targetRatio: Float = 0f, hardwareSensorOrientation: Int = 0, userRotation: Int = 0, 
              isMirrored: Boolean = false, zoomFactor: Float = 1.0f, isCapture: Boolean = false,
              compensationFactor: Float = 1.0f, rotationOffset: Int = 0,
-             brightnessMultiplier: Float = 1.0f, timeValue: Float = 0.0f,
+             ambientLightMultiplier: Float = 1.0f, timeValue: Float = 0.0f,
              gyroOffsetX: Float = 0f, gyroOffsetY: Float = 0f) {
              
         if (viewWidth > 0 && viewHeight > 0) GLES20.glViewport(0, 0, viewWidth, viewHeight)
@@ -240,7 +243,7 @@ class TextureRenderer(private val isVideo: Boolean = true) {
 
                 Matrix.multiplyMM(mvpMatrix, 0, projMatrix, 0, modelMatrix, 0)
                 GLES20.glUniform1i(muIsBackgroundHandle, if (isBackground) 1 else 0)
-                GLES20.glUniform1f(muBrightnessHandle, brightnessMultiplier)
+                GLES20.glUniform1f(muBrightnessHandle, ambientLightMultiplier)
                 GLES20.glUniform1f(muTimeHandle, timeValue)
                 GLES20.glUniformMatrix4fv(muSTMatrixHandle, 1, false, stMatrix, 0)
                 GLES20.glUniformMatrix4fv(muMVPMatrixHandle, 1, false, mvpMatrix, 0)
