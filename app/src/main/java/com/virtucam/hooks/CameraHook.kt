@@ -1357,6 +1357,7 @@ object CameraHook {
 
         XposedBridge.hookAllMethods(managerClass, "getCameraCharacteristics", object : XC_MethodHook() {
             override fun afterHookedMethod(param: MethodHookParam) {
+                if (!isEnabled) return
                 val cameraId = param.args[0] as? String ?: "unknown"
                 val chars = param.result as? android.hardware.camera2.CameraCharacteristics ?: return
                 
