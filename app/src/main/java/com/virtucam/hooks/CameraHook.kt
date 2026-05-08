@@ -1365,26 +1365,10 @@ object CameraHook {
                     val mPropertiesField = XposedHelpers.findFieldIfExists(chars.javaClass, "mProperties")
                     if (mPropertiesField != null) {
                         mPropertiesField.isAccessible = true
-                        val nativeMetadata = mPropertiesField.get(chars)
-                        val nativeClass = nativeMetadata.javaClass
-                        
-                        XposedHelpers.findAndHookMethod(nativeClass, "get", XposedHelpers.findClass("android.hardware.camera2.CameraMetadata\$Key", lpparam.classLoader), object : XC_MethodHook() {
-                            override fun afterHookedMethod(p2: MethodHookParam) {
-                                val keyObj = p2.args[0] ?: return
-                                val keyName = try { XposedHelpers.callMethod(keyObj, "getName") as? String } catch (e: Exception) { null } ?: return
-                                
-                                if (keyName == "android.info.supportedHardwareLevel") {
-                                    p2.result = 3 
-                                } else if (keyName == "android.lens.availableFocalLengths") {
-                                    p2.result = floatArrayOf(4.74f)
-                                } else if (keyName == "android.lens.availableApertures") {
-                                    p2.result = floatArrayOf(1.8f)
-                                }
-                            }
-                        })
+                        // The native metadata hook is now handled globally in hookNativeMetadata
                     }
                 } catch (e: Exception) {
-                    Log.e(TAG, "VirtuCam_Hook: Characteristics hardening failed", e)
+                    Log.e(TAG, "VirtuCam_Hook: Characteristics field access failed", e)
                 }
 
                 // DIAGNOSTIC: Log key characteristics
@@ -1399,12 +1383,40 @@ object CameraHook {
      * Hook CaptureRequest.Builder.addTarget() to swap original surfaces with dummy ones.
      * Without this, setRepeatingRequest() crashes with "unconfigured Input/Output Surface"
      */
-    private fun hookCaptureRequest(lpparam: XC_LoadPackage.LoadPackageParam) {
-        val builderClass = XposedHelpers.findClassIfExists(
-            "android.hardware.camera2.CaptureRequest\$Builder", lpparam.classLoader
-        ) ?: return
+        hookCaptureRequest(lpparam)
+        hookNativeMetadata(lpparam)
+    }
 
-        // [TOTAL SURVEILLANCE] Log all settings sent to the hardware
+    /**
+     * Spoof native metadata values (Hardware Level, Focal Length) globally.
+     */
+    private fun hookNativeMetadata(lpparam: XC_LoadPackage.LoadPackageParam) {
+        try {
+            val nativeClass = XposedHelpers.findClassIfExists("android.hardware.camera2.impl.CameraMetadataNative", lpparam.classLoader) ?: return
+            val keyClass = XposedHelpers.findClassIfExists("android.hardware.camera2.CameraMetadata\$Key", lpparam.classLoader) ?: return
+
+            XposedBridge.hookAllMethods(nativeClass, "get", object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    if (!isEnabled) return
+                    val keyObj = param.args[0] ?: return
+                    val keyName = try { XposedHelpers.callMethod(keyObj, "getName") as? String } catch (e: Exception) { null } ?: return
+                    
+                    if (keyName == "android.info.supportedHardwareLevel") {
+                        param.result = 3 
+                    } else if (keyName == "android.lens.availableFocalLengths") {
+                        param.result = floatArrayOf(4.74f)
+                    } else if (keyName == "android.lens.availableApertures") {
+                        param.result = floatArrayOf(1.8f)
+                    }
+                }
+            })
+        } catch (e: Throwable) {
+            Log.e(TAG, "VirtuCam_Hook: Failed to hook native metadata", e)
+        }
+    }
+
+    /**
+     * Hook CaptureRequest.Builder.addTarget() to swap original surfaces with dummy ones.
         XposedBridge.hookAllMethods(builderClass, "set", object : XC_MethodHook() {
             override fun beforeHookedMethod(param: MethodHookParam) {
                 try {
