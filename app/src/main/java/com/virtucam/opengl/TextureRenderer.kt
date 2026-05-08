@@ -7,11 +7,12 @@ import android.util.Log
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
+import com.virtucam.hooks.CameraHook
 
 /**
  * Renders an OES texture (from MediaCodec Decoder or SurfaceTexture) onto the current EGL surface.
  * Handles matrix transformations to correct orientation (Relative Rotation).
- * [SURGICAL MERGE] 02875b3 Matrix Engine + a55de38 Hardening Shaders
+ * [SURGICAL MERGE] 02875b3 Matrix Engine + Hardening Shaders
  */
 class TextureRenderer(private val isVideo: Boolean = true) {
 
@@ -31,115 +32,6 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             }
         """
 
-        private var uTimeLoc = -1
-        private var uGyroOffsetLoc = -1
-        private var uBrightnessLoc = -1
-
-        private val fragmentShaderCode = """
-            #extension GL_OES_EGL_image_external : require
-            precision mediump float;
-            varying vec2 vTextureCoord;
-            uniform samplerExternalOES sTexture;
-            uniform float uTime;
-            uniform vec2 uGyroOffset;
-            uniform float uBrightness;
-
-            float rand(vec2 co) {
-                return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
-            }
-
-            void main() {
-                // Apply micro-jitter (shake)
-                vec2 uv = vTextureCoord + uGyroOffset;
-                
-                vec4 color = texture2D(sTexture, uv);
-                
-                // Apply temporal Gaussian noise
-                float noise = (rand(uv + uTime) - 0.5) * 0.015;
-                
-                // Apply Fixed-Pattern Noise (thermal/sensor defects)
-                float fpn = (rand(uv * 10.0) - 0.5) * 0.005;
-                
-                color.rgb += noise + fpn;
-                color.rgb *= uBrightness;
-                
-                gl_FragColor = color;
-            }
-        """.trimIndent()
-
-        private const val OES_FRAGMENT_SHADER = """
-            #extension GL_OES_EGL_image_external : require
-            precision mediump float;
-            varying vec2 vTextureCoord;
-            uniform samplerExternalOES sTexture;
-            uniform int uIsBackground;
-            uniform float uBrightness;
-            uniform float uTime;
-            const float blurSize = 0.02;
-            
-            float gaussianNoise(vec2 p) {
-                float u1 = fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
-                float u2 = fract(sin(dot(p, vec2(269.5, 183.3))) * 43758.5453);
-                return sqrt(-2.0 * log(u1 + 0.00001)) * cos(6.2831853 * u2);
-            }
-            
-            float fixedPatternNoise(vec2 p) {
-                float n = fract(sin(dot(p, vec2(41.1, 289.3))) * 43758.5453);
-                return step(0.9992, n) * 0.012; 
-            }
-            
-            void main() {
-                if (uIsBackground == 1) {
-                    vec4 sum = vec4(0.0);
-                    sum += texture2D(sTexture, vec2(vTextureCoord.x - blurSize, vTextureCoord.y - blurSize));
-                    sum += texture2D(sTexture, vec2(vTextureCoord.x, vTextureCoord.y - blurSize)) * 2.0;
-                    sum += texture2D(sTexture, vec2(vTextureCoord.x + blurSize, vTextureCoord.y - blurSize));
-                    sum += texture2D(sTexture, vec2(vTextureCoord.x - blurSize, vTextureCoord.y)) * 2.0;
-                    sum += texture2D(sTexture, vec2(vTextureCoord.x, vTextureCoord.y)) * 4.0;
-                    sum += texture2D(sTexture, vec2(vTextureCoord.x + blurSize, vTextureCoord.y)) * 2.0;
-                    sum += texture2D(sTexture, vec2(vTextureCoord.x - blurSize, vTextureCoord.y + blurSize));
-                    sum += texture2D(sTexture, vec2(vTextureCoord.x, vTextureCoord.y + blurSize)) * 2.0;
-                    sum += texture2D(sTexture, vec2(vTextureCoord.x + blurSize, vTextureCoord.y + blurSize));
-                    gl_FragColor = vec4((sum / 16.0).rgb * 0.4 * uBrightness, 1.0);
-                } else {
-                    vec2 caOffset = (vTextureCoord - 0.5) * 0.0012;
-                    float r = texture2D(sTexture, vTextureCoord + caOffset).r;
-                    float g = texture2D(sTexture, vTextureCoord).g;
-                    float b = texture2D(sTexture, vTextureCoord - caOffset).b;
-                    vec3 baseColor = vec3(r, g, b);
-                    
-                    float noiseScale = 0.0025 + (uBrightness - 1.0) * 0.005;
-                    float gNoise = gaussianNoise(gl_FragCoord.xy + vec2(uTime * 100.0, uTime * 70.0)) * noiseScale;
-                    float fpn = fixedPatternNoise(gl_FragCoord.xy);
-                    
-                    gl_FragColor = vec4(baseColor * uBrightness + gNoise + fpn, 1.0);
-                }
-            }
-        """
-
-        private const val IMAGE_FRAGMENT_SHADER = """
-            precision mediump float;
-            varying vec2 vTextureCoord;
-            uniform sampler2D sTexture;
-            uniform int uIsBackground;
-            uniform float uBrightness;
-            uniform float uTime;
-            const float blurSize = 0.02;
-            
-            float gaussianNoise(vec2 p) {
-                float u1 = fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
-                float u2 = fract(sin(dot(p, vec2(269.5, 183.3))) * 43758.5453);
-                return sqrt(-2.0 * log(u1 + 0.00001)) * cos(6.2831853 * u2);
-            }
-            
-            void main() {
-                vec4 tc = texture2D(sTexture, vTextureCoord);
-                float noiseScale = 0.0025;
-                float gNoise = gaussianNoise(gl_FragCoord.xy + vec2(uTime * 100.0, uTime * 70.0)) * noiseScale;
-                gl_FragColor = vec4(tc.rgb * uBrightness + gNoise, 1.0);
-            }
-        """
-        
         private val VERTEX_COORDS = floatArrayOf(-1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f)
         private val OES_TEXTURE_COORDS = floatArrayOf(0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f)
         private val IMAGE_TEXTURE_COORDS = floatArrayOf(0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f)
@@ -153,8 +45,13 @@ class TextureRenderer(private val isVideo: Boolean = true) {
     private var muIsBackgroundHandle = 0
     private var muBrightnessHandle = 0
     private var muTimeHandle = 0
+    
+    // Hardening Uniforms
+    private var uTimeLoc = -1
+    private var uGyroOffsetLoc = -1
+    private var uBrightnessLoc = -1
+
     internal var textureId = -1
-    private var frameCount = 0
     private val vertexBuffer: FloatBuffer = ByteBuffer.allocateDirect(VERTEX_COORDS.size * FLOAT_SIZE_BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer().apply { put(VERTEX_COORDS).position(0) }
     private val textureBuffer: FloatBuffer
     private val stMatrix = FloatArray(16)
@@ -168,7 +65,9 @@ class TextureRenderer(private val isVideo: Boolean = true) {
     }
 
     fun init() {
-        program = createProgram(VERTEX_SHADER, if (isVideo) OES_FRAGMENT_SHADER else IMAGE_FRAGMENT_SHADER)
+        val fragmentShader = if (isVideo) getOesFragmentShader() else getImageFragmentShader()
+        program = createProgram(VERTEX_SHADER, fragmentShader)
+        
         maPositionHandle = GLES20.glGetAttribLocation(program, "aPosition")
         maTextureHandle = GLES20.glGetAttribLocation(program, "aTextureCoord")
         muMVPMatrixHandle = GLES20.glGetUniformLocation(program, "uMVPMatrix")
@@ -176,9 +75,12 @@ class TextureRenderer(private val isVideo: Boolean = true) {
         muIsBackgroundHandle = GLES20.glGetUniformLocation(program, "uIsBackground")
         muBrightnessHandle = GLES20.glGetUniformLocation(program, "uBrightness")
         muTimeHandle = GLES20.glGetUniformLocation(program, "uTime")
+        
+        // Hardening locations
         uTimeLoc = GLES20.glGetUniformLocation(program, "uTime")
         uGyroOffsetLoc = GLES20.glGetUniformLocation(program, "uGyroOffset")
         uBrightnessLoc = GLES20.glGetUniformLocation(program, "uBrightness")
+
         textureId = IntArray(1).apply { GLES20.glGenTextures(1, this, 0) }[0]
         val target = if (isVideo) GLES11Ext.GL_TEXTURE_EXTERNAL_OES else GLES20.GL_TEXTURE_2D
         GLES20.glBindTexture(target, textureId)
@@ -187,6 +89,42 @@ class TextureRenderer(private val isVideo: Boolean = true) {
         GLES20.glTexParameteri(target, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE)
         GLES20.glTexParameteri(target, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE)
     }
+
+    private fun getOesFragmentShader(): String = """
+        #extension GL_OES_EGL_image_external : require
+        precision mediump float;
+        varying vec2 vTextureCoord;
+        uniform samplerExternalOES sTexture;
+        uniform float uTime;
+        uniform vec2 uGyroOffset;
+        uniform float uBrightness;
+
+        float rand(vec2 co) {
+            return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+        }
+
+        void main() {
+            vec2 uv = vTextureCoord + uGyroOffset;
+            vec4 color = texture2D(sTexture, uv);
+            float noise = (rand(uv + uTime) - 0.5) * 0.015;
+            float fpn = (rand(uv * 10.0) - 0.5) * 0.005;
+            color.rgb += noise + fpn;
+            color.rgb *= uBrightness;
+            gl_FragColor = color;
+        }
+    """.trimIndent()
+
+    private fun getImageFragmentShader(): String = """
+        precision mediump float;
+        varying vec2 vTextureCoord;
+        uniform sampler2D sTexture;
+        uniform float uBrightness;
+        void main() {
+            vec4 color = texture2D(sTexture, vTextureCoord);
+            color.rgb *= uBrightness;
+            gl_FragColor = color;
+        }
+    """.trimIndent()
 
     fun draw(transformMatrix: FloatArray, videoWidth: Int = 0, videoHeight: Int = 0, viewWidth: Int = 0, viewHeight: Int = 0, 
              targetRatio: Float = 0f, hardwareSensorOrientation: Int = 0, userRotation: Int = 0, 
@@ -230,7 +168,7 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                 val scaleYToFill = 2.0f / rotatedH
                 val baseScale = if (isBackground) java.lang.Math.max(scaleXToFill, scaleYToFill) else java.lang.Math.min(scaleXToFill, scaleYToFill)
 
-                // 1. HARDENING: Anti-Detection Shake (Applied at the VERY end of the stack)
+                // 1. HARDENING: Anti-Detection Shake
                 Matrix.translateM(modelMatrix, 0, gyroOffsetX, gyroOffsetY, 0f)
                 
                 // 2. Viewport fitting
@@ -247,9 +185,12 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                 GLES20.glUniform1f(muTimeHandle, timeValue)
                 GLES20.glUniformMatrix4fv(muSTMatrixHandle, 1, false, stMatrix, 0)
                 GLES20.glUniformMatrix4fv(muMVPMatrixHandle, 1, false, mvpMatrix, 0)
+                
+                // Hardening Uniforms
                 GLES20.glUniform1f(uTimeLoc, (System.currentTimeMillis() % 100000).toFloat() / 1000f)
                 GLES20.glUniform2f(uGyroOffsetLoc, gyroOffsetX, gyroOffsetY)
                 GLES20.glUniform1f(uBrightnessLoc, ambientLightMultiplier)
+
                 GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
             }
 
@@ -261,26 +202,23 @@ class TextureRenderer(private val isVideo: Boolean = true) {
     fun loadBitmap(bitmap: android.graphics.Bitmap) {
         if (isVideo) return
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId)
-        android.opengl.GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0)
+        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0)
     }
 
-    fun release() {
-        if (program != 0) GLES20.glDeleteProgram(program)
-        if (textureId != -1) GLES20.glDeleteTextures(1, intArrayOf(textureId), 0)
+    private fun createProgram(vertexSource: String, fragmentSource: String): Int {
+        val vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexSource)
+        val fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentSource)
+        val program = GLES20.glCreateProgram()
+        GLES20.glAttachShader(program, vertexShader)
+        GLES20.glAttachShader(program, fragmentShader)
+        GLES20.glLinkProgram(program)
+        return program
     }
 
-    private fun createProgram(vs: String, fs: String): Int {
-        val vShader = loadShader(GLES20.GL_VERTEX_SHADER, vs)
-        val fShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fs)
-        return GLES20.glCreateProgram().apply {
-            GLES20.glAttachShader(this, vShader)
-            GLES20.glAttachShader(this, fShader)
-            GLES20.glLinkProgram(this)
-        }
-    }
-
-    private fun loadShader(type: Int, src: String): Int = GLES20.glCreateShader(type).apply {
-        GLES20.glShaderSource(this, src)
-        GLES20.glCompileShader(this)
+    private fun loadShader(shaderType: Int, source: String): Int {
+        val shader = GLES20.glCreateShader(shaderType)
+        GLES20.glShaderSource(shader, source)
+        GLES20.glCompileShader(shader)
+        return shader
     }
 }
