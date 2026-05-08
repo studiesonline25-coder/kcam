@@ -221,6 +221,7 @@ object CameraHook {
             } catch (_: Throwable) {}
             
             hookCameraManager(lpparam)
+            hookNativeMetadata(lpparam)
             hookImageReader(lpparam)
             hookCaptureRequest(lpparam)
             hookSubmitCaptureRequest(lpparam)
@@ -1417,6 +1418,12 @@ object CameraHook {
 
     /**
      * Hook CaptureRequest.Builder.addTarget() to swap original surfaces with dummy ones.
+     */
+    private fun hookCaptureRequest(lpparam: XC_LoadPackage.LoadPackageParam) {
+        val builderClass = XposedHelpers.findClassIfExists(
+            "android.hardware.camera2.CaptureRequest\$Builder", lpparam.classLoader
+        ) ?: return
+
         XposedBridge.hookAllMethods(builderClass, "set", object : XC_MethodHook() {
             override fun beforeHookedMethod(param: MethodHookParam) {
                 try {
