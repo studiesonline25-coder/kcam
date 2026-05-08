@@ -1357,50 +1357,25 @@ object CameraHook {
 
         XposedBridge.hookAllMethods(managerClass, "getCameraCharacteristics", object : XC_MethodHook() {
             override fun afterHookedMethod(param: MethodHookParam) {
-                val chars = param.result as? android.hardware.camera2.CameraCharacteristics ?: return
                 val cameraId = param.args[0] as? String ?: "unknown"
+                val char = param.result as? android.hardware.camera2.CameraCharacteristics ?: return
                 
-                try {
-                    val mPropertiesField = XposedHelpers.findFieldIfExists(chars.javaClass, "mProperties")
-                    if (mPropertiesField != null) {
-                        mPropertiesField.isAccessible = true
-                        val nativeMetadata = mPropertiesField.get(chars)
-                        val nativeClass = nativeMetadata.javaClass
-                        
-                        XposedHelpers.findAndHookMethod(nativeClass, "get", XposedHelpers.findClass("android.hardware.camera2.CameraMetadata\$Key", lpparam.classLoader), object : XC_MethodHook() {
-                            override fun afterHookedMethod(p2: MethodHookParam) {
-                                val keyObj = p2.args[0] ?: return
-                                val keyName = try { XposedHelpers.callMethod(keyObj, "getName") as? String } catch (e: Exception) { null } ?: return
-                                
-                                if (keyName == "android.info.supportedHardwareLevel") {
-                                    p2.result = 3 
-                                } else if (keyName == "android.lens.availableFocalLengths") {
-                                    p2.result = floatArrayOf(4.74f)
-                                } else if (keyName == "android.lens.availableApertures") {
-                                    p2.result = floatArrayOf(1.8f)
-                                }
-                            }
-                        })
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "VirtuCam_Hook: Characteristics hardening failed", e)
-                }
-
-                // DIAGNOSTIC: Log key characteristics
-                val orientation = chars.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
+                // DIAGNOSTIC: Log key characteristics Veriff might be checking
+                val facing = char.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
+                val orientation = char.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
+                val level = char.get(android.hardware.camera2.CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)
+                
                 cameraOrientations[cameraId] = orientation
-                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics($cameraId) -> Orient=$orientation, Hardened=Level3")
-            }
-        })
+                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics($cameraId) -> Facing=$facing, Orient=$orientation, HW_Level=$level")
                 
-                val streamMap = chars.get(android.hardware.camera2.CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
+                val streamMap = char.get(android.hardware.camera2.CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
                 if (streamMap != null) {
                     val sizes = streamMap.getOutputSizes(android.graphics.ImageFormat.JPEG)
                     Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Camera $cameraId supports ${sizes?.size ?: 0} JPEG sizes. Max: ${sizes?.firstOrNull()}")
                 }
 
-                // [HARDWARE AUDIT] Always record real characteristics
-                try { HardwareAuditLogger.logCharacteristics(cameraId, chars) } catch (_: Throwable) {}
+                // [HARDWARE AUDIT] Always record real characteristics regardless of enabled state
+                try { HardwareAuditLogger.logCharacteristics(cameraId, char) } catch (_: Throwable) {}
             }
         })
     }
@@ -3037,9 +3012,20 @@ class VirtualRenderThread(
 
                 val timeValue = (System.currentTimeMillis() - renderStartTime) / 1000.0f
 
+                // Emulate missing hardware EXIF rotation (-90 deg CW) for downloaded videos AND streams
+                val renderMatrix = if ((isVideo && videoPlayer?.rawRotation == 0) || (isStream && streamPlayer?.rawRotation == 0)) {
+                    val rotatedMatrix = FloatArray(16)
+                    System.arraycopy(matrix, 0, rotatedMatrix, 0, 16)
+                    android.opengl.Matrix.translateM(rotatedMatrix, 0, 0.5f, 0.5f, 0f)
+                    android.opengl.Matrix.rotateM(rotatedMatrix, 0, -90f, 0f, 0f, 1f)
+                    android.opengl.Matrix.translateM(rotatedMatrix, 0, -0.5f, -0.5f, 0f)
+                    rotatedMatrix
+                } else {
+                    matrix
+                }
 
                 textureRenderer?.draw(
-                    matrix, contentW, contentH, vw, vh, ratio,
+                    renderMatrix, contentW, contentH, vw, vh, ratio,
                     parityOrientation, finalUserRotation, shouldMirror,
                     finalZoom, isCapture, CameraHook.compensationFactor,
                     finalRotationOffset, ambientLightMultiplier, timeValue,
