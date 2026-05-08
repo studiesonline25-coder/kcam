@@ -31,6 +31,42 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             }
         """
 
+        private var uTimeLoc = -1
+        private var uGyroOffsetLoc = -1
+        private var uBrightnessLoc = -1
+
+        private val fragmentShaderCode = """
+            #extension GL_OES_EGL_image_external : require
+            precision mediump float;
+            varying vec2 vTextureCoord;
+            uniform samplerExternalOES sTexture;
+            uniform float uTime;
+            uniform vec2 uGyroOffset;
+            uniform float uBrightness;
+
+            float rand(vec2 co) {
+                return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+            }
+
+            void main() {
+                // Apply micro-jitter (shake)
+                vec2 uv = vTextureCoord + uGyroOffset;
+                
+                vec4 color = texture2D(sTexture, uv);
+                
+                // Apply temporal Gaussian noise
+                float noise = (rand(uv + uTime) - 0.5) * 0.015;
+                
+                // Apply Fixed-Pattern Noise (thermal/sensor defects)
+                float fpn = (rand(uv * 10.0) - 0.5) * 0.005;
+                
+                color.rgb += noise + fpn;
+                color.rgb *= uBrightness;
+                
+                gl_FragColor = color;
+            }
+        """.trimIndent()
+
         private const val OES_FRAGMENT_SHADER = """
             #extension GL_OES_EGL_image_external : require
             precision mediump float;
@@ -208,6 +244,9 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                 GLES20.glUniform1f(muTimeHandle, timeValue)
                 GLES20.glUniformMatrix4fv(muSTMatrixHandle, 1, false, stMatrix, 0)
                 GLES20.glUniformMatrix4fv(muMVPMatrixHandle, 1, false, mvpMatrix, 0)
+                GLES20.glUniform1f(uTimeLoc, (System.currentTimeMillis() % 100000).toFloat() / 1000f)
+                GLES20.glUniform2f(uGyroOffsetLoc, gyroOffsetX, gyroOffsetY)
+                GLES20.glUniform1f(uBrightnessLoc, ambientLightMultiplier)
                 GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
             }
 

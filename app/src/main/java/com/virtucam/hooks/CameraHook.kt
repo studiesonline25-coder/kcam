@@ -96,8 +96,15 @@ object CameraHook {
     private val surfaceSizes = java.util.Collections.synchronizedMap(java.util.WeakHashMap<Surface, Pair<Int, Int>>())
     private val surfaceTextureSizes = java.util.Collections.synchronizedMap(java.util.WeakHashMap<SurfaceTexture, Pair<Int, Int>>())
 
-    // Dynamic Xiaomi Vendor Tag Discovery
     private val discoveredXiaomiKeys = java.util.concurrent.ConcurrentHashMap<String, android.hardware.camera2.CaptureRequest.Key<*>>()
+
+    // [HARDENING] Sensor State
+    @Volatile var gyroOffsetX = 0f
+    @Volatile var gyroOffsetY = 0f
+    @Volatile var ambientLightMultiplier = 1.0f
+    private var sensorManager: android.hardware.SensorManager? = null
+    private var gyroListener: android.hardware.SensorEventListener? = null
+    private var lightListener: android.hardware.SensorEventListener? = null
     
     @Volatile var zoomFactor: Float = 1.0f
     @Volatile var rtspUseTcp: Boolean = true
@@ -1358,24 +1365,38 @@ object CameraHook {
         XposedBridge.hookAllMethods(managerClass, "getCameraCharacteristics", object : XC_MethodHook() {
             override fun afterHookedMethod(param: MethodHookParam) {
                 val cameraId = param.args[0] as? String ?: "unknown"
-                val char = param.result as? android.hardware.camera2.CameraCharacteristics ?: return
+                val chars = param.result as? android.hardware.camera2.CameraCharacteristics ?: return
                 
-                // DIAGNOSTIC: Log key characteristics Veriff might be checking
-                val facing = char.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
-                val orientation = char.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
-                val level = char.get(android.hardware.camera2.CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)
-                
-                cameraOrientations[cameraId] = orientation
-                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics($cameraId) -> Facing=$facing, Orient=$orientation, HW_Level=$level")
-                
-                val streamMap = char.get(android.hardware.camera2.CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-                if (streamMap != null) {
-                    val sizes = streamMap.getOutputSizes(android.graphics.ImageFormat.JPEG)
-                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Camera $cameraId supports ${sizes?.size ?: 0} JPEG sizes. Max: ${sizes?.firstOrNull()}")
+                try {
+                    val mPropertiesField = XposedHelpers.findFieldIfExists(chars.javaClass, "mProperties")
+                    if (mPropertiesField != null) {
+                        mPropertiesField.isAccessible = true
+                        val nativeMetadata = mPropertiesField.get(chars)
+                        val nativeClass = nativeMetadata.javaClass
+                        
+                        XposedHelpers.findAndHookMethod(nativeClass, "get", XposedHelpers.findClass("android.hardware.camera2.CameraMetadata\$Key", lpparam.classLoader), object : XC_MethodHook() {
+                            override fun afterHookedMethod(p2: MethodHookParam) {
+                                val keyObj = p2.args[0] ?: return
+                                val keyName = try { XposedHelpers.callMethod(keyObj, "getName") as? String } catch (e: Exception) { null } ?: return
+                                
+                                if (keyName == "android.info.supportedHardwareLevel") {
+                                    p2.result = 3 
+                                } else if (keyName == "android.lens.availableFocalLengths") {
+                                    p2.result = floatArrayOf(4.74f)
+                                } else if (keyName == "android.lens.availableApertures") {
+                                    p2.result = floatArrayOf(1.8f)
+                                }
+                            }
+                        })
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "VirtuCam_Hook: Characteristics hardening failed", e)
                 }
 
-                // [HARDWARE AUDIT] Always record real characteristics regardless of enabled state
-                try { HardwareAuditLogger.logCharacteristics(cameraId, char) } catch (_: Throwable) {}
+                // DIAGNOSTIC: Log key characteristics
+                val orientation = chars.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
+                cameraOrientations[cameraId] = orientation
+                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics($cameraId) -> Orient=$orientation, Hardened=Level3")
             }
         })
     }
@@ -2713,6 +2734,38 @@ class VirtualRenderThread(
                             // Normal indoor light is ~100-300 lux. We vary brightness from 0.85 to 1.15
                             val target = 0.85f + (lux.coerceIn(0f, 1000f) / 1000f) * 0.3f
                             // Smooth interpolation
+                            ambientLightMultiplier += (target - ambientLightMultiplier) * 0.1f
+                        }
+                        override fun onAccuracyChanged(s: android.hardware.Sensor?, a: Int) {}
+                    }
+                    sensorManager!!.registerListener(lightListener, light, android.hardware.SensorManager.SENSOR_DELAY_UI)
+                }
+            }
+
+            // [HARDENING] Anti-Detection Setup
+            sensorManager = context.getSystemService(android.content.Context.SENSOR_SERVICE) as? android.hardware.SensorManager
+            if (sensorManager != null) {
+                val gyro = sensorManager!!.getDefaultSensor(android.hardware.Sensor.TYPE_GYROSCOPE)
+                if (gyro != null) {
+                    gyroListener = object : android.hardware.SensorEventListener {
+                        override fun onSensorChanged(event: android.hardware.SensorEvent) {
+                            val dx = event.values[1] * 0.002f 
+                            val dy = event.values[0] * 0.002f 
+                            gyroOffsetX = (gyroOffsetX + dx).coerceIn(-0.05f, 0.05f)
+                            gyroOffsetY = (gyroOffsetY + dy).coerceIn(-0.05f, 0.05f)
+                            gyroOffsetX *= 0.9f
+                            gyroOffsetY *= 0.9f
+                        }
+                        override fun onAccuracyChanged(s: android.hardware.Sensor?, a: Int) {}
+                    }
+                    sensorManager!!.registerListener(gyroListener, gyro, android.hardware.SensorManager.SENSOR_DELAY_UI)
+                }
+                val light = sensorManager!!.getDefaultSensor(android.hardware.Sensor.TYPE_LIGHT)
+                if (light != null) {
+                    lightListener = object : android.hardware.SensorEventListener {
+                        override fun onSensorChanged(event: android.hardware.SensorEvent) {
+                            val lux = event.values[0]
+                            val target = 0.85f + (lux.coerceIn(0f, 1000f) / 1000f) * 0.3f
                             ambientLightMultiplier += (target - ambientLightMultiplier) * 0.1f
                         }
                         override fun onAccuracyChanged(s: android.hardware.Sensor?, a: Int) {}
