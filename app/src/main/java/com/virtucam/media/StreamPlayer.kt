@@ -155,7 +155,9 @@ class StreamPlayer(
                     videoHeight = videoSize.height
                 }
                 
-                onVideoSizeKnown?.invoke(videoWidth, videoHeight)
+                // CRITICAL: Always pass RAW dimensions to the SurfaceTexture buffer size.
+                // Rotation is handled in the shader, but the memory buffer MUST match the decoder output.
+                onVideoSizeKnown?.invoke(videoSize.width, videoSize.height)
             }
 
             override fun onRenderedFirstFrame() {
