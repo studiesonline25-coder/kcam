@@ -2890,6 +2890,18 @@ class VirtualRenderThread(
             }
             mediaSurfaceTexture?.getTransformMatrix(matrix)
             
+            if (CameraHook.isLivenessEnabled) {
+                val timeMs = System.currentTimeMillis()
+                val scale = 1.0f + (Math.sin(timeMs / 500.0) * 0.008f).toFloat() 
+                val trX = (Math.sin(timeMs / 200.0) * 0.005f).toFloat()
+                val trY = (Math.cos(timeMs / 330.0) * 0.005f).toFloat()
+
+                Matrix.translateM(matrix, 0, trX, trY, 0f)
+                Matrix.translateM(matrix, 0, 0.5f, 0.5f, 0f)
+                Matrix.scaleM(matrix, 0, scale, scale, 1f)
+                Matrix.translateM(matrix, 0, -0.5f, -0.5f, 0f)
+            }
+            
             val (vw, vh) = sizeProvider()
             if (!drawToAllSurfaces(matrix, vw, vh)) break
 
