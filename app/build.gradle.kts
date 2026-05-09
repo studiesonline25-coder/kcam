@@ -69,11 +69,6 @@ android {
             excludes.add("**/lib/x86/**")
             excludes.add("**/lib/x86_64/**")
             excludes.add("**/lib/armeabi-v7a/**")
-            
-            // Further strip optional FFmpeg components we don't use for the proxy
-            excludes.add("**/libswresample.so") 
-            excludes.add("**/libavdevice.so")
-            excludes.add("**/libavfilter.so")
         }
     }
 }
