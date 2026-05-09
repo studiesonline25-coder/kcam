@@ -2772,10 +2772,10 @@ class VirtualRenderThread(
                 // Live Stream Pipeline (ExoPlayer)
                 mediaSurfaceTexture = SurfaceTexture(textureRenderer!!.textureId)
                 
-                // CRITICAL: Pre-allocate a 16:9 Landscape buffer (1920x1080) BEFORE ExoPlayer connects.
-                // If not set, it defaults to the host app's EGL surface size (e.g., 1080x2400 portrait).
-                // The decoder (16:9) writing into a portrait buffer leaves massive uninitialized green padding.
-                mediaSurfaceTexture?.setDefaultBufferSize(1920, 1080)
+                // CRITICAL: Pre-allocate a 9:16 Portrait buffer (1080x1920) BEFORE ExoPlayer connects.
+                // This perfectly matches your OBS portrait canvas, preventing any stride mismatches
+                // or uninitialized green padding from the decoder.
+                mediaSurfaceTexture?.setDefaultBufferSize(1080, 1920)
                 
                 mediaSurface = Surface(mediaSurfaceTexture)
                 val hasNewFrame = java.util.concurrent.atomic.AtomicBoolean(false)
