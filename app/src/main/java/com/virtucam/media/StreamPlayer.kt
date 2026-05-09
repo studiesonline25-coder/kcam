@@ -18,7 +18,6 @@ import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
-import androidx.media3.exoplayer.rtsp.RtspMediaSource
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import okhttp3.OkHttpClient
@@ -104,23 +103,22 @@ class StreamPlayer(
         val trimmedUrl = streamUrl.trim()
         val finalUri = Uri.parse(trimmedUrl)
 
-        val mediaSource = if (finalUri.scheme?.startsWith("rtsp", ignoreCase = true) == true) {
-            RtspMediaSource.Factory()
-                .setForceUseRtpTcp(useTcp) // Force TCP for native ExoPlayer RTSP
-                .createMediaSource(MediaItem.fromUri(finalUri))
-        } else {
-            MediaItem.Builder()
-                .setUri(finalUri)
-                .setLiveConfiguration(
-                    MediaItem.LiveConfiguration.Builder()
-                        .setMaxPlaybackSpeed(1.05f)
-                        .setMinPlaybackSpeed(0.95f)
-                        .build()
-                )
-                .setRequestMetadata(RequestMetadata.Builder().build())
-                .build()
-                .let { mediaSourceFactory.createMediaSource(it) }
-        }
+        // Use DefaultMediaSourceFactory for ALL protocols (including RTSP).
+        // RtspMediaSource.Factory() produces frames with incorrect stride alignment,
+        // causing green padding. DefaultMediaSourceFactory auto-detects RTSP when 
+        // media3-exoplayer-rtsp is on the classpath and uses the correct decoder pipeline.
+        val mediaItem = MediaItem.Builder()
+            .setUri(finalUri)
+            .setLiveConfiguration(
+                MediaItem.LiveConfiguration.Builder()
+                    .setMaxPlaybackSpeed(1.05f)
+                    .setMinPlaybackSpeed(0.95f)
+                    .build()
+            )
+            .setRequestMetadata(RequestMetadata.Builder().build())
+            .build()
+
+        val mediaSource = mediaSourceFactory.createMediaSource(mediaItem)
 
         exoPlayer?.setMediaSource(mediaSource)
         
