@@ -37,21 +37,7 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             varying vec2 vTextureCoord;
             uniform samplerExternalOES sTexture;
             uniform int uIsBackground;
-            uniform float uBrightness;
-            uniform float uTime;
             const float blurSize = 0.02;
-            
-            float gaussianNoise(vec2 p) {
-                float u1 = fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
-                float u2 = fract(sin(dot(p, vec2(269.5, 183.3))) * 43758.5453);
-                return sqrt(-2.0 * log(u1 + 0.00001)) * cos(6.2831853 * u2);
-            }
-            
-            float fixedPatternNoise(vec2 p) {
-                float n = fract(sin(dot(p, vec2(41.1, 289.3))) * 43758.5453);
-                return step(0.9992, n) * 0.012; 
-            }
-            
             void main() {
                 if (uIsBackground == 1) {
                     vec4 sum = vec4(0.0);
@@ -64,19 +50,9 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                     sum += texture2D(sTexture, vec2(vTextureCoord.x - blurSize, vTextureCoord.y + blurSize));
                     sum += texture2D(sTexture, vec2(vTextureCoord.x, vTextureCoord.y + blurSize)) * 2.0;
                     sum += texture2D(sTexture, vec2(vTextureCoord.x + blurSize, vTextureCoord.y + blurSize));
-                    gl_FragColor = vec4((sum / 16.0).rgb * 0.4 * uBrightness, 1.0);
+                    gl_FragColor = vec4((sum / 16.0).rgb * 0.4, 1.0);
                 } else {
-                    vec2 caOffset = (vTextureCoord - 0.5) * 0.0012;
-                    float r = texture2D(sTexture, vTextureCoord + caOffset).r;
-                    float g = texture2D(sTexture, vTextureCoord).g;
-                    float b = texture2D(sTexture, vTextureCoord - caOffset).b;
-                    vec3 baseColor = vec3(r, g, b);
-                    
-                    float noiseScale = 0.0025 + (uBrightness - 1.0) * 0.005;
-                    float gNoise = gaussianNoise(gl_FragCoord.xy + vec2(uTime * 100.0, uTime * 70.0)) * noiseScale;
-                    float fpn = fixedPatternNoise(gl_FragCoord.xy);
-                    
-                    gl_FragColor = vec4(baseColor * uBrightness + gNoise + fpn, 1.0);
+                    gl_FragColor = texture2D(sTexture, vTextureCoord);
                 }
             }
         """

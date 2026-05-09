@@ -125,11 +125,6 @@ class StreamPlayer(
         }
 
         exoPlayer?.setMediaSource(mediaSource)
-        
-        // Trigger onFrameAvailable for every decoded frame to pump the render loop
-        exoPlayer?.setVideoFrameMetadataListener { _, _, _, _ ->
-            onFrameAvailable()
-        }
 
         exoPlayer?.addListener(object : Player.Listener {
             override fun onVideoSizeChanged(videoSize: VideoSize) {

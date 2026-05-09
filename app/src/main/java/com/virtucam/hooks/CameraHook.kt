@@ -2774,8 +2774,7 @@ class VirtualRenderThread(
                 
                 mediaSurface = Surface(mediaSurfaceTexture)
                 val hasNewFrame = java.util.concurrent.atomic.AtomicBoolean(false)
-                val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
-                mediaSurfaceTexture?.setOnFrameAvailableListener({ hasNewFrame.set(true) }, mainHandler)
+                mediaSurfaceTexture?.setOnFrameAvailableListener { hasNewFrame.set(true) }
                 
                 streamPlayer = StreamPlayer(
                     context = context,
@@ -2888,21 +2887,13 @@ class VirtualRenderThread(
             if (frameCount % 10 == 0) CameraHook.loadConfiguration()
             
             if (hasNewFrame.compareAndSet(true, false)) {
-                try { mediaSurfaceTexture?.updateTexImage() } catch (_: Exception) {}
+                try {
+                    mediaSurfaceTexture?.updateTexImage()
+                } catch (e: Exception) {
+                    Log.e("VirtuCam_Render", "Failed to update texture: ${e.message}")
+                }
             }
             mediaSurfaceTexture?.getTransformMatrix(matrix)
-            
-            if (CameraHook.isLivenessEnabled) {
-                val timeMs = System.currentTimeMillis()
-                val scale = 1.0f + (Math.sin(timeMs / 500.0) * 0.008f).toFloat() 
-                val trX = (Math.sin(timeMs / 200.0) * 0.005f).toFloat()
-                val trY = (Math.cos(timeMs / 330.0) * 0.005f).toFloat()
-
-                Matrix.translateM(matrix, 0, trX, trY, 0f)
-                Matrix.translateM(matrix, 0, 0.5f, 0.5f, 0f)
-                Matrix.scaleM(matrix, 0, scale, scale, 1f)
-                Matrix.translateM(matrix, 0, -0.5f, -0.5f, 0f)
-            }
             
             val (vw, vh) = sizeProvider()
             if (!drawToAllSurfaces(matrix, vw, vh)) break
@@ -2922,7 +2913,7 @@ class VirtualRenderThread(
                 }
             }
             
-            sleep(30)
+            Thread.sleep(30)
         }
     }
 
