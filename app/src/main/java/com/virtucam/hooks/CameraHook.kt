@@ -2858,17 +2858,11 @@ class VirtualRenderThread(
 
                         if (!drawToAllSurfaces(matrix, staticImageW, staticImageH)) break
                         
-                        // Handle Live Bridge Updates (Continuous YUV Feed for AI SDKs like Jumio)
-                        val nowTS = System.nanoTime()
-                        CameraHook.formatBridges.values.forEach { 
-                            it.pushLatestFrameToWriter(nowTS) 
-                        }
-
                         // Handle Photo/Capture Requests (Static Image)
                         synchronized(CameraHook) {
                             while (CameraHook.captureCount > 0) {
                                 val capture = CameraHook.captureQueue.poll()
-                                val timestamp = capture?.first ?: nowTS
+                                val timestamp = capture?.first ?: System.nanoTime()
                                 CameraHook.formatBridges.values.forEach { it.pushLatestFrameToWriter(timestamp) }
                                 CameraHook.captureCount--
                             }
@@ -2910,18 +2904,12 @@ class VirtualRenderThread(
             
             val (vw, vh) = sizeProvider()
             if (!drawToAllSurfaces(matrix, vw, vh)) break
-            
-            // Handle Live Bridge Updates (Continuous YUV Feed for AI SDKs like Jumio)
-            val nowTS = System.nanoTime()
-            CameraHook.formatBridges.values.forEach { 
-                it.pushLatestFrameToWriter(nowTS) 
-            }
 
-            // Handle Photo/Capture Requests (JPEG/High-Res)
+            // Handle Photo/Capture Requests
             synchronized(CameraHook) {
                 while (CameraHook.captureCount > 0) {
                     val capture = CameraHook.captureQueue.poll()
-                    val timestamp = capture?.first ?: nowTS
+                    val timestamp = capture?.first ?: System.nanoTime()
                     
                     CameraHook.latestVirtualJpegArea = 0
                     
