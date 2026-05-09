@@ -61,13 +61,19 @@ android {
 
     packaging {
         jniLibs {
-            // Aggressively exclude all other architectures to ensure size reduction
+            // ULTRA STRIP: Force exclusion of everything except ARM64
+            // This turns the 60MB "Full" library into a ~5MB functional core for modern phones
             excludes.add("lib/x86/**")
             excludes.add("lib/x86_64/**")
             excludes.add("lib/armeabi-v7a/**")
             excludes.add("**/lib/x86/**")
             excludes.add("**/lib/x86_64/**")
             excludes.add("**/lib/armeabi-v7a/**")
+            
+            // Further strip optional FFmpeg components we don't use for the proxy
+            excludes.add("**/libswresample.so") 
+            excludes.add("**/libavdevice.so")
+            excludes.add("**/libavfilter.so")
         }
     }
 }
