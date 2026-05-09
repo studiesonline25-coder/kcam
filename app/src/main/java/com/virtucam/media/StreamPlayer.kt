@@ -146,18 +146,26 @@ class StreamPlayer(
                 }
             }
 
+            // Cleanup any existing session before starting a new one to prevent port conflicts
+            try {
+                ffmpegSession?.cancel()
+                ffmpegSession = null
+            } catch (_: Exception) {}
+
             // High-fidelity proxy buffer for all protocols
             val udpUrl = "udp://127.0.0.1:9998?pkt_size=1316&buffer_size=20971520&fifo_size=1000000&overrun_nonfatal=1"
             Log.d(TAG, "Starting FFmpeg proxy for ${optimizedUrl.substringBefore(":")}: $optimizedUrl")
             
-            try {
-                // Increased probesize and analyzeduration to ensure stream format is detected correctly
-                val command = "$ffmpegInputArgs -probesize 2000000 -analyzeduration 2000000 -flags low_delay -i \"$optimizedUrl\" -c copy -f mpegts \"$udpUrl\""
-                ffmpegSession = FFmpegKit.executeAsync(command) { session ->
-                    Log.d(TAG, "FFmpeg Proxy finished with state ${session.state} and return code ${session.returnCode}")
+            handler?.post {
+                try {
+                    // Increased probesize and analyzeduration to ensure stream format is detected correctly
+                    val command = "$ffmpegInputArgs -probesize 2000000 -analyzeduration 2000000 -flags low_delay -i \"$optimizedUrl\" -c copy -f mpegts \"$udpUrl\""
+                    ffmpegSession = FFmpegKit.executeAsync(command) { session ->
+                        Log.d(TAG, "FFmpeg Proxy finished with state ${session.state} and return code ${session.returnCode}")
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to start FFmpeg proxy: ${e.message}")
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to start FFmpeg proxy: ${e.message}")
             }
             finalUri = Uri.parse(udpUrl)
         }
