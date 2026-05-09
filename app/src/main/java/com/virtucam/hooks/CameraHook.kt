@@ -2664,20 +2664,14 @@ class VirtualRenderThread(
     private var mediaSurface: Surface? = null
     private var frameCount = 0
 
-    private fun getTargetRatio(vW: Int, vH: Int, isSurfaceView: Boolean): Float {
-        return try {
-            val sensorOrientation = CameraHook.resolveSensorOrientationDeg()
-            
-            if (isSurfaceView && (sensorOrientation == 90 || sensorOrientation == 270) && vW > vH) {
-                // Return inverted logical ratio (e.g. 1080/1920 = 0.56) instead of physical (1920/1080 = 1.77)
-                // This pre-squishes the image so SurfaceFlinger's landscape-to-portrait stretch restores it.
-                vH.toFloat() / vW.toFloat()
-            } else {
-                vW.toFloat() / vH.toFloat()
-            }
-        } catch (e: Exception) {
-            vW.toFloat() / vH.toFloat()
+    private fun getTargetRatio(vW: Int, vH: Int, isSurfaceView: Boolean, contentW: Int, contentH: Int): Float {
+        // [ABSOLUTE PARITY] Match bb0cabb logic: the target ratio is determined by the content
+        // being injected, not the viewport of the target surface.
+        if (contentW > 0 && contentH > 0) {
+            return contentW.toFloat() / contentH.toFloat()
         }
+        return vW.toFloat() / vH.toFloat()
+    }
     }
 
     override fun run() {
@@ -2975,8 +2969,7 @@ class VirtualRenderThread(
                 val parityOrientation = targetBufferRotation
                 val finalUserRotation = 0
                 val videoCompensation = if (isVideo) (CameraHook.resolveSensorOrientationDeg() - (videoPlayer?.videoRotation ?: 0)) 
-                                        else if (isStream) (CameraHook.resolveSensorOrientationDeg() - (streamPlayer?.videoRotation ?: 0))
-                                        else 0
+                                        else 0 // [STREAM PARITY] No compensation for streams (match bb0cabb)
                 val finalRotationOffset = CameraHook.rotationOffset + videoCompensation
 
                 // DYNAMIC MIRRORING LOGIC (Axis-Swapping handled in TextureRenderer)
@@ -2991,12 +2984,13 @@ class VirtualRenderThread(
                 // Slight crop/zoom applied only to front camera to mimic lens variation
                 val finalZoom = if (isActuallyFront) CameraHook.zoomFactor * 1.05f else CameraHook.zoomFactor
 
-                val ratio = getTargetRatio(vw, vh, isSurfaceView)
+                val ratio = getTargetRatio(vw, vh, isSurfaceView, contentW, contentH)
 
                 val timeValue = (System.currentTimeMillis() - renderStartTime) / 1000.0f
 
-                // Emulate missing hardware EXIF rotation (-90 deg CW) for downloaded videos AND streams
-                val renderMatrix = if ((isVideo && videoPlayer?.rawRotation == 0) || (isStream && streamPlayer?.rawRotation == 0)) {
+                // [STREAM PARITY] Match bb0cabb: Do not manually rotate matrix for streams.
+                // Let the SurfaceTexture's native matrix handle it.
+                val renderMatrix = if (isVideo && videoPlayer?.rawRotation == 0) {
                     val rotatedMatrix = FloatArray(16)
                     System.arraycopy(matrix, 0, rotatedMatrix, 0, 16)
                     android.opengl.Matrix.translateM(rotatedMatrix, 0, 0.5f, 0.5f, 0f)
