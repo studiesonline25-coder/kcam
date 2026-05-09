@@ -2771,6 +2771,12 @@ class VirtualRenderThread(
             if (isStream) {
                 // Live Stream Pipeline (ExoPlayer)
                 mediaSurfaceTexture = SurfaceTexture(textureRenderer!!.textureId)
+                
+                // CRITICAL: Pre-allocate a 16:9 Landscape buffer (1920x1080) BEFORE ExoPlayer connects.
+                // If not set, it defaults to the host app's EGL surface size (e.g., 1080x2400 portrait).
+                // The decoder (16:9) writing into a portrait buffer leaves massive uninitialized green padding.
+                mediaSurfaceTexture?.setDefaultBufferSize(1920, 1080)
+                
                 mediaSurface = Surface(mediaSurfaceTexture)
                 val hasNewFrame = java.util.concurrent.atomic.AtomicBoolean(false)
                 val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
