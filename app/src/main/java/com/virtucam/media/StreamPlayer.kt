@@ -23,8 +23,7 @@ import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
-import com.arthenica.ffmpegkit.FFmpegKit
-import com.arthenica.ffmpegkit.FFmpegSession
+import com.google.common.collect.ImmutableList
 
 /**
  * ExoPlayer wrapper for broadcasting live RTSP/RTMP/SRT streams from OBS.
@@ -60,8 +59,7 @@ class StreamPlayer(
     var isPlaying: Boolean = false
         private set
 
-    private var firstFrameFired = false
-    private var ffmpegSession: FFmpegSession? = null
+    private var isFirstFrame = true
 
     fun start() {
         handlerThread = HandlerThread("VirtuCam-StreamPlayer")
@@ -101,63 +99,28 @@ class StreamPlayer(
             .setLoadControl(loadControl)
             .build()
 
-        exoPlayer?.setVideoSurface(outputSurface)
-
         val trimmedUrl = streamUrl.trim()
-        var finalUri = Uri.parse(trimmedUrl)
-
-        // Feature: SRT and RTMP Proxy via FFmpeg (higher reliability than platform/ExoPlayer native)
-        if (trimmedUrl.startsWith("srt", ignoreCase = true) || trimmedUrl.startsWith("rtmp", ignoreCase = true) || trimmedUrl.startsWith("rtsp", ignoreCase = true)) {
-            var optimizedUrl = trimmedUrl
-            var ffmpegInputArgs = ""
-            
-            // Handle Protocol-Specific Optimizations
-            if (trimmedUrl.startsWith("srt", ignoreCase = true)) {
-                // Increase SRT latency to 1000ms (1,000,000 microseconds) for maximum stability on WiFi
-                if (!trimmedUrl.contains("latency=")) {
-                    val separator = if (trimmedUrl.contains("?")) "&" else "?"
-                    optimizedUrl = "$trimmedUrl${separator}latency=1000000"
-                }
-            } else if (trimmedUrl.startsWith("rtsp", ignoreCase = true)) {
-                // Force TCP for RTSP to bypass firewall/UDP issues
-                ffmpegInputArgs = "-rtsp_transport tcp "
-            } else if (trimmedUrl.startsWith("rtmp", ignoreCase = true)) {
-                if (trimmedUrl.contains("0.0.0.0") || trimmedUrl.contains("listen=1")) {
-                    ffmpegInputArgs = "-listen 1 "
-                    optimizedUrl = optimizedUrl.replace("?listen=1", "").replace("&listen=1", "")
-                }
+        
+        val mediaSource = when {
+            trimmedUrl.startsWith("rtsp://", ignoreCase = true) -> {
+                RtspMediaSource.Factory()
+                    .setDebugLoggingEnabled(true)
+                    .setTimeoutMs(10000)
+                    .setForceUseRtpTcp(true)
+                    .createMediaSource(MediaItem.fromUri(trimmedUrl))
             }
-
-            // High-fidelity proxy buffer for all protocols
-            val udpUrl = "udp://127.0.0.1:9998?pkt_size=1316&buffer_size=20971520&fifo_size=1000000&overrun_nonfatal=1"
-            Log.d(TAG, "Starting FFmpeg proxy for ${optimizedUrl.substringBefore(":")}: $optimizedUrl")
-            
-            // Increased probesize and analyzeduration to ensure stream format is detected correctly
-            val command = "$ffmpegInputArgs -probesize 2000000 -analyzeduration 2000000 -flags low_delay -i \"$optimizedUrl\" -c copy -f mpegts \"$udpUrl\""
-            ffmpegSession = FFmpegKit.executeAsync(command) { session ->
-                Log.d(TAG, "FFmpeg Proxy finished with state ${session.state} and return code ${session.returnCode}")
+            trimmedUrl.startsWith("rtmp://", ignoreCase = true) -> {
+                DefaultMediaSourceFactory(context)
+                    .createMediaSource(MediaItem.fromUri(trimmedUrl))
             }
-            finalUri = Uri.parse(udpUrl)
+            else -> {
+                // Fallback for SRT or other protocols supported by DefaultMediaSourceFactory
+                mediaSourceFactory.createMediaSource(MediaItem.fromUri(trimmedUrl))
+            }
         }
 
-        val mediaSource = if (finalUri.scheme?.startsWith("rtsp", ignoreCase = true) == true) {
-            RtspMediaSource.Factory()
-                .setForceUseRtpTcp(true) // Force TCP for native ExoPlayer RTSP too
-                .createMediaSource(MediaItem.fromUri(finalUri))
-        } else {
-            MediaItem.Builder()
-                .setUri(finalUri)
-                .setLiveConfiguration(
-                    MediaItem.LiveConfiguration.Builder()
-                        .setMaxPlaybackSpeed(1.05f)
-                        .setMinPlaybackSpeed(0.95f)
-                        .build()
-                )
-                .setRequestMetadata(RequestMetadata.Builder().build())
-                .build()
-                .let { mediaSourceFactory.createMediaSource(it) }
-        }
-
+        // [CRITICAL] Enforce direct surface routing before prepare()
+        exoPlayer?.setVideoSurface(outputSurface)
         exoPlayer?.setMediaSource(mediaSource)
 
         exoPlayer?.addListener(object : Player.Listener {
@@ -186,8 +149,8 @@ class StreamPlayer(
             }
 
             override fun onRenderedFirstFrame() {
-                if (firstFrameFired) return
-                firstFrameFired = true
+                if (!isFirstFrame) return
+                isFirstFrame = false
                 isPlaying = true
                 onFrameAvailable()
                 onFirstFrame?.let { callback ->
@@ -198,14 +161,32 @@ class StreamPlayer(
             }
 
             override fun onPlayerError(error: PlaybackException) {
-                val msg = "Stream error: ${error.message} (code: ${error.errorCodeName})"
-                Log.e(TAG, msg)
+                Log.e("VIRTUCAM_RTSP", "RTSP error: ${error.errorCodeName} - ${error.message}")
                 isPlaying = false
-                onStreamError?.invoke(msg)
+                onStreamError?.invoke("Stream error: ${error.message}. Reconnecting in 3s...")
+                
+                // Attempt reconnect after 3 seconds
+                handler?.postDelayed({
+                    if (exoPlayer != null) {
+                        Log.d("VIRTUCAM_RTSP", "Attempting reconnection...")
+                        exoPlayer?.prepare()
+                    }
+                }, 3000)
+            }
+
+            override fun onPlaybackStateChanged(state: Int) {
+                Log.d("VIRTUCAM_RTSP", "State: $state")
             }
         })
 
         exoPlayer?.playWhenReady = true
+
+        // [LOGGING] Track frame arrivals for verification
+        exoPlayer?.setVideoFrameMetadataListener { _, _, _, _ ->
+            Log.d("VIRTUCAM_RTSP", "Frame arrived: ${System.currentTimeMillis()}")
+            onFrameAvailable()
+        }
+
         exoPlayer?.prepare()
     }
 
@@ -244,8 +225,6 @@ class StreamPlayer(
                 exoPlayer?.stop()
                 exoPlayer?.release()
                 exoPlayer = null
-                ffmpegSession?.cancel()
-                ffmpegSession = null
                 handlerThread?.quitSafely()
                 handlerThread = null
                 handler = null
