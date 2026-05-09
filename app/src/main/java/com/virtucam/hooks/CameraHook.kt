@@ -2788,6 +2788,9 @@ class VirtualRenderThread(
                         android.os.Handler(android.os.Looper.getMainLooper()).post {
                             saveStreamPreviewToProvider(bitmap)
                         }
+                    },
+                    onVideoSizeKnown = { width, height ->
+                        mediaSurfaceTexture?.setDefaultBufferSize(width, height)
                     }
                 )
                 streamPlayer!!.start()

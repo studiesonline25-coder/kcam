@@ -35,7 +35,8 @@ class StreamPlayer(
     private val useTcp: Boolean = true,
     private val onFrameAvailable: () -> Unit,
     private val onFirstFrame: ((Bitmap) -> Unit)? = null,
-    private val onStreamError: ((String) -> Unit)? = null
+    private val onStreamError: ((String) -> Unit)? = null,
+    private val onVideoSizeKnown: ((Int, Int) -> Unit)? = null
 ) {
 
     companion object {
@@ -153,6 +154,8 @@ class StreamPlayer(
                     videoWidth  = videoSize.width
                     videoHeight = videoSize.height
                 }
+                
+                onVideoSizeKnown?.invoke(videoWidth, videoHeight)
             }
 
             override fun onRenderedFirstFrame() {
