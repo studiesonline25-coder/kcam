@@ -107,7 +107,7 @@ class StreamPlayer(
         var finalUri = Uri.parse(trimmedUrl)
 
         // Feature: SRT and RTMP Proxy via FFmpeg (higher reliability than platform/ExoPlayer native)
-        if (trimmedUrl.startsWith("srt", ignoreCase = true) || trimmedUrl.startsWith("rtmp", ignoreCase = true) || trimmedUrl.startsWith("rtsp", ignoreCase = true)) {
+        if (trimmedUrl.startsWith("srt", ignoreCase = true) || trimmedUrl.startsWith("rtmp", ignoreCase = true)) {
             var optimizedUrl = trimmedUrl
             var ffmpegInputArgs = ""
             
