@@ -2672,7 +2672,6 @@ class VirtualRenderThread(
         }
         return vW.toFloat() / vH.toFloat()
     }
-    }
 
     override fun run() {
         try {
