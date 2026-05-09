@@ -22,6 +22,9 @@ import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
+import com.arthenica.ffmpegkit.FFmpegKit
+import com.arthenica.ffmpegkit.FFmpegSession
+import androidx.media3.exoplayer.rtsp.RtspMediaSource
 
 /**
  * ExoPlayer wrapper for broadcasting live RTSP/RTMP/SRT streams from OBS.
@@ -44,6 +47,7 @@ class StreamPlayer(
     private var exoPlayer: ExoPlayer? = null
     private var handlerThread: HandlerThread? = null
     private var handler: Handler? = null
+    private var ffmpegSession: FFmpegSession? = null
 
     var videoWidth: Int = 0
         private set
@@ -101,24 +105,59 @@ class StreamPlayer(
         exoPlayer?.setVideoSurface(outputSurface)
 
         val trimmedUrl = streamUrl.trim()
-        val finalUri = Uri.parse(trimmedUrl)
+        var finalUri = Uri.parse(trimmedUrl)
 
-        // Use DefaultMediaSourceFactory for ALL protocols (including RTSP).
-        // RtspMediaSource.Factory() produces frames with incorrect stride alignment,
-        // causing green padding. DefaultMediaSourceFactory auto-detects RTSP when 
-        // media3-exoplayer-rtsp is on the classpath and uses the correct decoder pipeline.
-        val mediaItem = MediaItem.Builder()
-            .setUri(finalUri)
-            .setLiveConfiguration(
-                MediaItem.LiveConfiguration.Builder()
-                    .setMaxPlaybackSpeed(1.05f)
-                    .setMinPlaybackSpeed(0.95f)
-                    .build()
-            )
-            .setRequestMetadata(RequestMetadata.Builder().build())
-            .build()
+        // Feature: SRT and RTMP Proxy via FFmpeg (higher reliability than platform/ExoPlayer native)
+        if (trimmedUrl.startsWith("srt", ignoreCase = true) || trimmedUrl.startsWith("rtmp", ignoreCase = true) || trimmedUrl.startsWith("rtsp", ignoreCase = true)) {
+            var optimizedUrl = trimmedUrl
+            var ffmpegInputArgs = ""
+            
+            // Handle Protocol-Specific Optimizations
+            if (trimmedUrl.startsWith("srt", ignoreCase = true)) {
+                // Increase SRT latency to 1000ms (1,000,000 microseconds) for maximum stability on WiFi
+                if (!trimmedUrl.contains("latency=")) {
+                    val separator = if (trimmedUrl.contains("?")) "&" else "?"
+                    optimizedUrl = "$trimmedUrl${separator}latency=1000000"
+                }
+            } else if (trimmedUrl.startsWith("rtsp", ignoreCase = true)) {
+                // Force TCP for RTSP to bypass firewall/UDP issues
+                ffmpegInputArgs = "-rtsp_transport tcp "
+            } else if (trimmedUrl.startsWith("rtmp", ignoreCase = true)) {
+                if (trimmedUrl.contains("0.0.0.0") || trimmedUrl.contains("listen=1")) {
+                    ffmpegInputArgs = "-listen 1 "
+                    optimizedUrl = optimizedUrl.replace("?listen=1", "").replace("&listen=1", "")
+                }
+            }
 
-        val mediaSource = mediaSourceFactory.createMediaSource(mediaItem)
+            // High-fidelity proxy buffer for all protocols
+            val udpUrl = "udp://127.0.0.1:9998?pkt_size=1316&buffer_size=20971520&fifo_size=1000000&overrun_nonfatal=1"
+            Log.d(TAG, "Starting FFmpeg proxy for ${optimizedUrl.substringBefore(":")}: $optimizedUrl")
+            
+            // Increased probesize and analyzeduration to ensure stream format is detected correctly
+            val command = "$ffmpegInputArgs -probesize 2000000 -analyzeduration 2000000 -flags low_delay -i \"$optimizedUrl\" -c copy -f mpegts \"$udpUrl\""
+            ffmpegSession = FFmpegKit.executeAsync(command) { session ->
+                Log.d(TAG, "FFmpeg Proxy finished with state ${session.state} and return code ${session.returnCode}")
+            }
+            finalUri = Uri.parse(udpUrl)
+        }
+
+        val mediaSource = if (finalUri.scheme?.startsWith("rtsp", ignoreCase = true) == true) {
+            RtspMediaSource.Factory()
+                .setForceUseRtpTcp(true) // Force TCP for native ExoPlayer RTSP too
+                .createMediaSource(MediaItem.fromUri(finalUri))
+        } else {
+            MediaItem.Builder()
+                .setUri(finalUri)
+                .setLiveConfiguration(
+                    MediaItem.LiveConfiguration.Builder()
+                        .setMaxPlaybackSpeed(1.05f)
+                        .setMinPlaybackSpeed(0.95f)
+                        .build()
+                )
+                .setRequestMetadata(RequestMetadata.Builder().build())
+                .build()
+                .let { mediaSourceFactory.createMediaSource(it) }
+        }
 
         exoPlayer?.setMediaSource(mediaSource)
         
@@ -211,7 +250,8 @@ class StreamPlayer(
                 exoPlayer?.stop()
                 exoPlayer?.release()
                 exoPlayer = null
-
+                ffmpegSession?.cancel()
+                ffmpegSession = null
                 handlerThread?.quitSafely()
                 handlerThread = null
                 handler = null

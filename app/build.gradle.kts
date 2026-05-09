@@ -103,4 +103,7 @@ dependencies {
     // OkHttp DataSource for better stream reliability
     implementation("androidx.media3:media3-datasource-okhttp:$media3_version")
     
+    // FFmpeg Proxy (Crucial for RTSP stream stability, fixing stride alignment & I-Frame gaps)
+    implementation("com.mrljdx:ffmpeg-kit-full:6.1.4")
+    
 }
