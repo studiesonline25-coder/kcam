@@ -103,7 +103,6 @@ dependencies {
     // OkHttp DataSource for better stream reliability
     implementation("androidx.media3:media3-datasource-okhttp:$media3_version")
     
-    // FFmpeg Proxy for SRT/RTMP (Proxying to local UDP)
-    // Using ABI-specific filters and packaging excludes to keep size down
-    implementation("com.mrljdx:ffmpeg-kit-full:6.1.4")
+    // Local Ultra-lightweight FFmpeg (only ~5MB) for robust RTSP packet parsing
+    implementation(files("libs/ffmpeg-kit.aar"))
 }
