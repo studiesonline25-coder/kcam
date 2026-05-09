@@ -2773,7 +2773,10 @@ class VirtualRenderThread(
                 mediaSurfaceTexture = SurfaceTexture(textureRenderer!!.textureId)
                 mediaSurface = Surface(mediaSurfaceTexture)
                 val hasNewFrame = java.util.concurrent.atomic.AtomicBoolean(false)
-                mediaSurfaceTexture?.setOnFrameAvailableListener { hasNewFrame.set(true) }
+                mediaSurfaceTexture?.setOnFrameAvailableListener { 
+                    Log.d("VIRTUCAM_RTSP", "Frame arrived (SurfaceTexture): ${System.currentTimeMillis()}")
+                    hasNewFrame.set(true) 
+                }
                 
                 streamPlayer = StreamPlayer(
                     context = context,

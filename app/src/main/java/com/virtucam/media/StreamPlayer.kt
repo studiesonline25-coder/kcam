@@ -130,16 +130,10 @@ class StreamPlayer(
                 rawRotation = videoSize.unappliedRotationDegrees
                 videoRotation = rawRotation
                 
-                // Spoof 0 rotation to 90 for upright streams so CameraHook treats them like recorded videos.
-                if (videoRotation == 0) {
-                    videoRotation = 90
-                }
-
                 val rotated = videoRotation == 90 || videoRotation == 270
                 
-                // IMPORTANT: Only swap dimensions if it's a physically-sideways video (rawRotation 90/270).
-                // If it's physically portrait (rawRotation 0), keep dimensions as-is.
-                if (rotated && rawRotation != 0) {
+                // [ABSOLUTE PARITY] Match bb0cabb: swap only if raw rotation is 90/270.
+                if (rotated) {
                     videoWidth  = videoSize.height
                     videoHeight = videoSize.width
                 } else {
