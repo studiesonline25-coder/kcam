@@ -2773,7 +2773,8 @@ class VirtualRenderThread(
                 mediaSurfaceTexture = SurfaceTexture(textureRenderer!!.textureId)
                 mediaSurface = Surface(mediaSurfaceTexture)
                 val hasNewFrame = java.util.concurrent.atomic.AtomicBoolean(false)
-                mediaSurfaceTexture?.setOnFrameAvailableListener { hasNewFrame.set(true) }
+                val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+                mediaSurfaceTexture?.setOnFrameAvailableListener({ hasNewFrame.set(true) }, mainHandler)
                 
                 streamPlayer = StreamPlayer(
                     context = context,
