@@ -53,31 +53,7 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             }
             
             void main() {
-                if (uIsBackground == 1) {
-                    vec4 sum = vec4(0.0);
-                    sum += texture2D(sTexture, vec2(vTextureCoord.x - blurSize, vTextureCoord.y - blurSize));
-                    sum += texture2D(sTexture, vec2(vTextureCoord.x, vTextureCoord.y - blurSize)) * 2.0;
-                    sum += texture2D(sTexture, vec2(vTextureCoord.x + blurSize, vTextureCoord.y - blurSize));
-                    sum += texture2D(sTexture, vec2(vTextureCoord.x - blurSize, vTextureCoord.y)) * 2.0;
-                    sum += texture2D(sTexture, vec2(vTextureCoord.x, vTextureCoord.y)) * 4.0;
-                    sum += texture2D(sTexture, vec2(vTextureCoord.x + blurSize, vTextureCoord.y)) * 2.0;
-                    sum += texture2D(sTexture, vec2(vTextureCoord.x - blurSize, vTextureCoord.y + blurSize));
-                    sum += texture2D(sTexture, vec2(vTextureCoord.x, vTextureCoord.y + blurSize)) * 2.0;
-                    sum += texture2D(sTexture, vec2(vTextureCoord.x + blurSize, vTextureCoord.y + blurSize));
-                    gl_FragColor = vec4((sum / 16.0).rgb * 0.4 * uBrightness, 1.0);
-                } else {
-                    vec2 caOffset = (vTextureCoord - 0.5) * 0.0012;
-                    float r = texture2D(sTexture, vTextureCoord + caOffset).r;
-                    float g = texture2D(sTexture, vTextureCoord).g;
-                    float b = texture2D(sTexture, vTextureCoord - caOffset).b;
-                    vec3 baseColor = vec3(r, g, b);
-                    
-                    float noiseScale = 0.0025 + (uBrightness - 1.0) * 0.005;
-                    float gNoise = gaussianNoise(gl_FragCoord.xy + vec2(uTime * 100.0, uTime * 70.0)) * noiseScale;
-                    float fpn = fixedPatternNoise(gl_FragCoord.xy);
-                    
-                    gl_FragColor = vec4(baseColor * uBrightness + gNoise + fpn, 1.0);
-                }
+                gl_FragColor = texture2D(sTexture, vTextureCoord) * uBrightness;
             }
         """
 
@@ -211,7 +187,7 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                 GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
             }
 
-            drawQuad(true)
+            // Simplified: Draw only the main video quad, no background.
             drawQuad(false)
         }
     }
