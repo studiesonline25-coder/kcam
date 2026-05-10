@@ -24,6 +24,7 @@ class MainActivity : AppCompatActivity() {
     
     private lateinit var webView: WebView
     private lateinit var config: VirtuCamConfig
+    private var previewPlayer: androidx.media3.exoplayer.ExoPlayer? = null
     
     private val pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri: Uri? ->
         uri?.let { handleSelectedMedia(it) }
@@ -39,6 +40,9 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         config = VirtuCamConfig.getInstance(this)
         setupWebView()
+        if (config.isStream) {
+            setupPreviewPlayer()
+        }
     }
     
     @SuppressLint("SetJavaScriptEnabled")
@@ -130,6 +134,7 @@ class MainActivity : AppCompatActivity() {
                     putExtra(com.virtucam.media.ProxyService.EXTRA_URL, url)
                 }
                 startForegroundService(intent)
+                setupPreviewPlayer()
                 webView.evaluateJavascript("window.onStreamConnecting && window.onStreamConnecting()", null)
                 syncConfigToWeb()
             }
@@ -144,6 +149,7 @@ class MainActivity : AppCompatActivity() {
                     action = com.virtucam.media.ProxyService.ACTION_STOP
                 }
                 startService(intent)
+                releasePreviewPlayer()
                 webView.evaluateJavascript("window.onStreamDisconnected && window.onStreamDisconnected()", null)
                 syncConfigToWeb()
             }
@@ -205,7 +211,6 @@ class MainActivity : AppCompatActivity() {
 
                 // 1. SETTINGS PANEL INJECTION
                 function injectSettingsUI() {
-                    // Hide original "Investigation Tools" and specifically Passthrough/Test Pattern from main view
                     ['PASSTHROUGH', 'TEST PATTERN', 'INVESTIGATION TOOLS'].forEach(text => {
                         let el = findByText(text);
                         if (el) {
@@ -214,7 +219,6 @@ class MainActivity : AppCompatActivity() {
                         }
                     });
 
-                    // Detect Settings Panel (Look for "ADVANCED SETTINGS" header)
                     let settingsHeader = findByText('ADVANCED SETTINGS');
                     if (!settingsHeader) return;
 
@@ -266,31 +270,25 @@ class MainActivity : AppCompatActivity() {
                     if (!selectArea) return;
                     
                     let container = selectArea.closest('div');
-                    if (!container || !window.vcState || !window.vcState.mediaPreview) return;
+                    if (!container || !window.vcState) return;
 
-                    let existingImg = container.querySelector('#vc-media-preview-img');
-                    if (!existingImg) {
-                        let icon = container.querySelector('svg');
-                        if (icon) icon.style.display = 'none';
-                        let img = document.createElement('img');
-                        img.id = 'vc-media-preview-img';
-                        img.style.width = '80px'; img.style.height = '80px'; img.style.borderRadius = '12px';
-                        img.style.objectFit = 'cover';
-                        container.prepend(img);
-                        existingImg = img;
+                    // Handle regular media preview
+                    if (window.vcState.mediaPreview) {
+                        let existingImg = container.querySelector('#vc-media-preview-img');
+                        if (!existingImg) {
+                            let icon = container.querySelector('svg');
+                            if (icon) icon.style.display = 'none';
+                            let img = document.createElement('img');
+                            img.id = 'vc-media-preview-img';
+                            img.style.width = '80px'; img.style.height = '80px'; img.style.borderRadius = '12px';
+                            img.style.objectFit = 'cover';
+                            container.prepend(img);
+                            existingImg = img;
+                        }
+                        existingImg.src = window.vcState.mediaPreview;
                     }
-                    existingImg.src = window.vcState.mediaPreview;
                 }
 
-                // 3. TAB STABILITY
-                // Intercept hash changes to prevent full reloads
-                window.addEventListener('hashchange', () => {
-                    console.log("Tab changed: " + window.location.hash);
-                    // Force a re-run of injection logic
-                    setTimeout(runAll, 100);
-                });
-
-                // 4. STREAM URL FIELD
                 function fixStreamField() {
                     let inputs = document.querySelectorAll('input');
                     inputs.forEach(input => {
@@ -333,5 +331,31 @@ class MainActivity : AppCompatActivity() {
             })();
         """.trimIndent()
         webView.evaluateJavascript(js, null)
+    }
+
+    private fun setupPreviewPlayer() {
+        if (previewPlayer != null) return
+        previewPlayer = androidx.media3.exoplayer.ExoPlayer.Builder(this).build().apply {
+            val mediaItem = androidx.media3.common.MediaItem.fromUri("udp://127.0.0.1:9998")
+            setMediaItem(mediaItem)
+            prepare()
+            playWhenReady = true
+            
+            addListener(object : androidx.media3.common.Player.Listener {
+                override fun onRenderedFirstFrame() {
+                    runOnUiThread { syncConfigToWeb() }
+                }
+            })
+        }
+    }
+
+    private fun releasePreviewPlayer() {
+        previewPlayer?.release()
+        previewPlayer = null
+    }
+
+    override fun onDestroy() {
+        releasePreviewPlayer()
+        super.onDestroy()
     }
 }

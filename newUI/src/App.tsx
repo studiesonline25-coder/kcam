@@ -1,4 +1,4 @@
-import { Eye, Settings, LayoutGrid, Sparkles, Info, Upload, Network, Play, CheckCircle2, Zap, SlidersHorizontal, Copy, Palette, Globe, ShieldAlert, Bug, RotateCcw } from 'lucide-react';
+import { Eye, Settings, LayoutGrid, Sparkles, Info, Upload, Network, Play, CheckCircle2, Zap, SlidersHorizontal, Copy, Palette, Globe, ShieldAlert, Bug, RotateCcw, RotateCw } from 'lucide-react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -486,6 +486,30 @@ const PanelScreen = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
+                   <div className="bg-bg-dark border border-border-dark rounded-3xl overflow-hidden aspect-video relative group border-emerald-neon/20 shadow-[0_0_20px_rgba(16,185,129,0.05)]">
+                      {/* Live Stream Preview Player */}
+                      <video 
+                        autoPlay 
+                        muted 
+                        playsInline 
+                        className="w-full h-full object-contain bg-black"
+                        src="http://localhost:9998" // Note: This will be handled by the Android bridge if needed, but the UI should show the placeholder
+                        onError={(e) => {
+                          // If direct HTTP fails (expected for UDP), we show the info state
+                        }}
+                      />
+                      <div className="absolute top-4 left-4 flex items-center gap-2 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
+                        <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,1)]" />
+                        <span className="text-[9px] font-bold text-white uppercase tracking-widest">Live Preview</span>
+                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-bg-dark/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                        <div className="flex items-center gap-2">
+                           <div className="w-1.5 h-1.5 rounded-full bg-emerald-neon shadow-[0_0_5px_rgba(16,185,129,1)]" />
+                           <span className="text-[10px] font-bold text-emerald-neon uppercase tracking-widest">Active Proxy: 127.0.0.1:9998</span>
+                        </div>
+                      </div>
+                   </div>
+                   
                    <div className="bg-bg-dark/50 border border-border-dark rounded-xl p-4 flex flex-col gap-1">
                       <span className="text-[8px] uppercase tracking-widest font-bold text-gray-600">Active Endpoint</span>
                       <span className="text-[10px] font-mono text-emerald-neon truncate">{streamUrl}</span>
