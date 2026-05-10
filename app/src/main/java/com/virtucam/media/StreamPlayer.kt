@@ -77,8 +77,15 @@ class StreamPlayer(
     private fun initializePlayer() {
         if (exoPlayer != null) return
 
+        // STABILITY BUFFER: Increased to 2.5s to eliminate "green particles" and allow
+        // the decoder enough time to synchronize with OBS Keyframes.
         val loadControl = DefaultLoadControl.Builder()
-            .setBufferDurationsMs(500, 1500, 500, 500)
+            .setBufferDurationsMs(
+                2500, // Min buffer
+                5000, // Max buffer
+                1000, // Buffer for playback
+                1500  // Buffer for rebuffering
+            )
             .setPrioritizeTimeOverSizeThresholds(true)
             .build()
 
@@ -88,7 +95,6 @@ class StreamPlayer(
             setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
             setMediaCodecSelector { mimeType, requiresSecureDecoder, requiresTunnelingDecoder ->
                 val infos = MediaCodecSelector.DEFAULT.getDecoderInfos(mimeType, requiresSecureDecoder, requiresTunnelingDecoder)
-                // Filter for the Google Software Decoder (c2.android.avc.decoder)
                 val swInfos = infos.filter { it.name.contains("android.avc") || it.name.contains("google") }
                 if (swInfos.isNotEmpty()) swInfos else infos
             }
@@ -104,7 +110,7 @@ class StreamPlayer(
         val mediaSource = RtspMediaSource.Factory()
             .setForceUseRtpTcp(true)
             .setDebugLoggingEnabled(true)
-            .setTimeoutMs(20000)
+            .setTimeoutMs(30000) // Increased to 30s for slow handshakes
             .createMediaSource(MediaItem.fromUri(streamUrl))
 
         exoPlayer?.setMediaSource(mediaSource)
