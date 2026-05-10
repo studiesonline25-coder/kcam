@@ -231,7 +231,16 @@ class FormatConverterBridge(
      */
     private var lastJpegGenTimeMs = 0L
 
+    // [DIAGNOSTIC] Frame-drop tracking
+    private var diagCallCount = 0
+    private var diagDropBufferNotReady = 0
+    private var diagDropIntegrity = 0
+    private var diagDropGuard = 0
+    private var diagSuccess = 0
+
     fun overwriteImageWithLatestYuv(targetImage: Image, timestamp: Long) {
+        diagCallCount++
+        
         // [Fix] Generate JPEG payload for late-stage file swap.
         // Throttled to once per second to avoid burning CPU on every preview frame.
         val now = System.currentTimeMillis()
@@ -241,7 +250,10 @@ class FormatConverterBridge(
         }
         
         if (!isBufferReady || readyBuffer == null || conversionBuffer == null) {
-            Log.e(TAG, "FormatConverterBridge: Cannot overwrite YUV - source data is missing or blank (all zeros)!")
+            diagDropBufferNotReady++
+            if (diagCallCount % 30 == 0) {
+                Log.e(TAG, "GREEN_DIAG: calls=$diagCallCount bufNotReady=$diagDropBufferNotReady integrity=$diagDropIntegrity guard=$diagDropGuard success=$diagSuccess | isBufferReady=$isBufferReady readyBuf=${readyBuffer != null} convBuf=${conversionBuffer != null}")
+            }
             return
         }
         
@@ -252,7 +264,10 @@ class FormatConverterBridge(
         val rgbaBytes = conversionBuffer!!
         
         if (!checkDataIntegrity(rgbaBytes)) {
-            Log.e(TAG, "FormatConverterBridge: Cannot overwrite YUV - source data is blank (all zeros)!")
+            diagDropIntegrity++
+            if (diagCallCount % 30 == 0) {
+                Log.e(TAG, "GREEN_DIAG: calls=$diagCallCount bufNotReady=$diagDropBufferNotReady integrity=$diagDropIntegrity guard=$diagDropGuard success=$diagSuccess | RGBA first 8 bytes: ${rgbaBytes.take(8).joinToString { String.format("%02X", it) }}")
+            }
             return
         }
 
@@ -260,9 +275,9 @@ class FormatConverterBridge(
         if (CameraHook.isVideo || CameraHook.isStreamActive) {
             // Flow allowed
         } else {
-            // Guard active. Return early to prevent the target app from seeing green.
-            if (System.currentTimeMillis() % 2000 < 100) {
-                Log.v(TAG, "Stream Guard: Waiting for first RTSP frame to land...")
+            diagDropGuard++
+            if (diagCallCount % 30 == 0) {
+                Log.e(TAG, "GREEN_DIAG: calls=$diagCallCount bufNotReady=$diagDropBufferNotReady integrity=$diagDropIntegrity guard=$diagDropGuard success=$diagSuccess | isVideo=${CameraHook.isVideo} isStreamActive=${CameraHook.isStreamActive}")
             }
             return
         }
@@ -436,7 +451,10 @@ class FormatConverterBridge(
                 } catch (_: Throwable) {}
             }
 
-            Log.d(TAG, "FormatConverterBridge: Captured frame (${w}x${h}) rewritten successfully. Format=$format")
+            diagSuccess++
+            if (diagCallCount % 30 == 0) {
+                Log.e(TAG, "GREEN_DIAG: calls=$diagCallCount bufNotReady=$diagDropBufferNotReady integrity=$diagDropIntegrity guard=$diagDropGuard success=$diagSuccess | WROTE ${w}x${h} fmt=$format")
+            }
         } catch (e: Exception) {
             Log.e(TAG, "FormatConverterBridge: Error overwriting capture buffer", e)
         }
