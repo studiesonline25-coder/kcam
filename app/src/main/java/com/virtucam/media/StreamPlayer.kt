@@ -91,16 +91,16 @@ class StreamPlayer(
                     if (width == 0 || height == 0) return@setOnVideoSizeChangedListener
 
                     // Native MediaPlayer does not directly expose raw rotation in the same way.
-                    rawRotation = 0
-                    videoRotation = 90 // Default to 90 for typical portrait camera streams
+                    this@StreamPlayer.rawRotation = 0
+                    this@StreamPlayer.videoRotation = 90 // Default to 90 for typical portrait camera streams
 
                     val rotated = videoRotation == 90 || videoRotation == 270
                     if (rotated && rawRotation != 0) {
-                        videoWidth = height
-                        videoHeight = width
+                        this@StreamPlayer.videoWidth = height
+                        this@StreamPlayer.videoHeight = width
                     } else {
-                        videoWidth = width
-                        videoHeight = height
+                        this@StreamPlayer.videoWidth = width
+                        this@StreamPlayer.videoHeight = height
                     }
                 }
 
@@ -109,7 +109,7 @@ class StreamPlayer(
                         Log.e(TAG, "!!! FIRST FRAME RENDERED !!! RTSP PIPELINE ACTIVE")
                         if (!firstFrameFired) {
                             firstFrameFired = true
-                            isPlaying = true
+                            this@StreamPlayer.isPlaying = true
 
                             // RELEASE THE GUARD: Signal to FormatConverterBridge that we have real data
                             com.virtucam.hooks.CameraHook.isStreamActive = true
