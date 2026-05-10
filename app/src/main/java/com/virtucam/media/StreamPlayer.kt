@@ -42,17 +42,14 @@ class StreamPlayer(
 
     companion object {
         private const val TAG = "StreamPlayer"
-        private var isNativeLoaded = false
-
-        fun loadNative() {
-            if (isNativeLoaded) return
-            try {
-                // Manually load the core FFmpegKit library only when needed
-                System.loadLibrary("ffmpegkit")
-                isNativeLoaded = true
-                Log.d(TAG, "FFmpeg native libraries loaded successfully")
+        
+        fun isFFmpegAvailable(): Boolean {
+            return try {
+                // Check if the library is functional without force-loading it ourselves
+                com.arthenica.ffmpegkit.FFmpegKitConfig.getFFmpegVersion() != null
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to load FFmpeg native libraries: ${e.message}")
+                Log.e(TAG, "FFmpeg not available: ${e.message}")
+                false
             }
         }
     }
@@ -79,7 +76,6 @@ class StreamPlayer(
 
 
     fun start() {
-        loadNative()
         handlerThread = HandlerThread("VirtuCam-StreamPlayer")
         handlerThread?.start()
         handler = Handler(handlerThread!!.looper)
