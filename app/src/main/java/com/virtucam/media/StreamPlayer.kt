@@ -73,31 +73,47 @@ class StreamPlayer(
     private inner class XiaomiCompatVideoRenderer(
         context: Context,
         mediaCodecSelector: MediaCodecSelector
-    ) : MediaCodecVideoRenderer(context, mediaCodecSelector, 0, null, null, 0) {
+    ) : MediaCodecVideoRenderer(context, mediaCodecSelector, 0, null, null, -1) {
         
-        override fun getCodecMaxInputSize(codecInfo: MediaCodecInfo, format: Format): Int {
+        override fun getCodecMaxInputSize(
+            codecInfo: MediaCodecInfo,
+            format: Format
+        ): Int {
             // Xiaomi devices need a significantly larger buffer than default for RTSP
-            return (format.width.takeIf { it > 0 } ?: 1920) * (format.height.takeIf { it > 0 } ?: 1080) * 2
+            val width = if (format.width > 0) format.width else 1920
+            val height = if (format.height > 0) format.height else 1080
+            return width * height * 2
         }
 
-        override fun configureCodec(
-            codecInfo: MediaCodecInfo,
-            codec: MediaCodec,
+        override fun getMediaFormat(
             format: Format,
-            crypto: android.media.MediaCrypto?,
-            codecMaxInputSize: Float
+            codecMimeType: String,
+            codecConfiguration: CodecMaxInputSize,
+            codecOperatingRate: Float,
+            deviceNeedsNoPostProcessWorkaround: Boolean,
+            tunnelingAudioSessionId: Int
         ): MediaFormat {
-            val mediaFormat = super.configureCodec(codecInfo, codec, format, crypto, codecMaxInputSize)
+            val mediaFormat = super.getMediaFormat(
+                format,
+                codecMimeType,
+                codecConfiguration,
+                codecOperatingRate,
+                deviceNeedsNoPostProcessWorkaround,
+                tunnelingAudioSessionId
+            )
             
             // Force NV12 (Semi-Planar) which is native for Qualcomm hardware
             mediaFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, 21) // COLOR_FormatYUV420SemiPlanar
             
-            // Re-inject KEY_MAX_INPUT_SIZE just in case
-            mediaFormat.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, getCodecMaxInputSize(codecInfo, format))
+            // Re-inject KEY_MAX_INPUT_SIZE
+            val width = if (format.width > 0) format.width else 1920
+            val height = if (format.height > 0) format.height else 1080
+            mediaFormat.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, width * height * 2)
             
-            Log.d(TAG, "Configuring Xiaomi-Compat Decoder: ${codecInfo.name}")
+            Log.d(TAG, "Configuring Xiaomi-Compat Decoder for $codecMimeType")
             return mediaFormat
         }
+    }
     }
 
     private fun initializePlayer() {
