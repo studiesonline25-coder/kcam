@@ -97,22 +97,34 @@ class StreamPlayer(
             setMediaCodecSelector { mimeType, requiresSecureDecoder, requiresTunnelingDecoder ->
                 val infos = MediaCodecSelector.DEFAULT.getDecoderInfos(mimeType, requiresSecureDecoder, requiresTunnelingDecoder)
                 
-                // Aggressively prioritize the known-stable Google Software Decoder
+                // Log ALL available decoders for this mime type
+                Log.e(TAG, "DECODER_SELECT for [$mimeType]: ${infos.size} decoders available: ${infos.joinToString { it.name }}")
+                
+                // For video/avc: force Google software decoder
                 val swDecoder = infos.find { it.name.lowercase() == "c2.android.avc.decoder" }
                 if (swDecoder != null) {
-                    Log.e(TAG, "FORCING GOOGLE SOFTWARE DECODER: ${swDecoder.name}")
+                    Log.e(TAG, ">>> USING SOFTWARE DECODER for [$mimeType]: ${swDecoder.name}")
                     return@setMediaCodecSelector listOf(swDecoder)
                 }
+                
+                // For video/hevc: try Google software HEVC decoder
+                val swHevc = infos.find { it.name.lowercase() == "c2.android.hevc.decoder" }
+                if (swHevc != null) {
+                    Log.e(TAG, ">>> USING SOFTWARE HEVC DECODER for [$mimeType]: ${swHevc.name}")
+                    return@setMediaCodecSelector listOf(swHevc)
+                }
 
+                // Generic: filter out all hardware decoders
                 val filteredInfos = infos.filter { 
                     val name = it.name.lowercase()
                     !name.contains("mtk") && !name.contains("mediatek") && !name.contains("omx")
                 }
                 if (filteredInfos.isNotEmpty()) {
-                    Log.d(TAG, "SELECTED FILTERED DECODER: ${filteredInfos[0].name}")
+                    Log.e(TAG, ">>> USING FILTERED DECODER for [$mimeType]: ${filteredInfos[0].name}")
                     filteredInfos
                 } else {
-                    Log.w(TAG, "NO SOFTWARE DECODER FOUND! Using default.")
+                    // For audio decoders this is normal - hardware audio is fine
+                    Log.w(TAG, ">>> NO SW DECODER for [$mimeType], using hardware: ${infos.firstOrNull()?.name}")
                     infos
                 }
             }
