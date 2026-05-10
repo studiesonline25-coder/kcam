@@ -63,17 +63,22 @@ class ProxyService : Service() {
             "$url${separator}latency=1000000"
         } else url
 
-        val transportArgs = if (url.startsWith("rtsp", ignoreCase = true)) "-rtsp_transport tcp " else ""
-        val udpUrl = "udp://127.0.0.1:9998?pkt_size=1316&buffer_size=20971520&fifo_size=1000000&overrun_nonfatal=1"
+        // RECONNECT LOGIC: Added -reconnect and -reconnect_streamed for robustness
+        // Removed -flags low_delay as it causes timeouts with some RTSP servers
+        val inputArgs = buildString {
+            if (url.startsWith("rtsp", ignoreCase = true)) append("-rtsp_transport tcp ")
+            append("-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 2 ")
+            append("-probesize 1000000 -analyzeduration 1000000 ")
+        }
         
-        val command = "$transportArgs -probesize 2000000 -analyzeduration 2000000 -flags low_delay -i \"$optimizedUrl\" -c copy -f mpegts \"$udpUrl\""
+        // BUFFER OPTIMIZATION: 10MB buffer for the local UDP pipe
+        val udpUrl = "udp://127.0.0.1:9998?pkt_size=1316&buffer_size=10485760&overrun_nonfatal=1"
+        
+        val command = "$inputArgs -i \"$optimizedUrl\" -c copy -f mpegts \"$udpUrl\""
         
         Log.d(TAG, "Starting proxy: $command")
         ffmpegSession = FFmpegKit.executeAsync(command) { session ->
-            Log.d(TAG, "Proxy finished: ${session.returnCode}")
-            if (!com.arthenica.ffmpegkit.ReturnCode.isSuccess(session.returnCode)) {
-                // In a real app, we might want to notify the UI here
-            }
+            Log.d(TAG, "Proxy finished with return code: ${session.returnCode}")
         }
     }
 
