@@ -146,9 +146,24 @@ class StreamPlayer(
                 }
             }
 
+            private var retryCount = 0
+            private const val MAX_RETRIES = 5
+
             override fun onPlayerError(error: PlaybackException) {
                 val msg = "Stream error: ${error.message} (code: ${error.errorCodeName})"
                 Log.e(TAG, msg)
+                
+                // If the proxy is still warming up, retry after 1 second
+                if (retryCount < MAX_RETRIES && error.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED) {
+                    retryCount++
+                    Log.d(TAG, "Proxy not ready yet, retrying... ($retryCount/$MAX_RETRIES)")
+                    handler?.postDelayed({
+                        exoPlayer?.prepare()
+                        exoPlayer?.play()
+                    }, 1500)
+                    return
+                }
+
                 isPlaying = false
                 onStreamError?.invoke(msg)
             }
