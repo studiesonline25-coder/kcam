@@ -317,11 +317,16 @@ class FormatConverterBridge(
                 return
             }
             
-            for (ty in 0 until h) {
+            // Bounds safety: Only process up to what we actually have in our source buffer
+            val processH = h.coerceAtMost(height)
+            val processW = w.coerceAtMost(width)
+
+            for (ty in 0 until processH) {
                 val rowPos = ty * yRowStride
-                for (tx in 0 until w) {
-                    val rgbaOff = (ty * srcStrideArr) + (tx * 4)
-                    if (rgbaOff >= 0 && rgbaOff + 3 < rgbaBytes.size) {
+                val srcRowBase = ty * srcStrideArr
+                for (tx in 0 until processW) {
+                    val rgbaOff = srcRowBase + (tx * 4)
+                    if (rgbaOff + 3 < rgbaBytes.size) {
                         val r = rgbaBytes[rgbaOff].toInt() and 0xFF
                         val g = rgbaBytes[rgbaOff+1].toInt() and 0xFF
                         val b = rgbaBytes[rgbaOff+2].toInt() and 0xFF
@@ -346,14 +351,15 @@ class FormatConverterBridge(
                 val pStride = uvPlane.rowStride
                 val pixStride = uvPlane.pixelStride
                 
-                val tW_out = w / 2
-                val tH_out = h / 2
+                val tW_out = (w / 2).coerceAtMost(width / 2)
+                val tH_out = (h / 2).coerceAtMost(height / 2)
                 
                 for (ty in 0 until tH_out) {
                     val rowPos = ty * pStride
+                    val srcRowBase = (ty * 2) * srcStrideArr
                     for (tx in 0 until tW_out) {
-                        val rgbaOff = ((ty * 2) * srcStrideArr) + ((tx * 2) * 4)
-                        if (rgbaOff >= 0 && rgbaOff + 3 < rgbaBytes.size) {
+                        val rgbaOff = srcRowBase + ((tx * 2) * 4)
+                        if (rgbaOff + 3 < rgbaBytes.size) {
                             val r = rgbaBytes[rgbaOff].toInt() and 0xFF
                             val g = rgbaBytes[rgbaOff+1].toInt() and 0xFF
                             val b = rgbaBytes[rgbaOff+2].toInt() and 0xFF
@@ -383,14 +389,15 @@ class FormatConverterBridge(
                     val buffer = plane.buffer
                     val pStride = plane.rowStride
                     val pixStride = plane.pixelStride
-                    val tW_out = w / 2
-                    val tH_out = h / 2
+                    val tW_out = (w / 2).coerceAtMost(width / 2)
+                    val tH_out = (h / 2).coerceAtMost(height / 2)
                     
                     for (ty in 0 until tH_out) {
                         val rowPos = ty * pStride
+                        val srcRowBase = (ty * 2) * srcStrideArr
                         for (tx in 0 until tW_out) {
-                            val rgbaOff = ((ty * 2) * srcStrideArr) + ((tx * 2) * 4)
-                            if (rgbaOff >= 0 && rgbaOff + 3 < rgbaBytes.size) {
+                            val rgbaOff = srcRowBase + ((tx * 2) * 4)
+                            if (rgbaOff + 3 < rgbaBytes.size) {
                                 val r = rgbaBytes[rgbaOff].toInt() and 0xFF
                                 val g = rgbaBytes[rgbaOff+1].toInt() and 0xFF
                                 val b = rgbaBytes[rgbaOff+2].toInt() and 0xFF
@@ -537,9 +544,17 @@ class FormatConverterBridge(
      * Synchronized via the Capture Session's sensor timestamp.
      */
     fun pushLatestFrameToWriter(timestamp: Long) {
+        if (!isBridgeActive) return
         val writer = imageWriter ?: return
         
         try {
+            // [GREEN SCREEN CIRCUIT BREAKER]
+            // If we are in stream mode, but the stream hasn't produced a frame yet, 
+            // do NOT push anything to the writer. Let the target app wait or see native frames.
+            if (!com.virtucam.hooks.CameraHook.isVideo && !com.virtucam.hooks.CameraHook.isStreamActive) {
+                return
+            }
+
             val outImage = writer.dequeueInputImage() ?: return
             
             var success = false
@@ -556,16 +571,15 @@ class FormatConverterBridge(
                 
                 writer.queueInputImage(outImage)
                 success = true
-                Log.d(TAG, "FormatConverterBridge: Successfully pushed captured frame (${width}x${height}) to ImageWriter (Format: $fmt, TS: $timestamp)")
             } finally {
                 if (!success) {
                     try { outImage.close() } catch (e: Exception) {}
                 }
             }
         } catch (e: IllegalStateException) {
-            // Normal backpressure: No free buffers to dequeue
+            // Normal backpressure
         } catch (e: Exception) {
-            Log.e(TAG, "FormatConverterBridge: CRITICAL ERROR during capture push", e)
+            // Avoid logging every frame to save CPU
         }
     }
 
