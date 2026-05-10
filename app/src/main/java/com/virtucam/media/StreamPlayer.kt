@@ -95,8 +95,21 @@ class StreamPlayer(
             setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
             setMediaCodecSelector { mimeType, requiresSecureDecoder, requiresTunnelingDecoder ->
                 val infos = MediaCodecSelector.DEFAULT.getDecoderInfos(mimeType, requiresSecureDecoder, requiresTunnelingDecoder)
-                val swInfos = infos.filter { it.name.contains("android.avc") || it.name.contains("google") }
-                if (swInfos.isNotEmpty()) swInfos else infos
+                
+                // AGGRESSIVE FILTER: Explicitly REJECT any MediaTek (mtk) hardware decoders.
+                // We only want software decoders (google/android) for this specific device.
+                val filteredInfos = infos.filter { 
+                    val name = it.name.lowercase()
+                    !name.contains("mtk") && !name.contains("mediatek")
+                }
+                
+                if (filteredInfos.isNotEmpty()) {
+                    Log.d("StreamPlayer", "Forcing Decoder: ${filteredInfos[0].name}")
+                    filteredInfos
+                } else {
+                    Log.w("StreamPlayer", "No non-MTK decoders found, falling back to default.")
+                    infos
+                }
             }
         }
 
