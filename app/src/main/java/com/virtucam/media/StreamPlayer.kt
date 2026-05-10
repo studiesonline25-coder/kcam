@@ -2,23 +2,15 @@ package com.virtucam.media
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.media.MediaPlayer
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
 import android.view.Surface
-import androidx.media3.common.MediaItem
-import androidx.media3.common.PlaybackException
-import androidx.media3.common.Player
-import androidx.media3.common.VideoSize
-import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.DefaultRenderersFactory
-import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
-import androidx.media3.exoplayer.rtsp.RtspMediaSource
-import androidx.media3.exoplayer.DefaultLoadControl
 
 /**
  * Robust RTSP Streamer for Xiaomi Devices.
- * Forces Google Software Decoder to bypass buggy MediaTek hardware.
+ * Uses native Android MediaPlayer to avoid ExoPlayer RtspMediaSource fragmentation bugs.
  */
 class StreamPlayer(
     private val context: Context,
@@ -33,7 +25,7 @@ class StreamPlayer(
         private const val TAG = "VIRTUCAM_RTSP"
     }
 
-    private var exoPlayer: ExoPlayer? = null
+    private var mediaPlayer: MediaPlayer? = null
     private var handlerThread: HandlerThread? = null
     private var handler: Handler? = null
 
@@ -62,146 +54,102 @@ class StreamPlayer(
     fun stop() {
         handler?.post {
             isPlaying = false
-            exoPlayer?.stop()
-            exoPlayer?.release()
-            exoPlayer = null
+            try {
+                mediaPlayer?.stop()
+            } catch (_: Exception) {}
+            try {
+                mediaPlayer?.release()
+            } catch (_: Exception) {}
+            mediaPlayer = null
             handlerThread?.quitSafely()
         }
     }
 
     fun updateSurface(newSurface: Surface?) {
         this.outputSurface = newSurface
-        handler?.post { exoPlayer?.setVideoSurface(newSurface) }
+        handler?.post {
+            try {
+                mediaPlayer?.setSurface(newSurface)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to update surface", e)
+            }
+        }
     }
 
     private fun initializePlayer() {
-        if (exoPlayer != null) return
+        if (mediaPlayer != null) return
 
-        Log.d(TAG, "Initializing Player for: $streamUrl")
+        Log.d(TAG, "Initializing native MediaPlayer for: $streamUrl")
 
-        // TUNE BUFFER: 1.5s is the sweet spot for stability vs. connection speed.
-        val loadControl = DefaultLoadControl.Builder()
-            .setBufferDurationsMs(
-                1500, // Min buffer (Lowered from 2.5s to speed up connection)
-                5000, // Max buffer
-                1000, // Buffer for playback
-                1500  // Buffer for rebuffering
-            )
-            .setPrioritizeTimeOverSizeThresholds(true)
-            .build()
+        try {
+            mediaPlayer = MediaPlayer().apply {
+                setDataSource(streamUrl)
+                outputSurface?.let { setSurface(it) }
 
-        // FORCE SOFTWARE DECODER
-        val renderersFactory = DefaultRenderersFactory(context).apply {
-            setEnableDecoderFallback(true)
-            setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
-            setMediaCodecSelector { mimeType, requiresSecureDecoder, requiresTunnelingDecoder ->
-                val infos = MediaCodecSelector.DEFAULT.getDecoderInfos(mimeType, requiresSecureDecoder, requiresTunnelingDecoder)
-                
-                // Log ALL available decoders for this mime type
-                Log.e(TAG, "DECODER_SELECT for [$mimeType]: ${infos.size} decoders available: ${infos.joinToString { it.name }}")
-                
-                // For video/avc: force Google software decoder
-                val swDecoder = infos.find { it.name.lowercase() == "c2.android.avc.decoder" }
-                if (swDecoder != null) {
-                    Log.e(TAG, ">>> USING SOFTWARE DECODER for [$mimeType]: ${swDecoder.name}")
-                    return@setMediaCodecSelector listOf(swDecoder)
-                }
-                
-                // For video/hevc: try Google software HEVC decoder
-                val swHevc = infos.find { it.name.lowercase() == "c2.android.hevc.decoder" }
-                if (swHevc != null) {
-                    Log.e(TAG, ">>> USING SOFTWARE HEVC DECODER for [$mimeType]: ${swHevc.name}")
-                    return@setMediaCodecSelector listOf(swHevc)
+                setOnVideoSizeChangedListener { _, width, height ->
+                    Log.d(TAG, "Stream Resolution: ${width}x${height}")
+                    if (width == 0 || height == 0) return@setOnVideoSizeChangedListener
+
+                    // Native MediaPlayer does not directly expose raw rotation in the same way.
+                    rawRotation = 0
+                    videoRotation = 90 // Default to 90 for typical portrait camera streams
+
+                    val rotated = videoRotation == 90 || videoRotation == 270
+                    if (rotated && rawRotation != 0) {
+                        videoWidth = height
+                        videoHeight = width
+                    } else {
+                        videoWidth = width
+                        videoHeight = height
+                    }
                 }
 
-                // Generic: filter out all hardware decoders
-                val filteredInfos = infos.filter { 
-                    val name = it.name.lowercase()
-                    !name.contains("mtk") && !name.contains("mediatek") && !name.contains("omx")
+                setOnInfoListener { _, what, extra ->
+                    if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
+                        Log.e(TAG, "!!! FIRST FRAME RENDERED !!! RTSP PIPELINE ACTIVE")
+                        if (!firstFrameFired) {
+                            firstFrameFired = true
+                            isPlaying = true
+
+                            // RELEASE THE GUARD: Signal to FormatConverterBridge that we have real data
+                            com.virtucam.hooks.CameraHook.isStreamActive = true
+
+                            // Signal first frame to bridge and UI
+                            onFrameAvailable()
+                            onFirstFrame?.invoke(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888))
+                        }
+                    }
+                    true
                 }
-                if (filteredInfos.isNotEmpty()) {
-                    Log.e(TAG, ">>> USING FILTERED DECODER for [$mimeType]: ${filteredInfos[0].name}")
-                    filteredInfos
-                } else {
-                    // For audio decoders this is normal - hardware audio is fine
-                    Log.w(TAG, ">>> NO SW DECODER for [$mimeType], using hardware: ${infos.firstOrNull()?.name}")
-                    infos
+
+                setOnPreparedListener { mp ->
+                    Log.d(TAG, "MediaPlayer prepared, starting playback")
+                    mp.start()
                 }
+
+                setOnErrorListener { _, what, extra ->
+                    Log.e(TAG, "MediaPlayer Error: what=$what extra=$extra")
+                    val errorMsg = "Error what=$what extra=$extra"
+
+                    if (retryCount < MAX_RETRIES) {
+                        retryCount++
+                        Log.e(TAG, "Retrying... ($retryCount/$MAX_RETRIES)")
+                        handler?.postDelayed({
+                            stop()
+                            initializePlayer()
+                        }, 2000)
+                    } else {
+                        Log.e(TAG, "Max retries reached. Stream failed.")
+                        onStreamError?.invoke(errorMsg)
+                    }
+                    true
+                }
+
+                prepareAsync()
             }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to initialize MediaPlayer", e)
+            onStreamError?.invoke(e.message ?: "Unknown init error")
         }
-
-        exoPlayer = ExoPlayer.Builder(context)
-            .setRenderersFactory(renderersFactory)
-            .setLoadControl(loadControl)
-            .build()
-
-        exoPlayer?.setVideoSurface(outputSurface)
-
-        val mediaSource = RtspMediaSource.Factory()
-            .setForceUseRtpTcp(true)
-            .setDebugLoggingEnabled(true) // THIS ENABLES INTERNAL RTSP LOGS
-            .setTimeoutMs(20000)
-            .createMediaSource(MediaItem.fromUri(streamUrl))
-
-        exoPlayer?.setMediaSource(mediaSource)
-        exoPlayer?.addListener(object : Player.Listener {
-            override fun onPlaybackStateChanged(playbackState: Int) {
-                val stateName = when(playbackState) {
-                    Player.STATE_BUFFERING -> "BUFFERING"
-                    Player.STATE_READY -> "READY"
-                    Player.STATE_ENDED -> "ENDED"
-                    Player.STATE_IDLE -> "IDLE"
-                    else -> "UNKNOWN"
-                }
-                Log.d(TAG, "Player State Changed: $stateName")
-            }
-
-            override fun onVideoSizeChanged(videoSize: VideoSize) {
-                Log.d(TAG, "Stream Resolution: ${videoSize.width}x${videoSize.height}")
-                if (videoSize.width == 0 || videoSize.height == 0) return
-                rawRotation = videoSize.unappliedRotationDegrees
-                // Default to 90 if rawRotation is 0 to match Xiaomi sensor behavior
-                videoRotation = if (rawRotation == 0) 90 else rawRotation
-                
-                val rotated = videoRotation == 90 || videoRotation == 270
-                if (rotated && rawRotation != 0) {
-                    videoWidth = videoSize.height
-                    videoHeight = videoSize.width
-                } else {
-                    videoWidth = videoSize.width
-                    videoHeight = videoSize.height
-                }
-            }
-
-            override fun onRenderedFirstFrame() {
-                Log.e(TAG, "!!! FIRST FRAME RENDERED !!! RTSP PIPELINE ACTIVE")
-                if (firstFrameFired) return
-                firstFrameFired = true
-                isPlaying = true
-                
-                // RELEASE THE GUARD: Signal to FormatConverterBridge that we have real data
-                com.virtucam.hooks.CameraHook.isStreamActive = true
-                
-                // Signal first frame to bridge and UI
-                onFrameAvailable()
-                onFirstFrame?.let { it(android.graphics.Bitmap.createBitmap(1, 1, android.graphics.Bitmap.Config.ARGB_8888)) }
-            }
-
-            override fun onPlayerError(error: PlaybackException) {
-                Log.e(TAG, "ExoPlayer Error: ${error.message} (code: ${error.errorCodeName})")
-                if (retryCount < MAX_RETRIES && error.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED) {
-                    retryCount++
-                    handler?.postDelayed({
-                        exoPlayer?.prepare()
-                        exoPlayer?.play()
-                    }, 2000)
-                    return
-                }
-                onStreamError?.invoke(error.message ?: "Unknown Error")
-            }
-        })
-
-        exoPlayer?.playWhenReady = true
-        exoPlayer?.prepare()
     }
 }
