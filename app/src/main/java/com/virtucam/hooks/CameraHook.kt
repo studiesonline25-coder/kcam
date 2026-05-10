@@ -23,7 +23,7 @@ import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
 import de.robv.android.xposed.callbacks.XC_LoadPackage
 import com.virtucam.ModuleMain
-import com.virtucam.media.StreamPlayer
+// import com.virtucam.media.StreamPlayer (Hiding to prevent early class loading)
 import com.virtucam.media.VideoPlayer
 import com.virtucam.opengl.EglCore
 import com.virtucam.opengl.TextureRenderer
@@ -2658,7 +2658,7 @@ class VirtualRenderThread(
     private var textureRenderer: TextureRenderer? = null
     
     private var videoPlayer: VideoPlayer? = null
-    private var streamPlayer: StreamPlayer? = null
+    private var streamPlayer: Any? = null
     
     private var mediaSurfaceTexture: SurfaceTexture? = null
     private var mediaSurface: Surface? = null
@@ -2775,24 +2775,37 @@ class VirtualRenderThread(
                 val hasNewFrame = java.util.concurrent.atomic.AtomicBoolean(false)
                 mediaSurfaceTexture?.setOnFrameAvailableListener { hasNewFrame.set(true) }
                 
-                streamPlayer = StreamPlayer(
-                    context = context,
-                    streamUrl = streamUrl,
-                    outputSurface = mediaSurface!!,
-                    useTcp = CameraHook.rtspUseTcp,
-                    onFrameAvailable = {
-                        hasNewFrame.set(true)
-                    },
-                    onFirstFrame = { bitmap: android.graphics.Bitmap ->
-                        android.os.Handler(android.os.Looper.getMainLooper()).post {
-                            saveStreamPreviewToProvider(bitmap)
-                        }
+                // LAZY INSTANTIATION: Use reflection to avoid early FFmpeg linking
+                try {
+                    val streamPlayerClass = Class.forName("com.virtucam.media.StreamPlayer")
+                    val constructor = streamPlayerClass.getConstructors()[0] // Get primary constructor
+                    
+                    streamPlayer = constructor.newInstance(
+                        context, streamUrl, mediaSurface, CameraHook.rtspUseTcp,
+                        { hasNewFrame.set(true) },
+                        { bitmap: Any -> 
+                            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                saveStreamPreviewToProvider(bitmap as android.graphics.Bitmap)
+                            }
+                        },
+                        { error: Any -> Log.e("VIRTUCAM_RTSP", "Stream error: $error") }
+                    )
+                    
+                    val startMethod = streamPlayerClass.getMethod("start")
+                    val stopMethod = streamPlayerClass.getMethod("stop")
+                    val getWidthMethod = streamPlayerClass.getMethod("getVideoWidth")
+                    val getHeightMethod = streamPlayerClass.getMethod("getVideoHeight")
+                    
+                    startMethod.invoke(streamPlayer)
+                    
+                    renderLoop(hasNewFrame) { 
+                        (getWidthMethod.invoke(streamPlayer) as Int) to (getHeightMethod.invoke(streamPlayer) as Int) 
                     }
-                )
-                streamPlayer!!.start()
-                
-                renderLoop(hasNewFrame) { streamPlayer!!.videoWidth to streamPlayer!!.videoHeight }
-                streamPlayer!!.stop()
+                    
+                    stopMethod.invoke(streamPlayer)
+                } catch (e: Exception) {
+                    Log.e("VIRTUCAM_RTSP", "Reflection failed for StreamPlayer", e)
+                }
                 
             } else if (isVideo) {
                 // Local Video Pipeline (MediaCodec)
