@@ -133,8 +133,13 @@ class MainActivity : AppCompatActivity() {
                     action = com.virtucam.media.ProxyService.ACTION_START
                     putExtra(com.virtucam.media.ProxyService.EXTRA_URL, url)
                 }
-                startForegroundService(intent)
-                setupPreviewPlayer()
+                
+                // DELAY START: Prevents UI thread crash during heavy native load
+                webView.postDelayed({
+                    startForegroundService(intent)
+                    setupPreviewPlayer()
+                }, 200)
+
                 webView.evaluateJavascript("""
                     window.dispatchEvent(new CustomEvent('android-stream-connecting'));
                     if(window.onStreamConnecting) window.onStreamConnecting();

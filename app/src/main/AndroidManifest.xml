@@ -62,10 +62,7 @@
             android:name=".media.ProxyService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="specialUse">
-            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="RTSP stream transmuxing for virtual camera" />
-        </service>
+            android:foregroundServiceType="shortService" />
 
         <!-- Settings Provider for cross-app config -->
         <provider
