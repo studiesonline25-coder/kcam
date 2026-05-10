@@ -35,7 +35,13 @@ class ProxyService : Service() {
             .setContentText("Transmuxing stream for stability...")
             .setSmallIcon(android.R.drawable.presence_video_online)
             .build()
-        startForeground(1, notification)
+        
+        // Start foreground with a more compatible approach for different Android versions
+        try {
+            startForeground(1, notification)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to start foreground service: ${e.message}")
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

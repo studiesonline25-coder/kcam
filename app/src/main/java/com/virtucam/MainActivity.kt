@@ -135,7 +135,10 @@ class MainActivity : AppCompatActivity() {
                 }
                 startForegroundService(intent)
                 setupPreviewPlayer()
-                webView.evaluateJavascript("window.onStreamConnecting && window.onStreamConnecting()", null)
+                webView.evaluateJavascript("""
+                    window.dispatchEvent(new CustomEvent('android-stream-connecting'));
+                    if(window.onStreamConnecting) window.onStreamConnecting();
+                """.trimIndent(), null)
                 syncConfigToWeb()
             }
         }
@@ -150,7 +153,10 @@ class MainActivity : AppCompatActivity() {
                 }
                 startService(intent)
                 releasePreviewPlayer()
-                webView.evaluateJavascript("window.onStreamDisconnected && window.onStreamDisconnected()", null)
+                webView.evaluateJavascript("""
+                    window.dispatchEvent(new CustomEvent('android-stream-disconnected'));
+                    if(window.onStreamDisconnected) window.onStreamDisconnected();
+                """.trimIndent(), null)
                 syncConfigToWeb()
             }
         }

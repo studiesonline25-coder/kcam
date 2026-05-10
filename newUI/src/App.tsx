@@ -356,6 +356,21 @@ const PanelScreen = () => {
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
   const [streamUrl, setStreamUrl] = useState<string>('');
   const [isStreamActive, setIsStreamActive] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+
+  useEffect(() => {
+    const handleConnecting = () => setIsConnecting(true);
+    const handleDisconnected = () => {
+        setIsConnecting(false);
+        setIsStreamActive(false);
+    };
+    window.addEventListener('android-stream-connecting', handleConnecting);
+    window.addEventListener('android-stream-disconnected', handleDisconnected);
+    return () => {
+        window.removeEventListener('android-stream-connecting', handleConnecting);
+        window.removeEventListener('android-stream-disconnected', handleDisconnected);
+    };
+  }, []);
 
   useEffect(() => {
     const handleSync = (e: any) => {
@@ -476,12 +491,20 @@ const PanelScreen = () => {
                   <button 
                     onClick={() => {
                       const url = (document.getElementById('streamUrlInput') as HTMLInputElement).value;
+                      setIsConnecting(true);
                       (window as any).Android?.connectStream(url);
                     }}
-                    className="w-full bg-emerald-neon text-bg-dark font-bold py-4 rounded-2xl flex items-center justify-center gap-2 hover:brightness-110 transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)]"
+                    disabled={isConnecting}
+                    className={`w-full font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] ${isConnecting ? 'bg-gray-700 text-gray-400' : 'bg-emerald-neon text-bg-dark hover:brightness-110'}`}
                   >
-                    <Play className="w-4 h-4 fill-current" />
-                    <span className="uppercase tracking-widest text-xs">Connect Stream</span>
+                    {isConnecting ? (
+                        <RotateCw className="w-4 h-4 animate-spin" />
+                    ) : (
+                        <Play className="w-4 h-4 fill-current" />
+                    )}
+                    <span className="uppercase tracking-widest text-xs">
+                        {isConnecting ? 'Connecting...' : 'Connect Stream'}
+                    </span>
                   </button>
                 </div>
               ) : (
