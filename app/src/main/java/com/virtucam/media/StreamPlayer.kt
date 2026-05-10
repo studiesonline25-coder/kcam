@@ -25,7 +25,6 @@ import java.nio.ByteBuffer
 
 /**
  * High-Compatibility RTSP Streamer for Xiaomi/Qualcomm Devices.
- * Pure Native ExoPlayer Implementation with Hardware Fixes.
  */
 class StreamPlayer(
     private val context: Context,
@@ -115,7 +114,6 @@ class StreamPlayer(
                 if (videoSize.width == 0 || videoSize.height == 0) return
                 rawRotation = videoSize.unappliedRotationDegrees
                 videoRotation = if (rawRotation == 0) 90 else rawRotation
-                
                 val rotated = videoRotation == 90 || videoRotation == 270
                 if (rotated && rawRotation != 0) {
                     videoWidth = videoSize.height
@@ -153,23 +151,28 @@ class StreamPlayer(
     }
 
     /**
-     * Custom Renderer to fix Xiaomi/Qualcomm specific green-screen bugs.
+     * Simplified Renderer that uses the correct Media3 1.5.1 signatures.
      */
     private inner class XiaomiCompatVideoRenderer(
         context: Context,
         mediaCodecSelector: MediaCodecSelector
     ) : MediaCodecVideoRenderer(context, mediaCodecSelector, 0, null, null, -1) {
         
-        override fun getCodecMaxInputSize(codecInfo: MediaCodecInfo, format: Format): Int {
-            val width = if (format.width > 0) format.width else 1920
-            val height = if (format.height > 0) format.height else 1080
-            return width * height * 2
+        override fun configureCodec(
+            codecInfo: MediaCodecInfo,
+            codec: MediaCodec,
+            format: Format,
+            crypto: android.media.MediaCrypto?,
+            codecMaxInputSize: Float
+        ) {
+            // This is the correct override for Media3 1.5.1
+            super.configureCodec(codecInfo, codec, format, crypto, codecMaxInputSize)
         }
 
         override fun getMediaFormat(
             format: Format,
             codecMimeType: String,
-            codecConfiguration: CodecMaxInputSize,
+            codecConfiguration: MediaCodecVideoRenderer.CodecMaxInputSize,
             codecOperatingRate: Float,
             deviceNeedsNoPostProcessWorkaround: Boolean,
             tunnelingAudioSessionId: Int
@@ -183,15 +186,13 @@ class StreamPlayer(
                 tunnelingAudioSessionId
             )
             
-            // Force NV12 (Semi-Planar) which is native for Qualcomm hardware
-            mediaFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, 21) // COLOR_FormatYUV420SemiPlanar
+            // Force NV12 and larger buffer
+            mediaFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, 21) // NV12
+            val w = if (format.width > 0) format.width else 1920
+            val h = if (format.height > 0) format.height else 1080
+            mediaFormat.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, w * h * 2)
             
-            // Re-inject KEY_MAX_INPUT_SIZE
-            val width = if (format.width > 0) format.width else 1920
-            val height = if (format.height > 0) format.height else 1080
-            mediaFormat.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, width * height * 2)
-            
-            Log.d(TAG, "Configuring Xiaomi-Compat Decoder for $codecMimeType")
+            Log.d(TAG, "Configuring Xiaomi Decoder: $codecMimeType")
             return mediaFormat
         }
     }
