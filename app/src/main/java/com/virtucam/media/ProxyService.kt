@@ -71,14 +71,20 @@ class ProxyService : Service() {
             append("-probesize 1000000 -analyzeduration 1000000 ")
         }
         
-        // BUFFER OPTIMIZATION: 10MB buffer for the local UDP pipe
+        // NUT is a much more flexible container for local piping than MPEGTS
+        // It handles H.264, H.265, and any audio/video combo without strict mapping
         val udpUrl = "udp://127.0.0.1:9998?pkt_size=1316&buffer_size=10485760&overrun_nonfatal=1"
         
-        val command = "$inputArgs -i \"$optimizedUrl\" -c copy -f mpegts \"$udpUrl\""
+        // Added -loglevel debug temporarily to see exactly why it fails if it doesn't start
+        val command = "$inputArgs -i \"$optimizedUrl\" -c copy -f nut \"$udpUrl\""
         
         Log.d(TAG, "Starting proxy: $command")
         ffmpegSession = FFmpegKit.executeAsync(command) { session ->
-            Log.d(TAG, "Proxy finished with return code: ${session.returnCode}")
+            val logs = session.allLogsAsString
+            Log.d(TAG, "Proxy finished. ReturnCode: ${session.returnCode}. State: ${session.state}")
+            if (logs.isNotEmpty()) {
+                Log.e(TAG, "FFmpeg Logs: $logs")
+            }
         }
     }
 
