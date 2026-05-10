@@ -317,7 +317,6 @@ class FormatConverterBridge(
                 return
             }
             
-            val srcStrideArr = width * 4
             for (ty in 0 until h) {
                 val rowPos = ty * yRowStride
                 for (tx in 0 until w) {
