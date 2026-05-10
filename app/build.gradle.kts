@@ -61,14 +61,9 @@ android {
 
     packaging {
         jniLibs {
-            // ULTRA STRIP: Force exclusion of everything except ARM64
-            // This turns the 60MB "Full" library into a ~5MB functional core for modern phones
+            // Keep it simple since we removed the heavy FFmpeg library
             excludes.add("lib/x86/**")
             excludes.add("lib/x86_64/**")
-            excludes.add("lib/armeabi-v7a/**")
-            excludes.add("**/lib/x86/**")
-            excludes.add("**/lib/x86_64/**")
-            excludes.add("**/lib/armeabi-v7a/**")
         }
     }
 }
@@ -100,10 +95,5 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer:$media3_version")
     implementation("androidx.media3:media3-exoplayer-rtsp:$media3_version")
     implementation("androidx.media3:media3-ui:$media3_version")
-    
-    // OkHttp DataSource for better stream reliability
     implementation("androidx.media3:media3-datasource-okhttp:$media3_version")
-    
-    // Local Ultra-lightweight FFmpeg (only ~5MB) for robust RTSP packet parsing
-    implementation(files("libs/ffmpeg-kit.aar"))
 }

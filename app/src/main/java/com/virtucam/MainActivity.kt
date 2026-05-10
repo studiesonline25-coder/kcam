@@ -18,13 +18,12 @@ import org.json.JSONObject
 
 /**
  * Main Activity - Ultra-Robust UI Bridge
- * Fixed: Settings Injection, Media Preview, and Tab Reset issues.
+ * Clean Slate: NO PROXIES. NO FFMPEG.
  */
 class MainActivity : AppCompatActivity() {
     
     private lateinit var webView: WebView
     private lateinit var config: VirtuCamConfig
-    private var previewPlayer: androidx.media3.exoplayer.ExoPlayer? = null
     
     private val pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri: Uri? ->
         uri?.let { handleSelectedMedia(it) }
@@ -40,9 +39,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         config = VirtuCamConfig.getInstance(this)
         setupWebView()
-        if (config.isStream) {
-            setupPreviewPlayer()
-        }
     }
     
     @SuppressLint("SetJavaScriptEnabled")
@@ -58,8 +54,6 @@ class MainActivity : AppCompatActivity() {
             databaseEnabled = true
             mediaPlaybackRequiresUserGesture = false
             mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-            
-            // Critical for SPA stability and preventing resets
             useWideViewPort = true
             loadWithOverviewMode = true
             cacheMode = WebSettings.LOAD_DEFAULT
@@ -87,8 +81,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun syncConfigToWeb() {
-        val file = java.io.File(filesDir, "stream_preview.jpg")
-        val streamPreviewUriStr = if (file.exists()) "content://com.virtucam.provider/stream_preview/stream_preview.jpg" else ""
         val state = JSONObject().apply {
             put("isEnabled", config.isEnabled)
             put("zoom", config.zoomFactor)
@@ -100,7 +92,6 @@ class MainActivity : AppCompatActivity() {
             put("streamUrl", config.streamUrl ?: "")
             put("isStream", config.isStream)
             put("mediaPreview", mediaPreviewBase64 ?: "")
-            put("streamPreview", streamPreviewUriStr)
             put("isSpoofVideo", config.isSpoofVideo)
             put("bufferCapture", config.isBufferCaptureEnabled)
             put("passthrough", config.isPassthroughMode)
@@ -129,21 +120,6 @@ class MainActivity : AppCompatActivity() {
             config.streamUrl = url
             config.isStream = true
             runOnUiThread {
-                val intent = Intent(this@MainActivity, com.virtucam.media.ProxyService::class.java).apply {
-                    action = com.virtucam.media.ProxyService.ACTION_START
-                    putExtra(com.virtucam.media.ProxyService.EXTRA_URL, url)
-                }
-                
-                // DELAY START: Prevents UI thread crash during heavy native load
-                webView.postDelayed({
-                    startForegroundService(intent)
-                    setupPreviewPlayer()
-                }, 200)
-
-                webView.evaluateJavascript("""
-                    window.dispatchEvent(new CustomEvent('android-stream-connecting'));
-                    if(window.onStreamConnecting) window.onStreamConnecting();
-                """.trimIndent(), null)
                 syncConfigToWeb()
             }
         }
@@ -153,15 +129,6 @@ class MainActivity : AppCompatActivity() {
             config.isStream = false
             config.streamUrl = null
             runOnUiThread {
-                val intent = Intent(this@MainActivity, com.virtucam.media.ProxyService::class.java).apply {
-                    action = com.virtucam.media.ProxyService.ACTION_STOP
-                }
-                startService(intent)
-                releasePreviewPlayer()
-                webView.evaluateJavascript("""
-                    window.dispatchEvent(new CustomEvent('android-stream-disconnected'));
-                    if(window.onStreamDisconnected) window.onStreamDisconnected();
-                """.trimIndent(), null)
                 syncConfigToWeb()
             }
         }
@@ -213,14 +180,10 @@ class MainActivity : AppCompatActivity() {
                 if (window.VIRTUCAM_BRIDGE_INITIALIZED) return;
                 window.VIRTUCAM_BRIDGE_INITIALIZED = true;
 
-                console.log("VIRTU-CAM BRIDGE BOOTING...");
-
-                // Helper to find input/buttons by text or icon
                 function findByText(text, selector = '*') {
                     return Array.from(document.querySelectorAll(selector)).find(el => el.innerText && el.innerText.includes(text));
                 }
 
-                // 1. SETTINGS PANEL INJECTION
                 function injectSettingsUI() {
                     ['PASSTHROUGH', 'TEST PATTERN', 'INVESTIGATION TOOLS'].forEach(text => {
                         let el = findByText(text);
@@ -275,15 +238,12 @@ class MainActivity : AppCompatActivity() {
                     panel.appendChild(container);
                 }
 
-                // 2. MEDIA PREVIEW RESTORATION
                 function updateMediaPreview() {
                     let selectArea = findByText('SELECT MEDIA');
                     if (!selectArea) return;
-                    
                     let container = selectArea.closest('div');
                     if (!container || !window.vcState) return;
 
-                    // Handle regular media preview
                     if (window.vcState.mediaPreview) {
                         let existingImg = container.querySelector('#vc-media-preview-img');
                         if (!existingImg) {
@@ -342,31 +302,5 @@ class MainActivity : AppCompatActivity() {
             })();
         """.trimIndent()
         webView.evaluateJavascript(js, null)
-    }
-
-    private fun setupPreviewPlayer() {
-        if (previewPlayer != null) return
-        previewPlayer = androidx.media3.exoplayer.ExoPlayer.Builder(this).build().apply {
-            val mediaItem = androidx.media3.common.MediaItem.fromUri("udp://127.0.0.1:9998")
-            setMediaItem(mediaItem)
-            prepare()
-            playWhenReady = true
-            
-            addListener(object : androidx.media3.common.Player.Listener {
-                override fun onRenderedFirstFrame() {
-                    runOnUiThread { syncConfigToWeb() }
-                }
-            })
-        }
-    }
-
-    private fun releasePreviewPlayer() {
-        previewPlayer?.release()
-        previewPlayer = null
-    }
-
-    override fun onDestroy() {
-        releasePreviewPlayer()
-        super.onDestroy()
     }
 }
