@@ -453,7 +453,8 @@ class FormatConverterBridge(
 
             diagSuccess++
             if (diagCallCount % 30 == 0) {
-                Log.e(TAG, "GREEN_DIAG: calls=$diagCallCount bufNotReady=$diagDropBufferNotReady integrity=$diagDropIntegrity guard=$diagDropGuard success=$diagSuccess | WROTE ${w}x${h} fmt=$format")
+                val coveragePct = (processW.toLong() * processH * 100) / (w.toLong() * h).coerceAtLeast(1)
+                Log.e(TAG, "GREEN_DIAG: calls=$diagCallCount success=$diagSuccess | target=${w}x${h} bridge=${width}x${height} process=${processW}x${processH} coverage=${coveragePct}% fmt=$format")
             }
         } catch (e: Exception) {
             Log.e(TAG, "FormatConverterBridge: Error overwriting capture buffer", e)
