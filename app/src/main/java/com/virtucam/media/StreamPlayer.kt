@@ -67,7 +67,7 @@ class StreamPlayer(
 
         val renderersFactory = DefaultRenderersFactory(context)
             .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF)
-            .setEnableDecoderFallback(true)
+            .setEnableDecoderFallback(true) // Crucial: allow falling back to software if hardware gives green frames
 
         exoPlayer = ExoPlayer.Builder(context)
             .setRenderersFactory(renderersFactory)
@@ -77,9 +77,12 @@ class StreamPlayer(
         exoPlayer?.setVideoSurface(outputSurface)
 
         val mediaItem = MediaItem.fromUri(streamUrl)
+        
+        // RTSP Configuration for Maximum Compatibility
         val mediaSource = RtspMediaSource.Factory()
-            .setForceUseRtpTcp(true) // Force TCP for stability
-            .setTimeoutMs(10000)
+            .setForceUseRtpTcp(true) 
+            .setDebugLoggingEnabled(true)
+            .setTimeoutMs(20000) // Increase timeout for slower connections
             .createMediaSource(mediaItem)
 
         exoPlayer?.setMediaSource(mediaSource)
