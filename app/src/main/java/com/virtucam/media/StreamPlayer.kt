@@ -46,6 +46,8 @@ class StreamPlayer(
     private var exoPlayer: ExoPlayer? = null
     private var handlerThread: HandlerThread? = null
     private var handler: Handler? = null
+    private var retryCount = 0
+    private val MAX_RETRIES = 5
 
     var videoWidth: Int = 0
         private set
@@ -146,8 +148,7 @@ class StreamPlayer(
                 }
             }
 
-            private var retryCount = 0
-            private const val MAX_RETRIES = 5
+
 
             override fun onPlayerError(error: PlaybackException) {
                 val msg = "Stream error: ${error.message} (code: ${error.errorCodeName})"
