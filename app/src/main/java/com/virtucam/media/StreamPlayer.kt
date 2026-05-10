@@ -30,7 +30,7 @@ class StreamPlayer(
     private val onStreamError: ((String) -> Unit)? = null
 ) {
     companion object {
-        private const val TAG = "StreamPlayer"
+        private const val TAG = "VIRTUCAM_RTSP"
     }
 
     private var exoPlayer: ExoPlayer? = null
@@ -77,11 +77,12 @@ class StreamPlayer(
     private fun initializePlayer() {
         if (exoPlayer != null) return
 
-        // STABILITY BUFFER: Increased to 2.5s to eliminate "green particles" and allow
-        // the decoder enough time to synchronize with OBS Keyframes.
+        Log.d(TAG, "Initializing Player for: $streamUrl")
+
+        // TUNE BUFFER: 1.5s is the sweet spot for stability vs. connection speed.
         val loadControl = DefaultLoadControl.Builder()
             .setBufferDurationsMs(
-                2500, // Min buffer
+                1500, // Min buffer (Lowered from 2.5s to speed up connection)
                 5000, // Max buffer
                 1000, // Buffer for playback
                 1500  // Buffer for rebuffering
@@ -89,25 +90,21 @@ class StreamPlayer(
             .setPrioritizeTimeOverSizeThresholds(true)
             .build()
 
-        // FORCE SOFTWARE DECODER: Bypass buggy MediaTek (MTK) hardware.
+        // FORCE SOFTWARE DECODER
         val renderersFactory = DefaultRenderersFactory(context).apply {
             setEnableDecoderFallback(true)
             setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
             setMediaCodecSelector { mimeType, requiresSecureDecoder, requiresTunnelingDecoder ->
                 val infos = MediaCodecSelector.DEFAULT.getDecoderInfos(mimeType, requiresSecureDecoder, requiresTunnelingDecoder)
-                
-                // AGGRESSIVE FILTER: Explicitly REJECT any MediaTek (mtk) hardware decoders.
-                // We only want software decoders (google/android) for this specific device.
                 val filteredInfos = infos.filter { 
                     val name = it.name.lowercase()
                     !name.contains("mtk") && !name.contains("mediatek")
                 }
-                
                 if (filteredInfos.isNotEmpty()) {
-                    Log.d("StreamPlayer", "Forcing Decoder: ${filteredInfos[0].name}")
+                    Log.d(TAG, "SELECTED DECODER: ${filteredInfos[0].name}")
                     filteredInfos
                 } else {
-                    Log.w("StreamPlayer", "No non-MTK decoders found, falling back to default.")
+                    Log.w(TAG, "NO SOFTWARE DECODER FOUND! Using default.")
                     infos
                 }
             }
@@ -122,13 +119,25 @@ class StreamPlayer(
 
         val mediaSource = RtspMediaSource.Factory()
             .setForceUseRtpTcp(true)
-            .setDebugLoggingEnabled(true)
-            .setTimeoutMs(30000) // Increased to 30s for slow handshakes
+            .setDebugLoggingEnabled(true) // THIS ENABLES INTERNAL RTSP LOGS
+            .setTimeoutMs(20000)
             .createMediaSource(MediaItem.fromUri(streamUrl))
 
         exoPlayer?.setMediaSource(mediaSource)
         exoPlayer?.addListener(object : Player.Listener {
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                val stateName = when(playbackState) {
+                    Player.STATE_BUFFERING -> "BUFFERING"
+                    Player.STATE_READY -> "READY"
+                    Player.STATE_ENDED -> "ENDED"
+                    Player.STATE_IDLE -> "IDLE"
+                    else -> "UNKNOWN"
+                }
+                Log.d(TAG, "Player State Changed: $stateName")
+            }
+
             override fun onVideoSizeChanged(videoSize: VideoSize) {
+                Log.d(TAG, "Stream Resolution: ${videoSize.width}x${videoSize.height}")
                 if (videoSize.width == 0 || videoSize.height == 0) return
                 rawRotation = videoSize.unappliedRotationDegrees
                 videoRotation = if (rawRotation == 0) 90 else rawRotation
@@ -143,6 +152,7 @@ class StreamPlayer(
             }
 
             override fun onRenderedFirstFrame() {
+                Log.d(TAG, "Rendered First Frame!")
                 if (firstFrameFired) return
                 firstFrameFired = true
                 isPlaying = true
