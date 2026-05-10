@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.media.MediaCodec
 import android.media.MediaFormat
-import android.net.Uri
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
@@ -15,18 +14,18 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.VideoSize
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.RenderersFactory
 import androidx.media3.exoplayer.mediacodec.MediaCodecInfo
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.exoplayer.rtsp.RtspMediaSource
 import androidx.media3.exoplayer.video.MediaCodecVideoRenderer
 import androidx.media3.exoplayer.DefaultLoadControl
+import androidx.media3.exoplayer.audio.MediaCodecAudioRenderer
 import java.nio.ByteBuffer
 
 /**
  * High-Compatibility RTSP Streamer for Xiaomi/Qualcomm Devices.
- * Fixes the 'Green Screen' issue by forcing larger input buffers and proper color formats.
+ * Pure Native ExoPlayer Implementation with Hardware Fixes.
  */
 class StreamPlayer(
     private val context: Context,
@@ -67,69 +66,33 @@ class StreamPlayer(
         handler?.post { initializePlayer() }
     }
 
-    /**
-     * Custom Renderer to fix Xiaomi/Qualcomm specific green-screen bugs.
-     */
-    private inner class XiaomiCompatVideoRenderer(
-        context: Context,
-        mediaCodecSelector: MediaCodecSelector
-    ) : MediaCodecVideoRenderer(context, mediaCodecSelector, 0, null, null, -1) {
-        
-        override fun getCodecMaxInputSize(
-            codecInfo: MediaCodecInfo,
-            format: Format
-        ): Int {
-            // Xiaomi devices need a significantly larger buffer than default for RTSP
-            val width = if (format.width > 0) format.width else 1920
-            val height = if (format.height > 0) format.height else 1080
-            return width * height * 2
-        }
-
-        override fun getMediaFormat(
-            format: Format,
-            codecMimeType: String,
-            codecConfiguration: CodecMaxInputSize,
-            codecOperatingRate: Float,
-            deviceNeedsNoPostProcessWorkaround: Boolean,
-            tunnelingAudioSessionId: Int
-        ): MediaFormat {
-            val mediaFormat = super.getMediaFormat(
-                format,
-                codecMimeType,
-                codecConfiguration,
-                codecOperatingRate,
-                deviceNeedsNoPostProcessWorkaround,
-                tunnelingAudioSessionId
-            )
-            
-            // Force NV12 (Semi-Planar) which is native for Qualcomm hardware
-            mediaFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, 21) // COLOR_FormatYUV420SemiPlanar
-            
-            // Re-inject KEY_MAX_INPUT_SIZE
-            val width = if (format.width > 0) format.width else 1920
-            val height = if (format.height > 0) format.height else 1080
-            mediaFormat.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, width * height * 2)
-            
-            Log.d(TAG, "Configuring Xiaomi-Compat Decoder for $codecMimeType")
-            return mediaFormat
+    fun stop() {
+        handler?.post {
+            isPlaying = false
+            exoPlayer?.stop()
+            exoPlayer?.release()
+            exoPlayer = null
+            handlerThread?.quitSafely()
         }
     }
+
+    fun updateSurface(newSurface: Surface?) {
+        this.outputSurface = newSurface
+        handler?.post { exoPlayer?.setVideoSurface(newSurface) }
     }
 
     private fun initializePlayer() {
         if (exoPlayer != null) return
 
-        // Optimized LoadControl for RTSP Stability
         val loadControl = DefaultLoadControl.Builder()
             .setBufferDurationsMs(500, 1500, 500, 500)
             .setPrioritizeTimeOverSizeThresholds(true)
             .build()
 
-        // Custom Renderers Factory to inject our Xiaomi Fix
         val renderersFactory = RenderersFactory { eventHandler, videoListener, audioListener, textRendererOutput, metadataOutput ->
             arrayOf(
                 XiaomiCompatVideoRenderer(context, MediaCodecSelector.DEFAULT),
-                androidx.media3.exoplayer.audio.MediaCodecAudioRenderer(context, MediaCodecSelector.DEFAULT, eventHandler, audioListener)
+                MediaCodecAudioRenderer(context, MediaCodecSelector.DEFAULT, eventHandler, audioListener)
             )
         }
 
@@ -173,8 +136,6 @@ class StreamPlayer(
 
             override fun onPlayerError(error: PlaybackException) {
                 Log.e(TAG, "ExoPlayer Error: ${error.message} (code: ${error.errorCodeName})")
-                
-                // Auto-retry on network blips
                 if (retryCount < MAX_RETRIES && error.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED) {
                     retryCount++
                     handler?.postDelayed({
@@ -183,7 +144,6 @@ class StreamPlayer(
                     }, 2000)
                     return
                 }
-                
                 onStreamError?.invoke(error.message ?: "Unknown Error")
             }
         })
@@ -192,18 +152,47 @@ class StreamPlayer(
         exoPlayer?.prepare()
     }
 
-    fun stop() {
-        handler?.post {
-            isPlaying = false
-            exoPlayer?.stop()
-            exoPlayer?.release()
-            exoPlayer = null
-            handlerThread?.quitSafely()
+    /**
+     * Custom Renderer to fix Xiaomi/Qualcomm specific green-screen bugs.
+     */
+    private inner class XiaomiCompatVideoRenderer(
+        context: Context,
+        mediaCodecSelector: MediaCodecSelector
+    ) : MediaCodecVideoRenderer(context, mediaCodecSelector, 0, null, null, -1) {
+        
+        override fun getCodecMaxInputSize(codecInfo: MediaCodecInfo, format: Format): Int {
+            val width = if (format.width > 0) format.width else 1920
+            val height = if (format.height > 0) format.height else 1080
+            return width * height * 2
         }
-    }
 
-    fun updateSurface(newSurface: Surface?) {
-        this.outputSurface = newSurface
-        handler?.post { exoPlayer?.setVideoSurface(newSurface) }
+        override fun getMediaFormat(
+            format: Format,
+            codecMimeType: String,
+            codecConfiguration: CodecMaxInputSize,
+            codecOperatingRate: Float,
+            deviceNeedsNoPostProcessWorkaround: Boolean,
+            tunnelingAudioSessionId: Int
+        ): MediaFormat {
+            val mediaFormat = super.getMediaFormat(
+                format,
+                codecMimeType,
+                codecConfiguration,
+                codecOperatingRate,
+                deviceNeedsNoPostProcessWorkaround,
+                tunnelingAudioSessionId
+            )
+            
+            // Force NV12 (Semi-Planar) which is native for Qualcomm hardware
+            mediaFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, 21) // COLOR_FormatYUV420SemiPlanar
+            
+            // Re-inject KEY_MAX_INPUT_SIZE
+            val width = if (format.width > 0) format.width else 1920
+            val height = if (format.height > 0) format.height else 1080
+            mediaFormat.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, width * height * 2)
+            
+            Log.d(TAG, "Configuring Xiaomi-Compat Decoder for $codecMimeType")
+            return mediaFormat
+        }
     }
 }
