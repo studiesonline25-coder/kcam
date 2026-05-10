@@ -86,16 +86,11 @@ class StreamPlayer(
         val renderersFactory = DefaultRenderersFactory(context).apply {
             setEnableDecoderFallback(true)
             setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
-            setMediaCodecSelector { _, format, _ ->
-                val mime = format.sampleMimeType
-                if (mime != null) {
-                    val infos = MediaCodecSelector.DEFAULT.getDecoderInfos(mime, false, false)
-                    // Filter for the Google Software Decoder (c2.android.avc.decoder)
-                    val swInfos = infos.filter { it.name.contains("android.avc") || it.name.contains("google") }
-                    if (swInfos.isNotEmpty()) swInfos else infos
-                } else {
-                    MediaCodecSelector.DEFAULT.getDecoderInfos(format.sampleMimeType ?: "video/avc", false, false)
-                }
+            setMediaCodecSelector { mimeType, requiresSecureDecoder, requiresTunnelingDecoder ->
+                val infos = MediaCodecSelector.DEFAULT.getDecoderInfos(mimeType, requiresSecureDecoder, requiresTunnelingDecoder)
+                // Filter for the Google Software Decoder (c2.android.avc.decoder)
+                val swInfos = infos.filter { it.name.contains("android.avc") || it.name.contains("google") }
+                if (swInfos.isNotEmpty()) swInfos else infos
             }
         }
 
