@@ -65,7 +65,7 @@ class ProxyService : Service() {
         Log.d(TAG, "Starting proxy: $command")
         ffmpegSession = FFmpegKit.executeAsync(command) { session ->
             Log.d(TAG, "Proxy finished: ${session.returnCode}")
-            if (!session.returnCode.isSuccess) {
+            if (!com.arthenica.ffmpegkit.ReturnCode.isSuccess(session.returnCode)) {
                 // In a real app, we might want to notify the UI here
             }
         }
