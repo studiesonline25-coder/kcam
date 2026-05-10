@@ -91,6 +91,7 @@ class MainActivity : AppCompatActivity() {
             put("tcpMode", config.rtspUseTcp)
             put("streamUrl", config.streamUrl ?: "")
             put("isStream", config.isStream)
+            put("isStreamActive", config.streamUrl != null && config.isEnabled)
             put("mediaPreview", mediaPreviewBase64 ?: "")
             put("isSpoofVideo", config.isSpoofVideo)
             put("bufferCapture", config.isBufferCaptureEnabled)

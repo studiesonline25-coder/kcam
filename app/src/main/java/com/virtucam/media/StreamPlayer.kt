@@ -96,12 +96,20 @@ class StreamPlayer(
             setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
             setMediaCodecSelector { mimeType, requiresSecureDecoder, requiresTunnelingDecoder ->
                 val infos = MediaCodecSelector.DEFAULT.getDecoderInfos(mimeType, requiresSecureDecoder, requiresTunnelingDecoder)
+                
+                // Aggressively prioritize the known-stable Google Software Decoder
+                val swDecoder = infos.find { it.name.lowercase() == "c2.android.avc.decoder" }
+                if (swDecoder != null) {
+                    Log.e(TAG, "FORCING GOOGLE SOFTWARE DECODER: ${swDecoder.name}")
+                    return@setMediaCodecSelector listOf(swDecoder)
+                }
+
                 val filteredInfos = infos.filter { 
                     val name = it.name.lowercase()
-                    !name.contains("mtk") && !name.contains("mediatek")
+                    !name.contains("mtk") && !name.contains("mediatek") && !name.contains("omx")
                 }
                 if (filteredInfos.isNotEmpty()) {
-                    Log.d(TAG, "SELECTED DECODER: ${filteredInfos[0].name}")
+                    Log.d(TAG, "SELECTED FILTERED DECODER: ${filteredInfos[0].name}")
                     filteredInfos
                 } else {
                     Log.w(TAG, "NO SOFTWARE DECODER FOUND! Using default.")
@@ -140,7 +148,9 @@ class StreamPlayer(
                 Log.d(TAG, "Stream Resolution: ${videoSize.width}x${videoSize.height}")
                 if (videoSize.width == 0 || videoSize.height == 0) return
                 rawRotation = videoSize.unappliedRotationDegrees
+                // Default to 90 if rawRotation is 0 to match Xiaomi sensor behavior
                 videoRotation = if (rawRotation == 0) 90 else rawRotation
+                
                 val rotated = videoRotation == 90 || videoRotation == 270
                 if (rotated && rawRotation != 0) {
                     videoWidth = videoSize.height
@@ -152,12 +162,17 @@ class StreamPlayer(
             }
 
             override fun onRenderedFirstFrame() {
-                Log.d(TAG, "Rendered First Frame!")
+                Log.e(TAG, "!!! FIRST FRAME RENDERED !!! RTSP PIPELINE ACTIVE")
                 if (firstFrameFired) return
                 firstFrameFired = true
                 isPlaying = true
+                
+                // RELEASE THE GUARD: Signal to FormatConverterBridge that we have real data
+                com.virtucam.hooks.CameraHook.isStreamActive = true
+                
+                // Signal first frame to bridge and UI
                 onFrameAvailable()
-                onFirstFrame?.let { it(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)) }
+                onFirstFrame?.let { it(android.graphics.Bitmap.createBitmap(1, 1, android.graphics.Bitmap.Config.ARGB_8888)) }
             }
 
             override fun onPlayerError(error: PlaybackException) {

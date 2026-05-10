@@ -255,6 +255,17 @@ class FormatConverterBridge(
             Log.e(TAG, "FormatConverterBridge: Cannot overwrite YUV - source data is blank (all zeros)!")
             return
         }
+
+        // [GREEN SCREEN FIX] Circuit breaker for connecting RTSP streams
+        if (CameraHook.isVideo || CameraHook.isStreamActive) {
+            // Flow allowed
+        } else {
+            // Guard active. Return early to prevent the target app from seeing green.
+            if (System.currentTimeMillis() % 2000 < 100) {
+                Log.v(TAG, "Stream Guard: Waiting for first RTSP frame to land...")
+            }
+            return
+        }
         
         try {
             val w = targetImage.width
@@ -301,6 +312,12 @@ class FormatConverterBridge(
             val srcStrideArr = width * 4
 
             // 1. Process Y Plane
+            if (rgbaBytes.isEmpty()) {
+                Log.e(TAG, "FormatConverterBridge: RGBA source is empty!")
+                return
+            }
+            
+            val srcStrideArr = width * 4
             for (ty in 0 until h) {
                 val rowPos = ty * yRowStride
                 for (tx in 0 until w) {

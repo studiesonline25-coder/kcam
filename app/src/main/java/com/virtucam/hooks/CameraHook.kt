@@ -43,6 +43,8 @@ object CameraHook {
     
     @Volatile
     var isVideo: Boolean = false
+    @Volatile
+    var isStreamActive = false
     private var isStream = false
     private var streamUrl: String = ""
     private var targetPackage: String = ""
@@ -2563,6 +2565,7 @@ object CameraHook {
         
         surfaceMap.clear()
         formatBridges.clear()
+        isStreamActive = false
     }
 
     private fun startRenderThreads(targetSurfaces: List<Triple<Surface, Boolean, Int>>) { // Changed to Triple
