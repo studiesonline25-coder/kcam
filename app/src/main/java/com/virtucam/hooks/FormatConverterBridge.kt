@@ -454,7 +454,23 @@ class FormatConverterBridge(
             diagSuccess++
             if (diagCallCount % 30 == 0) {
                 val coveragePct = (processW.toLong() * processH * 100) / (w.toLong() * h).coerceAtLeast(1)
-                Log.e(TAG, "GREEN_DIAG: calls=$diagCallCount success=$diagSuccess | target=${w}x${h} bridge=${width}x${height} process=${processW}x${processH} coverage=${coveragePct}% fmt=$format")
+                // Sample RGBA at 5 points across buffer to check if data is real
+                val bufSize = rgbaBytes.size
+                val positions = listOf(0, bufSize/4, bufSize/2, bufSize*3/4, bufSize-8).filter { it >= 0 && it+4 <= bufSize }
+                val samples = positions.map { pos ->
+                    val r = rgbaBytes[pos].toInt() and 0xFF
+                    val g = rgbaBytes[pos+1].toInt() and 0xFF
+                    val b = rgbaBytes[pos+2].toInt() and 0xFF
+                    val a = rgbaBytes[pos+3].toInt() and 0xFF
+                    "@${pos}:R${r}G${g}B${b}A${a}"
+                }
+                // Count non-zero bytes in a quick 1000-byte sample from the middle
+                val midStart = (bufSize / 2).coerceAtMost(bufSize - 1000).coerceAtLeast(0)
+                var nonZeroMid = 0
+                for (i in midStart until (midStart + 1000).coerceAtMost(bufSize)) {
+                    if (rgbaBytes[i] != 0.toByte()) nonZeroMid++
+                }
+                Log.e(TAG, "GREEN_DIAG: calls=$diagCallCount success=$diagSuccess | target=${w}x${h} bridge=${width}x${height} coverage=${coveragePct}% | midNonZero=$nonZeroMid/1000 | ${samples.joinToString(" ")}")
             }
         } catch (e: Exception) {
             Log.e(TAG, "FormatConverterBridge: Error overwriting capture buffer", e)
