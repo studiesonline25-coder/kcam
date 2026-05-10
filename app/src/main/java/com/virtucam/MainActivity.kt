@@ -125,6 +125,11 @@ class MainActivity : AppCompatActivity() {
             config.streamUrl = url
             config.isStream = true
             runOnUiThread {
+                val intent = Intent(this@MainActivity, com.virtucam.media.ProxyService::class.java).apply {
+                    action = com.virtucam.media.ProxyService.ACTION_START
+                    putExtra(com.virtucam.media.ProxyService.EXTRA_URL, url)
+                }
+                startForegroundService(intent)
                 webView.evaluateJavascript("window.onStreamConnecting && window.onStreamConnecting()", null)
                 syncConfigToWeb()
             }
@@ -135,6 +140,10 @@ class MainActivity : AppCompatActivity() {
             config.isStream = false
             config.streamUrl = null
             runOnUiThread {
+                val intent = Intent(this@MainActivity, com.virtucam.media.ProxyService::class.java).apply {
+                    action = com.virtucam.media.ProxyService.ACTION_STOP
+                }
+                startService(intent)
                 webView.evaluateJavascript("window.onStreamDisconnected && window.onStreamDisconnected()", null)
                 syncConfigToWeb()
             }
