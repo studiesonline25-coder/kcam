@@ -12,12 +12,13 @@ import androidx.media3.common.Player
 import androidx.media3.common.VideoSize
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.DefaultRenderersFactory
+import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.exoplayer.rtsp.RtspMediaSource
 import androidx.media3.exoplayer.DefaultLoadControl
 
 /**
  * Robust RTSP Streamer for Xiaomi Devices.
- * Simplified for maximum stability and easy compilation.
+ * Forces Google Software Decoder to bypass buggy MediaTek hardware.
  */
 class StreamPlayer(
     private val context: Context,
@@ -76,22 +77,25 @@ class StreamPlayer(
     private fun initializePlayer() {
         if (exoPlayer != null) return
 
-        // Standard Low-Latency Load Control
         val loadControl = DefaultLoadControl.Builder()
             .setBufferDurationsMs(500, 1500, 500, 500)
             .setPrioritizeTimeOverSizeThresholds(true)
             .build()
 
-        // FORCE SOFTWARE DECODER: MediaTek hardware decoders are failing on this device.
-        // We explicitly tell ExoPlayer to use the Google Software AVC Decoder.
+        // FORCE SOFTWARE DECODER: Bypass buggy MediaTek (MTK) hardware.
         val renderersFactory = DefaultRenderersFactory(context).apply {
             setEnableDecoderFallback(true)
             setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
             setMediaCodecSelector { _, format, _ ->
-                val infos = MediaCodecSelector.DEFAULT.getDecoderInfos(format.sampleMimeType!!, false, false)
-                // Filter for the Google Software Decoder (c2.android.avc.decoder)
-                val swInfos = infos.filter { it.name.contains("android.avc") || it.name.contains("google") }
-                if (swInfos.isNotEmpty()) swInfos else infos
+                val mime = format.sampleMimeType
+                if (mime != null) {
+                    val infos = MediaCodecSelector.DEFAULT.getDecoderInfos(mime, false, false)
+                    // Filter for the Google Software Decoder (c2.android.avc.decoder)
+                    val swInfos = infos.filter { it.name.contains("android.avc") || it.name.contains("google") }
+                    if (swInfos.isNotEmpty()) swInfos else infos
+                } else {
+                    MediaCodecSelector.DEFAULT.getDecoderInfos(format.sampleMimeType ?: "video/avc", false, false)
+                }
             }
         }
 
