@@ -82,11 +82,18 @@ class StreamPlayer(
             .setPrioritizeTimeOverSizeThresholds(true)
             .build()
 
-        // Use the standard factory but enable decoder fallback (HW -> SW)
-        // This solves the green screen by letting the phone switch to software if the hardware chip fails
-        val renderersFactory = DefaultRenderersFactory(context)
-            .setEnableDecoderFallback(true)
-            .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
+        // FORCE SOFTWARE DECODER: MediaTek hardware decoders are failing on this device.
+        // We explicitly tell ExoPlayer to use the Google Software AVC Decoder.
+        val renderersFactory = DefaultRenderersFactory(context).apply {
+            setEnableDecoderFallback(true)
+            setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
+            setMediaCodecSelector { _, format, _ ->
+                val infos = MediaCodecSelector.DEFAULT.getDecoderInfos(format.sampleMimeType!!, false, false)
+                // Filter for the Google Software Decoder (c2.android.avc.decoder)
+                val swInfos = infos.filter { it.name.contains("android.avc") || it.name.contains("google") }
+                if (swInfos.isNotEmpty()) swInfos else infos
+            }
+        }
 
         exoPlayer = ExoPlayer.Builder(context)
             .setRenderersFactory(renderersFactory)
