@@ -95,5 +95,7 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer:$media3_version")
     
     // Lightweight RTSP Client
-    implementation("com.github.alexeyvasilyev:rtsp-client-android:5.6.4")
+    implementation("com.github.alexeyvasilyev:rtsp-client-android:5.6.4") {
+        exclude(group = "androidx.camera")
+    }
 }
