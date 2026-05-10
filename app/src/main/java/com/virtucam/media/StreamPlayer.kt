@@ -61,8 +61,15 @@ class StreamPlayer(
     private fun initializePlayer() {
         if (exoPlayer != null) return
 
+        // ULTRA LOW LATENCY: Force ExoPlayer to buffer as little as possible
         val loadControl = DefaultLoadControl.Builder()
-            .setBufferDurationsMs(500, 2000, 250, 500) // Ultra-low latency for direct RTSP
+            .setBufferDurationsMs(
+                50,    // Min buffer
+                200,   // Max buffer
+                50,    // Buffer for playback
+                50     // Buffer for rebuffering
+            )
+            .setPrioritizeTimeOverSizeThresholds(true)
             .build()
 
         val renderersFactory = DefaultRenderersFactory(context)
