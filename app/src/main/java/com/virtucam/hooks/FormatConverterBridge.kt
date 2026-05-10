@@ -544,7 +544,6 @@ class FormatConverterBridge(
      * Synchronized via the Capture Session's sensor timestamp.
      */
     fun pushLatestFrameToWriter(timestamp: Long) {
-        if (!isBridgeActive) return
         val writer = imageWriter ?: return
         
         try {
