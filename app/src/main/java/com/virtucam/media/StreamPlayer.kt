@@ -2,29 +2,22 @@ package com.virtucam.media
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.media.MediaCodec
-import android.media.MediaFormat
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
 import android.view.Surface
-import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.VideoSize
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.RenderersFactory
-import androidx.media3.exoplayer.mediacodec.MediaCodecInfo
-import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
+import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.rtsp.RtspMediaSource
-import androidx.media3.exoplayer.video.MediaCodecVideoRenderer
 import androidx.media3.exoplayer.DefaultLoadControl
-import androidx.media3.exoplayer.audio.MediaCodecAudioRenderer
-import java.nio.ByteBuffer
 
 /**
- * High-Compatibility RTSP Streamer for Xiaomi/Qualcomm Devices.
+ * Robust RTSP Streamer for Xiaomi Devices.
+ * Simplified for maximum stability and easy compilation.
  */
 class StreamPlayer(
     private val context: Context,
@@ -83,17 +76,17 @@ class StreamPlayer(
     private fun initializePlayer() {
         if (exoPlayer != null) return
 
+        // Standard Low-Latency Load Control
         val loadControl = DefaultLoadControl.Builder()
             .setBufferDurationsMs(500, 1500, 500, 500)
             .setPrioritizeTimeOverSizeThresholds(true)
             .build()
 
-        val renderersFactory = RenderersFactory { eventHandler, videoListener, audioListener, textRendererOutput, metadataOutput ->
-            arrayOf(
-                XiaomiCompatVideoRenderer(context, MediaCodecSelector.DEFAULT),
-                MediaCodecAudioRenderer(context, MediaCodecSelector.DEFAULT, eventHandler, audioListener)
-            )
-        }
+        // Use the standard factory but enable decoder fallback (HW -> SW)
+        // This solves the green screen by letting the phone switch to software if the hardware chip fails
+        val renderersFactory = DefaultRenderersFactory(context)
+            .setEnableDecoderFallback(true)
+            .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
 
         exoPlayer = ExoPlayer.Builder(context)
             .setRenderersFactory(renderersFactory)
@@ -104,8 +97,8 @@ class StreamPlayer(
 
         val mediaSource = RtspMediaSource.Factory()
             .setForceUseRtpTcp(true)
-            .setTimeoutMs(20000)
             .setDebugLoggingEnabled(true)
+            .setTimeoutMs(20000)
             .createMediaSource(MediaItem.fromUri(streamUrl))
 
         exoPlayer?.setMediaSource(mediaSource)
@@ -148,52 +141,5 @@ class StreamPlayer(
 
         exoPlayer?.playWhenReady = true
         exoPlayer?.prepare()
-    }
-
-    /**
-     * Simplified Renderer that uses the correct Media3 1.5.1 signatures.
-     */
-    private inner class XiaomiCompatVideoRenderer(
-        context: Context,
-        mediaCodecSelector: MediaCodecSelector
-    ) : MediaCodecVideoRenderer(context, mediaCodecSelector, 0, null, null, -1) {
-        
-        override fun configureCodec(
-            codecInfo: MediaCodecInfo,
-            codec: MediaCodec,
-            format: Format,
-            crypto: android.media.MediaCrypto?,
-            codecMaxInputSize: Float
-        ) {
-            // This is the correct override for Media3 1.5.1
-            super.configureCodec(codecInfo, codec, format, crypto, codecMaxInputSize)
-        }
-
-        override fun getMediaFormat(
-            format: Format,
-            codecMimeType: String,
-            codecConfiguration: MediaCodecVideoRenderer.CodecMaxInputSize,
-            codecOperatingRate: Float,
-            deviceNeedsNoPostProcessWorkaround: Boolean,
-            tunnelingAudioSessionId: Int
-        ): MediaFormat {
-            val mediaFormat = super.getMediaFormat(
-                format,
-                codecMimeType,
-                codecConfiguration,
-                codecOperatingRate,
-                deviceNeedsNoPostProcessWorkaround,
-                tunnelingAudioSessionId
-            )
-            
-            // Force NV12 and larger buffer
-            mediaFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, 21) // NV12
-            val w = if (format.width > 0) format.width else 1920
-            val h = if (format.height > 0) format.height else 1080
-            mediaFormat.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, w * h * 2)
-            
-            Log.d(TAG, "Configuring Xiaomi Decoder: $codecMimeType")
-            return mediaFormat
-        }
     }
 }
