@@ -46,6 +46,8 @@ class StreamPlayer(
         private set
     var videoRotation: Int = 90
         private set
+    var rawRotation: Int = 0
+        private set
     var isPlaying: Boolean = false
         private set
 
