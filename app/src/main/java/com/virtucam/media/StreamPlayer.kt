@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Robust RTSP Streamer for Xiaomi Devices.
- * Uses rtsp-client-android (com.alexvas.rtsp) and direct MediaCodec with proper NAL framing.
+ * Uses rtsp-client-android and forces software decoding to avoid "green screen" hardware bugs.
  */
 class StreamPlayer(
     private val context: Context,
@@ -41,11 +41,11 @@ class StreamPlayer(
     private var handler: Handler? = null
     private val exitFlag = AtomicBoolean(false)
 
-    var videoWidth: Int = 1080
+    var videoWidth: Int = 1280 // Initial guess, will be updated from stream
         private set
-    var videoHeight: Int = 1920
+    var videoHeight: Int = 720
         private set
-    var videoRotation: Int = 0 // Usually RTSP is already oriented
+    var videoRotation: Int = 0
         private set
     var rawRotation: Int = 0
         private set
@@ -79,7 +79,6 @@ class StreamPlayer(
             mediaCodec = null
             isConfigured = false
             rtspClient = null
-            
             handlerThread?.quitSafely()
         }
     }
@@ -89,7 +88,7 @@ class StreamPlayer(
     }
 
     private fun initializeAndRun() {
-        Log.d(TAG, "Initializing RTSP connection for: $streamUrl")
+        Log.d(TAG, "Initializing RTSP (Software Decoder Mode) for: $streamUrl")
         
         val uri = Uri.parse(streamUrl)
         val host = uri.host ?: "127.0.0.1"
@@ -102,21 +101,12 @@ class StreamPlayer(
             socket.tcpNoDelay = true
             
             val listener = object : RtspClient.RtspClientListener {
-                override fun onRtspConnecting() {
-                    Log.d(TAG, "RTSP Connecting...")
-                }
+                override fun onRtspConnecting() { Log.d(TAG, "RTSP Connecting...") }
 
                 override fun onRtspConnected(sdpInfo: RtspClient.SdpInfo) {
-                    Log.d(TAG, "RTSP Connected! SDP Video track: ${sdpInfo.videoTrack != null}")
-                    // Try to extract SPS/PPS from SDP if available
-                    sdpInfo.videoTrack?.sps?.let { 
-                        Log.d(TAG, "Found SPS in SDP (${it.size} bytes)")
-                        spsData = it 
-                    }
-                    sdpInfo.videoTrack?.pps?.let { 
-                        Log.d(TAG, "Found PPS in SDP (${it.size} bytes)")
-                        ppsData = it 
-                    }
+                    Log.d(TAG, "RTSP Connected! Video track: ${sdpInfo.videoTrack != null}")
+                    sdpInfo.videoTrack?.sps?.let { spsData = it }
+                    sdpInfo.videoTrack?.pps?.let { ppsData = it }
                 }
 
                 override fun onRtspVideoNalUnitReceived(data: ByteArray, offset: Int, length: Int, timestamp: Long) {
@@ -126,23 +116,20 @@ class StreamPlayer(
 
                 override fun onRtspAudioSampleReceived(data: ByteArray, offset: Int, length: Int, timestamp: Long) {}
                 override fun onRtspApplicationDataReceived(data: ByteArray, offset: Int, length: Int, timestamp: Long) {}
-                override fun onRtspDisconnecting() { Log.d(TAG, "RTSP Disconnecting...") }
-                override fun onRtspDisconnected() { Log.d(TAG, "RTSP Disconnected") }
+                override fun onRtspDisconnecting() {}
+                override fun onRtspDisconnected() {}
                 override fun onRtspFailedUnauthorized() { onStreamError?.invoke("RTSP Unauthorized") }
                 override fun onRtspFailed(message: String?) { onStreamError?.invoke(message ?: "RTSP Error") }
             }
 
             rtspClient = RtspClient.Builder(socket, streamUrl, exitFlag, listener)
-                .requestAudio(false)
-                .requestVideo(true)
-                .withDebug(false)
-                .build()
+                .requestAudio(false).requestVideo(true).withDebug(false).build()
 
             isPlaying = true
             rtspClient?.execute()
             
         } catch (e: Exception) {
-            Log.e(TAG, "RTSP Execution failed", e)
+            Log.e(TAG, "RTSP connection failed", e)
             onStreamError?.invoke(e.message ?: "Connection failed")
         } finally {
             isPlaying = false
@@ -153,26 +140,13 @@ class StreamPlayer(
     private fun processIncomingNal(data: ByteArray, offset: Int, length: Int, timestamp: Long) {
         if (length < 1) return
         
-        // Check for start codes already existing
         val hasStartCode = length >= 4 && data[offset] == 0.toByte() && data[offset+1] == 0.toByte() && data[offset+2] == 0.toByte() && data[offset+3] == 1.toByte()
-        
-        // Identify NAL type
         val type = VideoCodecUtils.getNalUnitType(data, if (hasStartCode) offset + 4 else offset, length - (if (hasStartCode) 4 else 0), false)
         
-        // If it's a massive buffer (likely combined), we need to handle it
-        if (length > 1000 && type == VideoCodecUtils.NAL_SPS) {
-             // This is likely SPS + PPS + IDR. 
-             // We'll feed it as-is but ENSURE there are start codes between units if the library didn't add them.
-             // Actually, if it's 23KB, we should just feed it once configured.
-             Log.d(TAG, "Received Large NAL (Type $type, $length bytes)")
-        }
-
         if (type == VideoCodecUtils.NAL_SPS && spsData == null) {
             spsData = if (hasStartCode) data.copyOfRange(offset + 4, offset + length) else data.copyOfRange(offset, offset + length)
-            Log.d(TAG, "Captured SPS (${spsData?.size} bytes)")
         } else if (type == VideoCodecUtils.NAL_PPS && ppsData == null) {
             ppsData = if (hasStartCode) data.copyOfRange(offset + 4, offset + length) else data.copyOfRange(offset, offset + length)
-            Log.d(TAG, "Captured PPS (${ppsData?.size} bytes)")
         }
 
         if (spsData != null && ppsData != null && !isConfigured) {
@@ -180,15 +154,7 @@ class StreamPlayer(
         }
 
         if (isConfigured) {
-            // ALWAYS wrap in start code for MediaCodec
-            val frame = if (hasStartCode) {
-                data.copyOfRange(offset, offset + length)
-            } else {
-                val b = ByteArray(length + 4)
-                System.arraycopy(START_CODE, 0, b, 0, 4)
-                System.arraycopy(data, offset, b, 4, length)
-                b
-            }
+            val frame = if (hasStartCode) data.copyOfRange(offset, offset + length) else wrapInStartCode(data, offset, length)
             feedDecoder(frame, timestamp)
         }
     }
@@ -196,29 +162,31 @@ class StreamPlayer(
     private fun setupMediaCodec() {
         try {
             val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, videoWidth, videoHeight)
-            // csd-0 and csd-1 MUST include the 00 00 00 01 start code
-            spsData?.let { format.setByteBuffer("csd-0", ByteBuffer.wrap(wrapInStartCode(it))) }
-            ppsData?.let { format.setByteBuffer("csd-1", ByteBuffer.wrap(wrapInStartCode(it))) }
+            spsData?.let { format.setByteBuffer("csd-0", ByteBuffer.wrap(wrapInStartCode(it, 0, it.size))) }
+            ppsData?.let { format.setByteBuffer("csd-1", ByteBuffer.wrap(wrapInStartCode(it, 0, it.size))) }
             
-            format.setInteger(MediaFormat.KEY_ROTATION, videoRotation)
-            // Important for low-latency
-            format.setInteger(MediaFormat.KEY_PRIORITY, 0) 
-            format.setInteger(MediaFormat.KEY_OPERATING_RATE, Short.MAX_VALUE.toInt())
-
-            mediaCodec = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
+            // Try to force software decoder first
+            mediaCodec = try {
+                Log.i(TAG, "Attempting to initialize Google Software Decoder (OMX.google.h264.decoder)...")
+                MediaCodec.createByCodecName("OMX.google.h264.decoder")
+            } catch (e: Exception) {
+                Log.w(TAG, "Software decoder unavailable, falling back to hardware...")
+                MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
+            }
+            
             mediaCodec?.configure(format, outputSurface, null, 0)
             mediaCodec?.start()
             isConfigured = true
-            Log.i(TAG, "MediaCodec configured successfully for RTSP stream")
+            Log.i(TAG, "MediaCodec initialized: ${mediaCodec?.name}")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to setup MediaCodec", e)
         }
     }
 
-    private fun wrapInStartCode(data: ByteArray): ByteArray {
-        val b = ByteArray(data.size + 4)
+    private fun wrapInStartCode(data: ByteArray, offset: Int, length: Int): ByteArray {
+        val b = ByteArray(length + 4)
         System.arraycopy(START_CODE, 0, b, 0, 4)
-        System.arraycopy(data, 0, b, 4, data.size)
+        System.arraycopy(data, offset, b, 4, length)
         return b
     }
 
@@ -227,25 +195,36 @@ class StreamPlayer(
         try {
             val inputIndex = codec.dequeueInputBuffer(10000)
             if (inputIndex >= 0) {
-                val inputBuffer = codec.getInputBuffer(inputIndex)
-                inputBuffer?.clear()
-                inputBuffer?.put(data)
+                codec.getInputBuffer(inputIndex)?.apply {
+                    clear()
+                    put(data)
+                }
                 codec.queueInputBuffer(inputIndex, 0, data.size, timestamp * 1000, 0)
             }
 
             val bufferInfo = MediaCodec.BufferInfo()
             var outputIndex = codec.dequeueOutputBuffer(bufferInfo, 0)
             while (outputIndex >= 0) {
-                codec.releaseOutputBuffer(outputIndex, true)
-                onFrameAvailable()
-                if (!firstFrameFired) {
-                    firstFrameFired = true
-                    Log.i(TAG, "First RTSP frame rendered to surface!")
+                // Update dimensions if format changed
+                if (outputIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+                    val newFormat = codec.outputFormat
+                    videoWidth = newFormat.getInteger(MediaFormat.KEY_WIDTH)
+                    videoHeight = newFormat.getInteger(MediaFormat.KEY_HEIGHT)
+                    Log.i(TAG, "Stream resolution changed: ${videoWidth}x${videoHeight}")
+                }
+                
+                if (outputIndex >= 0) {
+                    codec.releaseOutputBuffer(outputIndex, true)
+                    onFrameAvailable()
+                    if (!firstFrameFired) {
+                        firstFrameFired = true
+                        Log.i(TAG, "First decoded frame rendered (Size: ${bufferInfo.size} bytes)")
+                    }
                 }
                 outputIndex = codec.dequeueOutputBuffer(bufferInfo, 0)
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error feeding decoder", e)
+            Log.e(TAG, "Error in decode loop", e)
         }
     }
 }
