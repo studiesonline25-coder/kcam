@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Robust RTSP Streamer for Xiaomi Devices.
- * Handles combined NAL bundles and ensures clean decoding.
+ * Final production version with auto-orientation and software decoding fallback.
  */
 class StreamPlayer(
     private val context: Context,
@@ -45,7 +45,7 @@ class StreamPlayer(
         private set
     var videoHeight: Int = 720
         private set
-    var videoRotation: Int = 90
+    var videoRotation: Int = 0
         private set
     var rawRotation: Int = 0
         private set
@@ -54,13 +54,11 @@ class StreamPlayer(
 
     private var isConfigured = false
     private var firstFrameFired = false
-    private var seenKeyframe = false
     private var spsData: ByteArray? = null
     private var ppsData: ByteArray? = null
 
     fun start() {
         exitFlag.set(false)
-        seenKeyframe = false
         firstFrameFired = false
         handlerThread = HandlerThread("VirtuCam-StreamPlayer")
         handlerThread?.start()
@@ -90,7 +88,7 @@ class StreamPlayer(
     }
 
     private fun initializeAndRun() {
-        Log.d(TAG, "Initializing RTSP (Permissive Mode) for: $streamUrl")
+        Log.d(TAG, "Starting RTSP Stream: $streamUrl")
         
         val uri = Uri.parse(streamUrl)
         val host = uri.host ?: "127.0.0.1"
@@ -103,17 +101,10 @@ class StreamPlayer(
             socket.tcpNoDelay = true
             
             val listener = object : RtspClient.RtspClientListener {
-                override fun onRtspConnecting() { Log.d(TAG, "RTSP Connecting...") }
+                override fun onRtspConnecting() {}
                 override fun onRtspConnected(sdpInfo: RtspClient.SdpInfo) {
-                    Log.d(TAG, "RTSP Connected! SDP Video track: ${sdpInfo.videoTrack != null}")
-                    sdpInfo.videoTrack?.sps?.let { 
-                        Log.d(TAG, "SDP SPS found: ${it.size} bytes")
-                        spsData = it 
-                    }
-                    sdpInfo.videoTrack?.pps?.let { 
-                        Log.d(TAG, "SDP PPS found: ${it.size} bytes")
-                        ppsData = it 
-                    }
+                    sdpInfo.videoTrack?.sps?.let { spsData = it }
+                    sdpInfo.videoTrack?.pps?.let { ppsData = it }
                 }
 
                 override fun onRtspVideoNalUnitReceived(data: ByteArray, offset: Int, length: Int, timestamp: Long) {
@@ -145,38 +136,26 @@ class StreamPlayer(
     }
 
     private fun processIncomingNal(data: ByteArray, offset: Int, length: Int, timestamp: Long) {
-        if (length < 1) return
+        if (length < 4) return
         
-        val hasStartCode = length >= 4 && data[offset] == 0.toByte() && data[offset+1] == 0.toByte() && data[offset+2] == 0.toByte() && data[offset+3] == 1.toByte()
-        val type = VideoCodecUtils.getNalUnitType(data, if (hasStartCode) offset + 4 else offset, length - (if (hasStartCode) 4 else 0), false)
+        // The library provides start codes (00 00 00 01), so we pass data directly to MediaCodec
+        val hasStartCode = data[offset] == 0.toByte() && data[offset+1] == 0.toByte() && data[offset+2] == 0.toByte() && data[offset+3] == 1.toByte()
         
-        // Debug: Log first 8 bytes of any received packet
-        if (!firstFrameFired && length > 0) {
-            val hex = data.sliceArray(offset until Math.min(offset + 8, offset + length))
-                .joinToString("") { "%02x ".format(it) }
-            Log.v(TAG, "NAL Type $type, Length $length, Data: $hex")
-        }
-
-        // If it's an IDR frame OR a large bundle starting with SPS, consider it a keyframe
-        if (!seenKeyframe && (type == VideoCodecUtils.NAL_IDR_SLICE || (type == VideoCodecUtils.NAL_SPS && length > 500))) {
-            Log.i(TAG, "Keyframe/Bundle detected (Type $type, $length bytes). Enabling decode.")
-            seenKeyframe = true
-        }
-
-        if (type == VideoCodecUtils.NAL_SPS && spsData == null) {
-            spsData = if (hasStartCode) data.copyOfRange(offset + 4, offset + length) else data.copyOfRange(offset, offset + length)
-        } else if (type == VideoCodecUtils.NAL_PPS && ppsData == null) {
-            ppsData = if (hasStartCode) data.copyOfRange(offset + 4, offset + length) else data.copyOfRange(offset, offset + length)
+        // Quick type check to find SPS/PPS if we don't have them yet
+        if (spsData == null || ppsData == null) {
+            val type = VideoCodecUtils.getNalUnitType(data, if (hasStartCode) offset + 4 else offset, length - (if (hasStartCode) 4 else 0), false)
+            if (type == VideoCodecUtils.NAL_SPS) {
+                spsData = if (hasStartCode) data.copyOfRange(offset + 4, offset + length) else data.copyOfRange(offset, offset + length)
+            } else if (type == VideoCodecUtils.NAL_PPS) {
+                ppsData = if (hasStartCode) data.copyOfRange(offset + 4, offset + length) else data.copyOfRange(offset, offset + length)
+            }
         }
 
         if (spsData != null && ppsData != null && !isConfigured) {
             setupMediaCodec()
         }
 
-        // Allow decoding if configured, even if we haven't seen a "formal" keyframe yet but have SPS/PPS from SDP
-        val shouldDecode = isConfigured && (seenKeyframe || (spsData != null && ppsData != null))
-        
-        if (shouldDecode) {
+        if (isConfigured) {
             val frame = if (hasStartCode) data.copyOfRange(offset, offset + length) else wrapInStartCode(data, offset, length)
             feedDecoder(frame, timestamp)
         }
@@ -188,6 +167,7 @@ class StreamPlayer(
             spsData?.let { format.setByteBuffer("csd-0", ByteBuffer.wrap(wrapInStartCode(it, 0, it.size))) }
             ppsData?.let { format.setByteBuffer("csd-1", ByteBuffer.wrap(wrapInStartCode(it, 0, it.size))) }
             
+            // Software decoder is safer against "green screen" bugs on Xiaomi
             mediaCodec = try {
                 MediaCodec.createByCodecName("OMX.google.h264.decoder")
             } catch (e: Exception) {
@@ -197,7 +177,7 @@ class StreamPlayer(
             mediaCodec?.configure(format, outputSurface, null, 0)
             mediaCodec?.start()
             isConfigured = true
-            Log.i(TAG, "MediaCodec initialized: ${mediaCodec?.name}")
+            Log.i(TAG, "Decoder started: ${mediaCodec?.name}")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to setup MediaCodec", e)
         }
@@ -229,20 +209,21 @@ class StreamPlayer(
                     val newFormat = codec.outputFormat
                     videoWidth = newFormat.getInteger(MediaFormat.KEY_WIDTH)
                     videoHeight = newFormat.getInteger(MediaFormat.KEY_HEIGHT)
+                    // If stream is landscape, rotate 90 for portrait virtual camera
                     videoRotation = if (videoWidth > videoHeight) 90 else 0
-                    Log.i(TAG, "Format corrected: ${videoWidth}x${videoHeight}, rot: $videoRotation")
+                    Log.i(TAG, "Resolution: ${videoWidth}x${videoHeight}, Rotation: $videoRotation")
                 } else if (outputIndex >= 0) {
                     codec.releaseOutputBuffer(outputIndex, true)
                     onFrameAvailable()
                     if (!firstFrameFired) {
                         firstFrameFired = true
-                        Log.i(TAG, "First frame rendered successfully.")
+                        Log.i(TAG, "Streaming active.")
                     }
                 }
                 outputIndex = codec.dequeueOutputBuffer(bufferInfo, 0)
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error in decode loop", e)
+            Log.e(TAG, "Decode loop error", e)
         }
     }
 }
