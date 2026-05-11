@@ -17,8 +17,8 @@ import java.nio.ByteBuffer
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * High-Performance RTSP Streamer for Xiaomi Devices.
- * Restores Hardware Acceleration and optimizes for 60fps throughput.
+ * Ultra-Robust RTSP Streamer for Xiaomi Devices.
+ * Features a Manual Bitstream Splitter to handle bundled NAL units.
  */
 class StreamPlayer(
     private val context: Context,
@@ -34,9 +34,10 @@ class StreamPlayer(
         private val START_CODE = byteArrayOf(0, 0, 0, 1)
         
         // H.264 NAL Types
-        private const val NAL_SPS = 7
-        private const val NAL_PPS = 8
-        private const val NAL_IDR = 5
+        private const val NAL_TYPE_SPS = 7
+        private const val NAL_TYPE_PPS = 8
+        private const val NAL_TYPE_IDR = 5
+        private const val NAL_TYPE_SLICE = 1
     }
 
     private var rtspClient: RtspClient? = null
@@ -58,14 +59,16 @@ class StreamPlayer(
 
     private var isConfigured = false
     private var firstFrameFired = false
-    private var seenKeyframe = false
     private var spsData: ByteArray? = null
     private var ppsData: ByteArray? = null
 
     fun start() {
         exitFlag.set(false)
-        seenKeyframe = false
         firstFrameFired = false
+        isConfigured = false
+        spsData = null
+        ppsData = null
+        
         handlerThread = HandlerThread("VirtuCam-StreamPlayer", android.os.Process.THREAD_PRIORITY_URGENT_DISPLAY)
         handlerThread?.start()
         handler = Handler(handlerThread!!.looper)
@@ -94,7 +97,7 @@ class StreamPlayer(
     }
 
     private fun initializeAndRun() {
-        Log.d(TAG, "Initializing Hardware RTSP: $streamUrl")
+        Log.d(TAG, "Starting RTSP Deep-Split Mode: $streamUrl")
         
         val uri = Uri.parse(streamUrl)
         val host = uri.host ?: "127.0.0.1"
@@ -104,7 +107,6 @@ class StreamPlayer(
         try {
             socket = Socket()
             socket.connect(InetSocketAddress(host, port), 15000)
-            socket.setSoTimeout(10000)
             socket.tcpNoDelay = true
             
             val listener = object : RtspClient.RtspClientListener {
@@ -116,7 +118,8 @@ class StreamPlayer(
 
                 override fun onRtspVideoNalUnitReceived(data: ByteArray, offset: Int, length: Int, timestamp: Long) {
                     if (outputSurface == null || exitFlag.get()) return
-                    processIncomingNal(data, offset, length, timestamp)
+                    // Hand off to our manual bitstream splitter
+                    splitAndProcess(data, offset, length, timestamp)
                 }
 
                 override fun onRtspAudioSampleReceived(data: ByteArray, offset: Int, length: Int, timestamp: Long) {}
@@ -134,7 +137,7 @@ class StreamPlayer(
             rtspClient?.execute()
             
         } catch (e: Exception) {
-            Log.e(TAG, "RTSP error", e)
+            Log.e(TAG, "RTSP connection failed", e)
             onStreamError?.invoke(e.message ?: "Connection failed")
         } finally {
             isPlaying = false
@@ -142,36 +145,65 @@ class StreamPlayer(
         }
     }
 
-    private fun processIncomingNal(data: ByteArray, offset: Int, length: Int, timestamp: Long) {
-        if (length < 4) return
+    private fun splitAndProcess(data: ByteArray, offset: Int, length: Int, timestamp: Long) {
+        var pos = offset
+        val end = offset + length
         
-        val hasStartCode = data[offset] == 0.toByte() && data[offset+1] == 0.toByte() && data[offset+2] == 0.toByte() && data[offset+3] == 1.toByte()
-        val nalHeaderOffset = if (hasStartCode) offset + 4 else offset
-        val type = (data[nalHeaderOffset].toInt() and 0x1F)
-
-        // Keyframe/Bundle detection
-        if (!seenKeyframe && (type == NAL_IDR || (type == NAL_SPS && length > 500))) {
-            Log.i(TAG, "IDR detected. Starting decode.")
-            seenKeyframe = true
+        while (pos < end) {
+            // Find the next start code 00 00 00 01
+            val startPos = findStartCode(data, pos, end)
+            if (startPos == -1) {
+                // If no start code found, but we are at the beginning of a packet from the library,
+                // it might be a raw NAL without start code.
+                if (pos == offset) {
+                    processNal(data, offset, length, timestamp)
+                }
+                break
+            }
+            
+            // Find the end of this NAL unit (the next start code)
+            val nextStart = findStartCode(data, startPos + 4, end)
+            val nalLength = if (nextStart == -1) end - startPos else nextStart - startPos
+            
+            processNal(data, startPos, nalLength, timestamp)
+            
+            if (nextStart == -1) break
+            pos = nextStart
         }
+    }
 
-        if (spsData == null && type == NAL_SPS) {
-            spsData = data.copyOfRange(nalHeaderOffset, offset + length)
-        } else if (ppsData == null && type == NAL_PPS) {
-            ppsData = data.copyOfRange(nalHeaderOffset, offset + length)
+    private fun findStartCode(data: ByteArray, offset: Int, end: Int): Int {
+        for (i in offset until end - 4) {
+            if (data[i] == 0.toByte() && data[i+1] == 0.toByte() && data[i+2] == 0.toByte() && data[i+3] == 1.toByte()) {
+                return i
+            }
+        }
+        return -1
+    }
+
+    private fun processNal(data: ByteArray, offset: Int, length: Int, timestamp: Long) {
+        if (length < 5) return
+        
+        // Skip start code if present
+        val hasStartCode = data[offset] == 0.toByte() && data[offset+1] == 0.toByte() && data[offset+2] == 0.toByte() && data[offset+3] == 1.toByte()
+        val headerPos = if (hasStartCode) offset + 4 else offset
+        val nalType = (data[headerPos].toInt() and 0x1F)
+
+        if (nalType == NAL_TYPE_SPS && spsData == null) {
+            spsData = data.copyOfRange(headerPos, offset + length)
+            Log.d(TAG, "Clean SPS Captured: ${spsData?.size} bytes")
+        } else if (nalType == NAL_TYPE_PPS && ppsData == null) {
+            ppsData = data.copyOfRange(headerPos, offset + length)
+            Log.d(TAG, "Clean PPS Captured: ${ppsData?.size} bytes")
         }
 
         if (spsData != null && ppsData != null && !isConfigured) {
             setupMediaCodec()
         }
 
-        if (isConfigured && seenKeyframe) {
-            // Re-use wrapInStartCode only if start code is missing
-            if (hasStartCode) {
-                feedDecoder(data, offset, length, timestamp)
-            } else {
-                feedDecoder(wrapInStartCode(data, offset, length), 0, length + 4, timestamp)
-            }
+        if (isConfigured) {
+            val frame = if (hasStartCode) data.copyOfRange(offset, offset + length) else wrapInStartCode(data, offset, length)
+            feedDecoder(frame, timestamp)
         }
     }
 
@@ -181,15 +213,13 @@ class StreamPlayer(
             spsData?.let { format.setByteBuffer("csd-0", ByteBuffer.wrap(wrapInStartCode(it, 0, it.size))) }
             ppsData?.let { format.setByteBuffer("csd-1", ByteBuffer.wrap(wrapInStartCode(it, 0, it.size))) }
             
-            // Use Hardware Decoder (much faster)
             mediaCodec = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
-            
             mediaCodec?.configure(format, outputSurface, null, 0)
             mediaCodec?.start()
             isConfigured = true
-            Log.i(TAG, "Hardware Decoder: ${mediaCodec?.name}")
+            Log.i(TAG, "Hardware Decoder Active: ${mediaCodec?.name}")
         } catch (e: Exception) {
-            Log.e(TAG, "Hardware setup failed", e)
+            Log.e(TAG, "Failed to setup MediaCodec", e)
         }
     }
 
@@ -200,16 +230,16 @@ class StreamPlayer(
         return b
     }
 
-    private fun feedDecoder(data: ByteArray, offset: Int, length: Int, timestamp: Long) {
+    private fun feedDecoder(data: ByteArray, timestamp: Long) {
         val codec = mediaCodec ?: return
         try {
-            val inputIndex = codec.dequeueInputBuffer(0) // No blocking
+            val inputIndex = codec.dequeueInputBuffer(0)
             if (inputIndex >= 0) {
                 codec.getInputBuffer(inputIndex)?.apply {
                     clear()
-                    put(data, offset, length)
+                    put(data)
                 }
-                codec.queueInputBuffer(inputIndex, 0, length, timestamp * 1000, 0)
+                codec.queueInputBuffer(inputIndex, 0, data.size, timestamp * 1000, 0)
             }
 
             val bufferInfo = MediaCodec.BufferInfo()
@@ -220,13 +250,12 @@ class StreamPlayer(
                     videoWidth = newFormat.getInteger(MediaFormat.KEY_WIDTH)
                     videoHeight = newFormat.getInteger(MediaFormat.KEY_HEIGHT)
                     videoRotation = if (videoWidth > videoHeight) 90 else 0
-                    Log.i(TAG, "Format corrected: ${videoWidth}x${videoHeight}")
                 } else if (outputIndex >= 0) {
                     codec.releaseOutputBuffer(outputIndex, true)
                     onFrameAvailable()
                     if (!firstFrameFired) {
                         firstFrameFired = true
-                        Log.i(TAG, "Stream Live.")
+                        Log.i(TAG, "RTSP stream is now visible and clean!")
                     }
                 }
                 outputIndex = codec.dequeueOutputBuffer(bufferInfo, 0)
