@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Robust RTSP Streamer for Xiaomi Devices.
- * Forces software decoding, waits for IDR keyframes to prevent green start, and handles rotation.
+ * Handles combined NAL bundles and ensures clean decoding.
  */
 class StreamPlayer(
     private val context: Context,
@@ -45,7 +45,7 @@ class StreamPlayer(
         private set
     var videoHeight: Int = 720
         private set
-    var videoRotation: Int = 90 // Default to portrait for mobile
+    var videoRotation: Int = 90
         private set
     var rawRotation: Int = 0
         private set
@@ -90,7 +90,7 @@ class StreamPlayer(
     }
 
     private fun initializeAndRun() {
-        Log.d(TAG, "Initializing RTSP (Clean-Start Mode) for: $streamUrl")
+        Log.d(TAG, "Initializing RTSP (Permissive Mode) for: $streamUrl")
         
         val uri = Uri.parse(streamUrl)
         val host = uri.host ?: "127.0.0.1"
@@ -105,9 +105,15 @@ class StreamPlayer(
             val listener = object : RtspClient.RtspClientListener {
                 override fun onRtspConnecting() { Log.d(TAG, "RTSP Connecting...") }
                 override fun onRtspConnected(sdpInfo: RtspClient.SdpInfo) {
-                    Log.d(TAG, "RTSP Connected! Video track: ${sdpInfo.videoTrack != null}")
-                    sdpInfo.videoTrack?.sps?.let { spsData = it }
-                    sdpInfo.videoTrack?.pps?.let { ppsData = it }
+                    Log.d(TAG, "RTSP Connected! SDP Video track: ${sdpInfo.videoTrack != null}")
+                    sdpInfo.videoTrack?.sps?.let { 
+                        Log.d(TAG, "SDP SPS found: ${it.size} bytes")
+                        spsData = it 
+                    }
+                    sdpInfo.videoTrack?.pps?.let { 
+                        Log.d(TAG, "SDP PPS found: ${it.size} bytes")
+                        ppsData = it 
+                    }
                 }
 
                 override fun onRtspVideoNalUnitReceived(data: ByteArray, offset: Int, length: Int, timestamp: Long) {
@@ -144,9 +150,16 @@ class StreamPlayer(
         val hasStartCode = length >= 4 && data[offset] == 0.toByte() && data[offset+1] == 0.toByte() && data[offset+2] == 0.toByte() && data[offset+3] == 1.toByte()
         val type = VideoCodecUtils.getNalUnitType(data, if (hasStartCode) offset + 4 else offset, length - (if (hasStartCode) 4 else 0), false)
         
-        // Wait for keyframe if we haven't seen one yet
-        if (!seenKeyframe && type == VideoCodecUtils.NAL_IDR_SLICE) {
-            Log.i(TAG, "First IDR Keyframe detected! Starting clean decode.")
+        // Debug: Log first 8 bytes of any received packet
+        if (!firstFrameFired && length > 0) {
+            val hex = data.sliceArray(offset until Math.min(offset + 8, offset + length))
+                .joinToString("") { "%02x ".format(it) }
+            Log.v(TAG, "NAL Type $type, Length $length, Data: $hex")
+        }
+
+        // If it's an IDR frame OR a large bundle starting with SPS, consider it a keyframe
+        if (!seenKeyframe && (type == VideoCodecUtils.NAL_IDR_SLICE || (type == VideoCodecUtils.NAL_SPS && length > 500))) {
+            Log.i(TAG, "Keyframe/Bundle detected (Type $type, $length bytes). Enabling decode.")
             seenKeyframe = true
         }
 
@@ -160,7 +173,10 @@ class StreamPlayer(
             setupMediaCodec()
         }
 
-        if (isConfigured && seenKeyframe) {
+        // Allow decoding if configured, even if we haven't seen a "formal" keyframe yet but have SPS/PPS from SDP
+        val shouldDecode = isConfigured && (seenKeyframe || (spsData != null && ppsData != null))
+        
+        if (shouldDecode) {
             val frame = if (hasStartCode) data.copyOfRange(offset, offset + length) else wrapInStartCode(data, offset, length)
             feedDecoder(frame, timestamp)
         }
@@ -168,7 +184,6 @@ class StreamPlayer(
 
     private fun setupMediaCodec() {
         try {
-            // Use 1280x720 as a fallback, but the format change event will correct it
             val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, videoWidth, videoHeight)
             spsData?.let { format.setByteBuffer("csd-0", ByteBuffer.wrap(wrapInStartCode(it, 0, it.size))) }
             ppsData?.let { format.setByteBuffer("csd-1", ByteBuffer.wrap(wrapInStartCode(it, 0, it.size))) }
@@ -214,16 +229,14 @@ class StreamPlayer(
                     val newFormat = codec.outputFormat
                     videoWidth = newFormat.getInteger(MediaFormat.KEY_WIDTH)
                     videoHeight = newFormat.getInteger(MediaFormat.KEY_HEIGHT)
-                    
-                    // Auto-Orientation: If width > height, it's landscape. Rotate 90 for mobile.
                     videoRotation = if (videoWidth > videoHeight) 90 else 0
-                    Log.i(TAG, "Stream detected: ${videoWidth}x${videoHeight}, setting rotation to $videoRotation")
+                    Log.i(TAG, "Format corrected: ${videoWidth}x${videoHeight}, rot: $videoRotation")
                 } else if (outputIndex >= 0) {
                     codec.releaseOutputBuffer(outputIndex, true)
                     onFrameAvailable()
                     if (!firstFrameFired) {
                         firstFrameFired = true
-                        Log.i(TAG, "First CLEAN frame rendered.")
+                        Log.i(TAG, "First frame rendered successfully.")
                     }
                 }
                 outputIndex = codec.dequeueOutputBuffer(bufferInfo, 0)
