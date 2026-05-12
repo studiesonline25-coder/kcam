@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>VirtuCam High-Res Capture Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #121212; color: white; }
+        video { width: 90%; border: 2px solid #444; border-radius: 8px; margin-top: 10px; }
+        #captureBtn { padding: 15px 30px; font-size: 18px; background: #007bff; color: white; border: none; border-radius: 5px; margin: 20px; cursor: pointer; }
+        #result { width: 90%; border: 2px solid #28a745; margin-top: 10px; display: none; }
+        h2 { color: #aaa; }
+    </style>
+</head>
+<body>
+    <h1>VirtuCam Capture Tester</h1>
+    <p>This tests the <b>High-Quality takePhoto()</b> method used by SumSub.</p>
+    
+    <video id="preview" autoplay playsinline muted></video>
+    <br>
+    <button id="captureBtn">Take High-Res Photo</button>
+    
+    <h2>Result Image:</h2>
+    <img id="result" alt="Captured Photo">
+    
+    <script>
+        const video = document.getElementById('preview');
+        const resultImg = document.getElementById('result');
+        const captureBtn = document.getElementById('captureBtn');
+        let imageCapture;
+
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "user" } 
+                });
+                video.srcObject = stream;
+                
+                const track = stream.getVideoTracks()[0];
+                imageCapture = new ImageCapture(track);
+                console.log("ImageCapture initialized for track:", track.label);
+            } catch (err) {
+                alert("Error starting camera: " + err);
+            }
+        }
+
+        captureBtn.onclick = async () => {
+            if (!imageCapture) return alert("Camera not ready");
+            
+            try {
+                captureBtn.disabled = true;
+                captureBtn.innerText = "Capturing...";
+                
+                // This triggers the Android CAPTURE_INTENT_STILL_CAPTURE path
+                const blob = await imageCapture.takePhoto();
+                const url = URL.createObjectURL(blob);
+                
+                resultImg.src = url;
+                resultImg.style.display = 'inline-block';
+                
+                captureBtn.disabled = false;
+                captureBtn.innerText = "Take High-Res Photo";
+                
+                // Verification: Is it green?
+                console.log("Capture Success! Blob size:", blob.size);
+            } catch (err) {
+                console.error("Capture failed:", err);
+                alert("Capture failed: " + err);
+                captureBtn.disabled = false;
+                captureBtn.innerText = "Take High-Res Photo";
+            }
+        };
+
+        startCamera();
+    </script>
+</body>
+</html>

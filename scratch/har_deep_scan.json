@@ -1,0 +1,206 @@
+[
+  {
+    "url": "https://in.sumsub.com/stry",
+    "method": "POST",
+    "status": 200,
+    "found_in": "request",
+    "response_preview": "{}",
+    "response_json": {}
+  },
+  {
+    "url": "https://in.sumsub.com/resources/tracking/trackEvents",
+    "method": "POST",
+    "status": 200,
+    "found_in": "request",
+    "response_preview": "{\n  \"ok\" : 1\n}",
+    "response_json": {
+      "ok": 1
+    }
+  },
+  {
+    "url": "https://in.sumsub.com/stry",
+    "method": "POST",
+    "status": 200,
+    "found_in": "request",
+    "response_preview": "{}",
+    "response_json": {}
+  },
+  {
+    "url": "https://static.sumsub.com/websdk2/static/2CaO-mk9t.js",
+    "method": "GET",
+    "status": 200,
+    "found_in": "response",
+    "response_preview": "(function(){try{var e=typeof window<`u`?window:typeof global<`u`?global:typeof globalThis<`u`?globalThis:typeof self<`u`?self:{};e.SENTRY_RELEASE={id:`2026.05.12-38c8e7eb`};var t=new e.Error().stack;t",
+    "response_json": null
+  },
+  {
+    "url": "https://static.sumsub.com/websdk2/static/2SpplNCRP.js",
+    "method": "GET",
+    "status": 200,
+    "found_in": "response",
+    "response_preview": "(function(){try{var e=typeof window<`u`?window:typeof global<`u`?global:typeof globalThis<`u`?globalThis:typeof self<`u`?self:{};e.SENTRY_RELEASE={id:`2026.05.12-38c8e7eb`};var t=new e.Error().stack;t",
+    "response_json": null
+  },
+  {
+    "url": "https://in.sumsub.com/stry",
+    "method": "POST",
+    "status": 200,
+    "found_in": "request",
+    "response_preview": "{}",
+    "response_json": {}
+  },
+  {
+    "url": "https://static.sumsub.com/websdk2/static/2BnrzvPow.js",
+    "method": "GET",
+    "status": 200,
+    "found_in": "response",
+    "response_preview": "(function(){try{var e=typeof window<`u`?window:typeof global<`u`?global:typeof globalThis<`u`?globalThis:typeof self<`u`?self:{};e.SENTRY_RELEASE={id:`2026.05.12-38c8e7eb`};var t=new e.Error().stack;t",
+    "response_json": null
+  },
+  {
+    "url": "https://in.sumsub.com/resources/sdk/liveness/6a0376b91b0e4124e6dfa004/multipart",
+    "method": "POST",
+    "status": 200,
+    "found_in": "request",
+    "response_preview": "{\n  \"id\" : \"6a0376b91b0e4124e6dfa004\"\n}",
+    "response_json": {
+      "id": "6a0376b91b0e4124e6dfa004"
+    }
+  },
+  {
+    "url": "https://in.sumsub.com/stry",
+    "method": "POST",
+    "status": 200,
+    "found_in": "request",
+    "response_preview": "{}",
+    "response_json": {}
+  },
+  {
+    "url": "https://in.sumsub.com/resources/tracking/trackTimings",
+    "method": "POST",
+    "status": 200,
+    "found_in": "request",
+    "response_preview": "{\n  \"ok\" : 1\n}",
+    "response_json": {
+      "ok": 1
+    }
+  },
+  {
+    "url": "https://in.sumsub.com/resources/sdk/liveness/6a0376b91b0e4124e6dfa004/multipart",
+    "method": "POST",
+    "status": 200,
+    "found_in": "request",
+    "response_preview": "{\n  \"id\" : \"6a0376b91b0e4124e6dfa004\"\n}",
+    "response_json": {
+      "id": "6a0376b91b0e4124e6dfa004"
+    }
+  },
+  {
+    "url": "https://in.sumsub.com/stry",
+    "method": "POST",
+    "status": 200,
+    "found_in": "request",
+    "response_preview": "{}",
+    "response_json": {}
+  },
+  {
+    "url": "https://in.sumsub.com/resources/sdk/liveness/6a0376b91b0e4124e6dfa004/multipart",
+    "method": "POST",
+    "status": 200,
+    "found_in": "request",
+    "response_preview": "{\n  \"id\" : \"6a0376b91b0e4124e6dfa004\"\n}",
+    "response_json": {
+      "id": "6a0376b91b0e4124e6dfa004"
+    }
+  },
+  {
+    "url": "https://in.sumsub.com/resources/sdk/liveness/6a0376b91b0e4124e6dfa004/multipart",
+    "method": "POST",
+    "status": 200,
+    "found_in": "request",
+    "response_preview": "{\n  \"id\" : \"6a0376b91b0e4124e6dfa004\"\n}",
+    "response_json": {
+      "id": "6a0376b91b0e4124e6dfa004"
+    }
+  },
+  {
+    "url": "https://in.sumsub.com/stry",
+    "method": "POST",
+    "status": 200,
+    "found_in": "request",
+    "response_preview": "{}",
+    "response_json": {}
+  },
+  {
+    "url": "https://in.sumsub.com/resources/sdk/liveness/6a0376b91b0e4124e6dfa004/multipart",
+    "method": "POST",
+    "status": 200,
+    "found_in": "request",
+    "response_preview": "{\n  \"id\" : \"6a0376b91b0e4124e6dfa004\"\n}",
+    "response_json": {
+      "id": "6a0376b91b0e4124e6dfa004"
+    }
+  },
+  {
+    "url": "https://in.sumsub.com/resources/tracking/trackTimings",
+    "method": "POST",
+    "status": 200,
+    "found_in": "request",
+    "response_preview": "{\n  \"ok\" : 1\n}",
+    "response_json": {
+      "ok": 1
+    }
+  },
+  {
+    "url": "https://in.sumsub.com/stry",
+    "method": "POST",
+    "status": 200,
+    "found_in": "request",
+    "response_preview": "{}",
+    "response_json": {}
+  },
+  {
+    "url": "https://in.sumsub.com/resources/tracking/trackTimings",
+    "method": "POST",
+    "status": 200,
+    "found_in": "request",
+    "response_preview": "{\n  \"ok\" : 1\n}",
+    "response_json": {
+      "ok": 1
+    }
+  },
+  {
+    "url": "https://static.sumsub.com/websdk2/static/2DVloszA-2.js",
+    "method": "GET",
+    "status": 200,
+    "found_in": "response",
+    "response_preview": "(function(){try{var e=typeof window<`u`?window:typeof global<`u`?global:typeof globalThis<`u`?globalThis:typeof self<`u`?self:{};e.SENTRY_RELEASE={id:`2026.05.12-38c8e7eb`};var t=new e.Error().stack;t",
+    "response_json": null
+  },
+  {
+    "url": "https://static.sumsub.com/websdk2/static/2DIVazZqc.js",
+    "method": "GET",
+    "status": 200,
+    "found_in": "response",
+    "response_preview": "(function(){try{var e=typeof window<`u`?window:typeof global<`u`?global:typeof globalThis<`u`?globalThis:typeof self<`u`?self:{};e.SENTRY_RELEASE={id:`2026.05.12-38c8e7eb`};var t=new e.Error().stack;t",
+    "response_json": null
+  },
+  {
+    "url": "https://in.sumsub.com/resources/tracking/trackEvents",
+    "method": "POST",
+    "status": 200,
+    "found_in": "request",
+    "response_preview": "{\n  \"ok\" : 1\n}",
+    "response_json": {
+      "ok": 1
+    }
+  },
+  {
+    "url": "https://in.sumsub.com/stry",
+    "method": "POST",
+    "status": 200,
+    "found_in": "request",
+    "response_preview": "{}",
+    "response_json": {}
+  }
+]

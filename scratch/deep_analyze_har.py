@@ -1,69 +1,60 @@
 import json
-import base64
-import sys
+import os
 
-# Ensure stdout handles UTF-8 correctly on Windows
-if sys.stdout.encoding != 'utf-8':
-    sys.stdout.reconfigure(encoding='utf-8')
-
-def analyze_har_deep(file_path):
-    print(f"Deep analyzing {file_path}...")
-    try:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            har_data = json.load(f)
-    except Exception as e:
-        print(f"Error loading JSON: {e}")
-        return
-
+def deep_analyze_har(har_path):
+    print(f"Deep Analysis of {har_path}...")
+    
+    with open(har_path, 'r', encoding='utf-8') as f:
+        har_data = json.load(f)
+    
     entries = har_data.get('log', {}).get('entries', [])
-    findings = []
     
-    findings.append("# Deep HAR Analysis Findings")
+    keywords = ["face", "synthetic", "liveness", "quality", "reject", "fail", "reason", "error", "warning", "suspicious", "bot", "virtual", "camera"]
     
-    keywords = ['gyro', 'accel', 'sensor', 'device', 'camera', 'fps', 'frame', 'track', 'facing', 'level', 'liveness', 'synthetic', 'noise']
+    results = []
     
     for entry in entries:
         request = entry.get('request', {})
+        response = entry.get('response', {})
         url = request.get('url', '')
         
+        # 1. Search Request Headers/PostData
         post_data = request.get('postData', {})
-        text = post_data.get('text', '')
+        req_text = post_data.get('text', '')
         
-        match_found = False
-        if text:
-            for kw in keywords:
-                if kw.lower() in text.lower():
-                    match_found = True
-                    break
+        # 2. Search Response Headers/Content
+        res_content = response.get('content', {})
+        res_text = res_content.get('text', '')
         
-        if match_found:
-            finding = f"### [MATCH] {url}\n"
-            finding += f"**Method**: {request.get('method')}\n\n"
-            try:
-                data = json.loads(text)
-                finding += "```json\n" + json.dumps(data, indent=2)[:5000] + "\n```\n"
-            except:
-                finding += f"**Raw Snippet (Cleaned)**: {text.encode('ascii', 'ignore').decode('ascii')[:1000]}\n"
-            findings.append(finding)
+        found_in_req = any(k in req_text.lower() for k in keywords)
+        found_in_res = any(k in res_text.lower() for k in keywords)
+        
+        if found_in_req or found_in_res:
+            res_json = None
+            if res_text and (res_text.strip().startswith('{') or res_text.strip().startswith('[')):
+                try:
+                    res_json = json.loads(res_text)
+                except:
+                    pass
+            
+            results.append({
+                "url": url,
+                "method": request.get('method'),
+                "status": response.get('status'),
+                "found_in": "request" if found_in_req else "response",
+                "response_preview": res_text[:200] if res_text else None,
+                "response_json": res_json
+            })
 
-    # Status/Rejection Triggers
-    findings.append("## Status & Rejection Triggers")
-    for entry in reversed(entries):
-        response = entry.get('response', {})
-        content = response.get('content', {})
-        text = content.get('text', '')
-        
-        if text and ('rejection' in text.lower() or 'reason' in text.lower() or 'fail' in text.lower() or '9103' in text):
-            url = entry.get('request', {}).get('url', '')
-            finding = f"### Trigger at {url}\n"
-            finding += f"**Status**: {response.get('status')}\n\n"
-            finding += f"**Body**: {text[:2000]}\n"
-            findings.append(finding)
-
-    with open("har_analysis_results.md", "w", encoding='utf-8') as out:
-        out.write("\n\n".join(findings))
+    # Output results
+    with open(r"c:\Users\kevin\Downloads\kcam\scratch\har_deep_scan.json", 'w') as out:
+        json.dump(results, out, indent=2)
     
-    print("Done. Results saved to har_analysis_results.md")
+    print(f"Deep scan complete. Found {len(results)} suspicious entries.")
+    print("Top suspicious URLs:")
+    for r in results[:10]:
+        print(f" - [{r['status']}] {r['url'][:100]}")
 
 if __name__ == "__main__":
-    analyze_har_deep(r"c:\Users\kevin\Downloads\kcam\raenest.har")
+    har_path = r"C:\Users\kevin\Downloads\kcam\in.sumsub.com_Archive [26-05-12 21-52-35].har"
+    deep_analyze_har(har_path)

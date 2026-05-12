@@ -2,43 +2,34 @@ import json
 import base64
 import os
 
-def extract_wasm(har_path):
-    print(f"Loading {har_path}...")
+def extract_wasm_from_har(har_path, output_path):
+    print(f"Extracting WASM from {har_path}...")
     with open(har_path, 'r', encoding='utf-8') as f:
-        data = json.load(f)
+        har_data = json.load(f)
     
-    entries = data['log']['entries']
-    found = False
-    for i, entry in enumerate(entries):
-        url = entry['request']['url']
-        if '.wasm' in url.lower():
-            found = True
-            filename = url.split('/')[-1].split('?')[0]
-            if not filename.endswith('.wasm'):
-                filename = f"module_{i}.wasm"
-            
+    entries = har_data.get('log', {}).get('entries', [])
+    for entry in entries:
+        url = entry.get('request', {}).get('url', '')
+        if 'trusted_media' in url and url.endswith('.wasm'):
             print(f"Found WASM: {url}")
-            content = entry['response'].get('content', {})
-            text = content.get('text')
+            content = entry.get('response', {}).get('content', {})
+            text = content.get('text', '')
             
             if text:
-                encoding = content.get('encoding')
-                try:
-                    if encoding == 'base64':
-                        raw_data = base64.b64decode(text)
-                    else:
-                        raw_data = text.encode('utf-8')
-                    
-                    with open(filename, 'wb') as out:
-                        out.write(raw_data)
-                    print(f"Successfully saved to {filename}")
-                except Exception as e:
-                    print(f"Failed to decode/save {filename}: {e}")
-            else:
-                print(f"No content found for {url} (Check if it was loaded from cache)")
+                if content.get('encoding') == 'base64':
+                    wasm_bytes = base64.b64decode(text)
+                else:
+                    wasm_bytes = text.encode('utf-8')
+                
+                with open(output_path, 'wb') as out:
+                    out.write(wasm_bytes)
+                print(f"Saved to {output_path} ({len(wasm_bytes)} bytes)")
+                return True
     
-    if not found:
-        print("No .wasm files found in HAR.")
+    print("WASM not found in HAR.")
+    return False
 
 if __name__ == "__main__":
-    extract_wasm('raenest.har')
+    har_path = r"C:\Users\kevin\Downloads\kcam\in.sumsub.com_Archive [26-05-12 21-52-35].har"
+    output_wasm = r"c:\Users\kevin\Downloads\kcam\scratch\trusted_media.wasm"
+    extract_wasm_from_har(har_path, output_wasm)
