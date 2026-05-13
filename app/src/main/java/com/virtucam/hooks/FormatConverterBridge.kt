@@ -499,10 +499,7 @@ class FormatConverterBridge(
      * Overwrite a JPEG-format Image buffer with our spoofed content.
      */
     fun overwriteImageWithLatestJpeg(targetImage: Image) {
-        if (!isBufferReady || readyBuffer == null) {
-            Log.e(TAG, "FormatConverterBridge: Cannot overwrite JPEG - source data is missing!")
-            return
-        }
+        // Local buffer readiness is not required for JPEG because we pull from the globally cached CameraHook.latestVirtualJpeg
         
         // Note: checkDataIntegrity is done inside generateAndStoreSpoofedJpeg
         
@@ -518,13 +515,25 @@ class FormatConverterBridge(
             val tW = targetImage.width
             val tH = targetImage.height
             
-            // Trigger background JPEG generation (doesn't block)
+            // Trigger background JPEG generation
             generateAndStoreSpoofedJpeg()
             
-            // Use the latest one that finished (might be from 1s ago, but better than nothing)
-            val jpegBytes = CameraHook.latestVirtualJpeg
+            // [HARDWARE PARITY FIX] Browsers don't pre-cache JPEGs during preview.
+            // When takePhoto() is called, the GPU needs a few milliseconds to read pixels 
+            // and the async thread needs time to encode the JPEG. We must wait for it.
+            var jpegBytes = CameraHook.latestVirtualJpeg
+            var waitCount = 0
+            while (jpegBytes == null && waitCount < 100) { // Wait up to 2 seconds
+                Thread.sleep(20)
+                if (isBufferReady) {
+                    generateAndStoreSpoofedJpeg() // Retrigger if local buffer just became ready
+                }
+                jpegBytes = CameraHook.latestVirtualJpeg
+                waitCount++
+            }
+            
             if (jpegBytes == null) {
-                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Failed to get latest Virtual JPEG. Not generated yet.")
+                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Failed to get latest Virtual JPEG after waiting 2 seconds. BufferReady=$isBufferReady")
                 return
             }
             
