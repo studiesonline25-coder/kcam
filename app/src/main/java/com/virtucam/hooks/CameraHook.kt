@@ -3009,10 +3009,8 @@ class VirtualRenderThread(
             val isCapture = it_triple.second
             val format = it_triple.third
 
-            // Buffer Capture Toggle (Feature 4): Skip capture surfaces if disabled to save system resources
-            if (isCapture && !CameraHook.isBufferCaptureEnabled) {
-                continue
-            }
+            // [HARDWARE PARITY FIX] Removed isBufferCaptureEnabled block. 
+            // We MUST render to capture surfaces, otherwise takePhoto() targets receive no frames and hang.
 
             val tStart = System.nanoTime()
             try {
