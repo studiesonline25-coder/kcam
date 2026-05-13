@@ -298,17 +298,8 @@ class FormatConverterBridge(
              for (i in 3 until rgbaBytes.size step 4) rgbaBytes[i] = 255.toByte()
         }
 
-        // [GREEN SCREEN FIX] Circuit breaker for connecting RTSP streams
-        if (CameraHook.isVideo || CameraHook.isStreamActive) {
-            // Flow allowed
-        } else {
-            diagDropGuard++
-            if (diagCallCount % 30 == 0) {
-                Log.e(TAG, "GREEN_DIAG: calls=$diagCallCount bufNotReady=$diagDropBufferNotReady integrity=$diagDropIntegrity guard=$diagDropGuard success=$diagSuccess | isVideo=${CameraHook.isVideo} isStreamActive=${CameraHook.isStreamActive}")
-            }
-            return
-        }
-        
+        // [GREEN SCREEN FIX] Circuit breaker for connecting RTSP streams removed.
+        // It was blocking Static Image and Test Pattern modes.        
         try {
             val w = targetImage.width
             val h = targetImage.height
@@ -611,9 +602,6 @@ class FormatConverterBridge(
         
         handler.post {
             try {
-                if (!com.virtucam.hooks.CameraHook.isVideo && !com.virtucam.hooks.CameraHook.isStreamActive) {
-                    return@post
-                }
 
                 val outImage = try { writer.dequeueInputImage() } catch (_: Exception) { null } ?: return@post
                 
