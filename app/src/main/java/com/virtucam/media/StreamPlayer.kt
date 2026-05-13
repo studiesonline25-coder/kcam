@@ -46,6 +46,8 @@ class StreamPlayer(
 
     var videoWidth: Int = 1280
     var videoHeight: Int = 720
+    var videoRotation: Int = 0
+    var rawRotation: Int = 0
     var isPlaying: Boolean = false
         private set
 
@@ -179,6 +181,8 @@ class StreamPlayer(
                 val fmt = codec.outputFormat
                 videoWidth = fmt.getInteger(MediaFormat.KEY_WIDTH)
                 videoHeight = fmt.getInteger(MediaFormat.KEY_HEIGHT)
+                videoRotation = if (videoWidth > videoHeight) 90 else 0
+                rawRotation = videoRotation
             }
         } catch (e: Exception) {
             Log.e(TAG, "Decode error: ${e.message}")

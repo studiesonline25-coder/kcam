@@ -263,6 +263,7 @@ class FormatConverterBridge(
 
     fun overwriteImageWithLatestYuv(targetImage: Image, timestamp: Long) {
         diagCallCount++
+        val expectedSize = width * height * 4
         
         // [Fix] Generate JPEG payload for late-stage file swap.
         // Throttled to once per second to avoid burning CPU on every preview frame.

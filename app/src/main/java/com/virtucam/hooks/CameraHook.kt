@@ -225,6 +225,7 @@ object CameraHook {
             hookCameraManager(lpparam)
             hookImageReader(lpparam)
             hookCaptureRequest(lpparam)
+            hookJitterMetadata(lpparam)
             hookSubmitCaptureRequest(lpparam)
             hookCameraError(lpparam)
             hookCaptureSurfaces(lpparam)
@@ -975,7 +976,7 @@ object CameraHook {
         })
     }
           
-    private fun hookSubmitCaptureRequest(lpparam: XC_LoadPackage.LoadPackageParam) {
+    private fun hookJitterMetadata(lpparam: XC_LoadPackage.LoadPackageParam) {
         val cameraCaptureSessionClass = XposedHelpers.findClassIfExists(
             "android.hardware.camera2.impl.CameraCaptureSessionImpl", lpparam.classLoader
         ) ?: return
@@ -1197,7 +1198,7 @@ object CameraHook {
                                         // === ANTI-DETECTION: Hardware Metadata Animation ===
                                         // Static metadata flags synthetic models. Animate AE state and exposure time.
                                         try {
-                                            val mResultsField = XposedHelpers.findFieldIfExists(result.javaClass, "mResults")
+                                            val mResultsField = XposedHelpers.findFieldIfExists(result.javaClass as Class<*>, "mResults")
                                             if (mResultsField != null) {
                                                 mResultsField.isAccessible = true
                                                 val metadataNative = mResultsField.get(result)
@@ -1706,9 +1707,9 @@ object CameraHook {
                         val reqClass = reqObj.javaClass
                         
                         // CaptureRequest internally stores surfaces in `mSurfaceSet` (or `mTargetSurfaces` in older versions)
-                        var surfaceSetField = XposedHelpers.findFieldIfExists(reqClass, "mSurfaceSet")
+                        var surfaceSetField = XposedHelpers.findFieldIfExists(reqClass as Class<*>, "mSurfaceSet")
                         if (surfaceSetField == null) {
-                            surfaceSetField = XposedHelpers.findFieldIfExists(reqClass, "mTargetSurfaces")
+                            surfaceSetField = XposedHelpers.findFieldIfExists(reqClass as Class<*>, "mTargetSurfaces")
                         }
                         
                         if (surfaceSetField != null) {
@@ -1739,7 +1740,7 @@ object CameraHook {
 
                         // --- METADATA MUTATION ---
                         try {
-                            val mSettingsField = XposedHelpers.findFieldIfExists(reqClass, "mSettings")
+                            val mSettingsField = XposedHelpers.findFieldIfExists(reqClass as Class<*>, "mSettings")
                             if (mSettingsField != null) {
                                 mSettingsField.isAccessible = true
                                 val settings = mSettingsField.get(reqObj) // CameraMetadataNative
@@ -2164,7 +2165,7 @@ object CameraHook {
             if (altSurface != null) {
                 // Try to get size from the OutputConfiguration's internal fields (Android 10+)
                 try {
-                    val mConfiguredWidthField = XposedHelpers.findFieldIfExists(config.javaClass, "mConfiguredSize")
+                    val mConfiguredWidthField = XposedHelpers.findFieldIfExists(config.javaClass as Class<*>, "mConfiguredSize")
                     if (mConfiguredWidthField != null) {
                         val size = mConfiguredWidthField.get(config)
                         if (size != null) {
@@ -2180,7 +2181,7 @@ object CameraHook {
 
                 // Fallback: try mSurfaceSize
                 try {
-                    val sizeField = XposedHelpers.findFieldIfExists(config.javaClass, "mSurfaceSize")
+                    val sizeField = XposedHelpers.findFieldIfExists(config.javaClass as Class<*>, "mSurfaceSize")
                     if (sizeField != null) {
                         val size = sizeField.get(config)
                         if (size != null) {
