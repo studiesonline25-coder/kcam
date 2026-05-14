@@ -1984,12 +1984,18 @@ object CameraHook {
                             if (bridge != null && !bridge.hasImageWriter) {
                                 bridge.overwriteImageWithLatestYuv(image, image.timestamp)
                                 Log.d(TAG, "VirtuCam_Hook: Overwrote YUV image ${image.width}x${image.height}")
-                                // [STAGE DUMP 3] Final consumed buffer — one-shot per session
-                                try {
-                                    val stage3Tag = "stage3_final_yuv_${image.width}x${image.height}"
-                                    BufferDumper.dumpYuvImage(image, stage3Tag)
-                                    Log.i(TAG, "[STAGE_DUMP_3] Saved final YUV buffer to virtucam_audit/buffers/stage3_final_yuv_${image.width}x${image.height}_*.png")
-                                } catch (_: Throwable) {}
+                                // [STAGE DUMP 3] Final consumed buffer — heavily throttled
+                                if (isBufferCaptureEnabled) {
+                                    val now = System.currentTimeMillis()
+                                    if (now - lastSpyDumpMs > 5000L) {
+                                        lastSpyDumpMs = now
+                                        try {
+                                            val stage3Tag = "stage3_final_yuv_${image.width}x${image.height}"
+                                            BufferDumper.dumpYuvImage(image, stage3Tag)
+                                            Log.i(TAG, "[STAGE_DUMP_3] Saved final YUV buffer to virtucam_audit/buffers/stage3_final_yuv_${image.width}x${image.height}_*.png")
+                                        } catch (_: Throwable) {}
+                                    }
+                                }
                             }
                         }
                         256 -> { // JPEG = 0x100 = 256
