@@ -607,12 +607,11 @@ class FormatConverterBridge(
      */
     fun pushLatestFrameToWriter(timestamp: Long) {
         val writer = imageWriter ?: return
-        val handler = pushHandler ?: return
         
-        handler.post {
+        Thread {
             try {
 
-                val outImage = try { writer.dequeueInputImage() } catch (_: Exception) { null } ?: return@post
+                val outImage = try { writer.dequeueInputImage() } catch (_: Exception) { null } ?: return@Thread
                 
                 var success = false
                 try {
@@ -633,7 +632,7 @@ class FormatConverterBridge(
                     }
                 }
             } catch (e: Exception) {}
-        }
+        }.start()
     }
 
     fun release() {
