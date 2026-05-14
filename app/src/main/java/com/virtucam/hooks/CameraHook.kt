@@ -119,7 +119,7 @@ object CameraHook {
     var isGeneratingJpeg: Boolean = false
 
     @Volatile
-    var isBufferCaptureEnabled: Boolean = true
+    var isBufferCaptureEnabled: Boolean = false
 
     @Volatile
     var compensationFactor: Float = 1.0f
@@ -2291,7 +2291,7 @@ object CameraHook {
                         isTestPatternMode = if (it.columnCount > 13) it.getInt(13) == 1 else false
                         isPassthroughMode = if (it.columnCount > 14) it.getInt(14) == 1 else false
                         rotationOffset = if (it.columnCount > 15) it.getInt(15) else 0
-                        isBufferCaptureEnabled = if (it.columnCount > 16) it.getInt(16) == 1 else true
+                        isBufferCaptureEnabled = if (it.columnCount > 16) it.getInt(16) == 1 else false
                         
                         Log.d(TAG, "VirtuCam_Hook: Config loaded. Enabled: $isEnabled, Zoom: $zoomFactor, Stretch: $compensationFactor, liveness: $isLivenessEnabled, passthrough: $isPassthroughMode, offset: $rotationOffset")
                     } catch (innerE: Exception) {
