@@ -594,8 +594,8 @@ class FormatConverterBridge(
     fun connectToImageReader(imageReader: ImageReader) {
         try {
             this.imageReader = imageReader
-            this.imageWriter = ImageWriter.newInstance(imageReader.surface, 5, targetFormat)
-            Log.i(TAG, "FormatConverterBridge: Connected to ImageReader ${width}x${height} for format $targetFormat")
+            this.imageWriter = ImageWriter.newInstance(imageReader.surface, 5, outputFormat)
+            Log.i(TAG, "FormatConverterBridge: Connected to ImageReader ${width}x${height} for format $outputFormat")
         } catch (e: Exception) {
             Log.e(TAG, "FormatConverterBridge: Failed to connect to ImageReader", e)
         }
