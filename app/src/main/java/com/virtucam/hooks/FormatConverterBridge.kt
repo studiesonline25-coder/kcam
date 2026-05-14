@@ -539,15 +539,22 @@ class FormatConverterBridge(
             
             // Write Spoofed JPEG into the image buffer (just in case the pipeline uses it directly)
             jpegBuffer.clear()
-            val bytesToWrite = jpegBytes.size.coerceAtMost(jpegBuffer.capacity())
-            jpegBuffer.put(jpegBytes, 0, bytesToWrite)
+            
+            val finalLimit: Int
+            if (jpegBytes.size > jpegBuffer.capacity()) {
+                Log.w(TAG, "FormatConverterBridge: Spoofed JPEG (${jpegBytes.size}) > Buffer Capacity (${jpegBuffer.capacity()}). Skipping buffer overwrite. Relying on FileOutputStream hook.")
+                finalLimit = jpegBuffer.capacity() // Keep original hardware JPEG size
+            } else {
+                jpegBuffer.put(jpegBytes, 0, jpegBytes.size)
+                finalLimit = jpegBytes.size
+            }
             
             // Do NOT flip. We want the camera framework to read up to its native size.
             // Appending our naked JPEG without EXIF APP1 blocks is enough because modern 
             // camera zipping modules (like Xiaomi CAM_ParallelDataZipper) parse and overwrite EXIF 
             // based on CaptureRequest parameters downstream automatically. Let them do their job.
             jpegBuffer.position(0)
-            jpegBuffer.limit(bytesToWrite)
+            jpegBuffer.limit(finalLimit)
             
             // DIAGNOSTIC DUMP: Save the spoofed JPEG to SD card to see exactly what Veriff sees
             if (CameraHook.isBufferCaptureEnabled) {

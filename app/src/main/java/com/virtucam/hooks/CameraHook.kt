@@ -3015,9 +3015,9 @@ class VirtualRenderThread(
             val isCapture = it_triple.second
             val format = it_triple.third
 
-            // Buffer Capture Toggle (Feature 4): Skip capture surfaces if disabled to save system resources.
+            // Buffer Capture Toggle (Feature 4): Skip JPEG capture surfaces if disabled to save system resources.
             // ONLY render to them if the browser is actively requesting a photo (captureCount > 0).
-            if (isCapture && !CameraHook.isBufferCaptureEnabled && CameraHook.captureCount == 0) {
+            if (isCapture && format == 256 && !CameraHook.isBufferCaptureEnabled && CameraHook.captureCount == 0) {
                 continue
             }
 
