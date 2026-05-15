@@ -195,15 +195,22 @@ class FormatConverterBridge(
      * but writes JPEGs to the sandboxed disk later.
      */
     internal fun generateAndStoreSpoofedJpeg() {
-        if (!isBufferReady || readyBuffer == null || conversionBuffer == null) return
+        // Primary source: the bridge's own readyBuffer (set by ImageReader callback)
+        // Fallback source: conversionBuffer (already filled by overwriteImageWithLatestYuv's fallback logic)
+        val sourceBuffer = if (isBufferReady && readyBuffer != null) readyBuffer 
+                           else if (conversionBuffer != null && checkDataIntegrity(conversionBuffer!!)) conversionBuffer
+                           else return
+        if (sourceBuffer == null) return
         
         val w = width
         val h = height
         val expectedSize = w * h * 4
         
-        // Fast synchronized copy into conversion buffer
-        synchronized(bufferLock) {
-            System.arraycopy(readyBuffer!!, 0, conversionBuffer!!, 0, expectedSize)
+        // Copy source data into conversion buffer (if not already there)
+        if (sourceBuffer !== conversionBuffer) {
+            synchronized(bufferLock) {
+                System.arraycopy(sourceBuffer, 0, conversionBuffer!!, 0, expectedSize)
+            }
         }
         val rgbaBytes = conversionBuffer!!
         
