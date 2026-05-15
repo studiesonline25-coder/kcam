@@ -194,7 +194,7 @@ class FormatConverterBridge(
      * Required for URI Direct Write bypass because native camera often uses YUV buffers 
      * but writes JPEGs to the sandboxed disk later.
      */
-    private fun generateAndStoreSpoofedJpeg() {
+    internal fun generateAndStoreSpoofedJpeg() {
         if (!isBufferReady || readyBuffer == null || conversionBuffer == null) return
         
         val w = width
@@ -516,8 +516,20 @@ class FormatConverterBridge(
             val tH = targetImage.height
             Log.e(TAG, "CAPT_LOG [3c]: overwriteImageWithLatestJpeg executing. TargetImage: ${tW}x${tH}")
             
-            // Trigger background JPEG generation
+            // Trigger background JPEG generation from THIS bridge first
             generateAndStoreSpoofedJpeg()
+            
+            // [STRICT ISOLATION FIX] If this bridge has no buffer (e.g. it's a JPEG-only bridge 
+            // that we deliberately don't push frames to), ask any YUV bridge that IS receiving 
+            // live frames to generate the global JPEG snapshot instead.
+            if (CameraHook.latestVirtualJpeg == null) {
+                for (bridge in CameraHook.formatBridges.values) {
+                    if (bridge !== this && bridge.isBufferReady) {
+                        bridge.generateAndStoreSpoofedJpeg()
+                        if (CameraHook.latestVirtualJpeg != null) break
+                    }
+                }
+            }
             
             // [HARDWARE PARITY FIX] Browsers don't pre-cache JPEGs during preview.
             // When takePhoto() is called, the GPU needs a few milliseconds to read pixels 
@@ -526,8 +538,11 @@ class FormatConverterBridge(
             var waitCount = 0
             while (jpegBytes == null && waitCount < 5) { // Wait up to 100ms only
                 Thread.sleep(20)
-                if (isBufferReady) {
-                    generateAndStoreSpoofedJpeg()
+                // Try any bridge with a ready buffer
+                for (bridge in CameraHook.formatBridges.values) {
+                    if (bridge.isBufferReady) {
+                        bridge.generateAndStoreSpoofedJpeg()
+                    }
                 }
                 jpegBytes = CameraHook.latestVirtualJpeg
                 waitCount++

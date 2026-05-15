@@ -619,3 +619,12 @@
 05-16 00:25:10.002 E/VirtuCam_Hook(27194): CAPT_LOG [4a]: Native Camera acquireNextImage (YUV 35) overriding directly. Image: 640x480
 05-16 00:25:10.053 E/VirtuCam_Bridge(27194): CAPT_LOG [3b]: pushLatestFrameToWriter starting Thread to dequeue and push frame. timestamp=175830464129000
 05-16 00:25:10.055 E/VirtuCam_Bridge(27194): CAPT_LOG [3b]: pushLatestFrameToWriter starting Thread to dequeue and push frame. timestamp=175830534208000
+05-16 00:25:15.335 E/VirtuCam_Hook( 2968): CAPT_LOG [4b]: Native Camera acquireNextImage (JPEG 256) overriding directly. Image: 2560x1920
+05-16 00:25:15.338 E/VirtuCam_Bridge( 2968): CAPT_LOG [3c]: overwriteImageWithLatestJpeg executing. TargetImage: 2560x1920
+05-16 00:25:17.382 E/VirtuCam_Bridge( 2968): CAPT_LOG [3d]: Failed to get latest Virtual JPEG after waiting 2000ms. BufferReady=false
+05-16 00:27:52.282 E/VirtuCam_Hook( 2968): CAPT_LOG [4b]: Native Camera acquireNextImage (JPEG 256) overriding directly. Image: 2560x1920
+05-16 00:27:52.282 E/VirtuCam_Bridge( 2968): CAPT_LOG [3c]: overwriteImageWithLatestJpeg executing. TargetImage: 2560x1920
+05-16 00:27:54.321 E/VirtuCam_Bridge( 2968): CAPT_LOG [3d]: Failed to get latest Virtual JPEG after waiting 2000ms. BufferReady=false
+05-16 00:48:14.794 E/VirtuCam_Hook(18271): CAPT_LOG [4b]: Native Camera acquireNextImage (JPEG 256) overriding directly. Image: 2560x1920
+05-16 00:48:14.796 E/VirtuCam_Bridge(18271): CAPT_LOG [3c]: overwriteImageWithLatestJpeg executing. TargetImage: 2560x1920
+05-16 00:48:14.898 E/VirtuCam_Bridge(18271): CAPT_LOG [3d]: Failed to get latest Virtual JPEG after waiting 100ms. BufferReady=false
