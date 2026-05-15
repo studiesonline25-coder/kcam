@@ -625,7 +625,13 @@ class FormatConverterBridge(
         Thread {
             try {
 
-                val outImage = try { writer.dequeueInputImage() } catch (_: Exception) { null } ?: return@Thread
+                val outImage = try { writer.dequeueInputImage() } catch (e: Exception) { 
+                    Log.e(TAG, "CAPT_LOG [3-ERR]: dequeueInputImage threw exception: ${e.message}")
+                    null 
+                } ?: run {
+                    Log.e(TAG, "CAPT_LOG [3-ERR]: dequeueInputImage returned NULL! Buffer queue likely full or not ready.")
+                    return@Thread
+                }
                 
                 var success = false
                 try {

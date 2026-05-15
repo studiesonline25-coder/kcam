@@ -1986,8 +1986,8 @@ object CameraHook {
                     
                     when (format) {
                         ImageFormat.YUV_420_888, ImageFormat.YV12, 35 -> {
-                            // YUV Data Override path
-                            if (bridge != null && !bridge.hasImageWriter) {
+                            // YUV Data Override path - Hybrid Strategy (Hook + Writer)
+                            if (bridge != null) {
                                 Log.e(TAG, "CAPT_LOG [4a]: Native Camera acquireNextImage (YUV 35) overriding directly. Image: ${image.width}x${image.height}")
                                 bridge.overwriteImageWithLatestYuv(image, image.timestamp)
                                 Log.d(TAG, "VirtuCam_Hook: Overwrote YUV image ${image.width}x${image.height}")
@@ -2006,14 +2006,14 @@ object CameraHook {
                             }
                         }
                         256 -> { // JPEG = 0x100 = 256
-                            // JPEG Capture Override path
-                            if (bridge != null && !bridge.hasImageWriter) {
-                                Log.e(TAG, "CAPT_LOG [4b]: Native Camera acquireNextImage (JPEG 256) overriding directly. Bridge has NO ImageWriter. Image: ${image.width}x${image.height}")
+                            // JPEG Capture Override path - Hybrid Strategy (Hook + Writer)
+                            if (bridge != null) {
+                                Log.e(TAG, "CAPT_LOG [4b]: Native Camera acquireNextImage (JPEG 256) overriding directly. Image: ${image.width}x${image.height}")
                                 bridge.overwriteImageWithLatestJpeg(image)
                                 Log.d(TAG, "VirtuCam_Hook: Overwrote JPEG capture ${image.width}x${image.height}")
-                            } else if (bridge == null) {
-                                // No matching bridge - try any bridge without writer
-                                val anyBridge = activeBridges.firstOrNull { !it.hasImageWriter }
+                            } else {
+                                // No matching bridge by size - try any bridge as a fallback
+                                val anyBridge = activeBridges.firstOrNull()
                                 if (anyBridge != null) {
                                     Log.e(TAG, "CAPT_LOG [4c]: Native Camera acquireNextImage (JPEG 256) overriding via fallback bridge. Image: ${image.width}x${image.height}")
                                     anyBridge.overwriteImageWithLatestJpeg(image)
@@ -2021,8 +2021,6 @@ object CameraHook {
                                 } else {
                                     Log.e(TAG, "CAPT_LOG [4d]: Native Camera acquireNextImage (JPEG 256) failed - no bridge available!")
                                 }
-                            } else {
-                                Log.e(TAG, "CAPT_LOG [4e]: Native Camera acquireNextImage (JPEG 256) skipped override because bridge HAS ImageWriter.")
                             }
                         }
                         else -> {
