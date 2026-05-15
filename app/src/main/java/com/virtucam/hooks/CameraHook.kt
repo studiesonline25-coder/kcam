@@ -1249,8 +1249,11 @@ object CameraHook {
                                     val timestamp = result.get(android.hardware.camera2.CaptureResult.SENSOR_TIMESTAMP) ?: 0L
                                     if (timestamp > 0) {
                                         activeBridges.forEach { 
-                                            // Only push to JPEG bridges if we are actively capturing
-                                            if (it.outputFormat == 256 && CameraHook.captureCount == 0) return@forEach
+                                            // [HYBRID TUNING] NEVER push to JPEG bridges via Writer. 
+                                            // The synchronous acquireNextImage hook is more reliable and 
+                                            // avoids the "dequeue buffer failed" collisions we see in logs.
+                                            if (it.outputFormat == 256) return@forEach
+                                            
                                             it.pushLatestFrameToWriter(timestamp) 
                                         }
                                     }
@@ -2951,11 +2954,21 @@ class VirtualRenderThread(
                         // Handle Photo/Capture Requests (Static Image)
                         synchronized(CameraHook) {
                             while (CameraHook.captureCount > 0) {
-                                val capture = CameraHook.captureQueue.poll()
-                                val timestamp = capture?.first ?: System.nanoTime()
-                                Log.e(TAG, "CAPT_LOG [2]: VirtualRenderThread draining captureQueue. Pushing to ${CameraHook.formatBridges.size} bridges. captureCount=${CameraHook.captureCount}")
-                                CameraHook.formatBridges.values.forEach { it.pushLatestFrameToWriter(timestamp) }
+                                Log.e(TAG, "CAPT_LOG [2]: VirtualRenderThread draining captureQueue. Pushing to bridges. captureCount=${CameraHook.captureCount}")
+                                CameraHook.formatBridges.values.forEach { 
+                                    // Only push YUV to bridges from here. JPEGs are handled by hooks.
+                                    if (it.outputFormat != 256) {
+                                        it.pushLatestFrameToWriter(timestamp)
+                                    }
+                                }
                                 CameraHook.captureCount--
+                                
+                                // [SAFETY VALVE] Prevent captureCount runaway (fixes "camera refuses to open" lockup)
+                                if (CameraHook.captureCount > 5) {
+                                    Log.w(TAG, "CAPT_LOG [!] Safety Valve: captureCount too high (${CameraHook.captureCount}). Resetting to zero.")
+                                    CameraHook.captureCount = 0
+                                    CameraHook.captureQueue.clear()
+                                }
                             }
                         }
                         
