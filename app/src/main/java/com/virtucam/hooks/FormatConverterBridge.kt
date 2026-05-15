@@ -514,6 +514,7 @@ class FormatConverterBridge(
             
             val tW = targetImage.width
             val tH = targetImage.height
+            Log.e(TAG, "CAPT_LOG [3c]: overwriteImageWithLatestJpeg executing. TargetImage: ${tW}x${tH}")
             
             // Trigger background JPEG generation
             generateAndStoreSpoofedJpeg()
@@ -533,9 +534,11 @@ class FormatConverterBridge(
             }
             
             if (jpegBytes == null) {
-                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Failed to get latest Virtual JPEG after waiting 2 seconds. BufferReady=$isBufferReady")
+                Log.e(TAG, "CAPT_LOG [3d]: Failed to get latest Virtual JPEG after waiting ${waitCount * 20}ms. BufferReady=$isBufferReady")
                 return
             }
+            
+            Log.e(TAG, "CAPT_LOG [3e]: Virtual JPEG acquired after ${waitCount * 20}ms. Size=${jpegBytes.size} bytes. Writing to Target Buffer Capacity=${jpegBuffer.capacity()}")
             
             // Write Spoofed JPEG into the image buffer (just in case the pipeline uses it directly)
             jpegBuffer.clear()
@@ -613,8 +616,12 @@ class FormatConverterBridge(
      * Synchronized via the Capture Session's sensor timestamp.
      */
     fun pushLatestFrameToWriter(timestamp: Long) {
-        val writer = imageWriter ?: return
+        val writer = imageWriter ?: run {
+            Log.e(TAG, "CAPT_LOG [3a]: pushLatestFrameToWriter called but imageWriter is NULL!")
+            return
+        }
         
+        Log.e(TAG, "CAPT_LOG [3b]: pushLatestFrameToWriter starting Thread to dequeue and push frame. timestamp=$timestamp")
         Thread {
             try {
 

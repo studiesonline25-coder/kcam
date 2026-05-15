@@ -593,6 +593,7 @@ object CameraHook {
                         val isJpeg = data.size > 3 && data[0] == 0xFF.toByte() && data[1] == 0xD8.toByte() && data[2] == 0xFF.toByte()
                         
                         if (isJpeg && data.size > 10000) { 
+                             Log.e(TAG, "CAPT_LOG [5]: FileOutputStream.write() (ByteArray) intercepting! RealDataSize=${data.size}, VirtualDataSize=${virtualJpeg.size}, Path=$path")
                              param.args[0] = virtualJpeg
                              Log.w(TAG, "VirtuCam_Storage: FileOutputStream.write() (ByteArray) SWAPPED successfully! path=$path")
                         }
@@ -625,6 +626,7 @@ object CameraHook {
                         val isJpeg = data.size > 3 && data[0] == 0xFF.toByte() && data[1] == 0xD8.toByte() && data[2] == 0xFF.toByte()
                         
                         if (isJpeg && len > 10000) {
+                            Log.e(TAG, "CAPT_LOG [5]: FileOutputStream.write(b,off,len) intercepting! RealDataSize=${data.size}, RealLen=$len, VirtualDataSize=${virtualJpeg.size}, Path=$path")
                             param.args[0] = virtualJpeg
                             param.args[1] = 0
                             param.args[2] = virtualJpeg.size
@@ -1191,7 +1193,7 @@ object CameraHook {
                                             synchronized(CameraHook) {
                                                 captureCount++
                                                 captureQueue.offer(Pair(sensorTimestamp, captureCount))
-                                                Log.d(TAG, "VirtuCam_Hook: Capture Event Detected! TS=$sensorTimestamp, QueueSize=${captureQueue.size}")
+                                                Log.e(TAG, "CAPT_LOG [1]: Capture Event Detected in hookCaptureCallback! Method=${param.method.name}. TS=$sensorTimestamp, captureCount=${captureCount}, QueueSize=${captureQueue.size}")
                                             }
                                         }
 
@@ -1982,6 +1984,7 @@ object CameraHook {
                         ImageFormat.YUV_420_888, ImageFormat.YV12, 35 -> {
                             // YUV Data Override path
                             if (bridge != null && !bridge.hasImageWriter) {
+                                Log.e(TAG, "CAPT_LOG [4a]: Native Camera acquireNextImage (YUV 35) overriding directly. Image: ${image.width}x${image.height}")
                                 bridge.overwriteImageWithLatestYuv(image, image.timestamp)
                                 Log.d(TAG, "VirtuCam_Hook: Overwrote YUV image ${image.width}x${image.height}")
                                 // [STAGE DUMP 3] Final consumed buffer — heavily throttled
@@ -2001,15 +2004,21 @@ object CameraHook {
                         256 -> { // JPEG = 0x100 = 256
                             // JPEG Capture Override path
                             if (bridge != null && !bridge.hasImageWriter) {
+                                Log.e(TAG, "CAPT_LOG [4b]: Native Camera acquireNextImage (JPEG 256) overriding directly. Bridge has NO ImageWriter. Image: ${image.width}x${image.height}")
                                 bridge.overwriteImageWithLatestJpeg(image)
                                 Log.d(TAG, "VirtuCam_Hook: Overwrote JPEG capture ${image.width}x${image.height}")
                             } else if (bridge == null) {
                                 // No matching bridge - try any bridge without writer
                                 val anyBridge = activeBridges.firstOrNull { !it.hasImageWriter }
                                 if (anyBridge != null) {
+                                    Log.e(TAG, "CAPT_LOG [4c]: Native Camera acquireNextImage (JPEG 256) overriding via fallback bridge. Image: ${image.width}x${image.height}")
                                     anyBridge.overwriteImageWithLatestJpeg(image)
                                     Log.d(TAG, "VirtuCam_Hook: Overwrote JPEG capture (fallback bridge) ${image.width}x${image.height}")
+                                } else {
+                                    Log.e(TAG, "CAPT_LOG [4d]: Native Camera acquireNextImage (JPEG 256) failed - no bridge available!")
                                 }
+                            } else {
+                                Log.e(TAG, "CAPT_LOG [4e]: Native Camera acquireNextImage (JPEG 256) skipped override because bridge HAS ImageWriter.")
                             }
                         }
                         else -> {
@@ -2942,6 +2951,7 @@ class VirtualRenderThread(
                             while (CameraHook.captureCount > 0) {
                                 val capture = CameraHook.captureQueue.poll()
                                 val timestamp = capture?.first ?: System.nanoTime()
+                                Log.e(TAG, "CAPT_LOG [2]: VirtualRenderThread draining captureQueue. Pushing to ${CameraHook.formatBridges.size} bridges. captureCount=${CameraHook.captureCount}")
                                 CameraHook.formatBridges.values.forEach { it.pushLatestFrameToWriter(timestamp) }
                                 CameraHook.captureCount--
                             }
