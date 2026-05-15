@@ -524,10 +524,10 @@ class FormatConverterBridge(
             // and the async thread needs time to encode the JPEG. We must wait for it.
             var jpegBytes = CameraHook.latestVirtualJpeg
             var waitCount = 0
-            while (jpegBytes == null && waitCount < 100) { // Wait up to 2 seconds
+            while (jpegBytes == null && waitCount < 5) { // Wait up to 100ms only
                 Thread.sleep(20)
                 if (isBufferReady) {
-                    generateAndStoreSpoofedJpeg() // Retrigger if local buffer just became ready
+                    generateAndStoreSpoofedJpeg()
                 }
                 jpegBytes = CameraHook.latestVirtualJpeg
                 waitCount++
