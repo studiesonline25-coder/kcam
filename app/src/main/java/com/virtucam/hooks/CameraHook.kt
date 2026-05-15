@@ -1248,7 +1248,11 @@ object CameraHook {
                                 try {
                                     val timestamp = result.get(android.hardware.camera2.CaptureResult.SENSOR_TIMESTAMP) ?: 0L
                                     if (timestamp > 0) {
-                                        activeBridges.forEach { it.pushLatestFrameToWriter(timestamp) }
+                                        activeBridges.forEach { 
+                                            // Only push to JPEG bridges if we are actively capturing
+                                            if (it.targetFormat == 256 && CameraHook.captureCount == 0) return@forEach
+                                            it.pushLatestFrameToWriter(timestamp) 
+                                        }
                                     }
                                 } catch (_: Exception) {}
 
