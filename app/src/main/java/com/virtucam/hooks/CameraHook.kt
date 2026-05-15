@@ -1250,7 +1250,7 @@ object CameraHook {
                                     if (timestamp > 0) {
                                         activeBridges.forEach { 
                                             // Only push to JPEG bridges if we are actively capturing
-                                            if (it.targetFormat == 256 && CameraHook.captureCount == 0) return@forEach
+                                            if (it.outputFormat == 256 && CameraHook.captureCount == 0) return@forEach
                                             it.pushLatestFrameToWriter(timestamp) 
                                         }
                                     }
