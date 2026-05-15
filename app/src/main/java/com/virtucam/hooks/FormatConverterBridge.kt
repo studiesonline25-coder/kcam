@@ -540,21 +540,9 @@ class FormatConverterBridge(
             
             Log.e(TAG, "CAPT_LOG [3e]: Virtual JPEG acquired after ${waitCount * 20}ms. Size=${jpegBytes.size} bytes. Writing to Target Buffer Capacity=${jpegBuffer.capacity()}")
             
-            // [Surgical Scrub] Zero out the hardware buffer first to prevent "file corrupted" 
-            // errors caused by trailing sensor data at the end of the buffer.
-            try {
-                jpegBuffer.clear()
-                val zeroArray = ByteArray(Math.min(1024, jpegBuffer.capacity()))
-                var written = 0
-                while (written < jpegBuffer.capacity()) {
-                    val toWrite = Math.min(zeroArray.size, jpegBuffer.capacity() - written)
-                    jpegBuffer.put(zeroArray, 0, toWrite)
-                    written += toWrite
-                }
-                jpegBuffer.clear()
-            } catch (_: Exception) {
-                jpegBuffer.clear()
-            }
+            // [Lightweight Capture] Removed buffer zeroing to prevent native camera crashes.
+            // We now rely on the limit() and synchronous overwrite alone.
+            jpegBuffer.clear()
             
             val finalLimit: Int
             if (jpegBytes.size > jpegBuffer.capacity()) {
