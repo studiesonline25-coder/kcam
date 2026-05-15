@@ -514,3 +514,10 @@
 05-15 10:30:12.913 E/VirtuCam_Hook(26910): CAPT_LOG [4a]: Native Camera acquireNextImage (YUV 35) overriding directly. Image: 640x480
 05-15 10:30:12.952 E/VirtuCam_Bridge(26910): CAPT_LOG [3b]: pushLatestFrameToWriter starting Thread to dequeue and push frame. timestamp=126837837619000
 05-15 10:30:13.016 E/VirtuCam_Hook(26910): CAPT_LOG [4a]: Native Camera acquireNextImage (YUV 35) overriding directly. Image: 640x480
+05-15 10:30:14.348 E/VirtuCam_Hook(26910): CAPT_LOG [4b]: Native Camera acquireNextImage (JPEG 256) overriding directly. Image: 2560x1920
+05-15 10:30:14.348 E/VirtuCam_Bridge(26910): CAPT_LOG [3c]: overwriteImageWithLatestJpeg executing. TargetImage: 2560x1920
+05-15 10:30:14.348 E/VirtuCam_Bridge(26910): CAPT_LOG [3e]: Virtual JPEG acquired after 0ms. Size=72491 bytes. Writing to Target Buffer Capacity=1749417
+05-15 10:30:14.349 E/VirtuCam_Bridge(26910): CAPT_LOG [3b]: pushLatestFrameToWriter starting Thread to dequeue and push frame. timestamp=126839025866000
+05-15 10:30:14.354 E/VirtuCam_Bridge(26910): CAPT_LOG [3-ERR]: dequeueInputImage threw exception: dequeue buffer failed
+05-15 10:30:14.355 E/VirtuCam_Bridge(26910): CAPT_LOG [3-ERR]: dequeueInputImage returned NULL! Buffer queue likely full or not ready.
+

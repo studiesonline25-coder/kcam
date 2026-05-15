@@ -2954,6 +2954,8 @@ class VirtualRenderThread(
                         // Handle Photo/Capture Requests (Static Image)
                         synchronized(CameraHook) {
                             while (CameraHook.captureCount > 0) {
+                                val capture = CameraHook.captureQueue.poll()
+                                val timestamp = capture?.first ?: System.nanoTime()
                                 Log.e(TAG, "CAPT_LOG [2]: VirtualRenderThread draining captureQueue. Pushing to bridges. captureCount=${CameraHook.captureCount}")
                                 CameraHook.formatBridges.values.forEach { 
                                     // Only push YUV to bridges from here. JPEGs are handled by hooks.
