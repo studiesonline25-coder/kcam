@@ -2152,10 +2152,10 @@ object CameraHook {
                 if (bridge != null && bridge.hasImageWriter) {
                     // [STRICT ISOLATION] Never push JPEGs from shadow listeners. 
                     // Let the synchronous hook handle photos.
-                    if (bridge.outputFormat == 256) return@post
-                    
-                    dummySinkHandler?.post {
-                        bridge.pushLatestFrameToWriter(realTimestamp)
+                    if (bridge.outputFormat != 256) {
+                        dummySinkHandler?.post {
+                            bridge.pushLatestFrameToWriter(realTimestamp)
+                        }
                     }
                 }
             } catch (e: Exception) {
