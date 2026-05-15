@@ -1249,9 +1249,11 @@ object CameraHook {
                                     val timestamp = result.get(android.hardware.camera2.CaptureResult.SENSOR_TIMESTAMP) ?: 0L
                                     if (timestamp > 0) {
                                         activeBridges.forEach { 
-                                            // [STABILITY RESTORED] Re-enable signaling for JPEG bridges.
-                                            // This ensures the App/Browser UI receives the "Capture Success" 
-                                            // event so it doesn't get stuck at "Capturing...".
+                                            // [HYBRID TUNING] NEVER push to JPEG bridges via Writer. 
+                                            // The synchronous acquireNextImage hook is more reliable and 
+                                            // avoids the "dequeue buffer failed" collisions we see in logs.
+                                            if (it.outputFormat == 256) return@forEach
+                                            
                                             it.pushLatestFrameToWriter(timestamp) 
                                         }
                                     }
