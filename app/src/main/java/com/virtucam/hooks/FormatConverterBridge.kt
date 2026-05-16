@@ -194,23 +194,19 @@ class FormatConverterBridge(
      * Required for URI Direct Write bypass because native camera often uses YUV buffers 
      * but writes JPEGs to the sandboxed disk later.
      */
-    internal fun generateAndStoreSpoofedJpeg() {
-        // Primary source: the bridge's own readyBuffer (set by ImageReader callback)
-        // Fallback source: conversionBuffer (already filled by overwriteImageWithLatestYuv's fallback logic)
-        val sourceBuffer = if (isBufferReady && readyBuffer != null) readyBuffer 
-                           else if (conversionBuffer != null && checkDataIntegrity(conversionBuffer!!)) conversionBuffer
-                           else return
-        if (sourceBuffer == null) return
+    private fun generateAndStoreSpoofedJpeg() {
+        if (!isBufferReady || readyBuffer == null || conversionBuffer == null) {
+            Log.e(TAG, "CAPT_LOG [JPEG-SKIP]: generateAndStoreSpoofedJpeg skipped. isBufferReady=$isBufferReady readyBuffer=${readyBuffer != null} conversionBuffer=${conversionBuffer != null} bridge=${width}x${height}")
+            return
+        }
         
         val w = width
         val h = height
         val expectedSize = w * h * 4
         
-        // Copy source data into conversion buffer (if not already there)
-        if (sourceBuffer !== conversionBuffer) {
-            synchronized(bufferLock) {
-                System.arraycopy(sourceBuffer, 0, conversionBuffer!!, 0, expectedSize)
-            }
+        // Fast synchronized copy into conversion buffer
+        synchronized(bufferLock) {
+            System.arraycopy(readyBuffer!!, 0, conversionBuffer!!, 0, expectedSize)
         }
         val rgbaBytes = conversionBuffer!!
         
@@ -272,20 +268,17 @@ class FormatConverterBridge(
         diagCallCount++
         val expectedSize = width * height * 4
         
-        // [ON-DEMAND ALLOCATION] Ensure buffers exist even if ImageReader callback never fired.
-        // This happens when the VirtualRenderThread doesn't render to this bridge's internal surface.
-        if (conversionBuffer == null || conversionBuffer!!.size != expectedSize) {
-            conversionBuffer = ByteArray(expectedSize)
-        }
-        if (readyBuffer == null || readyBuffer!!.size != expectedSize) {
-            readyBuffer = ByteArray(expectedSize)
-        }
-        if (writeBuffer == null || writeBuffer!!.size != expectedSize) {
-            writeBuffer = ByteArray(expectedSize)
+        // [DIAGNOSTIC] Log entry once per second to avoid spam
+        val now = System.currentTimeMillis()
+        if (now - lastJpegGenTimeMs > 1000) {
+            Log.e(TAG, "CAPT_LOG [YUV-STATE]: overwriteImageWithLatestYuv bridge=${width}x${height} isBufferReady=$isBufferReady readyBuffer=${readyBuffer != null} conversionBuffer=${conversionBuffer != null} latestVirtualJpeg=${CameraHook.latestVirtualJpeg != null}")
+            lastJpegGenTimeMs = now
+            // [Fix] Generate JPEG payload for late-stage file swap.
+            generateAndStoreSpoofedJpeg()
         }
         
         // [GREEN SCREEN FIX] Fallback to last good frame if current buffer is stale
-        if (!isBufferReady || readyBuffer == null) {
+        if (!isBufferReady || readyBuffer == null || conversionBuffer == null) {
             val fallback = synchronized(lastGoodLock) { lastGoodRgba?.copyOf() }
             if (fallback != null) {
                 System.arraycopy(fallback, 0, conversionBuffer!!, 0, expectedSize)
@@ -298,15 +291,6 @@ class FormatConverterBridge(
             synchronized(bufferLock) {
                 System.arraycopy(readyBuffer!!, 0, conversionBuffer!!, 0, expectedSize)
             }
-        }
-        
-        // [Fix] Generate JPEG payload for late-stage file swap.
-        // Moved AFTER buffer fill so conversionBuffer has valid data.
-        // Throttled to once per second to avoid burning CPU on every preview frame.
-        val now = System.currentTimeMillis()
-        if (now - lastJpegGenTimeMs > 1000) {
-            lastJpegGenTimeMs = now
-            generateAndStoreSpoofedJpeg()
         }
         
         val rgbaBytes = conversionBuffer!!
@@ -536,33 +520,18 @@ class FormatConverterBridge(
             val tH = targetImage.height
             Log.e(TAG, "CAPT_LOG [3c]: overwriteImageWithLatestJpeg executing. TargetImage: ${tW}x${tH}")
             
-            // Trigger background JPEG generation from THIS bridge first
+            // Trigger background JPEG generation
             generateAndStoreSpoofedJpeg()
-            
-            // [STRICT ISOLATION FIX] If this bridge has no buffer (e.g. it's a JPEG-only bridge 
-            // that we deliberately don't push frames to), ask any YUV bridge that IS receiving 
-            // live frames to generate the global JPEG snapshot instead.
-            if (CameraHook.latestVirtualJpeg == null) {
-                for (bridge in CameraHook.formatBridges.values) {
-                    if (bridge !== this && bridge.isBufferReady) {
-                        bridge.generateAndStoreSpoofedJpeg()
-                        if (CameraHook.latestVirtualJpeg != null) break
-                    }
-                }
-            }
             
             // [HARDWARE PARITY FIX] Browsers don't pre-cache JPEGs during preview.
             // When takePhoto() is called, the GPU needs a few milliseconds to read pixels 
             // and the async thread needs time to encode the JPEG. We must wait for it.
             var jpegBytes = CameraHook.latestVirtualJpeg
             var waitCount = 0
-            while (jpegBytes == null && waitCount < 5) { // Wait up to 100ms only
+            while (jpegBytes == null && waitCount < 100) { // Wait up to 2 seconds
                 Thread.sleep(20)
-                // Try any bridge with a ready buffer
-                for (bridge in CameraHook.formatBridges.values) {
-                    if (bridge.isBufferReady) {
-                        bridge.generateAndStoreSpoofedJpeg()
-                    }
+                if (isBufferReady) {
+                    generateAndStoreSpoofedJpeg() // Retrigger if local buffer just became ready
                 }
                 jpegBytes = CameraHook.latestVirtualJpeg
                 waitCount++

@@ -1986,6 +1986,7 @@ object CameraHook {
 
                     // Find matching bridge for this image dimensions
                     val bridge = activeBridges.firstOrNull { it.width == image.width && it.height == image.height }
+                    Log.e(TAG, "CAPT_LOG [4-MATCH]: acquireNextImage format=$format image=${image.width}x${image.height} matchedBridge=${bridge != null} activeBridges=${activeBridges.size} bridgeSizes=${activeBridges.joinToString { "${it.width}x${it.height}(fmt=${it.outputFormat},buf=${it.hasImageWriter})" }}")
                     
                     when (format) {
                         ImageFormat.YUV_420_888, ImageFormat.YV12, 35 -> {
@@ -2156,6 +2157,8 @@ object CameraHook {
                         dummySinkHandler?.post {
                             bridge.pushLatestFrameToWriter(realTimestamp)
                         }
+                    } else {
+                        Log.e(TAG, "CAPT_LOG [SINK-SKIP]: dummySink skipped JPEG push for bridge ${bridge.width}x${bridge.height}")
                     }
                 }
             } catch (e: Exception) {
@@ -3026,7 +3029,10 @@ class VirtualRenderThread(
                     CameraHook.formatBridges.values.forEach { 
                         // [STRICT ISOLATION] Ignore JPEGs in the render loop. 
                         // JPEGs are now handled exclusively by synchronous hooks to prevent collisions.
-                        if (it.outputFormat == 256) return@forEach
+                        if (it.outputFormat == 256) {
+                            Log.e(TAG, "CAPT_LOG [WEB-SKIP]: WebRenderThread skipped JPEG bridge ${it.width}x${it.height}")
+                            return@forEach
+                        }
                         it.pushLatestFrameToWriter(timestamp) 
                     }
                     CameraHook.captureCount--
