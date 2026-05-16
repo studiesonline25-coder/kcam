@@ -26,11 +26,13 @@ const Header = ({ onOpenSettings }: { onOpenSettings: () => void }) => (
   </header>
 );
 
-const SettingsDialog = ({ isOpen, onClose, bufferCapture, onToggleBufferCapture }: { 
+const SettingsDialog = ({ isOpen, onClose, bufferCapture, onToggleBufferCapture, auditMode, onToggleAuditMode }: { 
   isOpen: boolean, 
   onClose: () => void,
   bufferCapture: boolean,
-  onToggleBufferCapture: (val: boolean) => void
+  onToggleBufferCapture: (val: boolean) => void,
+  auditMode: boolean,
+  onToggleAuditMode: (val: boolean) => void
 }) => (
   <AnimatePresence>
     {isOpen && (
@@ -77,6 +79,27 @@ const SettingsDialog = ({ isOpen, onClose, bufferCapture, onToggleBufferCapture 
               >
                 <motion.div 
                   animate={{ x: bufferCapture ? 24 : 4 }}
+                  className="absolute top-1 left-0 w-3.5 h-3.5 bg-white rounded-full shadow-sm"
+                />
+              </button>
+            </div>
+
+            <div className="bg-white/5 rounded-2xl p-4 border border-white/5 flex items-center justify-between transition-all hover:bg-white/[0.07]">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <ShieldAlert className="w-3.5 h-3.5 text-amber-500" />
+                  <span className="text-sm font-bold text-gray-200">Audit Mode</span>
+                </div>
+                <p className="text-[10px] text-gray-500 font-medium max-w-[180px]">
+                  Disable spoofing and act as a pure observer for hardware telemetry.
+                </p>
+              </div>
+              <button 
+                onClick={() => onToggleAuditMode(!auditMode)}
+                className={`relative w-11 h-5.5 rounded-full transition-all duration-300 ${auditMode ? 'bg-amber-500' : 'bg-gray-700'}`}
+              >
+                <motion.div 
+                  animate={{ x: auditMode ? 24 : 4 }}
                   className="absolute top-1 left-0 w-3.5 h-3.5 bg-white rounded-full shadow-sm"
                 />
               </button>
@@ -707,6 +730,7 @@ export default function App() {
   const [isSynced, setIsSynced] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [bufferCapture, setBufferCapture] = useState(false);
+  const [auditMode, setAuditMode] = useState(false);
 
   // Synchronization with Android state
   useEffect(() => {
@@ -717,6 +741,7 @@ export default function App() {
         window.dispatchEvent(event);
         
         if (data.bufferCapture !== undefined) setBufferCapture(data.bufferCapture);
+        if (data.isAuditMode !== undefined) setAuditMode(data.isAuditMode);
         
         setIsSynced(true);
       } catch (e) {
@@ -745,6 +770,11 @@ export default function App() {
     (window as any).Android?.setBufferCapture(val);
   };
 
+  const toggleAuditMode = (val: boolean) => {
+    setAuditMode(val);
+    (window as any).Android?.setAuditMode(val);
+  };
+
   return (
     <div className="min-h-screen bg-bg-dark text-white max-w-md mx-auto relative pb-28 shadow-2xl overflow-x-hidden selection:bg-emerald-neon/30">
       <Header onOpenSettings={() => setIsSettingsOpen(true)} />
@@ -764,6 +794,8 @@ export default function App() {
         onClose={() => setIsSettingsOpen(false)}
         bufferCapture={bufferCapture}
         onToggleBufferCapture={toggleBufferCapture}
+        auditMode={auditMode}
+        onToggleAuditMode={toggleAuditMode}
       />
     </div>
   );

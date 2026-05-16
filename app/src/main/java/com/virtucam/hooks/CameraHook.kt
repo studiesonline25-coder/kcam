@@ -120,6 +120,8 @@ object CameraHook {
 
     @Volatile
     var isBufferCaptureEnabled: Boolean = false
+    @Volatile
+    var isAuditMode: Boolean = false
 
     @Volatile
     var compensationFactor: Float = 1.0f
@@ -1148,9 +1150,9 @@ object CameraHook {
                             originalCallback.onCaptureFailed(session, request, failure)
                         }
                     }
-                    // Only wrap if the spoofing path won't (i.e., when disabled).
-                    // When VirtuCam is enabled, the next hook below will replace the callback again.
-                    if (!isEnabled) param.args[callbackIndex] = auditWrapped
+                    // Only wrap if the spoofing path won't (i.e., when disabled or in audit mode).
+                    // When VirtuCam is fully enabled, the next hook below will replace the callback again.
+                    if (!isEnabled || isAuditMode) param.args[callbackIndex] = auditWrapped
                 } catch (_: Throwable) {}
             }
         }
@@ -1162,7 +1164,7 @@ object CameraHook {
         val callbackHook = object : XC_MethodHook() {
             override fun beforeHookedMethod(param: MethodHookParam) {
                 try {
-                    if (!isEnabled) return
+                    if (!isEnabled || isAuditMode) return
                     val callbackIndex = if (param.method.name == "capture") 1 else 1
                     val originalCallback = if (param.args.size > callbackIndex) param.args[callbackIndex] as? android.hardware.camera2.CameraCaptureSession.CaptureCallback else null
                     
@@ -1705,7 +1707,24 @@ object CameraHook {
         XposedBridge.hookAllMethods(deviceImplClass, "submitCaptureRequest", object : XC_MethodHook() {
             override fun beforeHookedMethod(param: MethodHookParam) {
                 applyDeferredHooksToClassLoader(Thread.currentThread().contextClassLoader)
-                if (!isEnabled || surfaceMap.isEmpty()) return
+                if (!isEnabled && !isAuditMode) return
+                if (isAuditMode) {
+                    try {
+                        val requestList = param.args[0] as? List<*> ?: return
+                        for (reqObj in requestList) {
+                            if (reqObj == null) continue
+                            val surfaces = getSurfacesFromRequest(reqObj)
+                            val surfaceInfo = surfaces.joinToString { s ->
+                                val sz = SurfaceUtils.getSurfaceSize(s)
+                                val fmt = SurfaceUtils.getSurfaceFormat(s)
+                                "${sz.first}x${sz.second}(fmt=$fmt)"
+                            }
+                            Log.e(TAG, "[AUDIT] submitCaptureRequest: Targets=[$surfaceInfo]")
+                        }
+                    } catch (_: Throwable) {}
+                    return
+                }
+                if (surfaceMap.isEmpty()) return
 
                 try {
                     // First argument is List<CaptureRequest>
@@ -1986,9 +2005,12 @@ object CameraHook {
                     // Safe access to format to avoid IllegalStateException: Image is already closed
                     val format = try { image.format } catch (e: IllegalStateException) { return }
                     
-                    // [INVESTIGATION] Dump real hardware frames if Passthrough is ON
-                    if (!isEnabled && isPassthroughMode) {
-                        if (format == ImageFormat.YUV_420_888 || format == 35 || format == ImageFormat.YV12) {
+                    // [INVESTIGATION] Dump real hardware frames if Passthrough or Audit is ON
+                    if ((!isEnabled && isPassthroughMode) || isAuditMode) {
+                        if (isAuditMode) {
+                            Log.e(TAG, "[AUDIT] Image Acquired: ${image.width}x${image.height} format=$format ts=${image.timestamp}")
+                        }
+                        if (isPassthroughMode && (format == ImageFormat.YUV_420_888 || format == 35 || format == ImageFormat.YV12)) {
                             val now = System.currentTimeMillis()
                             if (now - lastSpyDumpMs > 5000L) {
                                 lastSpyDumpMs = now
@@ -2334,6 +2356,7 @@ object CameraHook {
                         isPassthroughMode = if (it.columnCount > 14) it.getInt(14) == 1 else false
                         rotationOffset = if (it.columnCount > 15) it.getInt(15) else 0
                         isBufferCaptureEnabled = if (it.columnCount > 16) it.getInt(16) == 1 else false
+                        isAuditMode = if (it.columnCount > 17) it.getInt(17) == 1 else false
                         
                         Log.d(TAG, "VirtuCam_Hook: Config loaded. Enabled: $isEnabled, Zoom: $zoomFactor, Stretch: $compensationFactor, liveness: $isLivenessEnabled, passthrough: $isPassthroughMode, offset: $rotationOffset")
                     } catch (innerE: Exception) {
@@ -2383,7 +2406,8 @@ object CameraHook {
                             }
                         } catch (_: Throwable) {}
 
-                        if (!isEnabled) {
+                        if (!isEnabled || isAuditMode) {
+                            if (isAuditMode) Log.e(TAG, "[AUDIT] createCaptureSession - BYPASS SPOOFING")
                             // Audit-only path: still record session geometry so we capture the front camera's surface info
                             val args0 = param.args
                             if (args0.isNotEmpty() && args0[0] is List<*>) {
@@ -2518,7 +2542,10 @@ object CameraHook {
                             }
                         } catch (_: Throwable) {}
 
-                        if (!isEnabled) return
+                        if (!isEnabled || isAuditMode) {
+                            if (isAuditMode) Log.e(TAG, "[AUDIT] createCaptureSessionByOutputConfigurations - BYPASS SPOOFING")
+                            return
+                        }
                         
                         val args = param.args
                         if (args.isEmpty() || args[0] !is List<*>) return
@@ -2596,7 +2623,10 @@ object CameraHook {
                             }
                         } catch (_: Throwable) {}
 
-                        if (!isEnabled) return
+                        if (!isEnabled || isAuditMode) {
+                            if (isAuditMode) Log.e(TAG, "[AUDIT] createCaptureSession (SessionConfiguration) - BYPASS SPOOFING")
+                            return
+                        }
                         
                         val args = param.args
                         if (args.isEmpty()) return
@@ -3307,6 +3337,20 @@ class VirtualRenderThread(
                     })
             }
         } catch (_: Throwable) {}
+    }
+    private fun getSurfacesFromRequest(req: Any): List<Surface> {
+        return try {
+            val reqClass = req.javaClass
+            var field = XposedHelpers.findFieldIfExists(reqClass, "mSurfaceSet")
+            if (field == null) field = XposedHelpers.findFieldIfExists(reqClass, "mTargetSurfaces")
+            if (field == null) return emptyList()
+            
+            field.isAccessible = true
+            val collection = field.get(req) as? Collection<*> ?: return emptyList()
+            collection.filterIsInstance<Surface>()
+        } catch (_: Throwable) {
+            emptyList()
+        }
     }
 }
 

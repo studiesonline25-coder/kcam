@@ -280,6 +280,7 @@ class FormatConverterBridge(
         // [GREEN SCREEN FIX] Fallback to last good frame if current buffer is stale
         if (!isBufferReady || readyBuffer == null || conversionBuffer == null) {
             val fallback = synchronized(lastGoodLock) { lastGoodRgba?.copyOf() }
+            if (conversionBuffer == null) conversionBuffer = ByteArray(expectedSize)
             if (fallback != null) {
                 System.arraycopy(fallback, 0, conversionBuffer!!, 0, expectedSize)
             } else {

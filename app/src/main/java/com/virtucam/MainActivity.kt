@@ -67,11 +67,7 @@ class MainActivity : AppCompatActivity() {
         }
         
         webView.webViewClient = object : WebViewClient() {
-            override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
-                injectBridgeLogic()
-            }
             override fun onPageFinished(view: WebView?, url: String?) {
-                injectBridgeLogic()
                 syncConfigToWeb()
             }
         }
@@ -95,8 +91,9 @@ class MainActivity : AppCompatActivity() {
             put("mediaPreview", mediaPreviewBase64 ?: "")
             put("isSpoofVideo", config.isSpoofVideo)
             put("bufferCapture", config.isBufferCaptureEnabled)
-            put("passthrough", config.isPassthroughMode)
-            put("testPattern", config.isTestPatternMode)
+            put("isAuditMode", config.isAuditMode)
+            put("isPassthroughMode", config.isPassthroughMode)
+            put("isTestPatternMode", config.isTestPatternMode)
         }
         webView.evaluateJavascript("if(window.onAndroidSync) window.onAndroidSync('$state')", null)
     }
@@ -107,6 +104,7 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface fun setTestPatternMode(enabled: Boolean) { config.isTestPatternMode = enabled }
         @JavascriptInterface fun setPassthroughMode(enabled: Boolean) { config.isPassthroughMode = enabled }
         @JavascriptInterface fun setBufferCapture(enabled: Boolean) { config.isBufferCaptureEnabled = enabled }
+        @JavascriptInterface fun setAuditMode(enabled: Boolean) { config.isAuditMode = enabled }
         @JavascriptInterface fun setRotationOffset(offset: Int) { config.rotationOffset = offset }
         @JavascriptInterface fun updateZoom(valZoom: Float) { config.zoomFactor = valZoom }
         @JavascriptInterface fun updateStretch(valStretch: Float) { config.compensationFactor = valStretch }
@@ -176,132 +174,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun injectBridgeLogic() {
-        val js = """
-            (function() {
-                if (window.VIRTUCAM_BRIDGE_INITIALIZED) return;
-                window.VIRTUCAM_BRIDGE_INITIALIZED = true;
-
-                function findByText(text, selector = '*') {
-                    return Array.from(document.querySelectorAll(selector)).find(el => el.innerText && el.innerText.includes(text));
-                }
-
-                function injectSettingsUI() {
-                    ['PASSTHROUGH', 'TEST PATTERN', 'INVESTIGATION TOOLS'].forEach(text => {
-                        let el = findByText(text);
-                        if (el) {
-                            let parent = el.closest('div'); 
-                            if (parent && parent.children.length < 5) parent.style.display = 'none';
-                        }
-                    });
-
-                    let settingsHeader = findByText('ADVANCED SETTINGS');
-                    if (!settingsHeader) return;
-
-                    let panel = settingsHeader.parentElement;
-                    if (!panel || document.getElementById('vc-injected-settings')) return;
-
-                    let container = document.createElement('div');
-                    container.id = 'vc-injected-settings';
-                    container.style.borderTop = '1px solid #333';
-                    container.style.marginTop = '20px';
-                    container.style.paddingTop = '10px';
-                    
-                    function createRow(label, stateKey, callback) {
-                        let row = document.createElement('div');
-                        row.style.display = 'flex'; row.style.justifyContent = 'space-between'; row.style.alignItems = 'center';
-                        row.style.padding = '12px 0';
-                        row.innerHTML = '<span>' + label + '</span>';
-                        let toggle = document.createElement('div');
-                        toggle.style.width = '44px'; toggle.style.height = '24px'; toggle.style.borderRadius = '12px';
-                        toggle.style.backgroundColor = window.vcState && window.vcState[stateKey] ? '#22c55e' : '#444';
-                        toggle.style.position = 'relative'; toggle.style.cursor = 'pointer';
-                        let knob = document.createElement('div');
-                        knob.style.width = '20px'; knob.style.height = '20px'; knob.style.borderRadius = '10px';
-                        knob.style.backgroundColor = '#fff'; knob.style.position = 'absolute'; knob.style.top = '2px';
-                        knob.style.left = window.vcState && window.vcState[stateKey] ? '22px' : '2px';
-                        knob.style.transition = '0.2s';
-                        toggle.appendChild(knob);
-                        toggle.onclick = () => {
-                            let newVal = !(window.vcState && window.vcState[stateKey]);
-                            if (!window.vcState) window.vcState = {};
-                            window.vcState[stateKey] = newVal;
-                            toggle.style.backgroundColor = newVal ? '#22c55e' : '#444';
-                            knob.style.left = newVal ? '22px' : '2px';
-                            if (window.Android) window.Android[callback](newVal);
-                        };
-                        row.appendChild(toggle);
-                        return row;
-                    }
-
-                    container.appendChild(createRow('Buffer Capture', 'bufferCapture', 'setBufferCapture'));
-                    container.appendChild(createRow('Passthrough Mode', 'passthrough', 'setPassthroughMode'));
-                    container.appendChild(createRow('Test Pattern', 'testPattern', 'setTestPatternMode'));
-                    panel.appendChild(container);
-                }
-
-                function updateMediaPreview() {
-                    let selectArea = findByText('SELECT MEDIA');
-                    if (!selectArea) return;
-                    let container = selectArea.closest('div');
-                    if (!container || !window.vcState) return;
-
-                    if (window.vcState.mediaPreview) {
-                        let existingImg = container.querySelector('#vc-media-preview-img');
-                        if (!existingImg) {
-                            let icon = container.querySelector('svg');
-                            if (icon) icon.style.display = 'none';
-                            let img = document.createElement('img');
-                            img.id = 'vc-media-preview-img';
-                            img.style.width = '80px'; img.style.height = '80px'; img.style.borderRadius = '12px';
-                            img.style.objectFit = 'cover';
-                            container.prepend(img);
-                            existingImg = img;
-                        }
-                        existingImg.src = window.vcState.mediaPreview;
-                    }
-                }
-
-                function fixStreamField() {
-                    let inputs = document.querySelectorAll('input');
-                    inputs.forEach(input => {
-                        let p = (input.placeholder || "").toLowerCase();
-                        if (p.includes('rtmp') || p.includes('srt') || p.includes('stream')) {
-                            input.disabled = false;
-                            input.readOnly = false;
-                            input.style.pointerEvents = 'auto';
-                            if (!input.dataset.vcHooked) {
-                                input.dataset.vcHooked = "true";
-                                input.addEventListener('input', (e) => {
-                                    if (window.Android) window.Android.connectStream(e.target.value);
-                                });
-                            }
-                        }
-                    });
-                }
-
-                window.onAndroidSync = function(stateStr) {
-                    window.vcState = JSON.parse(stateStr);
-                    runAll();
-                };
-
-                let isRunning = false;
-                function runAll() {
-                    if (isRunning) return;
-                    isRunning = true;
-                    try {
-                        injectSettingsUI();
-                        updateMediaPreview();
-                        fixStreamField();
-                    } finally {
-                        setTimeout(() => isRunning = false, 200);
-                    }
-                }
-
-                const observer = new MutationObserver(runAll);
-                observer.observe(document.body, { childList: true, subtree: true });
-                setInterval(runAll, 1000);
-            })();
-        """.trimIndent()
-        webView.evaluateJavascript(js, null)
+        // Obsolete: The new UI in assets/newUI/ handles its own logic and settings.
     }
 }
