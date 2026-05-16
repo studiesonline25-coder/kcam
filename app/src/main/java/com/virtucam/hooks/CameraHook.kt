@@ -1728,8 +1728,15 @@ object CameraHook {
                             val toRemove = mutableListOf<Surface>()
                             val toAdd = mutableListOf<Surface>()
                             
+                            var isCaptureRequest = false
+                            
                             for (surfaceObj in surfaceCollection) {
                                 val s = surfaceObj as? Surface ?: continue
+                                val format = surfaceFormats[s] ?: -1
+                                if (captureSurfaces.contains(s) || format == 256) {
+                                    isCaptureRequest = true
+                                }
+                                
                                 val dummySurface = surfaceMap[s]
                                 if (dummySurface != null && dummySurface != s) {
                                     toRemove.add(s)
@@ -1744,6 +1751,14 @@ object CameraHook {
                                 mutSet.removeAll(toRemove)
                                 mutSet.addAll(toAdd)
                                 Log.d(TAG, "VirtuCam_Hook: submitCaptureRequest CHOKEPOINT ACTIVATED -> Swapped ${toRemove.size} surfaces natively in immutable CaptureRequest!")
+                            }
+                            
+                            if (isCaptureRequest) {
+                                synchronized(CameraHook) {
+                                    captureCount++
+                                    captureQueue.offer(Pair(System.nanoTime(), captureCount))
+                                    Log.e(TAG, "CAPT_LOG [1-SUBMIT]: Capture request targeted capture surface! captureCount=$captureCount")
+                                }
                             }
                         }
 

@@ -638,16 +638,16 @@ class FormatConverterBridge(
             return
         }
         
-        Log.e(TAG, "CAPT_LOG [3b]: pushLatestFrameToWriter starting Thread to dequeue and push frame. timestamp=$timestamp")
-        Thread {
+        Log.e(TAG, "CAPT_LOG [3b]: pushLatestFrameToWriter posting to pushHandler. timestamp=$timestamp")
+        
+        val task = Runnable {
             try {
-
                 val outImage = try { writer.dequeueInputImage() } catch (e: Exception) { 
                     Log.e(TAG, "CAPT_LOG [3-ERR]: dequeueInputImage threw exception: ${e.message}")
                     null 
                 } ?: run {
                     Log.e(TAG, "CAPT_LOG [3-ERR]: dequeueInputImage returned NULL! Buffer queue likely full or not ready.")
-                    return@Thread
+                    return@Runnable
                 }
                 
                 var success = false
@@ -668,8 +668,17 @@ class FormatConverterBridge(
                         try { outImage.close() } catch (e: Exception) {}
                     }
                 }
-            } catch (e: Exception) {}
-        }.start()
+            } catch (e: Exception) {
+                Log.e(TAG, "CAPT_LOG [3-ERR]: pushLatestFrameToWriter task failed", e)
+            }
+        }
+        
+        if (pushHandler != null) {
+            pushHandler!!.post(task)
+        } else {
+            // Fallback to sequential execution if thread died
+            task.run()
+        }
     }
 
     fun release() {
