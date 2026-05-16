@@ -272,16 +272,20 @@ class FormatConverterBridge(
         diagCallCount++
         val expectedSize = width * height * 4
         
-        // [Fix] Generate JPEG payload for late-stage file swap.
-        // Throttled to once per second to avoid burning CPU on every preview frame.
-        val now = System.currentTimeMillis()
-        if (now - lastJpegGenTimeMs > 1000) {
-            lastJpegGenTimeMs = now
-            generateAndStoreSpoofedJpeg()
+        // [ON-DEMAND ALLOCATION] Ensure buffers exist even if ImageReader callback never fired.
+        // This happens when the VirtualRenderThread doesn't render to this bridge's internal surface.
+        if (conversionBuffer == null || conversionBuffer!!.size != expectedSize) {
+            conversionBuffer = ByteArray(expectedSize)
+        }
+        if (readyBuffer == null || readyBuffer!!.size != expectedSize) {
+            readyBuffer = ByteArray(expectedSize)
+        }
+        if (writeBuffer == null || writeBuffer!!.size != expectedSize) {
+            writeBuffer = ByteArray(expectedSize)
         }
         
         // [GREEN SCREEN FIX] Fallback to last good frame if current buffer is stale
-        if (!isBufferReady || readyBuffer == null || conversionBuffer == null) {
+        if (!isBufferReady || readyBuffer == null) {
             val fallback = synchronized(lastGoodLock) { lastGoodRgba?.copyOf() }
             if (fallback != null) {
                 System.arraycopy(fallback, 0, conversionBuffer!!, 0, expectedSize)
@@ -294,6 +298,15 @@ class FormatConverterBridge(
             synchronized(bufferLock) {
                 System.arraycopy(readyBuffer!!, 0, conversionBuffer!!, 0, expectedSize)
             }
+        }
+        
+        // [Fix] Generate JPEG payload for late-stage file swap.
+        // Moved AFTER buffer fill so conversionBuffer has valid data.
+        // Throttled to once per second to avoid burning CPU on every preview frame.
+        val now = System.currentTimeMillis()
+        if (now - lastJpegGenTimeMs > 1000) {
+            lastJpegGenTimeMs = now
+            generateAndStoreSpoofedJpeg()
         }
         
         val rgbaBytes = conversionBuffer!!
