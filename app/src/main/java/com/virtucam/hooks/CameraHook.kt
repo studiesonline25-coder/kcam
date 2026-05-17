@@ -1166,7 +1166,19 @@ object CameraHook {
                     val callbackIndex = if (param.method.name == "capture") 1 else 1
                     val originalCallback = if (param.args.size > callbackIndex) param.args[callbackIndex] as? android.hardware.camera2.CameraCaptureSession.CaptureCallback else null
                     
-                    if (originalCallback == null) return
+                    // [BROWSER CAPTURE FIX] Even with null callback, increment captureCount for capture() calls.
+                    // Browsers often pass null CaptureCallback and rely on ImageReader.onImageAvailable instead.
+                    // Without this, captureCount stays 0 and the JPEG bridge never gets rendered to.
+                    if (originalCallback == null) {
+                        if (param.method.name == "capture" || param.method.name == "captureBurst") {
+                            synchronized(CameraHook) {
+                                captureCount++
+                                captureQueue.offer(Pair(System.nanoTime(), captureCount))
+                                Log.e(TAG, "CAPT_LOG [1]: Capture Event Detected (null callback). Method=${param.method.name}, captureCount=${captureCount}")
+                            }
+                        }
+                        return
+                    }
                     
                     // Wrap the original callback to intercept onCaptureCompleted
                     val wrappedCallback = object : android.hardware.camera2.CameraCaptureSession.CaptureCallback() {
@@ -1277,6 +1289,73 @@ object CameraHook {
         XposedBridge.hookAllMethods(sessionClass, "capture", callbackHook)
         XposedBridge.hookAllMethods(sessionClass, "captureBurst", callbackHook)
         XposedBridge.hookAllMethods(sessionClass, "setRepeatingRequest", callbackHook)
+
+        // [BROWSER CAPTURE FIX] Hook API 28+ Executor-based capture methods.
+        // Chromium and modern apps may use captureSingleRequest(CaptureRequest, Executor, CaptureCallback)
+        // instead of capture(CaptureRequest, CaptureCallback, Handler).
+        // The callback is at index 2 (not 1) in these methods.
+        val executorCallbackHook = object : XC_MethodHook() {
+            override fun beforeHookedMethod(param: MethodHookParam) {
+                try {
+                    if (!isEnabled) return
+                    // captureSingleRequest(CaptureRequest, Executor, CaptureCallback) → callback at index 2
+                    val callbackIndex = 2
+                    val originalCallback = if (param.args.size > callbackIndex) param.args[callbackIndex] as? android.hardware.camera2.CameraCaptureSession.CaptureCallback else null
+                    
+                    if (originalCallback == null) return
+                    
+                    val wrappedCallback = object : android.hardware.camera2.CameraCaptureSession.CaptureCallback() {
+                        override fun onCaptureStarted(session: android.hardware.camera2.CameraCaptureSession, request: android.hardware.camera2.CaptureRequest, timestamp: Long, frameNumber: Long) {
+                            originalCallback.onCaptureStarted(session, request, timestamp, frameNumber)
+                        }
+                        
+                        override fun onCaptureCompleted(session: android.hardware.camera2.CameraCaptureSession, request: android.hardware.camera2.CaptureRequest, result: android.hardware.camera2.TotalCaptureResult) {
+                            try {
+                                val sensorTimestamp = result.get(android.hardware.camera2.CaptureResult.SENSOR_TIMESTAMP) ?: System.nanoTime()
+                                metadataCourierMap[sensorTimestamp] = TransformationState(compensationFactor, rotationOffset, isMirrored)
+                                
+                                if (metadataCourierMap.size > 120) {
+                                    val cutoff = sensorTimestamp - 2_000_000_000L
+                                    metadataCourierMap.keys.removeIf { it < cutoff }
+                                }
+
+                                // captureSingleRequest is always a single capture (not repeating)
+                                if (param.method.name == "captureSingleRequest") {
+                                    synchronized(CameraHook) {
+                                        captureCount++
+                                        captureQueue.offer(Pair(sensorTimestamp, captureCount))
+                                        Log.e(TAG, "CAPT_LOG [1]: Capture Event Detected via captureSingleRequest! TS=$sensorTimestamp, captureCount=${captureCount}")
+                                    }
+                                }
+
+                                // Bridge push (same as callbackHook but for executor-based methods)
+                                try {
+                                    val timestamp = result.get(android.hardware.camera2.CaptureResult.SENSOR_TIMESTAMP) ?: 0L
+                                    if (timestamp > 0) {
+                                        activeBridges.forEach { 
+                                            if (it.outputFormat == 256) return@forEach
+                                            it.pushLatestFrameToWriter(timestamp) 
+                                        }
+                                    }
+                                } catch (_: Exception) {}
+
+                            } catch (e: Exception) {}
+                            originalCallback.onCaptureCompleted(session, request, result)
+                        }
+                        
+                        override fun onCaptureFailed(session: android.hardware.camera2.CameraCaptureSession, request: android.hardware.camera2.CaptureRequest, failure: android.hardware.camera2.CaptureFailure) {
+                            originalCallback.onCaptureFailed(session, request, failure)
+                        }
+                    }
+                    param.args[callbackIndex] = wrappedCallback
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error wrapping CaptureCallback (Executor variant)", e)
+                }
+            }
+        }
+        XposedBridge.hookAllMethods(sessionClass, "captureSingleRequest", executorCallbackHook)
+        XposedBridge.hookAllMethods(sessionClass, "captureBurstRequests", executorCallbackHook)
+        XposedBridge.hookAllMethods(sessionClass, "setSingleRepeatingRequest", executorCallbackHook)
     }
 
     /**
@@ -1971,6 +2050,16 @@ object CameraHook {
                     // Safe access to format to avoid IllegalStateException: Image is already closed
                     val format = try { image.format } catch (e: IllegalStateException) { return }
                     
+                    // [BROWSER CAPTURE FIX] Skip overwrite for our own dummy sink ImageReaders.
+                    // The dummy sink exists only to drain the HAL pipeline — its Images are immediately
+                    // discarded. Overwriting them is wasteful and, worse, the JPEG overwrite blocks
+                    // the dummySinkHandler thread for up to 2 seconds (polling for latestVirtualJpeg),
+                    // which stalls ALL dummy sinks including YUV preview draining.
+                    val callerReader = param.thisObject as? ImageReader
+                    if (callerReader != null && dummyImageReaders.contains(callerReader)) {
+                        return
+                    }
+                    
                     // [INVESTIGATION] Dump real hardware frames if Passthrough is ON
                     if (!isEnabled && isPassthroughMode) {
                         if (format == ImageFormat.YUV_420_888 || format == 35 || format == ImageFormat.YV12) {
@@ -2143,6 +2232,22 @@ object CameraHook {
         
         reader.setOnImageAvailableListener({ ir ->
             try {
+                // [BROWSER CAPTURE FIX] For JPEG dummy sinks, increment captureCount BEFORE
+                // acquireNextImage. This is critical because:
+                // 1) The acquireNextImage hook will block polling for latestVirtualJpeg
+                // 2) latestVirtualJpeg requires the render loop to render to the JPEG EGL surface
+                // 3) The render loop only renders to JPEG surfaces when captureCount > 0
+                // 4) Browsers may use captureSingleRequest() (not hooked) or pass null callbacks,
+                //    so the CaptureCallback-based captureCount++ may never fire.
+                // By incrementing here, the render loop can populate the bridge WHILE the hook polls.
+                if (readerFormat == 256 && bridge != null) {
+                    synchronized(CameraHook) {
+                        CameraHook.captureCount++
+                        CameraHook.captureQueue.offer(Pair(System.nanoTime(), CameraHook.captureCount))
+                        Log.e(TAG, "CAPT_LOG [0]: JPEG Dummy Sink fired! captureCount incremented to ${CameraHook.captureCount} (browser-safe trigger)")
+                    }
+                }
+
                 // Instantly consume and discard the image to keep the pipeline flowing
                 val realImage = ir.acquireNextImage()
                 val realTimestamp = realImage?.timestamp ?: 0L
