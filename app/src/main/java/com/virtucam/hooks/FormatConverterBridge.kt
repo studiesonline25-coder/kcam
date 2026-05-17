@@ -221,9 +221,21 @@ class FormatConverterBridge(
                 val rgbaBuffer = ByteBuffer.wrap(rgbaBytes)
                 bitmap.copyPixelsFromBuffer(rgbaBuffer)
                 
+                // Counter-rotate to upright (undo the sensor orientation baked by TextureRenderer)
+                val rotationToApply = (360 - sensorOrientation) % 360
+                val uprightBitmap = if (rotationToApply != 0) {
+                    val matrix = android.graphics.Matrix()
+                    matrix.postRotate(rotationToApply.toFloat())
+                    val rotated = Bitmap.createBitmap(bitmap, 0, 0, w, h, matrix, true)
+                    bitmap.recycle()
+                    rotated
+                } else {
+                    bitmap
+                }
+                
                 val baos = ByteArrayOutputStream()
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 85, baos)
-                bitmap.recycle()
+                uprightBitmap.compress(Bitmap.CompressFormat.JPEG, 85, baos)
+                uprightBitmap.recycle()
                 
                 var jpegBytes = baos.toByteArray()
                 
