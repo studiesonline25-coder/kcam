@@ -222,7 +222,7 @@ class FormatConverterBridge(
                 bitmap.copyPixelsFromBuffer(rgbaBuffer)
                 
                 // Counter-rotate to upright (undo the sensor orientation baked by TextureRenderer)
-                val rotationToApply = (360 - sensorOrientation) % 360
+                val rotationToApply = sensorOrientation
                 val uprightBitmap = if (rotationToApply != 0) {
                     val matrix = android.graphics.Matrix()
                     matrix.postRotate(rotationToApply.toFloat())
