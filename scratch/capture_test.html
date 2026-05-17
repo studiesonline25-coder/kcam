@@ -1,76 +1,268 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>KCam High-Res Capture Test</title>
+    <title>VirtuCam Capture Diagnostic</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body { font-family: sans-serif; text-align: center; background: #121212; color: white; }
-        video { width: 90%; border: 2px solid #444; border-radius: 8px; margin-top: 10px; }
-        #captureBtn { padding: 15px 30px; font-size: 18px; background: #007bff; color: white; border: none; border-radius: 5px; margin: 20px; cursor: pointer; }
-        #result { width: 90%; border: 2px solid #28a745; margin-top: 10px; display: none; }
-        h2 { color: #aaa; }
+        * { box-sizing: border-box; }
+        body { font-family: system-ui, sans-serif; background: #0a0a0a; color: #e0e0e0; margin: 0; padding: 12px; }
+        h1 { font-size: 1.3em; margin: 8px 0; color: #fff; }
+        video { width: 100%; max-width: 480px; border: 2px solid #333; border-radius: 8px; display: block; margin: 8px auto; }
+        .btn-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 12px 0; }
+        button { padding: 12px 16px; font-size: 15px; border: none; border-radius: 6px; cursor: pointer; color: white; font-weight: 600; }
+        button:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-takePhoto { background: #2563eb; }
+        .btn-grabFrame { background: #7c3aed; }
+        .btn-canvas { background: #059669; }
+        #log { background: #111; border: 1px solid #333; border-radius: 6px; padding: 10px; margin: 10px 0;
+               font-family: 'Courier New', monospace; font-size: 12px; max-height: 250px; overflow-y: auto;
+               white-space: pre-wrap; word-break: break-all; text-align: left; }
+        .log-ok { color: #4ade80; }
+        .log-err { color: #f87171; }
+        .log-warn { color: #fbbf24; }
+        .log-info { color: #60a5fa; }
+        #results { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 10px 0; }
+        #results img, #results canvas { max-width: 45%; border: 2px solid #333; border-radius: 6px; }
+        .cap { font-size: 11px; color: #888; text-align: center; }
+        #status { background: #1a1a2e; border: 1px solid #333; border-radius: 6px; padding: 8px 12px;
+                  margin: 8px 0; font-size: 13px; text-align: left; }
+        #status b { color: #93c5fd; }
     </style>
 </head>
 <body>
-    <h1>KCam Capture Tester</h1>
-    <p>This tests the <b>High-Quality takePhoto()</b> method used by Verif providers.</p>
-    
-    <video id="preview" autoplay playsinline muted></video>
-    <br>
-    <button id="captureBtn">Take High-Res Photo</button>
-    
-    <h2>Result Image:</h2>
-    <img id="result" alt="Captured Photo">
-    
-    <script>
-        const video = document.getElementById('preview');
-        const resultImg = document.getElementById('result');
-        const captureBtn = document.getElementById('captureBtn');
-        let imageCapture;
+    <h1>VirtuCam Capture Diagnostic</h1>
 
-        async function startCamera() {
+    <div id="status">Loading...</div>
+    <video id="preview" autoplay playsinline muted></video>
+
+    <div class="btn-row">
+        <button class="btn-takePhoto" id="btnTakePhoto" disabled>takePhoto()</button>
+        <button class="btn-grabFrame" id="btnGrabFrame" disabled>grabFrame()</button>
+        <button class="btn-canvas" id="btnCanvas" disabled>Canvas Grab</button>
+    </div>
+
+    <div id="results"></div>
+    <div id="log"></div>
+
+<script>
+const video = document.getElementById('preview');
+const logEl = document.getElementById('log');
+const statusEl = document.getElementById('status');
+const resultsEl = document.getElementById('results');
+let stream = null;
+let imageCapture = null;
+
+function log(msg, cls = 'log-info') {
+    const ts = new Date().toLocaleTimeString('en', {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit', fractionalSecondDigits:3});
+    const line = document.createElement('div');
+    line.className = cls;
+    line.textContent = `[${ts}] ${msg}`;
+    logEl.appendChild(line);
+    logEl.scrollTop = logEl.scrollHeight;
+}
+
+function showResult(blob, label) {
+    const url = URL.createObjectURL(blob);
+    const wrap = document.createElement('div');
+    wrap.style.textAlign = 'center';
+    const img = document.createElement('img');
+    img.src = url;
+    img.style.maxWidth = '100%';
+    img.style.maxHeight = '300px';
+    const cap = document.createElement('div');
+    cap.className = 'cap';
+    cap.textContent = `${label} | ${blob.type} | ${(blob.size/1024).toFixed(1)} KB`;
+    wrap.appendChild(img);
+    wrap.appendChild(cap);
+    resultsEl.prepend(wrap);
+}
+
+function updateStatus() {
+    const track = stream ? stream.getVideoTracks()[0] : null;
+    const settings = track ? track.getSettings() : {};
+    const caps = (track && track.getCapabilities) ? track.getCapabilities() : {};
+    const hasIC = typeof ImageCapture !== 'undefined';
+
+    let html = '';
+    html += `<b>Browser:</b> ${navigator.userAgent.split(') ')[0].split('(')[1] || navigator.userAgent}<br>`;
+    html += `<b>ImageCapture API:</b> ${hasIC ? '<span style="color:#4ade80">Available</span>' : '<span style="color:#f87171">NOT available</span>'}<br>`;
+    if (track) {
+        html += `<b>Track:</b> ${track.label} (${track.readyState})<br>`;
+        html += `<b>Settings:</b> ${settings.width}x${settings.height} facing=${settings.facingMode || '?'}<br>`;
+        if (caps.width) html += `<b>Max resolution:</b> ${caps.width.max}x${caps.height.max}<br>`;
+    } else {
+        html += `<b>Track:</b> <span style="color:#f87171">None</span><br>`;
+    }
+    statusEl.innerHTML = html;
+}
+
+async function startCamera() {
+    log('Requesting camera (facingMode: user)...');
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }
+        });
+        video.srcObject = stream;
+        await video.play();
+        const track = stream.getVideoTracks()[0];
+        log(`Camera started: ${track.label}`, 'log-ok');
+        log(`Track settings: ${JSON.stringify(track.getSettings())}`);
+
+        document.getElementById('btnCanvas').disabled = false;
+
+        if (typeof ImageCapture !== 'undefined') {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "user" } 
-                });
-                video.srcObject = stream;
-                
-                const track = stream.getVideoTracks()[0];
                 imageCapture = new ImageCapture(track);
-                console.log("ImageCapture initialized for track:", track.label);
-            } catch (err) {
-                alert("Error starting camera: " + err);
+                log('ImageCapture initialized', 'log-ok');
+                document.getElementById('btnTakePhoto').disabled = false;
+                document.getElementById('btnGrabFrame').disabled = false;
+            } catch (e) {
+                log(`ImageCapture constructor failed: ${e.name}: ${e.message}`, 'log-err');
             }
+        } else {
+            log('ImageCapture API not available in this browser', 'log-warn');
+            log('Only Canvas Grab will work (preview-pipeline test)', 'log-warn');
         }
 
-        captureBtn.onclick = async () => {
-            if (!imageCapture) return alert("Camera not ready");
-            
-            try {
-                captureBtn.disabled = true;
-                captureBtn.innerText = "Capturing...";
-                
-                // This triggers the Android CAPTURE_INTENT_STILL_CAPTURE path
-                const blob = await imageCapture.takePhoto();
-                const url = URL.createObjectURL(blob);
-                
-                resultImg.src = url;
-                resultImg.style.display = 'inline-block';
-                
-                captureBtn.disabled = false;
-                captureBtn.innerText = "Take High-Res Photo";
-                
-                // Verification: Is it green?
-                console.log("Capture Success! Blob size:", blob.size);
-            } catch (err) {
-                console.error("Capture failed:", err);
-                alert("Capture failed: " + err);
-                captureBtn.disabled = false;
-                captureBtn.innerText = "Take High-Res Photo";
-            }
-        };
+        updateStatus();
+    } catch (err) {
+        log(`getUserMedia FAILED: ${err.name}: ${err.message}`, 'log-err');
+        updateStatus();
+    }
+}
 
-        startCamera();
-    </script>
+// --- METHOD 1: ImageCapture.takePhoto() ---
+// This is the real Camera2 JPEG capture path.
+// Chrome creates a JPEG ImageReader, reconfigures the session, calls capture().
+document.getElementById('btnTakePhoto').onclick = async () => {
+    if (!imageCapture) { log('ImageCapture not initialized', 'log-err'); return; }
+    const btn = document.getElementById('btnTakePhoto');
+    btn.disabled = true; btn.textContent = 'Capturing...';
+    log('--- takePhoto() START ---');
+    log('This triggers Camera2 session reconfiguration + JPEG capture');
+
+    try {
+        const t0 = performance.now();
+        const blob = await imageCapture.takePhoto();
+        const ms = (performance.now() - t0).toFixed(0);
+        log(`takePhoto() SUCCESS in ${ms}ms | ${blob.type} | ${blob.size} bytes`, 'log-ok');
+        showResult(blob, `takePhoto() ${ms}ms`);
+    } catch (err) {
+        log(`takePhoto() FAILED: ${err.name}: ${err.message}`, 'log-err');
+        log(`Error details: ${JSON.stringify({name: err.name, message: err.message, code: err.code})}`, 'log-err');
+
+        // Fallback: try with explicit photoSettings
+        log('Retrying with explicit photoSettings...', 'log-warn');
+        try {
+            const capabilities = imageCapture.getPhotoCapabilities
+                ? await imageCapture.getPhotoCapabilities()
+                : null;
+            if (capabilities) {
+                log(`Photo capabilities: ${JSON.stringify({
+                    imageWidth: capabilities.imageWidth,
+                    imageHeight: capabilities.imageHeight,
+                    fillLightMode: capabilities.fillLightMode
+                })}`);
+            }
+        } catch (e2) {
+            log(`getPhotoCapabilities failed: ${e2.message}`, 'log-warn');
+        }
+
+        try {
+            const blob2 = await imageCapture.takePhoto({});
+            log(`takePhoto({}) retry SUCCESS | ${blob2.size} bytes`, 'log-ok');
+            showResult(blob2, 'takePhoto() retry');
+        } catch (e3) {
+            log(`takePhoto({}) retry also FAILED: ${e3.name}: ${e3.message}`, 'log-err');
+        }
+    }
+    btn.disabled = false; btn.textContent = 'takePhoto()';
+};
+
+// --- METHOD 2: ImageCapture.grabFrame() ---
+// This grabs an ImageBitmap from the preview stream WITHOUT Camera2 capture.
+// It reads from the SurfaceTexture/preview, not from a JPEG ImageReader.
+document.getElementById('btnGrabFrame').onclick = async () => {
+    if (!imageCapture) { log('ImageCapture not initialized', 'log-err'); return; }
+    const btn = document.getElementById('btnGrabFrame');
+    btn.disabled = true; btn.textContent = 'Grabbing...';
+    log('--- grabFrame() START ---');
+    log('This reads from the preview stream (SurfaceTexture), no Camera2 capture');
+
+    try {
+        const t0 = performance.now();
+        const bitmap = await imageCapture.grabFrame();
+        const ms = (performance.now() - t0).toFixed(0);
+        log(`grabFrame() returned ImageBitmap ${bitmap.width}x${bitmap.height} in ${ms}ms`, 'log-ok');
+
+        // Convert ImageBitmap to blob via canvas
+        const c = document.createElement('canvas');
+        c.width = bitmap.width; c.height = bitmap.height;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(bitmap, 0, 0);
+        bitmap.close();
+
+        const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.92));
+        log(`Converted to JPEG: ${blob.size} bytes`, 'log-ok');
+        showResult(blob, `grabFrame() ${ms}ms`);
+    } catch (err) {
+        log(`grabFrame() FAILED: ${err.name}: ${err.message}`, 'log-err');
+    }
+    btn.disabled = false; btn.textContent = 'grabFrame()';
+};
+
+// --- METHOD 3: Canvas Grab ---
+// Pure JS capture from the <video> element. No Camera2 involvement at all.
+// This ALWAYS works if the preview is displaying. Tests the preview pipeline only.
+document.getElementById('btnCanvas').onclick = async () => {
+    const btn = document.getElementById('btnCanvas');
+    btn.disabled = true; btn.textContent = 'Grabbing...';
+    log('--- Canvas Grab START ---');
+    log('Reading pixels directly from <video> element (preview pipeline only)');
+
+    try {
+        const t0 = performance.now();
+        const c = document.createElement('canvas');
+        c.width = video.videoWidth; c.height = video.videoHeight;
+        if (c.width === 0 || c.height === 0) {
+            log(`Video dimensions are ${c.width}x${c.height} - video not ready`, 'log-err');
+            btn.disabled = false; btn.textContent = 'Canvas Grab';
+            return;
+        }
+        const ctx = c.getContext('2d');
+        ctx.drawImage(video, 0, 0);
+
+        const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.92));
+        const ms = (performance.now() - t0).toFixed(0);
+        log(`Canvas grab SUCCESS in ${ms}ms | ${video.videoWidth}x${video.videoHeight} | ${blob.size} bytes`, 'log-ok');
+        showResult(blob, `Canvas ${video.videoWidth}x${video.videoHeight}`);
+
+        // Quick pixel analysis: check if the image is all one color (green/black = broken)
+        const imgData = ctx.getImageData(0, 0, Math.min(c.width, 100), Math.min(c.height, 100));
+        const d = imgData.data;
+        let rSum=0, gSum=0, bSum=0, n=0;
+        for (let i = 0; i < d.length; i += 16) { // Sample every 4th pixel
+            rSum += d[i]; gSum += d[i+1]; bSum += d[i+2]; n++;
+        }
+        const avgR = (rSum/n).toFixed(0), avgG = (gSum/n).toFixed(0), avgB = (bSum/n).toFixed(0);
+        log(`Pixel analysis (top-left 100x100): avgR=${avgR} avgG=${avgG} avgB=${avgB}`);
+        if (parseInt(avgG) > 200 && parseInt(avgR) < 50 && parseInt(avgB) < 50) {
+            log('WARNING: Image appears to be solid green (test pattern or broken)', 'log-warn');
+        } else if (parseInt(avgR) < 10 && parseInt(avgG) < 10 && parseInt(avgB) < 10) {
+            log('WARNING: Image appears to be solid black (no data)', 'log-warn');
+        } else {
+            log('Image has varied pixel data (looks like a real image)', 'log-ok');
+        }
+    } catch (err) {
+        log(`Canvas grab FAILED: ${err.name}: ${err.message}`, 'log-err');
+    }
+    btn.disabled = false; btn.textContent = 'Canvas Grab';
+};
+
+log('VirtuCam Capture Diagnostic loaded');
+log(`ImageCapture API: ${typeof ImageCapture !== 'undefined' ? 'Available' : 'NOT available'}`, 
+    typeof ImageCapture !== 'undefined' ? 'log-ok' : 'log-warn');
+startCamera();
+</script>
 </body>
 </html>

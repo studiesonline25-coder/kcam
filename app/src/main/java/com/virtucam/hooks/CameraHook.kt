@@ -2361,6 +2361,16 @@ object CameraHook {
             null
         }
 
+        // [BROWSER CAPTURE FIX] If JPEG bridge but ImageWriter failed,
+        // use "direct overwrite" strategy: don't swap the OutputConfiguration surface,
+        // let HAL write directly to Chrome's ImageReader. Our acquireNextImage hook
+        // will overwrite the real JPEG with our spoofed content.
+        if (format == 256 && bridge != null && !bridge.hasImageWriter) {
+            Log.e(TAG, "VirtuCam_Hook: JPEG ImageWriter unavailable for OutputConfig ${w}x${h} — using direct overwrite fallback (not swapping)")
+            // Don't modify the OutputConfiguration — leave Chrome's original JPEG surface
+            // Don't create a dummy, don't add to surfaceMap
+            return bridge.inputSurface ?: targetSurface
+        }
         
         val dummySurface = createDummySurface(targetSurface, w, h, bridge)
         surfaceMap[targetSurface] = dummySurface
@@ -2544,6 +2554,18 @@ object CameraHook {
                                     b
                                 } else {
                                     null
+                                }
+                                
+                                // [BROWSER CAPTURE FIX] If JPEG bridge but ImageWriter failed,
+                                // use "direct overwrite" strategy: don't swap the JPEG surface,
+                                // let HAL write directly to Chrome's ImageReader. Our acquireNextImage
+                                // hook will overwrite the real JPEG with our spoofed content.
+                                if (format == 256 && bridge != null && !bridge.hasImageWriter) {
+                                    Log.e(TAG, "VirtuCam_Hook: JPEG ImageWriter unavailable for ${w}x${h} — using direct overwrite fallback")
+                                    newSurfaces.add(targetSurface) // Keep Chrome's original JPEG surface
+                                    val resolvedSurface = bridge.inputSurface ?: targetSurface
+                                    targetSurfaces.add(Triple(resolvedSurface, true, format))
+                                    continue
                                 }
                                 
                                 val dummySurface = createDummySurface(targetSurface, w, h, bridge)
@@ -3144,11 +3166,12 @@ class VirtualRenderThread(
             val isCapture = it_triple.second
             val format = it_triple.third
 
-            // Buffer Capture Toggle (Feature 4): Skip JPEG capture surfaces if disabled to save system resources.
-            // ONLY render to them if the browser is actively requesting a photo (captureCount > 0).
-            if (isCapture && format == 256 && !CameraHook.isBufferCaptureEnabled && CameraHook.captureCount == 0) {
-                continue
-            }
+            // [BROWSER CAPTURE FIX] Always render to JPEG bridge surfaces.
+            // Previously gated by captureCount > 0, but this created a chicken-and-egg timing
+            // problem: the bridge RGBA cache wasn't populated when the push mechanism needed it,
+            // causing the JPEG generation to fail or timeout. By always rendering, the bridge
+            // cache is always warm and JPEG generation is instant when triggered.
+            // Cost: one extra EGL draw per frame to the JPEG surface (~negligible on modern GPUs).
 
             val tStart = System.nanoTime()
             try {

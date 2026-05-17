@@ -82,15 +82,29 @@ class FormatConverterBridge(
             
             if (outputSurface != null) {
                 try {
-                    imageWriter = android.media.ImageWriter.newInstance(outputSurface, 2)
+                    // [BROWSER CAPTURE FIX] Try API 29+ 3-arg ImageWriter.newInstance(surface, maxImages, format)
+                    // first. This is more reliable for JPEG surfaces because the format is explicitly specified,
+                    // avoiding auto-detection failures on some OEM implementations.
+                    imageWriter = try {
+                        val newInstanceMethod = ImageWriter::class.java.getMethod(
+                            "newInstance", Surface::class.java, Int::class.javaPrimitiveType, Int::class.javaPrimitiveType
+                        )
+                        val writer = newInstanceMethod.invoke(null, outputSurface, 2, outputFormat) as ImageWriter
+                        Log.d(TAG, "FormatConverterBridge: ImageWriter created via API 29+ (format=$outputFormat)")
+                        writer
+                    } catch (e: Throwable) {
+                        Log.d(TAG, "FormatConverterBridge: API 29+ ImageWriter failed (${e.message}), trying 2-arg fallback")
+                        android.media.ImageWriter.newInstance(outputSurface, 2)
+                    }
                     
                     // Initialize Push Thread
                     pushThread = HandlerThread("VirtuCamPushThread").apply { start() }
                     pushHandler = Handler(pushThread!!.looper)
                     
-                    Log.d(TAG, "FormatConverterBridge: ImageWriter and PushThread connected")
+                    Log.d(TAG, "FormatConverterBridge: ImageWriter and PushThread connected for ${width}x${height} format=$outputFormat")
                 } catch (e: Throwable) {
-                    Log.e(TAG, "FormatConverterBridge: Failed to connect ImageWriter", e)
+                    Log.e(TAG, "FormatConverterBridge: Failed to connect ImageWriter for ${width}x${height} format=$outputFormat — will use direct overwrite fallback", e)
+                    imageWriter = null
                 }
             }
             
