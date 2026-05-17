@@ -161,21 +161,27 @@ class StreamPlayer(
 
     private fun setupMediaCodec() {
         try {
+            // SPS/PPS are already stripped of start codes in NALAssembler.setSps/setPps
+            val rawSps = nalAssembler.getSps()
+            val rawPps = nalAssembler.getPps()
+            
             // [MEDIATEK FIX] Parse actual resolution from SPS instead of using defaults.
             // MediaTek Helio decoders allocate buffers based on the initial format dimensions.
             // If these don't match the SPS, partial green frames result.
-            nalAssembler.getSps()?.let { sps ->
+            rawSps?.let { sps ->
                 val parsed = parseSpsResolution(sps)
                 if (parsed != null) {
                     videoWidth = parsed.first
                     videoHeight = parsed.second
                     Log.i(TAG, "Parsed SPS resolution: ${videoWidth}x${videoHeight}")
+                } else {
+                    Log.w(TAG, "SPS parse failed, using defaults ${videoWidth}x${videoHeight}")
                 }
             }
             
             val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, videoWidth, videoHeight)
-            nalAssembler.getSps()?.let { format.setByteBuffer("csd-0", ByteBuffer.wrap(wrapStartCode(it))) }
-            nalAssembler.getPps()?.let { format.setByteBuffer("csd-1", ByteBuffer.wrap(wrapStartCode(it))) }
+            rawSps?.let { format.setByteBuffer("csd-0", ByteBuffer.wrap(wrapStartCode(it))) }
+            rawPps?.let { format.setByteBuffer("csd-1", ByteBuffer.wrap(wrapStartCode(it))) }
             
             // [MEDIATEK FIX] Set max input size hint — some MediaTek decoders need this
             // to allocate sufficiently large input buffers. Without it, large IDR frames
@@ -190,6 +196,17 @@ class StreamPlayer(
         } catch (e: Exception) {
             Log.e(TAG, "Failed to start MediaCodec", e)
         }
+    }
+    
+    /** Strip leading 00 00 00 01 or 00 00 01 start code if present */
+    private fun stripStartCode(data: ByteArray): ByteArray {
+        if (data.size > 4 && data[0] == 0.toByte() && data[1] == 0.toByte() && data[2] == 0.toByte() && data[3] == 1.toByte()) {
+            return data.copyOfRange(4, data.size)
+        }
+        if (data.size > 3 && data[0] == 0.toByte() && data[1] == 0.toByte() && data[2] == 1.toByte()) {
+            return data.copyOfRange(3, data.size)
+        }
+        return data
     }
     
     /**
@@ -319,7 +336,13 @@ class StreamPlayer(
 
         val codec = mediaCodec ?: return
         try {
-            val inputIndex = codec.dequeueInputBuffer(10000)
+            // [FIX] Drain outputs FIRST before trying to queue input.
+            // On MediaTek c2.mtk.avc.decoder, the input buffer pool (typically ~16-20 buffers) 
+            // fills up if outputs aren't consumed. Once full, dequeueInputBuffer returns -1 forever.
+            // By draining outputs first (with a real timeout), we free up the pipeline.
+            drainOutputs(codec)
+            
+            val inputIndex = codec.dequeueInputBuffer(10000) // 10ms
             if (inputIndex >= 0) {
                 codec.getInputBuffer(inputIndex)?.apply {
                     clear()
@@ -328,39 +351,46 @@ class StreamPlayer(
                 val flags = if (nalAssembler.isKeyFrame(data)) MediaCodec.BUFFER_FLAG_KEY_FRAME else 0
                 codec.queueInputBuffer(inputIndex, 0, data.size, timestamp * 1000, flags)
                 decoderInputCount++
+            } else {
+                // Input queue full — aggressively drain outputs to free up space
+                drainOutputs(codec, timeoutUs = 30000) // 30ms wait
             }
 
-            // Drain all available output frames
-            val info = MediaCodec.BufferInfo()
-            var draining = true
-            while (draining) {
-                val outputIndex = codec.dequeueOutputBuffer(info, 0)
-                when {
-                    outputIndex >= 0 -> {
-                        decoderOutputCount++
-                        if (decoderOutputCount <= 3) {
-                            Log.i(TAG, "RTSP_DIAG: Decoder output frame #$decoderOutputCount size=${info.size} flags=${info.flags}")
-                        }
-                        codec.releaseOutputBuffer(outputIndex, true)
-                        onFrameAvailable()
-                    }
-                    outputIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {
-                        val fmt = codec.outputFormat
-                        videoWidth = fmt.getInteger(MediaFormat.KEY_WIDTH)
-                        videoHeight = fmt.getInteger(MediaFormat.KEY_HEIGHT)
-                        videoRotation = if (videoWidth > videoHeight) 90 else 0
-                        rawRotation = videoRotation
-                        Log.i(TAG, "Decoder output format changed: ${videoWidth}x${videoHeight}")
-                        // Continue draining — there may be frames available after format change
-                    }
-                    outputIndex == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED -> {
-                        // Deprecated but some MediaTek decoders still emit this
-                    }
-                    else -> draining = false // INFO_TRY_AGAIN_LATER or unknown
-                }
-            }
+            // Drain again after queuing input
+            drainOutputs(codec)
         } catch (e: Exception) {
             Log.e(TAG, "Decode error: ${e.message}")
+        }
+    }
+    
+    /** Drain all available output buffers from the decoder */
+    private fun drainOutputs(codec: MediaCodec, timeoutUs: Long = 5000) {
+        val info = MediaCodec.BufferInfo()
+        var draining = true
+        while (draining) {
+            val outputIndex = codec.dequeueOutputBuffer(info, timeoutUs)
+            when {
+                outputIndex >= 0 -> {
+                    decoderOutputCount++
+                    if (decoderOutputCount <= 5 || decoderOutputCount % 100 == 0) {
+                        Log.i(TAG, "RTSP_DIAG: Decoder output #$decoderOutputCount flags=${info.flags}")
+                    }
+                    codec.releaseOutputBuffer(outputIndex, true)
+                    onFrameAvailable()
+                }
+                outputIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {
+                    val fmt = codec.outputFormat
+                    videoWidth = fmt.getInteger(MediaFormat.KEY_WIDTH)
+                    videoHeight = fmt.getInteger(MediaFormat.KEY_HEIGHT)
+                    videoRotation = if (videoWidth > videoHeight) 90 else 0
+                    rawRotation = videoRotation
+                    Log.i(TAG, "Decoder output format changed: ${videoWidth}x${videoHeight}")
+                }
+                outputIndex == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED -> {
+                    // Deprecated but some MediaTek decoders still emit this
+                }
+                else -> draining = false // INFO_TRY_AGAIN_LATER
+            }
         }
     }
 
@@ -370,26 +400,28 @@ class StreamPlayer(
     private inner class NALAssembler {
         private var sps: ByteArray? = null
         private var pps: ByteArray? = null
+        private var lastAssembledWasIdr = false
         
-        fun setSps(data: ByteArray) { sps = data }
-        fun setPps(data: ByteArray) { pps = data }
+        fun setSps(data: ByteArray) { sps = stripStartCode(data) }
+        fun setPps(data: ByteArray) { pps = stripStartCode(data) }
         fun getSps() = sps
         fun getPps() = pps
 
-        fun isKeyFrame(data: ByteArray): Boolean {
-            val type = if (data.size > 4) (data[4].toInt() and 0x1F) else -1
-            return type == NAL_TYPE_IDR
-        }
+        /** Check if the last assembled frame was an IDR (keyframe) */
+        fun isKeyFrame(data: ByteArray): Boolean = lastAssembledWasIdr
 
         fun assemble(data: ByteArray, offset: Int, length: Int): ByteArray? {
             val hasStartCode = length > 4 && data[offset] == 0.toByte() && data[offset+1] == 0.toByte() && data[offset+2] == 0.toByte() && data[offset+3] == 1.toByte()
             val type = if (hasStartCode) (data[offset+4].toInt() and 0x1F) else (data[offset].toInt() and 0x1F)
+            lastAssembledWasIdr = (type == NAL_TYPE_IDR)
             
             if (type == NAL_TYPE_IDR) {
-                // Prepend SPS/PPS to IDR for complete keyframe delivery
+                // Prepend SPS/PPS to IDR for complete keyframe delivery.
+                // SPS/PPS are stored WITHOUT start codes (stripped on set).
                 val s = sps ?: return null
                 val p = pps ?: return null
-                val totalSize = 4 + s.size + 4 + p.size + 4 + length - (if (hasStartCode) 4 else 0)
+                val rawNalLen = length - (if (hasStartCode) 4 else 0)
+                val totalSize = 4 + s.size + 4 + p.size + 4 + rawNalLen
                 val out = ByteArray(totalSize)
                 var pos = 0
                 
@@ -398,7 +430,7 @@ class StreamPlayer(
                 System.arraycopy(START_CODE, 0, out, pos, 4); pos += 4
                 System.arraycopy(p, 0, out, pos, p.size); pos += p.size
                 System.arraycopy(START_CODE, 0, out, pos, 4); pos += 4
-                System.arraycopy(data, if (hasStartCode) offset + 4 else offset, out, pos, length - (if (hasStartCode) 4 else 0))
+                System.arraycopy(data, if (hasStartCode) offset + 4 else offset, out, pos, rawNalLen)
                 return out
             }
             
