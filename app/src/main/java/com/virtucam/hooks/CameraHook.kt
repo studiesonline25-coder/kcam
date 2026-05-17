@@ -2150,12 +2150,8 @@ object CameraHook {
                 // Sync Trigger: The real camera just took a photo! Push our spoofed frame to the app NOW!
                 // Offload the heavy JPEG compression (50ms+) so we don't stall the physical HAL
                 if (bridge != null && bridge.hasImageWriter) {
-                    // [STRICT ISOLATION] Never push JPEGs from shadow listeners. 
-                    // Let the synchronous hook handle photos.
-                    if (bridge.outputFormat != 256) {
-                        dummySinkHandler?.post {
-                            bridge.pushLatestFrameToWriter(realTimestamp)
-                        }
+                    dummySinkHandler?.post {
+                        bridge.pushLatestFrameToWriter(realTimestamp)
                     }
                 }
             } catch (e: Exception) {
@@ -2962,10 +2958,7 @@ class VirtualRenderThread(
                                 val timestamp = capture?.first ?: System.nanoTime()
                                 Log.e(TAG, "CAPT_LOG [2]: VirtualRenderThread draining captureQueue. Pushing to bridges. captureCount=${CameraHook.captureCount}")
                                 CameraHook.formatBridges.values.forEach { 
-                                    // Only push YUV to bridges from here. JPEGs are handled by hooks.
-                                    if (it.outputFormat != 256) {
-                                        it.pushLatestFrameToWriter(timestamp)
-                                    }
+                                    it.pushLatestFrameToWriter(timestamp)
                                 }
                                 CameraHook.captureCount--
                                 
@@ -3024,9 +3017,6 @@ class VirtualRenderThread(
                     CameraHook.latestVirtualJpegArea = 0
                     
                     CameraHook.formatBridges.values.forEach { 
-                        // [STRICT ISOLATION] Ignore JPEGs in the render loop. 
-                        // JPEGs are now handled exclusively by synchronous hooks to prevent collisions.
-                        if (it.outputFormat == 256) return@forEach
                         it.pushLatestFrameToWriter(timestamp) 
                     }
                     CameraHook.captureCount--
