@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>VirtuCam Capture Diagnostic</title>
+    <title>VirtuCam Capture Diagnostic v2</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         * { box-sizing: border-box; }
@@ -14,25 +14,36 @@
         .btn-takePhoto { background: #2563eb; }
         .btn-grabFrame { background: #7c3aed; }
         .btn-canvas { background: #059669; }
+        .btn-copy { background: #6b7280; font-size: 12px; padding: 8px 12px; }
+        .btn-clear { background: #991b1b; font-size: 12px; padding: 8px 12px; }
+        .btn-timeout { background: #b45309; font-size: 12px; padding: 8px 12px; }
         #log { background: #111; border: 1px solid #333; border-radius: 6px; padding: 10px; margin: 10px 0;
-               font-family: 'Courier New', monospace; font-size: 12px; max-height: 250px; overflow-y: auto;
+               font-family: 'Courier New', monospace; font-size: 11px; max-height: 400px; overflow-y: auto;
                white-space: pre-wrap; word-break: break-all; text-align: left; }
         .log-ok { color: #4ade80; }
         .log-err { color: #f87171; }
         .log-warn { color: #fbbf24; }
         .log-info { color: #60a5fa; }
+        .log-dim { color: #6b7280; }
+        .log-head { color: #c084fc; font-weight: bold; }
         #results { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 10px 0; }
         #results img, #results canvas { max-width: 45%; border: 2px solid #333; border-radius: 6px; }
         .cap { font-size: 11px; color: #888; text-align: center; }
         #status { background: #1a1a2e; border: 1px solid #333; border-radius: 6px; padding: 8px 12px;
-                  margin: 8px 0; font-size: 13px; text-align: left; }
+                  margin: 8px 0; font-size: 12px; text-align: left; line-height: 1.5; }
         #status b { color: #93c5fd; }
+        #ticker { display: none; background: #1c1917; border: 1px solid #f59e0b; border-radius: 6px;
+                  padding: 8px 12px; margin: 8px 0; font-size: 13px; color: #fbbf24; text-align: center; }
+        .timeout-selector { display: flex; align-items: center; gap: 6px; justify-content: center; margin: 4px 0; }
+        .timeout-selector label { font-size: 12px; color: #aaa; }
+        .timeout-selector select { background: #222; color: #e0e0e0; border: 1px solid #555; border-radius: 4px; padding: 4px 8px; font-size: 12px; }
     </style>
 </head>
 <body>
-    <h1>VirtuCam Capture Diagnostic</h1>
+    <h1>VirtuCam Capture Diagnostic v2</h1>
 
     <div id="status">Loading...</div>
+    <div id="ticker"></div>
     <video id="preview" autoplay playsinline muted></video>
 
     <div class="btn-row">
@@ -40,8 +51,23 @@
         <button class="btn-grabFrame" id="btnGrabFrame" disabled>grabFrame()</button>
         <button class="btn-canvas" id="btnCanvas" disabled>Canvas Grab</button>
     </div>
+    <div class="timeout-selector">
+        <label>takePhoto timeout:</label>
+        <select id="timeoutSel">
+            <option value="5000">5s</option>
+            <option value="10000" selected>10s</option>
+            <option value="20000">20s</option>
+            <option value="30000">30s</option>
+            <option value="0">No timeout</option>
+        </select>
+    </div>
 
     <div id="results"></div>
+
+    <div class="btn-row">
+        <button class="btn-copy" id="btnCopy">Copy Log</button>
+        <button class="btn-clear" id="btnClear">Clear Log</button>
+    </div>
     <div id="log"></div>
 
 <script>
@@ -49,9 +75,12 @@ const video = document.getElementById('preview');
 const logEl = document.getElementById('log');
 const statusEl = document.getElementById('status');
 const resultsEl = document.getElementById('results');
+const tickerEl = document.getElementById('ticker');
 let stream = null;
 let imageCapture = null;
+let captureAttempt = 0;
 
+// --- Logging ---
 function log(msg, cls = 'log-info') {
     const ts = new Date().toLocaleTimeString('en', {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit', fractionalSecondDigits:3});
     const line = document.createElement('div');
@@ -61,6 +90,37 @@ function log(msg, cls = 'log-info') {
     logEl.scrollTop = logEl.scrollHeight;
 }
 
+document.getElementById('btnCopy').onclick = () => {
+    const text = logEl.innerText;
+    navigator.clipboard.writeText(text).then(() => log('Log copied to clipboard', 'log-ok')).catch(() => {
+        // Fallback for insecure contexts
+        const ta = document.createElement('textarea');
+        ta.value = text; document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); document.body.removeChild(ta);
+        log('Log copied (fallback)', 'log-ok');
+    });
+};
+document.getElementById('btnClear').onclick = () => { logEl.innerHTML = ''; resultsEl.innerHTML = ''; };
+
+// --- Live ticker during capture ---
+let tickerInterval = null;
+function startTicker(label) {
+    const t0 = performance.now();
+    tickerEl.style.display = 'block';
+    tickerEl.textContent = `${label}: waiting... 0.0s`;
+    tickerInterval = setInterval(() => {
+        const elapsed = ((performance.now() - t0) / 1000).toFixed(1);
+        const track = stream ? stream.getVideoTracks()[0] : null;
+        const state = track ? track.readyState : 'none';
+        tickerEl.textContent = `${label}: waiting... ${elapsed}s | track: ${state}`;
+    }, 200);
+}
+function stopTicker() {
+    clearInterval(tickerInterval);
+    tickerEl.style.display = 'none';
+}
+
+// --- Result display ---
 function showResult(blob, label) {
     const url = URL.createObjectURL(blob);
     const wrap = document.createElement('div');
@@ -69,6 +129,12 @@ function showResult(blob, label) {
     img.src = url;
     img.style.maxWidth = '100%';
     img.style.maxHeight = '300px';
+    img.onload = () => {
+        log(`  Image decoded: ${img.naturalWidth}x${img.naturalHeight}`, 'log-dim');
+    };
+    img.onerror = () => {
+        log(`  WARNING: Browser failed to decode the image blob!`, 'log-err');
+    };
     const cap = document.createElement('div');
     cap.className = 'cap';
     cap.textContent = `${label} | ${blob.type} | ${(blob.size/1024).toFixed(1)} KB`;
@@ -77,6 +143,78 @@ function showResult(blob, label) {
     resultsEl.prepend(wrap);
 }
 
+// --- Blob analysis ---
+async function analyzeBlob(blob) {
+    log(`  Blob: type="${blob.type}" size=${blob.size} (${(blob.size/1024).toFixed(1)} KB)`, 'log-dim');
+    if (blob.size === 0) {
+        log('  CRITICAL: Blob is EMPTY (0 bytes)', 'log-err');
+        return;
+    }
+    if (blob.size < 100) {
+        log(`  WARNING: Blob is suspiciously small (${blob.size} bytes)`, 'log-warn');
+    }
+
+    // Check JPEG header bytes
+    try {
+        const header = new Uint8Array(await blob.slice(0, 16).arrayBuffer());
+        const hexHead = Array.from(header.slice(0, 8)).map(b => b.toString(16).padStart(2, '0')).join(' ');
+        log(`  Header bytes: ${hexHead}`, 'log-dim');
+        if (header[0] === 0xFF && header[1] === 0xD8) {
+            log('  Valid JPEG SOI marker (FF D8)', 'log-ok');
+        } else if (header[0] === 0x89 && header[1] === 0x50) {
+            log('  This is a PNG, not JPEG', 'log-warn');
+        } else if (header[0] === 0x00 && header[1] === 0x00) {
+            log('  CRITICAL: Header is null bytes - JPEG data is EMPTY/ZEROED', 'log-err');
+        } else {
+            log(`  WARNING: Unexpected header - not a standard JPEG (first 2 bytes: 0x${header[0].toString(16)} 0x${header[1].toString(16)})`, 'log-warn');
+        }
+        // Check JPEG tail
+        const tail = new Uint8Array(await blob.slice(blob.size - 2, blob.size).arrayBuffer());
+        if (tail[0] === 0xFF && tail[1] === 0xD9) {
+            log('  Valid JPEG EOI marker (FF D9)', 'log-ok');
+        } else {
+            log(`  WARNING: Missing JPEG EOI marker (tail: 0x${tail[0].toString(16)} 0x${tail[1].toString(16)}) - may be truncated`, 'log-warn');
+        }
+    } catch (e) {
+        log(`  Could not read blob header: ${e.message}`, 'log-warn');
+    }
+}
+
+// --- Track state logging ---
+function getTrackDiag() {
+    const track = stream ? stream.getVideoTracks()[0] : null;
+    if (!track) return { state: 'none', muted: false, settings: {} };
+    return {
+        state: track.readyState,
+        muted: track.muted,
+        enabled: track.enabled,
+        settings: track.getSettings(),
+        constraints: track.getConstraints()
+    };
+}
+
+function logTrackState(prefix) {
+    const d = getTrackDiag();
+    log(`  ${prefix} track: state=${d.state} muted=${d.muted} enabled=${d.enabled}`, 'log-dim');
+    if (d.state === 'ended') {
+        log(`  CRITICAL: Track is ENDED - camera was disconnected or session destroyed`, 'log-err');
+    }
+}
+
+// --- Watch for track events during capture ---
+function watchTrackEvents() {
+    const track = stream ? stream.getVideoTracks()[0] : null;
+    if (!track) return () => {};
+    const handlers = {
+        ended: () => log('  EVENT: Track ENDED during capture!', 'log-err'),
+        mute: () => log('  EVENT: Track MUTED during capture (session reconfiguring?)', 'log-warn'),
+        unmute: () => log('  EVENT: Track UNMUTED (session reconfigured)', 'log-ok'),
+    };
+    Object.entries(handlers).forEach(([e, h]) => track.addEventListener(e, h));
+    return () => Object.entries(handlers).forEach(([e, h]) => track.removeEventListener(e, h));
+}
+
+// --- Status ---
 function updateStatus() {
     const track = stream ? stream.getVideoTracks()[0] : null;
     const settings = track ? track.getSettings() : {};
@@ -84,20 +222,21 @@ function updateStatus() {
     const hasIC = typeof ImageCapture !== 'undefined';
 
     let html = '';
-    html += `<b>Browser:</b> ${navigator.userAgent.split(') ')[0].split('(')[1] || navigator.userAgent}<br>`;
-    html += `<b>ImageCapture API:</b> ${hasIC ? '<span style="color:#4ade80">Available</span>' : '<span style="color:#f87171">NOT available</span>'}<br>`;
+    html += `<b>UA:</b> ${navigator.userAgent}<br>`;
+    html += `<b>ImageCapture API:</b> ${hasIC ? '<span style="color:#4ade80">Yes</span>' : '<span style="color:#f87171">NO</span>'}<br>`;
     if (track) {
-        html += `<b>Track:</b> ${track.label} (${track.readyState})<br>`;
-        html += `<b>Settings:</b> ${settings.width}x${settings.height} facing=${settings.facingMode || '?'}<br>`;
-        if (caps.width) html += `<b>Max resolution:</b> ${caps.width.max}x${caps.height.max}<br>`;
+        html += `<b>Track:</b> ${track.label} | ${track.readyState} | muted=${track.muted}<br>`;
+        html += `<b>Settings:</b> ${settings.width}x${settings.height} facing=${settings.facingMode || '?'} fps=${settings.frameRate || '?'}<br>`;
+        if (caps.width) html += `<b>Caps:</b> ${caps.width.min}-${caps.width.max} x ${caps.height.min}-${caps.height.max}<br>`;
     } else {
         html += `<b>Track:</b> <span style="color:#f87171">None</span><br>`;
     }
     statusEl.innerHTML = html;
 }
 
+// --- Start camera ---
 async function startCamera() {
-    log('Requesting camera (facingMode: user)...');
+    log('Requesting camera (facingMode: user, ideal 1280x720)...');
     try {
         stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }
@@ -106,7 +245,12 @@ async function startCamera() {
         await video.play();
         const track = stream.getVideoTracks()[0];
         log(`Camera started: ${track.label}`, 'log-ok');
-        log(`Track settings: ${JSON.stringify(track.getSettings())}`);
+        log(`Settings: ${JSON.stringify(track.getSettings())}`);
+
+        // Log track events
+        track.addEventListener('ended', () => log('TRACK EVENT: ended', 'log-err'));
+        track.addEventListener('mute', () => log('TRACK EVENT: muted', 'log-warn'));
+        track.addEventListener('unmute', () => log('TRACK EVENT: unmuted', 'log-ok'));
 
         document.getElementById('btnCanvas').disabled = false;
 
@@ -114,6 +258,21 @@ async function startCamera() {
             try {
                 imageCapture = new ImageCapture(track);
                 log('ImageCapture initialized', 'log-ok');
+
+                // Query photo capabilities upfront
+                try {
+                    const caps = await imageCapture.getPhotoCapabilities();
+                    log(`PhotoCapabilities: width=${JSON.stringify(caps.imageWidth)} height=${JSON.stringify(caps.imageHeight)} fillLight=${JSON.stringify(caps.fillLightMode)}`, 'log-dim');
+                } catch (e) {
+                    log(`getPhotoCapabilities: ${e.name}: ${e.message}`, 'log-warn');
+                }
+                try {
+                    const settings = await imageCapture.getPhotoSettings();
+                    log(`PhotoSettings: ${JSON.stringify(settings)}`, 'log-dim');
+                } catch (e) {
+                    log(`getPhotoSettings: ${e.name}: ${e.message}`, 'log-dim');
+                }
+
                 document.getElementById('btnTakePhoto').disabled = false;
                 document.getElementById('btnGrabFrame').disabled = false;
             } catch (e) {
@@ -121,73 +280,147 @@ async function startCamera() {
             }
         } else {
             log('ImageCapture API not available in this browser', 'log-warn');
-            log('Only Canvas Grab will work (preview-pipeline test)', 'log-warn');
         }
-
         updateStatus();
     } catch (err) {
         log(`getUserMedia FAILED: ${err.name}: ${err.message}`, 'log-err');
+        if (err.name === 'NotAllowedError') log('  User denied camera permission', 'log-err');
+        if (err.name === 'NotFoundError') log('  No camera found on device', 'log-err');
+        if (err.name === 'NotReadableError') log('  Camera is in use by another app', 'log-err');
         updateStatus();
     }
 }
 
-// --- METHOD 1: ImageCapture.takePhoto() ---
-// This is the real Camera2 JPEG capture path.
-// Chrome creates a JPEG ImageReader, reconfigures the session, calls capture().
+// ============================================================
+// METHOD 1: ImageCapture.takePhoto()
+// The real Camera2 JPEG capture path.
+// Chrome: JPEG ImageReader + session reconfig + capture()
+// ============================================================
 document.getElementById('btnTakePhoto').onclick = async () => {
     if (!imageCapture) { log('ImageCapture not initialized', 'log-err'); return; }
     const btn = document.getElementById('btnTakePhoto');
     btn.disabled = true; btn.textContent = 'Capturing...';
-    log('--- takePhoto() START ---');
-    log('This triggers Camera2 session reconfiguration + JPEG capture');
+    captureAttempt++;
+    const attempt = captureAttempt;
+
+    log('', 'log-head');
+    log(`=== takePhoto() #${attempt} START ===`, 'log-head');
+    log('Camera2 path: session reconfig -> JPEG ImageReader -> capture()', 'log-dim');
+    logTrackState('PRE-capture');
+
+    const timeoutMs = parseInt(document.getElementById('timeoutSel').value) || 0;
+    log(`Timeout: ${timeoutMs ? timeoutMs + 'ms' : 'none'}`, 'log-dim');
+
+    const unwatchTrack = watchTrackEvents();
+    startTicker(`takePhoto #${attempt}`);
+    const t0 = performance.now();
+
+    // Progress logging at intervals
+    const progressTimers = [];
+    [1000, 2000, 3000, 5000, 8000, 10000, 15000, 20000].forEach(ms => {
+        if (timeoutMs && ms >= timeoutMs) return;
+        progressTimers.push(setTimeout(() => {
+            const elapsed = ((performance.now() - t0) / 1000).toFixed(1);
+            const td = getTrackDiag();
+            log(`  ...still waiting at ${elapsed}s (track=${td.state}, muted=${td.muted})`, 'log-warn');
+        }, ms));
+    });
 
     try {
-        const t0 = performance.now();
-        const blob = await imageCapture.takePhoto();
+        let blob;
+        if (timeoutMs > 0) {
+            // Race takePhoto against a timeout
+            blob = await Promise.race([
+                imageCapture.takePhoto(),
+                new Promise((_, reject) => setTimeout(() => {
+                    reject(new DOMException(
+                        `takePhoto() did not resolve within ${timeoutMs}ms. ` +
+                        `This confirms the JPEG capture pipeline is hanging. ` +
+                        `The Camera2 session reconfiguration or JPEG ImageReader ` +
+                        `never delivered an Image back to the browser.`,
+                        'TimeoutError'
+                    ));
+                }, timeoutMs))
+            ]);
+        } else {
+            blob = await imageCapture.takePhoto();
+        }
+
         const ms = (performance.now() - t0).toFixed(0);
-        log(`takePhoto() SUCCESS in ${ms}ms | ${blob.type} | ${blob.size} bytes`, 'log-ok');
-        showResult(blob, `takePhoto() ${ms}ms`);
+        log(`takePhoto() #${attempt} SUCCESS in ${ms}ms`, 'log-ok');
+        logTrackState('POST-capture');
+        await analyzeBlob(blob);
+        showResult(blob, `takePhoto #${attempt} ${ms}ms`);
+
     } catch (err) {
-        log(`takePhoto() FAILED: ${err.name}: ${err.message}`, 'log-err');
-        log(`Error details: ${JSON.stringify({name: err.name, message: err.message, code: err.code})}`, 'log-err');
+        const ms = (performance.now() - t0).toFixed(0);
+        log(`takePhoto() #${attempt} FAILED after ${ms}ms`, 'log-err');
+        log(`  Error: ${err.name}: ${err.message}`, 'log-err');
 
-        // Fallback: try with explicit photoSettings
-        log('Retrying with explicit photoSettings...', 'log-warn');
+        if (err.name === 'TimeoutError') {
+            log('  DIAGNOSIS: The promise never resolved. The JPEG Image was never', 'log-err');
+            log('  delivered from Camera2 to Chrome\'s ImageReader. This is the', 'log-err');
+            log('  VirtuCam JPEG push/overwrite pipeline failing silently.', 'log-err');
+            log('  Check logcat for: CAPT_LOG, FormatConverterBridge, ImageWriter', 'log-err');
+        } else if (err.name === 'InvalidStateError') {
+            log('  Track may have ended or ImageCapture was invalidated', 'log-err');
+            log('  This can happen if the camera session was destroyed during capture', 'log-err');
+        } else if (err.name === 'UnknownError') {
+            log('  Camera2 returned an internal error. The HAL or framework rejected the capture.', 'log-err');
+        } else if (err.name === 'NotReadableError') {
+            log('  Camera hardware error during capture', 'log-err');
+        } else if (err.name === 'OperationError') {
+            log('  Camera2 session or capture request failed at the framework level', 'log-err');
+        }
+
+        logTrackState('POST-error');
+        log(`  Error object keys: ${Object.keys(err).join(', ') || '(none)'}`, 'log-dim');
+        if (err.code !== undefined) log(`  Error code: ${err.code}`, 'log-dim');
+        if (err.stack) log(`  Stack: ${err.stack.split('\n').slice(0,3).join(' | ')}`, 'log-dim');
+
+        // Try to get photo capabilities after failure (may reveal reconfig issues)
         try {
-            const capabilities = imageCapture.getPhotoCapabilities
-                ? await imageCapture.getPhotoCapabilities()
-                : null;
-            if (capabilities) {
-                log(`Photo capabilities: ${JSON.stringify({
-                    imageWidth: capabilities.imageWidth,
-                    imageHeight: capabilities.imageHeight,
-                    fillLightMode: capabilities.fillLightMode
-                })}`);
-            }
+            const caps = await imageCapture.getPhotoCapabilities();
+            log(`  Post-fail capabilities: width=${JSON.stringify(caps.imageWidth)} height=${JSON.stringify(caps.imageHeight)}`, 'log-dim');
         } catch (e2) {
-            log(`getPhotoCapabilities failed: ${e2.message}`, 'log-warn');
+            log(`  Post-fail getPhotoCapabilities: ${e2.name}: ${e2.message}`, 'log-warn');
+            if (e2.name === 'InvalidStateError') {
+                log('  ImageCapture is invalidated - need to recreate after getUserMedia', 'log-err');
+            }
         }
 
-        try {
-            const blob2 = await imageCapture.takePhoto({});
-            log(`takePhoto({}) retry SUCCESS | ${blob2.size} bytes`, 'log-ok');
-            showResult(blob2, 'takePhoto() retry');
-        } catch (e3) {
-            log(`takePhoto({}) retry also FAILED: ${e3.name}: ${e3.message}`, 'log-err');
+        // Check if track is still alive
+        const td = getTrackDiag();
+        if (td.state === 'ended') {
+            log('  Track is ENDED. Attempting to restart camera...', 'log-warn');
+            try {
+                await startCamera();
+                log('  Camera restarted successfully', 'log-ok');
+            } catch (e) {
+                log(`  Camera restart failed: ${e.message}`, 'log-err');
+            }
         }
+    } finally {
+        progressTimers.forEach(clearTimeout);
+        unwatchTrack();
+        stopTicker();
+        btn.disabled = false; btn.textContent = 'takePhoto()';
+        updateStatus();
     }
-    btn.disabled = false; btn.textContent = 'takePhoto()';
 };
 
-// --- METHOD 2: ImageCapture.grabFrame() ---
-// This grabs an ImageBitmap from the preview stream WITHOUT Camera2 capture.
-// It reads from the SurfaceTexture/preview, not from a JPEG ImageReader.
+// ============================================================
+// METHOD 2: ImageCapture.grabFrame()
+// Grabs ImageBitmap from preview stream (SurfaceTexture).
+// No Camera2 capture. No JPEG ImageReader. No session reconfig.
+// ============================================================
 document.getElementById('btnGrabFrame').onclick = async () => {
     if (!imageCapture) { log('ImageCapture not initialized', 'log-err'); return; }
     const btn = document.getElementById('btnGrabFrame');
     btn.disabled = true; btn.textContent = 'Grabbing...';
-    log('--- grabFrame() START ---');
-    log('This reads from the preview stream (SurfaceTexture), no Camera2 capture');
+    log('', 'log-head');
+    log('=== grabFrame() START ===', 'log-head');
+    log('Preview-only path: reads from SurfaceTexture, no Camera2 capture', 'log-dim');
 
     try {
         const t0 = performance.now();
@@ -195,7 +428,6 @@ document.getElementById('btnGrabFrame').onclick = async () => {
         const ms = (performance.now() - t0).toFixed(0);
         log(`grabFrame() returned ImageBitmap ${bitmap.width}x${bitmap.height} in ${ms}ms`, 'log-ok');
 
-        // Convert ImageBitmap to blob via canvas
         const c = document.createElement('canvas');
         c.width = bitmap.width; c.height = bitmap.height;
         const ctx = c.getContext('2d');
@@ -204,21 +436,28 @@ document.getElementById('btnGrabFrame').onclick = async () => {
 
         const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.92));
         log(`Converted to JPEG: ${blob.size} bytes`, 'log-ok');
+        await analyzeBlob(blob);
         showResult(blob, `grabFrame() ${ms}ms`);
+
+        // Pixel analysis
+        analyzePixels(ctx, c.width, c.height);
     } catch (err) {
         log(`grabFrame() FAILED: ${err.name}: ${err.message}`, 'log-err');
+        logTrackState('POST-error');
     }
     btn.disabled = false; btn.textContent = 'grabFrame()';
 };
 
-// --- METHOD 3: Canvas Grab ---
-// Pure JS capture from the <video> element. No Camera2 involvement at all.
-// This ALWAYS works if the preview is displaying. Tests the preview pipeline only.
+// ============================================================
+// METHOD 3: Canvas Grab
+// Pure JS from <video> element. Tests preview pipeline only.
+// ============================================================
 document.getElementById('btnCanvas').onclick = async () => {
     const btn = document.getElementById('btnCanvas');
     btn.disabled = true; btn.textContent = 'Grabbing...';
-    log('--- Canvas Grab START ---');
-    log('Reading pixels directly from <video> element (preview pipeline only)');
+    log('', 'log-head');
+    log('=== Canvas Grab START ===', 'log-head');
+    log('Reading pixels directly from <video> element', 'log-dim');
 
     try {
         const t0 = performance.now();
@@ -236,32 +475,47 @@ document.getElementById('btnCanvas').onclick = async () => {
         const ms = (performance.now() - t0).toFixed(0);
         log(`Canvas grab SUCCESS in ${ms}ms | ${video.videoWidth}x${video.videoHeight} | ${blob.size} bytes`, 'log-ok');
         showResult(blob, `Canvas ${video.videoWidth}x${video.videoHeight}`);
-
-        // Quick pixel analysis: check if the image is all one color (green/black = broken)
-        const imgData = ctx.getImageData(0, 0, Math.min(c.width, 100), Math.min(c.height, 100));
-        const d = imgData.data;
-        let rSum=0, gSum=0, bSum=0, n=0;
-        for (let i = 0; i < d.length; i += 16) { // Sample every 4th pixel
-            rSum += d[i]; gSum += d[i+1]; bSum += d[i+2]; n++;
-        }
-        const avgR = (rSum/n).toFixed(0), avgG = (gSum/n).toFixed(0), avgB = (bSum/n).toFixed(0);
-        log(`Pixel analysis (top-left 100x100): avgR=${avgR} avgG=${avgG} avgB=${avgB}`);
-        if (parseInt(avgG) > 200 && parseInt(avgR) < 50 && parseInt(avgB) < 50) {
-            log('WARNING: Image appears to be solid green (test pattern or broken)', 'log-warn');
-        } else if (parseInt(avgR) < 10 && parseInt(avgG) < 10 && parseInt(avgB) < 10) {
-            log('WARNING: Image appears to be solid black (no data)', 'log-warn');
-        } else {
-            log('Image has varied pixel data (looks like a real image)', 'log-ok');
-        }
+        analyzePixels(ctx, c.width, c.height);
     } catch (err) {
         log(`Canvas grab FAILED: ${err.name}: ${err.message}`, 'log-err');
     }
     btn.disabled = false; btn.textContent = 'Canvas Grab';
 };
 
-log('VirtuCam Capture Diagnostic loaded');
-log(`ImageCapture API: ${typeof ImageCapture !== 'undefined' ? 'Available' : 'NOT available'}`, 
+// --- Pixel analysis helper ---
+function analyzePixels(ctx, w, h) {
+    try {
+        const sW = Math.min(w, 100), sH = Math.min(h, 100);
+        const imgData = ctx.getImageData(0, 0, sW, sH);
+        const d = imgData.data;
+        let rSum=0, gSum=0, bSum=0, aSum=0, n=0, zeroPx=0, uniqueColors = new Set();
+        for (let i = 0; i < d.length; i += 16) {
+            rSum += d[i]; gSum += d[i+1]; bSum += d[i+2]; aSum += d[i+3]; n++;
+            if (d[i] === 0 && d[i+1] === 0 && d[i+2] === 0) zeroPx++;
+            uniqueColors.add((d[i] >> 4) + ',' + (d[i+1] >> 4) + ',' + (d[i+2] >> 4));
+        }
+        const avgR = (rSum/n).toFixed(0), avgG = (gSum/n).toFixed(0), avgB = (bSum/n).toFixed(0);
+        log(`  Pixels (${sW}x${sH} sample): avgR=${avgR} avgG=${avgG} avgB=${avgB} | ${zeroPx}/${n} black | ${uniqueColors.size} unique color bins`, 'log-dim');
+
+        if (parseInt(avgG) > 200 && parseInt(avgR) < 50 && parseInt(avgB) < 50) {
+            log('  WARNING: Solid green (test pattern or broken pipeline)', 'log-warn');
+        } else if (parseInt(avgR) < 10 && parseInt(avgG) < 10 && parseInt(avgB) < 10) {
+            log('  WARNING: Solid black (no data reaching preview)', 'log-warn');
+        } else if (uniqueColors.size < 5) {
+            log('  WARNING: Very few unique colors - may be a solid fill or error pattern', 'log-warn');
+        } else {
+            log('  Image has varied pixel data (looks like a real image)', 'log-ok');
+        }
+    } catch (e) {
+        log(`  Pixel analysis failed: ${e.message}`, 'log-dim');
+    }
+}
+
+// --- Init ---
+log('VirtuCam Capture Diagnostic v2 loaded');
+log(`ImageCapture API: ${typeof ImageCapture !== 'undefined' ? 'Available' : 'NOT available'}`,
     typeof ImageCapture !== 'undefined' ? 'log-ok' : 'log-warn');
+log(`Screen: ${screen.width}x${screen.height} | DPR: ${devicePixelRatio}`, 'log-dim');
 startCamera();
 </script>
 </body>

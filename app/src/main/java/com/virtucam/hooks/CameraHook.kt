@@ -2346,10 +2346,19 @@ object CameraHook {
         
         val isVideoSurface = videoSurfaces.contains(targetSurface)
         
+        // [JPEG DIRECT OVERWRITE] For JPEG surfaces, always use direct overwrite.
+        // Don't swap with dummy — HAL writes real JPEG, acquireNextImage hook overwrites it.
+        if (format == 256 && !isPreview && !isVideoSurface) {
+            val realSensorOrientation = resolveSensorOrientationDeg()
+            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: JPEG OutputConfig ${w}x${h} — direct overwrite (no dummy, no ImageWriter)")
+            val b = FormatConverterBridge(w, h, null, format, realSensorOrientation, rotationOffset, isColorSwapped)
+            activeBridges.add(b)
+            formatBridges[android.util.Size(w, h)] = b
+            // Don't modify the OutputConfiguration — keep Chrome's original JPEG surface
+            return b.inputSurface ?: targetSurface
+        }
+
         val bridge = if (!isPreview && !isVideoSurface) {
-            // Use the same fresh resolution as drawToAllSurfaces — both preview and capture
-            // should output at the real hardware sensor orientation so the framework handles
-            // all downstream transforms (metadata, JPEG EXIF, app-side matrices) correctly.
             val realSensorOrientation = resolveSensorOrientationDeg()
             Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Creating FormatConverterBridge for $w x $h (Format $format) SensorRot=$realSensorOrientation, RotOffset=$rotationOffset, ColorSwap=$isColorSwapped")
             val b = FormatConverterBridge(w, h, targetSurface, format, realSensorOrientation, rotationOffset, isColorSwapped)
@@ -2359,17 +2368,6 @@ object CameraHook {
         } else {
             if (isVideoSurface) Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Identified Video Surface - Bypassing FormatBridge for Direct OpenGL Render")
             null
-        }
-
-        // [BROWSER CAPTURE FIX] If JPEG bridge but ImageWriter failed,
-        // use "direct overwrite" strategy: don't swap the OutputConfiguration surface,
-        // let HAL write directly to Chrome's ImageReader. Our acquireNextImage hook
-        // will overwrite the real JPEG with our spoofed content.
-        if (format == 256 && bridge != null && !bridge.hasImageWriter) {
-            Log.e(TAG, "VirtuCam_Hook: JPEG ImageWriter unavailable for OutputConfig ${w}x${h} — using direct overwrite fallback (not swapping)")
-            // Don't modify the OutputConfiguration — leave Chrome's original JPEG surface
-            // Don't create a dummy, don't add to surfaceMap
-            return bridge.inputSurface ?: targetSurface
         }
         
         val dummySurface = createDummySurface(targetSurface, w, h, bridge)
@@ -2547,6 +2545,23 @@ object CameraHook {
                                 val format = SurfaceUtils.getSurfaceFormat(targetSurface)
                                 val isPreview = (format == 0x22 || format == 0x1)
                                 
+                                // [JPEG DIRECT OVERWRITE] For JPEG surfaces, ALWAYS use direct overwrite.
+                                // Don't swap with dummy, don't use ImageWriter (dequeueInputImage fails
+                                // with "dequeue buffer failed" on Chrome's JPEG surface). Instead:
+                                // 1. Keep Chrome's original JPEG surface in the session
+                                // 2. Create bridge WITHOUT ImageWriter (null outputSurface) for RGBA caching
+                                // 3. HAL writes real JPEG to Chrome's surface
+                                // 4. Our acquireNextImage hook [4b] overwrites it with virtual content
+                                if (format == 256 && !isPreview && !isVideoSurface) {
+                                    val b = FormatConverterBridge(w, h, null, format, resolveSensorOrientationDeg(), rotationOffset, isColorSwapped)
+                                    activeBridges.add(b)
+                                    formatBridges[android.util.Size(w, h)] = b
+                                    Log.e(TAG, "VirtuCam_Hook: JPEG ${w}x${h} — direct overwrite (no dummy, no ImageWriter)")
+                                    newSurfaces.add(targetSurface) // Keep Chrome's original JPEG surface
+                                    targetSurfaces.add(Triple(b.inputSurface ?: targetSurface, true, format))
+                                    continue
+                                }
+                                
                                 val bridge = if (!isPreview && !isVideoSurface) {
                                     val b = FormatConverterBridge(w, h, targetSurface, format, resolveSensorOrientationDeg(), rotationOffset, isColorSwapped)
                                     activeBridges.add(b)
@@ -2554,18 +2569,6 @@ object CameraHook {
                                     b
                                 } else {
                                     null
-                                }
-                                
-                                // [BROWSER CAPTURE FIX] If JPEG bridge but ImageWriter failed,
-                                // use "direct overwrite" strategy: don't swap the JPEG surface,
-                                // let HAL write directly to Chrome's ImageReader. Our acquireNextImage
-                                // hook will overwrite the real JPEG with our spoofed content.
-                                if (format == 256 && bridge != null && !bridge.hasImageWriter) {
-                                    Log.e(TAG, "VirtuCam_Hook: JPEG ImageWriter unavailable for ${w}x${h} — using direct overwrite fallback")
-                                    newSurfaces.add(targetSurface) // Keep Chrome's original JPEG surface
-                                    val resolvedSurface = bridge.inputSurface ?: targetSurface
-                                    targetSurfaces.add(Triple(resolvedSurface, true, format))
-                                    continue
                                 }
                                 
                                 val dummySurface = createDummySurface(targetSurface, w, h, bridge)
@@ -2787,6 +2790,12 @@ object CameraHook {
         surfaceMap.clear()
         formatBridges.clear()
         isStreamActive = false
+        
+        // Reset JPEG state to prevent stale data from previous sessions
+        latestVirtualJpeg = null
+        latestVirtualJpegArea = 0
+        captureCount = 0
+        captureQueue.clear()
     }
 
     private fun startRenderThreads(targetSurfaces: List<Triple<Surface, Boolean, Int>>) { // Changed to Triple
