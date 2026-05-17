@@ -208,8 +208,23 @@ class FormatConverterBridge(
      * Required for URI Direct Write bypass because native camera often uses YUV buffers 
      * but writes JPEGs to the sandboxed disk later.
      */
-    private fun generateAndStoreSpoofedJpeg() {
-        if (!isBufferReady || readyBuffer == null || conversionBuffer == null) return
+    /**
+     * Public entry point for periodic JPEG pre-warming from the render loop.
+     * Keeps latestVirtualJpeg fresh so takePhoto() is instant.
+     */
+    fun warmJpegCache() {
+        generateAndStoreSpoofedJpeg()
+    }
+
+    /**
+     * Core JPEG encoding from RGBA cache. Called by both async and sync paths.
+     * @param maxBytes If > 0, re-encodes at progressively lower quality until the JPEG fits.
+     *                 This is critical because HAL JPEG buffers are often smaller than what
+     *                 Bitmap.compress() produces at high quality.
+     * Returns the JPEG bytes or null on failure.
+     */
+    private fun encodeJpegFromCache(maxBytes: Int = 0): ByteArray? {
+        if (!isBufferReady || readyBuffer == null || conversionBuffer == null) return null
         
         val w = width
         val h = height
@@ -221,42 +236,68 @@ class FormatConverterBridge(
         }
         val rgbaBytes = conversionBuffer!!
         
-        if (!checkDataIntegrity(rgbaBytes)) return
+        if (!checkDataIntegrity(rgbaBytes)) return null
+        
+        val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        val rgbaBuffer = ByteBuffer.wrap(rgbaBytes)
+        bitmap.copyPixelsFromBuffer(rgbaBuffer)
+        
+        // Counter-rotate to upright (undo the sensor orientation baked by TextureRenderer)
+        val rotationToApply = sensorOrientation
+        val uprightBitmap = if (rotationToApply != 0) {
+            val matrix = android.graphics.Matrix()
+            matrix.postRotate(rotationToApply.toFloat())
+            val rotated = Bitmap.createBitmap(bitmap, 0, 0, w, h, matrix, true)
+            bitmap.recycle()
+            rotated
+        } else {
+            bitmap
+        }
+        
+        // Encode with quality stepping to fit buffer if maxBytes is specified
+        var quality = 85
+        var jpegBytes: ByteArray
+        do {
+            val baos = ByteArrayOutputStream()
+            uprightBitmap.compress(Bitmap.CompressFormat.JPEG, quality, baos)
+            jpegBytes = baos.toByteArray()
+            if (maxBytes <= 0 || jpegBytes.size <= maxBytes) break
+            Log.d(TAG, "JPEG quality $quality produced ${jpegBytes.size} bytes (max=$maxBytes), reducing...")
+            quality -= 10
+        } while (quality >= 15)
+        
+        uprightBitmap.recycle()
+        
+        if (maxBytes > 0 && jpegBytes.size > maxBytes) {
+            Log.w(TAG, "JPEG still ${jpegBytes.size} bytes at quality $quality (max=$maxBytes)")
+        }
+        
+        return jpegBytes
+    }
+
+    private fun generateAndStoreSpoofedJpeg() {
+        if (!isBufferReady || readyBuffer == null || conversionBuffer == null) return
         
         // [SHUTTER OPTIMIZATION] Throttle: only one bridge processes JPEG at a time
-        if (CameraHook.isGeneratingJpeg) return
+        // Safety timeout: auto-reset if stuck for >5 seconds
+        if (CameraHook.isGeneratingJpeg) {
+            if (System.currentTimeMillis() - CameraHook.jpegGenStartMs > 5000) {
+                Log.w(TAG, "FormatConverterBridge: isGeneratingJpeg stuck for >5s, force-resetting")
+                CameraHook.isGeneratingJpeg = false
+            } else {
+                return
+            }
+        }
         
         Thread {
             try {
                 CameraHook.isGeneratingJpeg = true
-                Log.d(TAG, "FormatConverterBridge: Async JPEG start for ${w}x${h}")
+                CameraHook.jpegGenStartMs = System.currentTimeMillis()
+                Log.d(TAG, "FormatConverterBridge: Async JPEG start for ${width}x${height}")
                 
-                val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-                val rgbaBuffer = ByteBuffer.wrap(rgbaBytes)
-                bitmap.copyPixelsFromBuffer(rgbaBuffer)
+                val jpegBytes = encodeJpegFromCache() ?: return@Thread
                 
-                // Counter-rotate to upright (undo the sensor orientation baked by TextureRenderer)
-                val rotationToApply = sensorOrientation
-                val uprightBitmap = if (rotationToApply != 0) {
-                    val matrix = android.graphics.Matrix()
-                    matrix.postRotate(rotationToApply.toFloat())
-                    val rotated = Bitmap.createBitmap(bitmap, 0, 0, w, h, matrix, true)
-                    bitmap.recycle()
-                    rotated
-                } else {
-                    bitmap
-                }
-                
-                val baos = ByteArrayOutputStream()
-                uprightBitmap.compress(Bitmap.CompressFormat.JPEG, 85, baos)
-                uprightBitmap.recycle()
-                
-                var jpegBytes = baos.toByteArray()
-                
-                // [HARDWARE PARITY FIX] Disabled EXIF INJECTION
-                // Let the OS handle real EXIF orientation naturally.
-                
-                val area = w * h
+                val area = width * height
                 synchronized(CameraHook) {
                     if (area >= CameraHook.latestVirtualJpegArea) {
                         CameraHook.latestVirtualJpeg = jpegBytes
@@ -271,6 +312,19 @@ class FormatConverterBridge(
                 Log.d(TAG, "FormatConverterBridge: Async JPEG done.")
             }
         }.start()
+    }
+
+    /**
+     * Synchronous JPEG generation — blocks caller until JPEG is ready.
+     * Used as a fallback when async generation hasn't produced a result yet.
+     */
+    fun generateJpegSync(): ByteArray? {
+        return try {
+            encodeJpegFromCache()
+        } catch (e: Exception) {
+            Log.e(TAG, "Sync JPEG generation failed", e)
+            null
+        }
     }
 
     /**
@@ -542,23 +596,31 @@ class FormatConverterBridge(
             val tH = targetImage.height
             Log.e(TAG, "CAPT_LOG [3c]: overwriteImageWithLatestJpeg executing. TargetImage: ${tW}x${tH}")
             
-            // Trigger background JPEG generation
-            generateAndStoreSpoofedJpeg()
-            
-            // [HARDWARE PARITY FIX] Browsers don't pre-cache JPEGs during preview.
-            // When takePhoto() is called, the GPU needs a few milliseconds to read pixels 
-            // and the async thread needs time to encode the JPEG. We must wait for it.
+            // Try cached JPEG first (instant if pre-warmed during preview)
             var jpegBytes = CameraHook.latestVirtualJpeg
             var waitCount = 0
-            while (jpegBytes == null && waitCount < 100) { // Wait up to 2 seconds
-                Thread.sleep(20)
-                if (isBufferReady) {
-                    generateAndStoreSpoofedJpeg() // Retrigger if local buffer just became ready
+
+            // If no cached JPEG, try synchronous generation (blocks ~200-500ms but no poll overhead)
+            if (jpegBytes == null && isBufferReady) {
+                jpegBytes = generateJpegSync()
+                if (jpegBytes != null) {
+                    synchronized(CameraHook) {
+                        CameraHook.latestVirtualJpeg = jpegBytes
+                        CameraHook.latestVirtualJpegArea = width * height
+                    }
                 }
-                jpegBytes = CameraHook.latestVirtualJpeg
-                waitCount++
             }
-            
+
+            // Last resort: async + short poll (only if RGBA buffer isn't ready yet)
+            if (jpegBytes == null) {
+                generateAndStoreSpoofedJpeg()
+                while (jpegBytes == null && waitCount < 50) { // 1 second max
+                    Thread.sleep(20)
+                    jpegBytes = CameraHook.latestVirtualJpeg
+                    waitCount++
+                }
+            }
+
             if (jpegBytes == null) {
                 Log.e(TAG, "CAPT_LOG [3d]: Failed to get latest Virtual JPEG after waiting ${waitCount * 20}ms. BufferReady=$isBufferReady")
                 return
@@ -582,10 +644,23 @@ class FormatConverterBridge(
                 jpegBuffer.clear()
             }
             
+            // If cached JPEG is too big for the HAL buffer, re-encode at lower quality to fit.
+            // HAL buffers are typically ~290KB while our quality-85 JPEG can be ~520KB.
+            val bufCap = jpegBuffer.capacity()
+            if (jpegBytes.size > bufCap && isBufferReady) {
+                Log.w(TAG, "FormatConverterBridge: Spoofed JPEG (${jpegBytes.size}) > Buffer Capacity ($bufCap). Re-encoding to fit...")
+                val fitted = encodeJpegFromCache(maxBytes = bufCap)
+                if (fitted != null && fitted.size <= bufCap) {
+                    jpegBytes = fitted
+                    Log.d(TAG, "FormatConverterBridge: Re-encoded JPEG fits: ${fitted.size} bytes <= $bufCap")
+                } else {
+                    Log.e(TAG, "FormatConverterBridge: Re-encode failed or still too big (${fitted?.size}). Skipping buffer overwrite.")
+                }
+            }
+            
             val finalLimit: Int
-            if (jpegBytes.size > jpegBuffer.capacity()) {
-                Log.w(TAG, "FormatConverterBridge: Spoofed JPEG (${jpegBytes.size}) > Buffer Capacity (${jpegBuffer.capacity()}). Skipping buffer overwrite. Relying on FileOutputStream hook.")
-                finalLimit = jpegBuffer.capacity() // Keep original hardware JPEG size
+            if (jpegBytes.size > bufCap) {
+                finalLimit = bufCap // Last resort: keep original hardware JPEG
             } else {
                 jpegBuffer.put(jpegBytes, 0, jpegBytes.size)
                 finalLimit = jpegBytes.size

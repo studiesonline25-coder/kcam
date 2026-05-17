@@ -119,6 +119,9 @@ object CameraHook {
     var isGeneratingJpeg: Boolean = false
 
     @Volatile
+    var jpegGenStartMs: Long = 0L
+
+    @Volatile
     var isBufferCaptureEnabled: Boolean = false
 
     @Volatile
@@ -2791,9 +2794,9 @@ object CameraHook {
         formatBridges.clear()
         isStreamActive = false
         
-        // Reset JPEG state to prevent stale data from previous sessions
-        latestVirtualJpeg = null
-        latestVirtualJpegArea = 0
+        // Reset capture counters but KEEP latestVirtualJpeg warm.
+        // The preview bridge already cached a JPEG — reuse it for instant first capture.
+        // The JPEG session's bridge will update it with full-resolution data once ready.
         captureCount = 0
         captureQueue.clear()
     }
@@ -3087,6 +3090,12 @@ class VirtualRenderThread(
 
                         if (!drawToAllSurfaces(matrix, staticImageW, staticImageH)) break
                         
+                        // [JPEG PRE-WARM] Every ~1s, generate a fresh JPEG from the current frame
+                        // so takePhoto() finds latestVirtualJpeg instantly without waiting.
+                        if (frameCount % 30 == 0) {
+                            CameraHook.formatBridges.values.forEach { it.warmJpegCache() }
+                        }
+                        
                         // Handle Photo/Capture Requests (Static Image)
                         synchronized(CameraHook) {
                             while (CameraHook.captureCount > 0) {
@@ -3143,6 +3152,11 @@ class VirtualRenderThread(
             
             val (vw, vh) = sizeProvider()
             if (!drawToAllSurfaces(matrix, vw, vh)) break
+
+            // [JPEG PRE-WARM] Every ~1s, keep JPEG cache fresh for instant takePhoto()
+            if (frameCount % 30 == 0) {
+                CameraHook.formatBridges.values.forEach { it.warmJpegCache() }
+            }
 
             // Handle Photo/Capture Requests
             synchronized(CameraHook) {
