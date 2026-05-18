@@ -1000,14 +1000,10 @@ object CameraHook {
     }
 
     private fun jitterCaptureRequest(request: android.hardware.camera2.CaptureRequest) {
-        try {
-            // [3A JITTER] Mimic physical sensor hunting
-            val focusJitter = (Math.random() * 0.05).toFloat() - 0.025f
-            setCaptureRequestField(request, android.hardware.camera2.CaptureRequest.LENS_FOCUS_DISTANCE, 0.5f + focusJitter)
-            
-            val expJitter = (Math.random() * 500000).toLong() - 250000
-            setCaptureRequestField(request, android.hardware.camera2.CaptureRequest.SENSOR_EXPOSURE_TIME, 33333333L + expJitter)
-        } catch (_: Throwable) {}
+        // [REMOVED] Random jitter replaced with smooth sine-based metadata variation
+        // in onCaptureCompleted callback (lines 1235-1243). Random jitter looks
+        // synthetic and can be detected by ML models. Smooth sine waves mimic
+        // real PID controller behavior in camera 3A algorithms.
     }
 
     private fun setCaptureRequestField(request: android.hardware.camera2.CaptureRequest, key: Any, value: Any) {

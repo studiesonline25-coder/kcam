@@ -1,0 +1,17 @@
+{
+  "device": {
+    "manufacturer": "Xiaomi",
+    "model": "2409BRN2CA",
+    "device": "pond",
+    "brand": "Redmi",
+    "android_version": "15",
+    "sdk_int": 35,
+    "target_package": "com.google.android.gms"
+  },
+  "capture_time": "2026-05-16 00:31:11",
+  "characteristics": {},
+  "transform_matrices": [],
+  "capture_results": [],
+  "capture_requests": [],
+  "sessions": []
+}

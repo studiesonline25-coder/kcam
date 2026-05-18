@@ -1,0 +1,24 @@
+{
+  "device": {
+    "manufacturer": "Xiaomi",
+    "model": "2409BRN2CA",
+    "device": "pond",
+    "brand": "Redmi",
+    "android_version": "15",
+    "sdk_int": 35,
+    "target_package": "com.google.android.youtube"
+  },
+  "capture_time": "2026-05-16 14:32:25",
+  "characteristics": {},
+  "transform_matrices": [],
+  "capture_results": [],
+  "capture_requests": [],
+  "sessions": [],
+  "display_transforms": [
+    {
+      "ts_ms": 1778931155942,
+      "tag": "View.setRotation:AppCompatImageView",
+      "value": "180.0"
+    }
+  ]
+}

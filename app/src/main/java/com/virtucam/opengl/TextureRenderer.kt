@@ -49,7 +49,7 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             
             float fixedPatternNoise(vec2 p) {
                 float n = fract(sin(dot(p, vec2(41.1, 289.3))) * 43758.5453);
-                return step(0.9992, n) * 0.012; 
+                return step(0.9998, n) * 0.012;  // 0.02% hot pixel coverage (was 0.08%, realistic for flagship cameras)
             }
             
             void main() {

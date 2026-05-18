@@ -1,0 +1,7 @@
+
+05-18 09:38:10.964 13330 21757 E VIRTUCAM_RTSP: Stream error: Source error
+05-18 09:38:33.726 13330 23531 E VIRTUCAM_RTSP: Stream error: Source error
+05-18 09:38:41.564 13330 23738 E VIRTUCAM_RTSP: Stream error: Source error
+05-18 09:38:45.750 13330 24073 E VIRTUCAM_RTSP: Stream error: Source error
+05-18 09:38:55.782 13330 24537 E VIRTUCAM_RTSP: Stream error: Source error
+
