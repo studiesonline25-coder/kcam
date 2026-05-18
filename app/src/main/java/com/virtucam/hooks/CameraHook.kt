@@ -85,6 +85,10 @@ object CameraHook {
     private val cameraOrientations = java.util.concurrent.ConcurrentHashMap<String, Int>()
     private val cameraFacings = java.util.concurrent.ConcurrentHashMap<String, Int>() // 0=BACK, 1=FRONT
     
+    // Cache real camera optical specs for dynamic injection (device-agnostic)
+    private val cameraApertures = java.util.concurrent.ConcurrentHashMap<String, Float>()
+    private val cameraFocalLengths = java.util.concurrent.ConcurrentHashMap<String, Float>()
+    
     // Global state for Late-Stage Storage Interception
     @Volatile var latestVirtualJpeg: ByteArray? = null
     @Volatile var latestVirtualJpegArea: Int = 0
@@ -1238,13 +1242,14 @@ object CameraHook {
                                                     val isoJitter = (sinValue * 20).toInt()
                                                     setResultMetadata(metadataNative, "android.sensor.sensitivity", (baseIso + isoJitter).coerceAtLeast(100))
 
-                                                    // [HARDWARE PARITY] Inject Mi 11 Ultra Optical Specs
-                                                    if (isActiveCameraFrontFacing()) {
-                                                        setResultMetadata(metadataNative, "android.lens.aperture", 2.2f)
-                                                        setResultMetadata(metadataNative, "android.lens.focalLength", 3.49f)
-                                                    } else {
-                                                        setResultMetadata(metadataNative, "android.lens.aperture", 1.95f)
-                                                        setResultMetadata(metadataNative, "android.lens.focalLength", 6.81f)
+                                                    // [HARDWARE PARITY] Inject real device optical specs (device-agnostic)
+                                                    val aperture = cameraApertures[activeCameraId]
+                                                    val focalLength = cameraFocalLengths[activeCameraId]
+                                                    if (aperture != null) {
+                                                        setResultMetadata(metadataNative, "android.lens.aperture", aperture)
+                                                    }
+                                                    if (focalLength != null) {
+                                                        setResultMetadata(metadataNative, "android.lens.focalLength", focalLength)
                                                     }
                                                 }
                                             }
@@ -1529,7 +1534,18 @@ object CameraHook {
                 } catch (_: Exception) {}
 
                 cameraOrientations[cameraId] = orientation
-                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics($cameraId) -> Facing=$facing, Orient=$orientation, HW_Level=$level")
+                
+                // Cache real optical specs for dynamic injection (device-agnostic)
+                val apertures = char.get(android.hardware.camera2.CameraCharacteristics.LENS_INFO_AVAILABLE_APERTURES)
+                val focalLengths = char.get(android.hardware.camera2.CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS)
+                if (apertures != null && apertures.isNotEmpty()) {
+                    cameraApertures[cameraId] = apertures[0]  // Use first (widest) aperture
+                }
+                if (focalLengths != null && focalLengths.isNotEmpty()) {
+                    cameraFocalLengths[cameraId] = focalLengths[0]  // Use first (primary) focal length
+                }
+                
+                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics($cameraId) -> Facing=$facing, Orient=$orientation, HW_Level=$level, Aperture=${cameraApertures[cameraId]}, FocalLen=${cameraFocalLengths[cameraId]}")
                 
                 val streamMap = char.get(android.hardware.camera2.CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
                 if (streamMap != null) {
@@ -3263,6 +3279,18 @@ class VirtualRenderThread(
                 if (vw <= 0 || vh <= 0) {
                     vw = 1280
                     vh = 720
+                }
+                
+                // [RESOLUTION MISMATCH WARNING] Detect if stream resolution doesn't match requested resolution
+                if (isStream && frameCount % 300 == 0) {  // Log every 10 seconds
+                    val streamW = contentW
+                    val streamH = contentH
+                    val requestedW = vw
+                    val requestedH = vh
+                    val scaleFactor = Math.max(requestedW.toFloat() / streamW, requestedH.toFloat() / streamH)
+                    if (scaleFactor > 1.3f) {  // More than 30% upscaling
+                        Log.w("VirtuCam_Render", "⚠️ RESOLUTION MISMATCH: Stream is ${streamW}x${streamH} but app requested ${requestedW}x${requestedH} (${scaleFactor}x upscale). Configure OBS to stream at higher resolution to avoid detection.")
+                    }
                 }
 
                 // Emulate HAL auto-rotation for SurfaceView (0 = Upright), otherwise hardware parity (Raw sensor orientation)
