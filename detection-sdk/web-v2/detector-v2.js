@@ -145,12 +145,12 @@ class VirtuCamDetectorV2 {
         
         // Calculate periodicity score (0-100)
         const avgMagnitude = spectrum.slice(1, spectrum.length / 2).reduce((a, b) => a + b, 0) / (spectrum.length / 2 - 1);
-        const periodicityScore = (maxMagnitude / avgMagnitude - 1) * 20; // Normalized
+        const periodicityScore = (maxMagnitude / avgMagnitude - 1) * 10; // Reduced multiplier
         
         return {
             score: Math.min(100, Math.max(0, periodicityScore)),
             dominantFrequency: maxIndex,
-            suspicious: periodicityScore > 15 // Threshold for suspicion
+            suspicious: periodicityScore > 50 // Much higher threshold - only flag obvious sine waves
         };
     }
 
@@ -208,14 +208,14 @@ class VirtuCamDetectorV2 {
         const stdDev = Math.sqrt(variance);
         
         // Detect if motion is too uniform (sign of screen recording)
-        const coefficientOfVariation = stdDev / mean;
+        const coefficientOfVariation = mean > 0 ? stdDev / mean : 1;
         
-        // Real camera has CV > 0.3, screen recording often < 0.2
+        // Real camera has CV > 0.2, screen recording often < 0.1
         return {
             mean: mean,
             stdDev: stdDev,
             cv: coefficientOfVariation,
-            suspicious: coefficientOfVariation < 0.2 && mean > 1
+            suspicious: coefficientOfVariation < 0.1 && mean > 1
         };
     }
 
@@ -232,7 +232,7 @@ class VirtuCamDetectorV2 {
         // Screen recording has narrow range
         return {
             brightnessRange: brightnessRange,
-            suspicious: brightnessRange < 10 && this.frames.length > 60
+            suspicious: brightnessRange < 3 && this.frames.length > 60 // Very strict - only flag if almost no variation
         };
     }
 
@@ -271,7 +271,7 @@ class VirtuCamDetectorV2 {
         // 3. Face consistency
         const faceConsistency = this.analyzeFaceConsistency();
         if (faceConsistency) {
-            const faceScore = (faceConsistency.disappearances * 10) + (faceConsistency.jumps * 5) + ((100 - faceConsistency.stability) * 0.5);
+            const faceScore = (faceConsistency.disappearances * 5) + (faceConsistency.jumps * 2) + ((100 - faceConsistency.stability) * 0.3);
             report.detections.push({
                 name: 'Face Detection Consistency',
                 score: Math.min(100, faceScore),
@@ -283,7 +283,7 @@ class VirtuCamDetectorV2 {
         // 4. Motion patterns
         const motionPattern = this.analyzeMotionPatterns();
         if (motionPattern) {
-            const motionScore = motionPattern.suspicious ? 60 : 20;
+            const motionScore = motionPattern.suspicious ? 70 : 10;
             report.detections.push({
                 name: 'Motion Pattern Analysis',
                 score: motionScore,
@@ -295,7 +295,7 @@ class VirtuCamDetectorV2 {
         // 5. Screen recording artifacts
         const screenArtifacts = this.detectScreenRecordingArtifacts();
         if (screenArtifacts) {
-            const artifactScore = screenArtifacts.suspicious ? 70 : 15;
+            const artifactScore = screenArtifacts.suspicious ? 80 : 5;
             report.detections.push({
                 name: 'Screen Recording Artifacts',
                 score: artifactScore,
@@ -308,7 +308,7 @@ class VirtuCamDetectorV2 {
         const suspiciousDetections = report.detections.filter(d => d.suspicious);
         const avgScore = report.detections.reduce((sum, d) => sum + d.score, 0) / report.detections.length;
         
-        report.riskScore = Math.min(100, avgScore + (suspiciousDetections.length * 10));
+        report.riskScore = Math.min(100, avgScore + (suspiciousDetections.length * 5));
         
         // Verdict
         if (report.riskScore < 30) {
