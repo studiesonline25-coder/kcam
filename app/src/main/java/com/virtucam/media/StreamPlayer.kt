@@ -79,18 +79,20 @@ class StreamPlayer(
         try {
             Log.i(TAG, "STREAM_DIAG: Initializing ExoPlayer for: $streamUrl")
             
-            // Configure minimal buffering for live streams to reduce latency
+            // Configure buffering for live streams - balanced between latency and stability
             val loadControl = androidx.media3.exoplayer.DefaultLoadControl.Builder()
                 .setBufferDurationsMs(
-                    500,   // minBufferMs: start playback after 500ms
-                    2000,  // maxBufferMs: buffer up to 2s (vs default 50s)
-                    250,   // bufferForPlaybackMs: resume after rebuffer with 250ms
-                    500    // bufferForPlaybackAfterRebufferMs: 500ms after stall
+                    1000,  // minBufferMs: start playback after 1s (was 500ms, too aggressive)
+                    5000,  // maxBufferMs: buffer up to 5s (was 2s, caused disconnects)
+                    500,   // bufferForPlaybackMs: resume after rebuffer with 500ms
+                    1000   // bufferForPlaybackAfterRebufferMs: 1s after stall (was 500ms)
                 )
+                .setPrioritizeTimeOverSizeThresholds(true)  // Prioritize time-based buffering for live streams
                 .build()
             
             player = ExoPlayer.Builder(context)
                 .setLoadControl(loadControl)
+                .setWakeMode(androidx.media3.common.C.WAKE_MODE_NETWORK)  // Keep network alive during playback
                 .build().apply {
                 // Set the output surface for decoded video frames
                 setVideoSurface(outputSurface)
@@ -133,7 +135,25 @@ class StreamPlayer(
                     
                     override fun onPlayerError(error: PlaybackException) {
                         Log.e(TAG, "STREAM_DIAG: Player error: ${error.message} (code=${error.errorCode})", error)
-                        onStreamError?.invoke(error.message ?: "ExoPlayer error ${error.errorCode}")
+                        
+                        // Auto-reconnect on network errors (connection closed, timeout, etc.)
+                        if (error.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED ||
+                            error.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT ||
+                            error.errorCode == PlaybackException.ERROR_CODE_IO_UNSPECIFIED) {
+                            Log.w(TAG, "STREAM_DIAG: Network error detected, attempting reconnect in 1s...")
+                            playerHandler?.postDelayed({
+                                try {
+                                    player?.prepare()
+                                    player?.play()
+                                    Log.i(TAG, "STREAM_DIAG: Reconnect attempt initiated")
+                                } catch (e: Exception) {
+                                    Log.e(TAG, "STREAM_DIAG: Reconnect failed: ${e.message}")
+                                    onStreamError?.invoke(error.message ?: "ExoPlayer error ${error.errorCode}")
+                                }
+                            }, 1000)
+                        } else {
+                            onStreamError?.invoke(error.message ?: "ExoPlayer error ${error.errorCode}")
+                        }
                     }
                 })
                 
