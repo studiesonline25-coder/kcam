@@ -191,8 +191,14 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                 val scaleYToFill = 2.0f / rotatedH
                 val baseScale = if (isBackground) java.lang.Math.max(scaleXToFill, scaleYToFill) else java.lang.Math.min(scaleXToFill, scaleYToFill)
 
-                // 1. HARDENING: Anti-Detection Shake (Applied at the VERY end of the stack)
-                Matrix.translateM(modelMatrix, 0, gyroOffsetX, gyroOffsetY, 0f)
+                // 1. HARDENING: Anti-Detection Gyro Tilt (realistic camera rotation, not translation)
+                // Apply gyro as rotation around X and Y axes to mimic real camera sensor tilt
+                if (gyroOffsetX != 0f || gyroOffsetY != 0f) {
+                    Matrix.translateM(modelMatrix, 0, 0.5f, 0.5f, 0f)  // Rotate around center
+                    Matrix.rotateM(modelMatrix, 0, gyroOffsetY, 1f, 0f, 0f)  // Pitch (X-axis rotation)
+                    Matrix.rotateM(modelMatrix, 0, gyroOffsetX, 0f, 1f, 0f)  // Roll (Y-axis rotation)
+                    Matrix.translateM(modelMatrix, 0, -0.5f, -0.5f, 0f)
+                }
                 
                 // 2. Viewport fitting
                 Matrix.scaleM(modelMatrix, 0, baseScale * zoomFactor, baseScale * zoomFactor, 1.0f)

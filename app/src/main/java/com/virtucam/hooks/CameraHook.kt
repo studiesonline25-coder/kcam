@@ -2992,14 +2992,23 @@ class VirtualRenderThread(
                 if (gyro != null) {
                     gyroListener = object : android.hardware.SensorEventListener {
                         override fun onSensorChanged(event: android.hardware.SensorEvent) {
-                            // Accumulate micro-movements, slowly decay to center
-                            val dx = event.values[1] * 0.002f // Y-axis rotation maps to X translation
-                            val dy = event.values[0] * 0.002f // X-axis rotation maps to Y translation
-                            gyroOffsetX = (gyroOffsetX + dx).coerceIn(-0.05f, 0.05f)
-                            gyroOffsetY = (gyroOffsetY + dy).coerceIn(-0.05f, 0.05f)
-                            // Decay
-                            gyroOffsetX *= 0.9f
-                            gyroOffsetY *= 0.9f
+                            // Gyroscope measures angular velocity (rad/s) around X, Y, Z axes
+                            // Integrate to get rotation angles (degrees) for realistic camera tilt
+                            // event.values[0] = X-axis (pitch), [1] = Y-axis (roll), [2] = Z-axis (yaw)
+                            val pitchRate = event.values[0] * 57.2958f  // rad/s to deg/s
+                            val rollRate = event.values[1] * 57.2958f
+                            
+                            // Integrate angular velocity to rotation angle (simplified, no dt)
+                            // Scale down significantly - gyro rates are high, we want subtle tilt
+                            val dPitch = pitchRate * 0.001f  // Pitch affects Y-axis tilt
+                            val dRoll = rollRate * 0.001f   // Roll affects X-axis tilt
+                            
+                            gyroOffsetX = (gyroOffsetX + dRoll).coerceIn(-2.0f, 2.0f)  // ±2° max roll
+                            gyroOffsetY = (gyroOffsetY + dPitch).coerceIn(-2.0f, 2.0f) // ±2° max pitch
+                            
+                            // Decay back to center (simulates hand stabilization)
+                            gyroOffsetX *= 0.95f
+                            gyroOffsetY *= 0.95f
                         }
                         override fun onAccuracyChanged(s: android.hardware.Sensor?, a: Int) {}
                     }
