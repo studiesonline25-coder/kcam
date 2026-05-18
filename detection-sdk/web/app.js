@@ -77,7 +77,28 @@ async function startCamera() {
         
     } catch (error) {
         console.error('Error accessing camera:', error);
-        alert('Failed to access camera. Please grant camera permissions.');
+        let errorMsg = 'Failed to access camera.\n\n';
+        
+        if (error.name === 'NotAllowedError') {
+            errorMsg += 'Camera permission denied. Please:\n';
+            errorMsg += '1. Grant camera permissions in browser\n';
+            errorMsg += '2. Reload the page and try again';
+        } else if (error.name === 'NotFoundError') {
+            errorMsg += 'No camera found. Please check:\n';
+            errorMsg += '1. Camera is connected\n';
+            errorMsg += '2. Camera is not being used by another app';
+        } else if (error.name === 'NotSupportedError' || window.location.protocol === 'file:') {
+            errorMsg += 'Camera requires HTTPS or localhost!\n\n';
+            errorMsg += 'Solution:\n';
+            errorMsg += '1. Open terminal in detection-sdk/web folder\n';
+            errorMsg += '2. Run: python -m http.server 8000\n';
+            errorMsg += '3. Open: http://localhost:8000\n\n';
+            errorMsg += 'Or use: npx http-server';
+        } else {
+            errorMsg += 'Error: ' + error.message;
+        }
+        
+        alert(errorMsg);
     }
 }
 

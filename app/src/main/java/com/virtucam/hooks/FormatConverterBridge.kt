@@ -268,14 +268,16 @@ class FormatConverterBridge(
         // Copy readyBuffer → conversionBuffer atomically to avoid reading half-old half-new data
         synchronized(bufferLock) {
             if (readyBuffer == null || conversionBuffer == null) {
-                Log.w(TAG, "overwriteImageWithLatestYuv: Buffer became null during copy, using fallback")
+                Log.w(TAG, "encodeJpegFromCache: Buffer became null during copy, using fallback")
                 val fallback = synchronized(lastGoodLock) { lastGoodRgba?.copyOf() }
                 if (fallback != null && conversionBuffer != null) {
                     System.arraycopy(fallback, 0, conversionBuffer!!, 0, expectedSize.coerceAtMost(fallback.size))
+                } else {
+                    return null  // No buffer available
                 }
-                return
+            } else {
+                System.arraycopy(readyBuffer!!, 0, conversionBuffer!!, 0, expectedSize)
             }
-            System.arraycopy(readyBuffer!!, 0, conversionBuffer!!, 0, expectedSize)
         }
         val rgbaBytes = conversionBuffer!!
         
