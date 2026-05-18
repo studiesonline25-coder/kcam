@@ -18,13 +18,18 @@ object FaceDetectionHelper {
     
     // ML Kit face detector with performance mode (fast detection)
     private val detector by lazy {
-        val options = FaceDetectorOptions.Builder()
-            .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
-            .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_NONE)
-            .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_NONE)
-            .setMinFaceSize(0.15f)  // Detect faces that are at least 15% of image
-            .build()
-        FaceDetection.getClient(options)
+        try {
+            val options = FaceDetectorOptions.Builder()
+                .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
+                .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_NONE)
+                .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_NONE)
+                .setMinFaceSize(0.15f)  // Detect faces that are at least 15% of image
+                .build()
+            FaceDetection.getClient(options)
+        } catch (e: Exception) {
+            Log.w(TAG, "ML Kit Face Detection not available: ${e.message}")
+            null
+        }
     }
     
     // Cached face array (updated asynchronously)
@@ -43,9 +48,12 @@ object FaceDetectionHelper {
         if (now - lastDetectionMs < DETECTION_INTERVAL_MS) return
         lastDetectionMs = now
         
+        // Skip if detector failed to initialize
+        if (detector == null) return
+        
         try {
             val image = InputImage.fromBitmap(bitmap, 0)
-            detector.process(image)
+            detector!!.process(image)
                 .addOnSuccessListener { mlFaces ->
                     // Convert ML Kit faces to Camera2 Face objects
                     val camera2Faces = mlFaces.map { mlFace ->
@@ -186,7 +194,7 @@ object FaceDetectionHelper {
      */
     fun cleanup() {
         try {
-            detector.close()
+            detector?.close()
         } catch (e: Exception) {
             // Ignore cleanup errors
         }
