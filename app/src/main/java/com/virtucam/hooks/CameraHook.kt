@@ -2899,6 +2899,10 @@ class VirtualRenderThread(
     private var mediaSurfaceTexture: SurfaceTexture? = null
     private var mediaSurface: Surface? = null
     private var frameCount = 0
+    
+    // Background maintenance thread for non-render-critical tasks
+    private var maintenanceThread: Thread? = null
+    @Volatile private var maintenanceRunning = false
 
     private fun getTargetRatio(vW: Int, vH: Int, isSurfaceView: Boolean): Float {
         return try {
@@ -2914,6 +2918,56 @@ class VirtualRenderThread(
         } catch (e: Exception) {
             vW.toFloat() / vH.toFloat()
         }
+    }
+    
+    /**
+     * Background maintenance thread for non-render-critical periodic tasks:
+     * - Configuration polling (every 1s instead of every 10 frames)
+     * - JPEG pre-warming (every 500ms instead of every 30 frames)
+     * 
+     * Prevents render thread jank from DB queries and JPEG encoding.
+     */
+    private fun startMaintenanceThread() {
+        maintenanceRunning = true
+        maintenanceThread = Thread({
+            try {
+                var configCounter = 0
+                var jpegCounter = 0
+                
+                while (maintenanceRunning && isRunning) {
+                    Thread.sleep(100) // 10Hz tick rate
+                    
+                    configCounter++
+                    jpegCounter++
+                    
+                    // Poll configuration every 1 second (10 ticks)
+                    if (configCounter >= 10) {
+                        try {
+                            CameraHook.loadConfiguration()
+                        } catch (e: Exception) {
+                            Log.w("VirtuCam_Maintenance", "Config load failed: ${e.message}")
+                        }
+                        configCounter = 0
+                    }
+                    
+                    // Warm JPEG cache every 500ms (5 ticks) for instant photo capture
+                    if (jpegCounter >= 5) {
+                        try {
+                            CameraHook.formatBridges.values.forEach { it.warmJpegCache() }
+                        } catch (e: Exception) {
+                            Log.w("VirtuCam_Maintenance", "JPEG warm failed: ${e.message}")
+                        }
+                        jpegCounter = 0
+                    }
+                }
+            } catch (e: InterruptedException) {
+                // Normal shutdown
+            } catch (e: Exception) {
+                Log.e("VirtuCam_Maintenance", "Maintenance thread error", e)
+            }
+        }, "VirtuCam-Maintenance")
+        maintenanceThread?.priority = Thread.MIN_PRIORITY
+        maintenanceThread?.start()
     }
 
     override fun run() {
@@ -3004,6 +3058,9 @@ class VirtualRenderThread(
             
             val uri = Uri.parse("content://com.virtucam.provider/file")
             
+            // Start background maintenance thread for config polling and JPEG pre-warming
+            startMaintenanceThread()
+            
             if (isStream) {
                 // Live Stream Pipeline (ExoPlayer)
                 mediaSurfaceTexture = SurfaceTexture(textureRenderer!!.textureId)
@@ -3072,7 +3129,7 @@ class VirtualRenderThread(
                     
                     while (isRunning) {
                         frameCount++
-                        if (frameCount % 10 == 0) CameraHook.loadConfiguration()
+                        // Config polling and JPEG pre-warming moved to background maintenance thread
 
                         Matrix.setIdentityM(matrix, 0)
 
@@ -3089,12 +3146,6 @@ class VirtualRenderThread(
                         }
 
                         if (!drawToAllSurfaces(matrix, staticImageW, staticImageH)) break
-                        
-                        // [JPEG PRE-WARM] Every ~1s, generate a fresh JPEG from the current frame
-                        // so takePhoto() finds latestVirtualJpeg instantly without waiting.
-                        if (frameCount % 30 == 0) {
-                            CameraHook.formatBridges.values.forEach { it.warmJpegCache() }
-                        }
                         
                         // Handle Photo/Capture Requests (Static Image)
                         synchronized(CameraHook) {
@@ -3131,7 +3182,7 @@ class VirtualRenderThread(
         val matrix = FloatArray(16)
         while (isRunning) {
             frameCount++
-            if (frameCount % 10 == 0) CameraHook.loadConfiguration()
+            // Config polling and JPEG pre-warming moved to background maintenance thread
             
             if (hasNewFrame.compareAndSet(true, false)) {
                 try { mediaSurfaceTexture?.updateTexImage() } catch (_: Exception) {}
@@ -3152,11 +3203,6 @@ class VirtualRenderThread(
             
             val (vw, vh) = sizeProvider()
             if (!drawToAllSurfaces(matrix, vw, vh)) break
-
-            // [JPEG PRE-WARM] Every ~1s, keep JPEG cache fresh for instant takePhoto()
-            if (frameCount % 30 == 0) {
-                CameraHook.formatBridges.values.forEach { it.warmJpegCache() }
-            }
 
             // Handle Photo/Capture Requests
             synchronized(CameraHook) {
@@ -3326,6 +3372,14 @@ class VirtualRenderThread(
 
     private fun releaseResources() {
         isRunning = false
+        
+        // Stop background maintenance thread
+        maintenanceRunning = false
+        maintenanceThread?.interrupt()
+        try {
+            maintenanceThread?.join(500)
+        } catch (e: InterruptedException) {}
+        maintenanceThread = null
 
         if (sensorManager != null) {
             gyroListener?.let { sensorManager!!.unregisterListener(it) }

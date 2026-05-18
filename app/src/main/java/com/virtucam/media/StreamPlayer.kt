@@ -79,7 +79,19 @@ class StreamPlayer(
         try {
             Log.i(TAG, "STREAM_DIAG: Initializing ExoPlayer for: $streamUrl")
             
-            player = ExoPlayer.Builder(context).build().apply {
+            // Configure minimal buffering for live streams to reduce latency
+            val loadControl = androidx.media3.exoplayer.DefaultLoadControl.Builder()
+                .setBufferDurationsMs(
+                    500,   // minBufferMs: start playback after 500ms
+                    2000,  // maxBufferMs: buffer up to 2s (vs default 50s)
+                    250,   // bufferForPlaybackMs: resume after rebuffer with 250ms
+                    500    // bufferForPlaybackAfterRebufferMs: 500ms after stall
+                )
+                .build()
+            
+            player = ExoPlayer.Builder(context)
+                .setLoadControl(loadControl)
+                .build().apply {
                 // Set the output surface for decoded video frames
                 setVideoSurface(outputSurface)
                 
