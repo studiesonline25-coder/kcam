@@ -90,9 +90,11 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     
-    // ExoPlayer for Video only
+    // ExoPlayer for Video + Live Streaming
     val media3_version = "1.5.1"
     implementation("androidx.media3:media3-exoplayer:$media3_version")
+    implementation("androidx.media3:media3-exoplayer-rtsp:$media3_version")
+    implementation("androidx.media3:media3-datasource-rtmp:$media3_version")
     
     // Lightweight RTSP Client
     implementation("com.github.alexeyvasilyev:rtsp-client-android:5.6.4") {
