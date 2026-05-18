@@ -3135,9 +3135,10 @@ class VirtualRenderThread(
 
                         if (CameraHook.isLivenessEnabled) {
                             val timeMs = System.currentTimeMillis()
-                            val scale = 1.0f + (Math.sin(timeMs / 500.0) * 0.008f).toFloat() 
-                            val trX = (Math.sin(timeMs / 200.0) * 0.005f).toFloat()
-                            val trY = (Math.cos(timeMs / 330.0) * 0.005f).toFloat()
+                            // Minimal hand tremor: barely perceptible when "staying still"
+                            val scale = 1.0f + (Math.sin(timeMs / 800.0) * 0.0015f).toFloat()  // ±0.15% breathing (was ±0.8%)
+                            val trX = (Math.sin(timeMs / 400.0) * 0.001f).toFloat()  // ±0.1% horizontal (was ±0.5%)
+                            val trY = (Math.cos(timeMs / 550.0) * 0.001f).toFloat()  // ±0.1% vertical (was ±0.5%)
 
                             Matrix.translateM(matrix, 0, trX, trY, 0f)
                             Matrix.translateM(matrix, 0, 0.5f, 0.5f, 0f)
@@ -3191,9 +3192,10 @@ class VirtualRenderThread(
             
             if (CameraHook.isLivenessEnabled) {
                 val timeMs = System.currentTimeMillis()
-                val scale = 1.0f + (Math.sin(timeMs / 500.0) * 0.008f).toFloat() 
-                val trX = (Math.sin(timeMs / 200.0) * 0.005f).toFloat()
-                val trY = (Math.cos(timeMs / 330.0) * 0.005f).toFloat()
+                // Minimal hand tremor: barely perceptible when "staying still"
+                val scale = 1.0f + (Math.sin(timeMs / 800.0) * 0.0015f).toFloat()  // ±0.15% breathing (was ±0.8%)
+                val trX = (Math.sin(timeMs / 400.0) * 0.001f).toFloat()  // ±0.1% horizontal (was ±0.5%)
+                val trY = (Math.cos(timeMs / 550.0) * 0.001f).toFloat()  // ±0.1% vertical (was ±0.5%)
 
                 Matrix.translateM(matrix, 0, trX, trY, 0f)
                 Matrix.translateM(matrix, 0, 0.5f, 0.5f, 0f)
