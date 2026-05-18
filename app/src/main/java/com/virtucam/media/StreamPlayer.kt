@@ -48,8 +48,8 @@ class StreamPlayer(
     var videoHeight: Int = 720
     var videoRotation: Int = 0
     var rawRotation: Int = 0
-    var isPlaying: Boolean = false
-        private set
+    private var _isPlaying: Boolean = false
+    val isPlaying: Boolean get() = _isPlaying
 
     private var frameCount = 0
 
@@ -62,7 +62,7 @@ class StreamPlayer(
     }
 
     fun stop() {
-        isPlaying = false
+        _isPlaying = false
         playerHandler?.post {
             try {
                 player?.stop()
@@ -99,7 +99,7 @@ class StreamPlayer(
                         Log.i(TAG, "STREAM_DIAG: Playback state: $stateName")
                         
                         if (state == Player.STATE_READY && !isPlaying) {
-                            isPlaying = true
+                            _isPlaying = true
                             Log.i(TAG, "STREAM_DIAG: Stream is playing!")
                         }
                     }
