@@ -116,6 +116,10 @@ object CameraHook {
     @Volatile
     var isTestPatternMode: Boolean = false
 
+    // [STEALTH MODE] Global toggle for diagnostic logging (disable for production/KYC)
+    @Volatile
+    var enableDiagnosticLogs: Boolean = false  // Set to true for debugging
+
     // Signal for VirtualRenderThread to recreate EGL surfaces when browser renegotiates resolution
     val pendingSurfaceResize = java.util.concurrent.atomic.AtomicBoolean(false)
 
@@ -137,6 +141,26 @@ object CameraHook {
     // [Metadata Sync] Process-local sync to avoid collision with real hardware focus distance
     data class TransformationState(val compensationFactor: Float, val rotationOffset: Int, val isMirrored: Boolean)
     private val metadataCourierMap = java.util.concurrent.ConcurrentHashMap<Long, TransformationState>()
+    
+    // [STEALTH MODE] Conditional logging wrappers - logs only fire when enableDiagnosticLogs = true
+    private fun logD(tag: String, msg: String) {
+        if (enableDiagnosticLogs) android.util.Log.d(tag, msg)
+    }
+    
+    private fun logE(tag: String, msg: String, throwable: Throwable? = null) {
+        if (enableDiagnosticLogs) {
+            if (throwable != null) android.util.Log.e(tag, msg, throwable)
+            else android.util.Log.e(tag, msg)
+        }
+    }
+    
+    private fun logW(tag: String, msg: String) {
+        if (enableDiagnosticLogs) android.util.Log.w(tag, msg)
+    }
+    
+    private fun logV(tag: String, msg: String) {
+        if (enableDiagnosticLogs) android.util.Log.v(tag, msg)
+    }
     
     fun getLatestCouriedState(timestamp: Long): TransformationState? {
         // Find the closest state that is <= the current timestamp
@@ -280,7 +304,7 @@ object CameraHook {
                 }
             })
         } catch (e: Throwable) {
-            Log.e("DIAGNOSTIC_VIRTUCAM", "Failed to hook ContextWrapper", e)
+            logE("DIAGNOSTIC_VIRTUCAM", "Failed to hook ContextWrapper", e)
         }
     }
 
@@ -309,14 +333,14 @@ object CameraHook {
         // Only search each unique ClassLoader exactly once
         if (!searchedClassLoaders.add(classLoader)) return
         
-        Log.e("DIAGNOSTIC_VIRTUCAM", "Searching new ClassLoader for Xiaomi classes: ${classLoader.javaClass.simpleName}")
+        logE("DIAGNOSTIC_VIRTUCAM", "Searching new ClassLoader for Xiaomi classes: ${classLoader.javaClass.simpleName}")
 
         if (!isStorageHooked) {
             try {
                 val storageClass = XposedHelpers.findClassIfExists("com.android.camera.storage.Storage", classLoader)
                 if (storageClass != null) {
                     isStorageHooked = true
-                    Log.e("DIAGNOSTIC_VIRTUCAM", "DEFERRED HOOK SUCCESS: Found com.android.camera.storage.Storage!")
+                    logE("DIAGNOSTIC_VIRTUCAM", "DEFERRED HOOK SUCCESS: Found com.android.camera.storage.Storage!")
                     applyStorageHooks(storageClass)
                 }
             } catch (t: Throwable) {}
@@ -330,7 +354,7 @@ object CameraHook {
                     val ptdClass = XposedHelpers.findClassIfExists(name, classLoader)
                     if (ptdClass != null) {
                         isPtdHooked = true
-                        Log.e("DIAGNOSTIC_VIRTUCAM", "DEFERRED HOOK SUCCESS: Found $name!")
+                        logE("DIAGNOSTIC_VIRTUCAM", "DEFERRED HOOK SUCCESS: Found $name!")
                         applyParallelTaskDataHooks(ptdClass)
                         break
                     }
@@ -346,7 +370,7 @@ object CameraHook {
                     val zipperClass = XposedHelpers.findClassIfExists(name, classLoader)
                     if (zipperClass != null) {
                         isZipperHooked = true
-                        Log.e("DIAGNOSTIC_VIRTUCAM", "DEFERRED HOOK SUCCESS: Found $name!")
+                        logE("DIAGNOSTIC_VIRTUCAM", "DEFERRED HOOK SUCCESS: Found $name!")
                         applyParallelDataZipperHooks(zipperClass)
                         break
                     }
@@ -361,7 +385,7 @@ object CameraHook {
                     val algoManagerClass = XposedHelpers.findClassIfExists(name, classLoader)
                     if (algoManagerClass != null) {
                         isAlgoHooked = true
-                        Log.e("DIAGNOSTIC_VIRTUCAM", "DEFERRED HOOK SUCCESS: Found $name!")
+                        logE("DIAGNOSTIC_VIRTUCAM", "DEFERRED HOOK SUCCESS: Found $name!")
                         applyAlgorithmManagerHooks(algoManagerClass)
                         break
                     }
@@ -373,13 +397,13 @@ object CameraHook {
     private fun applyStorageHooks(storageClass: Class<*>) {
         try {
             val methods = storageClass.declaredMethods
-            Log.e("DIAGNOSTIC_VIRTUCAM", "Storage class loaded! Total declared methods: ${methods.size}")
+            logE("DIAGNOSTIC_VIRTUCAM", "Storage class loaded! Total declared methods: ${methods.size}")
             for (m in methods) {
                 val paramTypes = m.parameterTypes.joinToString(", ") { it.simpleName }
-                Log.e("DIAGNOSTIC_VIRTUCAM", "  Storage method: ${m.name}($paramTypes) -> ${m.returnType.simpleName}")
+                logE("DIAGNOSTIC_VIRTUCAM", "  Storage method: ${m.name}($paramTypes) -> ${m.returnType.simpleName}")
             }
         } catch (t: Throwable) {
-            Log.e("DIAGNOSTIC_VIRTUCAM", "Failed to enumerate Storage methods", t)
+            logE("DIAGNOSTIC_VIRTUCAM", "Failed to enumerate Storage methods", t)
         }
 
         // 1. Boolean Squasher + Physical Copy + Manual Scan: Hook by name first, then by reflection as fallback
@@ -397,7 +421,7 @@ object CameraHook {
                             filePath = arg
                         }
                     }
-                    Log.d("DIAGNOSTIC_VIRTUCAM", "${param.method.name}: Squashed all booleans to false")
+                    logD("DIAGNOSTIC_VIRTUCAM", "${param.method.name}: Squashed all booleans to false")
 
                     if (filePath != null) {
                         val normalizedPath = if (filePath.contains("scopedStorage", true)) {
@@ -415,19 +439,19 @@ object CameraHook {
                                 destFile.parentFile?.mkdirs()
                                 try {
                                     originalFile.copyTo(destFile, overwrite = true)
-                                    Log.e("DIAGNOSTIC_VIRTUCAM", "PHYSICAL COPY SUCCESS in ${param.method.name}: Copied OBB file to \${normalizedPath}")
+                                    logE("DIAGNOSTIC_VIRTUCAM", "PHYSICAL COPY SUCCESS in ${param.method.name}: Copied OBB file to \${normalizedPath}")
                                 } catch (e: Exception) {
-                                    Log.e("DIAGNOSTIC_VIRTUCAM", "Failed to physically copy file", e)
+                                    logE("DIAGNOSTIC_VIRTUCAM", "Failed to physically copy file", e)
                                 }
                             } else {
-                                Log.e("DIAGNOSTIC_VIRTUCAM", "WARNING: OBB file does not exist or is empty at \$filePath when ${param.method.name} was called!")
+                                logE("DIAGNOSTIC_VIRTUCAM", "WARNING: OBB file does not exist or is empty at \$filePath when ${param.method.name} was called!")
                             }
                         }
 
                         triggerManualScan(normalizedPath)
                     }
                 } catch (t: Throwable) {
-                    Log.e("DIAGNOSTIC_VIRTUCAM", "squashAndScan hook error", t)
+                    logE("DIAGNOSTIC_VIRTUCAM", "squashAndScan hook error", t)
                 }
             }
         }
@@ -435,22 +459,22 @@ object CameraHook {
         // Try named hooks first
         val addImageHooks = XposedBridge.hookAllMethods(storageClass, "addImage", squashAndScanHook)
         val updateImageHooks = XposedBridge.hookAllMethods(storageClass, "updateImage", squashAndScanHook)
-        Log.e("DIAGNOSTIC_VIRTUCAM", "hookAllMethods('addImage') returned ${addImageHooks.size} hooks")
-        Log.e("DIAGNOSTIC_VIRTUCAM", "hookAllMethods('updateImage') returned ${updateImageHooks.size} hooks")
+        logE("DIAGNOSTIC_VIRTUCAM", "hookAllMethods('addImage') returned ${addImageHooks.size} hooks")
+        logE("DIAGNOSTIC_VIRTUCAM", "hookAllMethods('updateImage') returned ${updateImageHooks.size} hooks")
 
         // [NUCLEAR FALLBACK] If named hooks returned 0, hook ALL methods with boolean args
         if (addImageHooks.isEmpty()) {
-            Log.e("DIAGNOSTIC_VIRTUCAM", "addImage hook FAILED! Falling back to hooking ALL Storage methods.")
+            logE("DIAGNOSTIC_VIRTUCAM", "addImage hook FAILED! Falling back to hooking ALL Storage methods.")
             try {
                 for (method in storageClass.declaredMethods) {
                     val hasBooleanParam = method.parameterTypes.any { it == Boolean::class.javaPrimitiveType || it == java.lang.Boolean::class.java }
                     if (hasBooleanParam) {
                         XposedBridge.hookMethod(method, squashAndScanHook)
-                        Log.e("DIAGNOSTIC_VIRTUCAM", "  Hooked Storage.${method.name}() [has boolean param]")
+                        logE("DIAGNOSTIC_VIRTUCAM", "  Hooked Storage.${method.name}() [has boolean param]")
                     }
                 }
             } catch (t: Throwable) {
-                Log.e("DIAGNOSTIC_VIRTUCAM", "Storage reflection hook error", t)
+                logE("DIAGNOSTIC_VIRTUCAM", "Storage reflection hook error", t)
             }
         }
 
@@ -517,7 +541,7 @@ object CameraHook {
                         if (dcimIndex > 0) {
                             val newPath = "/storage/emulated/0/" + originalPath.substring(dcimIndex)
                             param.args[0] = newPath
-                            Log.e("DIAGNOSTIC_VIRTUCAM", "Storage Normalization: Stripped OEM Redirect! $originalPath -> $newPath")
+                            logE("DIAGNOSTIC_VIRTUCAM", "Storage Normalization: Stripped OEM Redirect! $originalPath -> $newPath")
                         }
                     }
                 }
@@ -664,7 +688,7 @@ object CameraHook {
                         val idx = path.indexOf("DCIM/Camera")
                         if (idx > 0) {
                             paths[i] = "/storage/emulated/0/" + path.substring(idx)
-                            Log.e("DIAGNOSTIC_VIRTUCAM", "MediaScanner Normalization: $path -> ${paths[i]}")
+                            logE("DIAGNOSTIC_VIRTUCAM", "MediaScanner Normalization: $path -> ${paths[i]}")
                         }
                     }
                 }
@@ -695,7 +719,7 @@ object CameraHook {
                     try {
                         val keys = values.keySet()
                         val kvPairs = keys.joinToString(", ") { k -> "$k=${values.get(k)}" }
-                        Log.e("DIAGNOSTIC_VIRTUCAM", "ContentResolver INSERT keys: $kvPairs")
+                        logE("DIAGNOSTIC_VIRTUCAM", "ContentResolver INSERT keys: $kvPairs")
                     } catch (_: Throwable) {}
                     
                     // 1. Path Normalization (try _data first)
@@ -705,7 +729,7 @@ object CameraHook {
                         if (idx > 0) {
                             val normalizedPath = "/storage/emulated/0/" + dataPath.substring(idx)
                             values.put("_data", normalizedPath)
-                            Log.e("DIAGNOSTIC_VIRTUCAM", "ContentResolver Normalization: $dataPath -> $normalizedPath")
+                            logE("DIAGNOSTIC_VIRTUCAM", "ContentResolver Normalization: $dataPath -> $normalizedPath")
                         }
                     }
                     
@@ -713,13 +737,13 @@ object CameraHook {
                     val relativePath = values.getAsString("relative_path")
                     if (relativePath != null && relativePath.contains("scopedStorage", true)) {
                         values.put("relative_path", "DCIM/Camera/")
-                        Log.e("DIAGNOSTIC_VIRTUCAM", "ContentResolver: Forced relative_path=DCIM/Camera/ (was: $relativePath)")
+                        logE("DIAGNOSTIC_VIRTUCAM", "ContentResolver: Forced relative_path=DCIM/Camera/ (was: $relativePath)")
                     }
                     
                     // 2. Orientation Normalization (MediaStore)
                     if (values.containsKey("orientation")) {
                          values.put("orientation", 0)
-                         Log.e("DIAGNOSTIC_VIRTUCAM", "ContentResolver: Forced orientation=0 in ContentValues")
+                         logE("DIAGNOSTIC_VIRTUCAM", "ContentResolver: Forced orientation=0 in ContentValues")
                     }
 
                     // 3. Construct scan path (but DON'T scan yet — file hasn't been written)
@@ -764,7 +788,7 @@ object CameraHook {
                     val resultUri = param.result as? android.net.Uri ?: return
                     if (!resultUri.toString().contains("images")) return
                     
-                    Log.e("DIAGNOSTIC_VIRTUCAM", "ContentResolver INSERT returned URI: $resultUri")
+                    logE("DIAGNOSTIC_VIRTUCAM", "ContentResolver INSERT returned URI: $resultUri")
                     
                     // Extract _display_name directly from the ContentValues in args
                     val values = param.args.firstOrNull { it is android.content.ContentValues } as? android.content.ContentValues
@@ -779,7 +803,7 @@ object CameraHook {
                         // 1. Send broadcast immediately
                         val scanIntent = android.content.Intent(android.content.Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, resultUri)
                         context.sendBroadcast(scanIntent)
-                        Log.e("DIAGNOSTIC_VIRTUCAM", "Sent MEDIA_SCANNER broadcast for URI: $resultUri")
+                        logE("DIAGNOSTIC_VIRTUCAM", "Sent MEDIA_SCANNER broadcast for URI: $resultUri")
                     }
                     
                     // 2. URI DIRECT WRITE RESCUE
@@ -812,19 +836,19 @@ object CameraHook {
                                                 os.flush()
                                                 os.close()
                                                 uriWriteSuccess = true
-                                                Log.e("DIAGNOSTIC_VIRTUCAM", "URI DIRECT WRITE SUCCESS: Wrote ${jpegData.size} bytes to $capturedUri")
+                                                logE("DIAGNOSTIC_VIRTUCAM", "URI DIRECT WRITE SUCCESS: Wrote ${jpegData.size} bytes to $capturedUri")
                                                 
                                                 // Clear is_pending flag IMMEDIATELY so gallery can see it and app unblocks
                                                 val updateValues = android.content.ContentValues()
                                                 updateValues.put("is_pending", 0)
                                                 try {
                                                     resolver.update(capturedUri, updateValues, null, null)
-                                                    Log.e("DIAGNOSTIC_VIRTUCAM", "Cleared is_pending flag for $capturedUri")
+                                                    logE("DIAGNOSTIC_VIRTUCAM", "Cleared is_pending flag for $capturedUri")
                                                 } catch (_: Throwable) {}
                                             }
                                         }
                                     } catch (e: Throwable) {
-                                        Log.e("DIAGNOSTIC_VIRTUCAM", "URI Direct Write failed: ${e.message}")
+                                        logE("DIAGNOSTIC_VIRTUCAM", "URI Direct Write failed: ${e.message}")
                                     }
                                     
                                     // === SECONDARY: Also write physical backup to DCIM ===
@@ -837,9 +861,9 @@ object CameraHook {
                                             fos.write(jpegData)
                                             fos.flush()
                                         }
-                                        Log.e("DIAGNOSTIC_VIRTUCAM", "PHYSICAL BACKUP SUCCESS: Wrote ${jpegData.size} bytes to $dcimPath")
+                                        logE("DIAGNOSTIC_VIRTUCAM", "PHYSICAL BACKUP SUCCESS: Wrote ${jpegData.size} bytes to $dcimPath")
                                     } catch (e: Throwable) {
-                                        Log.e("DIAGNOSTIC_VIRTUCAM", "Physical backup write failed (EACCES?): ${e.message}. URI write was: $uriWriteSuccess")
+                                        logE("DIAGNOSTIC_VIRTUCAM", "Physical backup write failed (EACCES?): ${e.message}. URI write was: $uriWriteSuccess")
                                     }
                                     
                                     if (uriWriteSuccess) {
@@ -847,7 +871,7 @@ object CameraHook {
                                         return@Thread 
                                     }
                                 } else {
-                                    Log.e("DIAGNOSTIC_VIRTUCAM", "URI Direct Write: No latestVirtualJpeg available after 2.5s. Falling back to file polling...")
+                                    logE("DIAGNOSTIC_VIRTUCAM", "URI Direct Write: No latestVirtualJpeg available after 2.5s. Falling back to file polling...")
                                 }
                                 
                                 // === TERTIARY FALLBACK: Original file polling (reduced) ===
@@ -883,14 +907,14 @@ object CameraHook {
                                             tempFile.copyTo(dcimFile, overwrite = true)
                                             tempFile.delete()
                                             
-                                            Log.e("DIAGNOSTIC_VIRTUCAM", "PHYSICAL RESCUE SUCCESS (Attempt $attempt): Found at ${foundFile.absolutePath}, rescued to $dcimPath")
+                                            logE("DIAGNOSTIC_VIRTUCAM", "PHYSICAL RESCUE SUCCESS (Attempt $attempt): Found at ${foundFile.absolutePath}, rescued to $dcimPath")
                                             triggerManualScan(dcimPath)
                                             break 
                                         } catch (e: Exception) {
-                                            Log.e("DIAGNOSTIC_VIRTUCAM", "Physical Rescue Copy Error", e)
+                                            logE("DIAGNOSTIC_VIRTUCAM", "Physical Rescue Copy Error", e)
                                         }
                                     } else {
-                                        Log.e("DIAGNOSTIC_VIRTUCAM", "Physical Rescue Attempt $attempt: File not found in any sandbox yet.")
+                                        logE("DIAGNOSTIC_VIRTUCAM", "Physical Rescue Attempt $attempt: File not found in any sandbox yet.")
                                     }
                                 }
                             } catch (_: Throwable) {}
@@ -925,7 +949,7 @@ object CameraHook {
                     if (idx > 0) {
                         val normalized = "/storage/emulated/0/" + value.substring(idx)
                         param.args[1] = normalized
-                        Log.v("DIAGNOSTIC_VIRTUCAM", "ContentValues Path Normalization: $value -> $normalized")
+                        logV("DIAGNOSTIC_VIRTUCAM", "ContentValues Path Normalization: $value -> $normalized")
                         
                         // Force a manual scan the moment the database receives the correct path
                         triggerManualScan(normalized)
@@ -942,7 +966,7 @@ object CameraHook {
                     val originalValue = param.args[1] as Int
                     if (originalValue != 0) {
                         param.args[1] = 0 
-                        Log.e("DIAGNOSTIC_VIRTUCAM", "ContentValues Orientation SPOOFED: $originalValue -> 0")
+                        logE("DIAGNOSTIC_VIRTUCAM", "ContentValues Orientation SPOOFED: $originalValue -> 0")
                     }
                 }
             }
@@ -977,7 +1001,7 @@ object CameraHook {
                         if (idx > 0) {
                             val newPath = "/storage/emulated/0/" + path.substring(idx)
                             intent.setData(android.net.Uri.fromFile(java.io.File(newPath)))
-                            Log.e("DIAGNOSTIC_VIRTUCAM", "Scanner Broadcast Normalization: $path -> $newPath")
+                            logE("DIAGNOSTIC_VIRTUCAM", "Scanner Broadcast Normalization: $path -> $newPath")
                         }
                     }
                 }
@@ -1026,7 +1050,7 @@ object CameraHook {
             XposedBridge.hookAllMethods(ptdClass, "setParallel", object : XC_MethodHook() {
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     param.args[0] = false
-                    Log.d("DIAGNOSTIC_VIRTUCAM", "ParallelTaskData: Forced setParallel(false)")
+                    logD("DIAGNOSTIC_VIRTUCAM", "ParallelTaskData: Forced setParallel(false)")
                 }
             })
             // Also squash isParallel getter just in case
@@ -1036,7 +1060,7 @@ object CameraHook {
                 }
             })
         } catch (t: Throwable) {
-            Log.e("DIAGNOSTIC_VIRTUCAM", "Failed to apply ParallelTaskData hooks", t)
+            logE("DIAGNOSTIC_VIRTUCAM", "Failed to apply ParallelTaskData hooks", t)
         }
     }
 
@@ -1047,7 +1071,7 @@ object CameraHook {
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     // Try to force the zipper to THINK it's not parallel anymore
                     // This is aggressive and might crash, but it's our best bet to stop the redirect
-                    Log.d("DIAGNOSTIC_VIRTUCAM", "ParallelDataZipper: Intercepted setResult")
+                    logD("DIAGNOSTIC_VIRTUCAM", "ParallelDataZipper: Intercepted setResult")
                 }
             })
             
@@ -1058,13 +1082,13 @@ object CameraHook {
                     if (ptd != null) {
                         try {
                             XposedHelpers.setBooleanField(ptd, "mIsParallel", false)
-                            Log.d("DIAGNOSTIC_VIRTUCAM", "ParallelDataZipper: Squashed mIsParallel in returned PTD object")
+                            logD("DIAGNOSTIC_VIRTUCAM", "ParallelDataZipper: Squashed mIsParallel in returned PTD object")
                         } catch (_: Exception) {}
                     }
                 }
             })
         } catch (t: Throwable) {
-            Log.e("DIAGNOSTIC_VIRTUCAM", "Failed to apply ParallelDataZipper hooks", t)
+            logE("DIAGNOSTIC_VIRTUCAM", "Failed to apply ParallelDataZipper hooks", t)
         }
     }
 
@@ -1076,7 +1100,7 @@ object CameraHook {
                 }
             })
         } catch (t: Throwable) {
-            Log.e("DIAGNOSTIC_VIRTUCAM", "Failed to apply AlgorithmManager hooks", t)
+            logE("DIAGNOSTIC_VIRTUCAM", "Failed to apply AlgorithmManager hooks", t)
         }
     }
 
@@ -1091,7 +1115,7 @@ object CameraHook {
                 val file = param.thisObject as java.io.File
                 val path = file.absolutePath
                 if (path.contains("DCIM/Camera", true) && path.endsWith(".jpg", true)) {
-                    Log.e("DIAGNOSTIC_VIRTUCAM", "CRITICAL WARNING: App attempted to DELETE physical photo! Path: $path")
+                    logE("DIAGNOSTIC_VIRTUCAM", "CRITICAL WARNING: App attempted to DELETE physical photo! Path: $path")
                     // We let it proceed for now to see IF it happens, but we can block it later if needed.
                 }
             }
@@ -1102,15 +1126,15 @@ object CameraHook {
         try {
             val context = AndroidAppHelper.currentApplication()
             if (context == null) {
-                Log.e("DIAGNOSTIC_VIRTUCAM", "Manual Scan FAILED: No Application Context available for $path")
+                logE("DIAGNOSTIC_VIRTUCAM", "Manual Scan FAILED: No Application Context available for $path")
                 return
             }
-            Log.e("DIAGNOSTIC_VIRTUCAM", "Triggering MANUAL System Scan for: $path")
+            logE("DIAGNOSTIC_VIRTUCAM", "Triggering MANUAL System Scan for: $path")
             android.media.MediaScannerConnection.scanFile(context, arrayOf(path), null) { scannedPath, uri ->
-                Log.e("DIAGNOSTIC_VIRTUCAM", "MANUAL Scan Completed! Path: $scannedPath, URI: $uri")
+                logE("DIAGNOSTIC_VIRTUCAM", "MANUAL Scan Completed! Path: $scannedPath, URI: $uri")
             }
         } catch (e: Exception) {
-            Log.e("DIAGNOSTIC_VIRTUCAM", "Failed to trigger manual scan", e)
+            logE("DIAGNOSTIC_VIRTUCAM", "Failed to trigger manual scan", e)
         }
     }
 
@@ -1222,25 +1246,21 @@ object CameraHook {
                                                 if (metadataNative != null) {
                                                     val currentFrame = captureCount
                                                     
-                                                    // 1. Smooth Exposure Metadata (Sine Wave over 90 frames ~ 3 seconds)
-                                                    val framePhase = (currentFrame % 90L).toDouble() / 90.0 * 2.0 * Math.PI
-                                                    val sinValue = Math.sin(framePhase)
-                                                    val cosValue = Math.cos(framePhase)
+                                                    // [ULTRA-REALISTIC NOISE] Perlin noise + CMOS sensor model (replaces sine waves)
                                                     
-                                                    // SEARCHING when the rate of change is highest (steepest part of sine wave)
-                                                    val aeState = if (Math.abs(cosValue) > 0.8) 1 else 2 // 1: SEARCHING, 2: CONVERGED
+                                                    // 1. Realistic Auto-Exposure State (natural state machine behavior)
+                                                    val aeState = RealisticNoiseGenerator.realisticAeState(currentFrame.toLong())
                                                     setResultMetadata(metadataNative, "android.control.aeState", aeState)
                                                     
-                                                    // Exposure Time Fluctuation: Smooth ±5% curve instead of impossible random jumps
+                                                    // 2. Realistic Exposure Time (multi-octave Perlin + CMOS noise)
                                                     val baseExposure = result.get(android.hardware.camera2.CaptureResult.SENSOR_EXPOSURE_TIME) ?: 33_333_333L
-                                                    val smoothJitter = sinValue * 0.05 * baseExposure
-                                                    val newExposure = (baseExposure + smoothJitter).toLong()
-                                                    setResultMetadata(metadataNative, "android.sensor.exposureTime", newExposure)
+                                                    val realisticExposure = RealisticNoiseGenerator.realisticExposureTime(currentFrame.toLong(), baseExposure)
+                                                    setResultMetadata(metadataNative, "android.sensor.exposureTime", realisticExposure)
 
-                                                    // ISO Sensitivity Shimmer: Mimics real CMOS noise floor fluctuations
+                                                    // 3. Realistic ISO Sensitivity (Perlin + shot noise + read noise)
                                                     val baseIso = result.get(android.hardware.camera2.CaptureResult.SENSOR_SENSITIVITY) ?: 200
-                                                    val isoJitter = (sinValue * 20).toInt()
-                                                    setResultMetadata(metadataNative, "android.sensor.sensitivity", (baseIso + isoJitter).coerceAtLeast(100))
+                                                    val realisticIso = RealisticNoiseGenerator.realisticIsoSensitivity(currentFrame.toLong(), baseIso)
+                                                    setResultMetadata(metadataNative, "android.sensor.sensitivity", realisticIso)
 
                                                     // [HARDWARE PARITY] Inject real device optical specs (device-agnostic)
                                                     val aperture = cameraApertures[activeCameraId]
@@ -1250,6 +1270,22 @@ object CameraHook {
                                                     }
                                                     if (focalLength != null) {
                                                         setResultMetadata(metadataNative, "android.lens.focalLength", focalLength)
+                                                    }
+                                                    
+                                                    // [FACE DETECTION] Inject STATISTICS_FACES from ML Kit detection
+                                                    try {
+                                                        val detectedFaces = FaceDetectionHelper.getCachedFaces()
+                                                        if (detectedFaces.isNotEmpty()) {
+                                                            setResultMetadata(metadataNative, "android.statistics.faces", detectedFaces)
+                                                            if (enableDiagnosticLogs) {
+                                                                logD(TAG, "Injected ${detectedFaces.size} face(s) into STATISTICS_FACES")
+                                                            }
+                                                        }
+                                                    } catch (e: Exception) {
+                                                        // Face injection is optional, don't crash
+                                                        if (enableDiagnosticLogs) {
+                                                            logW(TAG, "Failed to inject STATISTICS_FACES: ${e.message}")
+                                                        }
                                                     }
                                                 }
                                             }
@@ -1378,7 +1414,7 @@ object CameraHook {
                     tag.contains("ParallelData", true) || 
                     tag.contains("CAM_Storage", true)) {
                     
-                    Log.e("DIAGNOSTIC_VIRTUCAM", "[$tag] $msg")
+                    logE("DIAGNOSTIC_VIRTUCAM", "[$tag] $msg")
                 }
             }
         }
@@ -2935,7 +2971,7 @@ class VirtualRenderThread(
     /**
      * Background maintenance thread for non-render-critical periodic tasks:
      * - Configuration polling (every 1s instead of every 10 frames)
-     * - JPEG pre-warming (every 500ms instead of every 30 frames)
+     * - JPEG pre-warming (every 200ms instead of every 30 frames)
      * 
      * Prevents render thread jank from DB queries and JPEG encoding.
      */
@@ -2962,8 +2998,8 @@ class VirtualRenderThread(
                         configCounter = 0
                     }
                     
-                    // Warm JPEG cache every 500ms (5 ticks) for instant photo capture
-                    if (jpegCounter >= 5) {
+                    // Warm JPEG cache every 200ms (2 ticks) for instant photo capture
+                    if (jpegCounter >= 2) {
                         try {
                             CameraHook.formatBridges.values.forEach { it.warmJpegCache() }
                         } catch (e: Exception) {

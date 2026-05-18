@@ -100,4 +100,7 @@ dependencies {
     implementation("com.github.alexeyvasilyev:rtsp-client-android:5.6.4") {
         exclude(group = "androidx.camera")
     }
+    
+    // ML Kit Face Detection for STATISTICS_FACES metadata injection
+    implementation("com.google.mlkit:face-detection:16.1.7")
 }

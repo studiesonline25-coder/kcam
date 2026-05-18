@@ -32,6 +32,26 @@ class FormatConverterBridge(
     companion object {
         private const val TAG = "VirtuCam_Bridge"
     }
+    
+    // [STEALTH MODE] Conditional logging wrappers
+    private fun logD(tag: String, msg: String) {
+        if (CameraHook.enableDiagnosticLogs) android.util.Log.d(tag, msg)
+    }
+    
+    private fun logE(tag: String, msg: String, throwable: Throwable? = null) {
+        if (CameraHook.enableDiagnosticLogs) {
+            if (throwable != null) android.util.Log.e(tag, msg, throwable)
+            else android.util.Log.e(tag, msg)
+        }
+    }
+    
+    private fun logW(tag: String, msg: String) {
+        if (CameraHook.enableDiagnosticLogs) android.util.Log.w(tag, msg)
+    }
+    
+    private fun logV(tag: String, msg: String) {
+        if (CameraHook.enableDiagnosticLogs) android.util.Log.v(tag, msg)
+    }
 
     private var imageReader: ImageReader? = null
     private var handlerThread: HandlerThread? = null
@@ -153,6 +173,19 @@ class FormatConverterBridge(
                                 }
                             }
                         }
+                        
+                        // [FACE DETECTION] Process frame for STATISTICS_FACES metadata (async, non-blocking)
+                        try {
+                            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                            bitmap.copyPixelsFromBuffer(java.nio.ByteBuffer.wrap(wBuf))
+                            FaceDetectionHelper.processFrameAsync(bitmap, width, height)
+                            bitmap.recycle()
+                        } catch (e: Exception) {
+                            // Face detection is optional, don't crash if it fails
+                            if (CameraHook.enableDiagnosticLogs) {
+                                Log.w(TAG, "Face detection skipped: ${e.message}")
+                            }
+                        }
                     }
                     // [INVESTIGATION] Periodic buffer dump for rotation analysis.
                     // Throttled to once per 5 seconds per bridge to avoid spamming disk.
@@ -231,7 +264,17 @@ class FormatConverterBridge(
         val expectedSize = w * h * 4
         
         // Fast synchronized copy into conversion buffer
+        // [RACE CONDITION FIX] Double-buffer copy to prevent split-line artifacts
+        // Copy readyBuffer → conversionBuffer atomically to avoid reading half-old half-new data
         synchronized(bufferLock) {
+            if (readyBuffer == null || conversionBuffer == null) {
+                Log.w(TAG, "overwriteImageWithLatestYuv: Buffer became null during copy, using fallback")
+                val fallback = synchronized(lastGoodLock) { lastGoodRgba?.copyOf() }
+                if (fallback != null && conversionBuffer != null) {
+                    System.arraycopy(fallback, 0, conversionBuffer!!, 0, expectedSize.coerceAtMost(fallback.size))
+                }
+                return
+            }
             System.arraycopy(readyBuffer!!, 0, conversionBuffer!!, 0, expectedSize)
         }
         val rgbaBytes = conversionBuffer!!
@@ -276,7 +319,10 @@ class FormatConverterBridge(
     }
 
     private fun generateAndStoreSpoofedJpeg() {
-        if (!isBufferReady || readyBuffer == null || conversionBuffer == null) return
+        if (!isBufferReady || readyBuffer == null || conversionBuffer == null) {
+            Log.d(TAG, "generateAndStoreSpoofedJpeg: Buffer not ready (isBufferReady=$isBufferReady, readyBuffer=${readyBuffer != null}, conversionBuffer=${conversionBuffer != null})")
+            return
+        }
         
         // [SHUTTER OPTIMIZATION] Throttle: only one bridge processes JPEG at a time
         // Safety timeout: auto-reset if stuck for >5 seconds
@@ -364,8 +410,24 @@ class FormatConverterBridge(
                 for (i in 3 until conversionBuffer!!.size step 4) conversionBuffer!![i] = 255.toByte()
             }
         } else {
+            // [RACE CONDITION FIX] Atomic copy to prevent split-line artifacts
             synchronized(bufferLock) {
-                System.arraycopy(readyBuffer!!, 0, conversionBuffer!!, 0, expectedSize)
+                if (readyBuffer == null || conversionBuffer == null) {
+                    Log.w(TAG, "overwriteImageWithLatestYuv: Buffer became null, using fallback")
+                    val fallback = synchronized(lastGoodLock) { lastGoodRgba?.copyOf() }
+                    if (fallback != null && conversionBuffer != null) {
+                        System.arraycopy(fallback, 0, conversionBuffer!!, 0, expectedSize.coerceAtMost(fallback.size))
+                    } else {
+                        // Total failure: fill with black
+                        if (conversionBuffer != null) {
+                            java.util.Arrays.fill(conversionBuffer!!, 0.toByte())
+                            for (i in 3 until conversionBuffer!!.size step 4) conversionBuffer!![i] = 255.toByte()
+                        }
+                        return
+                    }
+                } else {
+                    System.arraycopy(readyBuffer!!, 0, conversionBuffer!!, 0, expectedSize)
+                }
             }
         }
         
