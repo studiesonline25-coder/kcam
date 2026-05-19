@@ -108,6 +108,15 @@ class VirtuCamConfig(context: Context) {
         set(value) = prefs.edit().putBoolean("is_liveness_enabled", value).apply()
 
     /**
+     * Color Flash Detection - Detects screen color flashes (green circles, etc.)
+     * and adjusts video color to simulate ambient light reflection on face.
+     * Used to bypass KYC liveness color challenges.
+     */
+    var isColorFlashEnabled: Boolean
+        get() = prefs.getBoolean("is_color_flash_enabled", true) // Default to ON
+        set(value) = prefs.edit().putBoolean("is_color_flash_enabled", value).apply()
+
+    /**
      * [INVESTIGATION] Test pattern mode.
      * When ON, replaces user-uploaded media with a known-orientation test pattern
      * (TOP/BOTTOM/L/R labels + arrow). Used for rotation/mirror analysis.

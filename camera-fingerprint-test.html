@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Fingerprint Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        h1 {
+            color: #4fc3f7;
+        }
+        .section {
+            background: #2d2d2d;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border-left: 4px solid #4fc3f7;
+        }
+        .warning {
+            border-left-color: #ff9800;
+            background: #3d2d1d;
+        }
+        .error {
+            border-left-color: #f44336;
+            background: #3d1d1d;
+        }
+        .success {
+            border-left-color: #4caf50;
+            background: #1d3d1d;
+        }
+        pre {
+            background: #1e1e1e;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        button {
+            background: #4fc3f7;
+            color: #1e1e1e;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #29b6f6;
+        }
+        video {
+            width: 100%;
+            max-width: 640px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Camera Fingerprint Test</h1>
+    <p>This test reveals what KYC providers see when analyzing your camera.</p>
+    
+    <button onclick="runTest()">🚀 Start Camera Test</button>
+    <button onclick="copyResults()">📋 Copy Results</button>
+    
+    <video id="video" autoplay playsinline muted></video>
+    
+    <div id="results"></div>
+    
+    <script>
+        let allResults = {};
+        
+        async function runTest() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<h2>⏳ Running tests...</h2>';
+            
+            allResults = {
+                timestamp: new Date().toISOString(),
+                tests: {}
+            };
+            
+            // Test 1: Browser Environment
+            addResult('Browser Environment', testBrowserEnvironment(), 'info');
+            
+            // Test 2: WebGL Renderer
+            addResult('WebGL Renderer', testWebGL(), 'info');
+            
+            // Test 3: Hardware Info
+            addResult('Hardware Info', testHardware(), 'info');
+            
+            // Test 4: Camera Access
+            try {
+                const cameraInfo = await testCamera();
+                addResult('Camera Analysis', cameraInfo, cameraInfo.suspicious ? 'error' : 'success');
+            } catch (error) {
+                addResult('Camera Analysis', { error: error.message }, 'error');
+            }
+        }
+        
+        function testBrowserEnvironment() {
+            const ua = navigator.userAgent;
+            const platform = navigator.platform;
+            
+            const suspicious = [];
+            
+            if (ua.includes('Linux') && !ua.includes('Android')) {
+                suspicious.push('Linux user agent (not Android)');
+            }
+            
+            if (platform.includes('Linux') || platform.includes('X11')) {
+                suspicious.push('Linux platform');
+            }
+            
+            if (!ua.includes('Mobile') && !ua.includes('Android')) {
+                suspicious.push('Not mobile device');
+            }
+            
+            return {
+                userAgent: ua,
+                platform: platform,
+                suspicious: suspicious,
+                verdict: suspicious.length > 0 ? '⚠️ SUSPICIOUS' : '✅ NORMAL'
+            };
+        }
+        
+        function testWebGL() {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            
+            if (!gl) {
+                return { error: 'WebGL not supported' };
+            }
+            
+            const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+            const vendor = debugInfo ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) : 'Unknown';
+            const renderer = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : 'Unknown';
+            
+            const suspicious = [];
+            
+            if (renderer.includes('llvmpipe')) {
+                suspicious.push('Software rendering (llvmpipe) - Virtual machine!');
+            }
+            
+            if (renderer.includes('SwiftShader')) {
+                suspicious.push('Software rendering (SwiftShader) - Virtual machine!');
+            }
+            
+            if (renderer.includes('VMware') || renderer.includes('VirtualBox')) {
+                suspicious.push('Virtual machine GPU detected!');
+            }
+            
+            if (vendor.includes('VMware') || vendor.includes('VirtualBox')) {
+                suspicious.push('Virtual machine vendor detected!');
+            }
+            
+            return {
+                vendor: vendor,
+                renderer: renderer,
+                suspicious: suspicious,
+                verdict: suspicious.length > 0 ? '❌ VIRTUAL MACHINE DETECTED' : '✅ REAL GPU'
+            };
+        }
+        
+        function testHardware() {
+            const suspicious = [];
+            
+            // Check CPU cores
+            const cores = navigator.hardwareConcurrency || 0;
+            if (cores < 4) {
+                suspicious.push(`Low CPU cores (${cores}) - Possible VM`);
+            }
+            
+            // Check screen resolution
+            const width = screen.width;
+            const height = screen.height;
+            
+            // Common VM resolutions
+            if ((width === 1024 && height === 768) ||
+                (width === 1280 && height === 720) ||
+                (width === 1280 && height === 800)) {
+                suspicious.push(`Common VM resolution (${width}x${height})`);
+            }
+            
+            // Check device memory (if available)
+            const memory = navigator.deviceMemory || 'Unknown';
+            if (memory !== 'Unknown' && memory < 4) {
+                suspicious.push(`Low device memory (${memory}GB) - Possible VM`);
+            }
+            
+            return {
+                cores: cores,
+                screenResolution: `${width}x${height}`,
+                deviceMemory: memory,
+                suspicious: suspicious,
+                verdict: suspicious.length > 0 ? '⚠️ SUSPICIOUS' : '✅ NORMAL'
+            };
+        }
+        
+        async function testCamera() {
+            // Get camera stream
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: 'user',
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                }
+            });
+            
+            // Display video
+            const video = document.getElementById('video');
+            video.srcObject = stream;
+            
+            const track = stream.getVideoTracks()[0];
+            const settings = track.getSettings();
+            const capabilities = track.getCapabilities();
+            
+            // Analyze camera
+            const suspicious = [];
+            
+            // Check for missing hardware capabilities
+            if (!capabilities.exposureMode) {
+                suspicious.push('Missing exposureMode capability - Not a real camera!');
+            }
+            
+            if (!capabilities.focusMode) {
+                suspicious.push('Missing focusMode capability - Not a real camera!');
+            }
+            
+            if (!capabilities.whiteBalanceMode) {
+                suspicious.push('Missing whiteBalanceMode capability - Not a real camera!');
+            }
+            
+            if (!capabilities.zoom) {
+                suspicious.push('Missing zoom capability - Not a real camera!');
+            }
+            
+            if (!capabilities.torch && !capabilities.fillLightMode) {
+                suspicious.push('Missing torch/flash capability - Suspicious');
+            }
+            
+            // Check device label
+            const label = track.label || '';
+            if (label.toLowerCase().includes('virtual') ||
+                label.toLowerCase().includes('obs') ||
+                label.toLowerCase().includes('manycam') ||
+                label.toLowerCase().includes('snap')) {
+                suspicious.push(`Virtual camera detected in label: "${label}"`);
+            }
+            
+            // Check settings
+            if (!settings.exposureMode) {
+                suspicious.push('Missing exposureMode in settings');
+            }
+            
+            if (!settings.focusMode) {
+                suspicious.push('Missing focusMode in settings');
+            }
+            
+            if (!settings.whiteBalanceMode) {
+                suspicious.push('Missing whiteBalanceMode in settings');
+            }
+            
+            return {
+                label: label,
+                deviceId: settings.deviceId,
+                resolution: `${settings.width}x${settings.height}`,
+                frameRate: settings.frameRate,
+                facingMode: settings.facingMode,
+                settings: settings,
+                capabilities: capabilities,
+                suspicious: suspicious,
+                verdict: suspicious.length > 0 ? '❌ VIRTUAL CAMERA DETECTED' : '✅ REAL CAMERA'
+            };
+        }
+        
+        function addResult(title, data, type) {
+            allResults.tests[title] = data;
+            
+            const resultsDiv = document.getElementById('results');
+            
+            let className = 'section';
+            if (type === 'error') className += ' error';
+            else if (type === 'warning') className += ' warning';
+            else if (type === 'success') className += ' success';
+            
+            const section = document.createElement('div');
+            section.className = className;
+            
+            section.innerHTML = `
+                <h3>${title}</h3>
+                <p><strong>Verdict:</strong> ${data.verdict || 'N/A'}</p>
+                ${data.suspicious && data.suspicious.length > 0 ? `
+                    <p><strong>⚠️ Suspicious Indicators:</strong></p>
+                    <ul>
+                        ${data.suspicious.map(s => `<li>${s}</li>`).join('')}
+                    </ul>
+                ` : ''}
+                <details>
+                    <summary>Full Details</summary>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                </details>
+            `;
+            
+            resultsDiv.appendChild(section);
+        }
+        
+        function copyResults() {
+            const text = JSON.stringify(allResults, null, 2);
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ Results copied to clipboard!');
+            });
+        }
+    </script>
+</body>
+</html>

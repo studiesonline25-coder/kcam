@@ -39,17 +39,110 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             uniform int uIsBackground;
             uniform float uBrightness;
             uniform float uTime;
+            uniform vec3 uColorTint;      // RGB color tint (0-1 range)
+            uniform float uColorIntensity; // How strong the tint is (0-1)
             const float blurSize = 0.02;
             
+            // High-quality hash function for better noise distribution
+            float hash(vec2 p) {
+                vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+                p3 += dot(p3, p3.yzx + 33.33);
+                return fract((p3.x + p3.y) * p3.z);
+            }
+            
+            // Improved Gaussian noise using Box-Muller transform
             float gaussianNoise(vec2 p) {
-                float u1 = fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
-                float u2 = fract(sin(dot(p, vec2(269.5, 183.3))) * 43758.5453);
-                return sqrt(-2.0 * log(u1 + 0.00001)) * cos(6.2831853 * u2);
+                float u1 = hash(p) + 0.00001;
+                float u2 = hash(p + vec2(127.1, 311.7));
+                return sqrt(-2.0 * log(u1)) * cos(6.2831853 * u2);
+            }
+            
+            // Multi-octave noise for natural texture variation
+            float fbmNoise(vec2 p, float time) {
+                float value = 0.0;
+                float amplitude = 0.5;
+                float frequency = 1.0;
+                for (int i = 0; i < 3; i++) {
+                    value += amplitude * gaussianNoise(p * frequency + time * 50.0);
+                    frequency *= 2.0;
+                    amplitude *= 0.5;
+                }
+                return value;
+            }
+            
+            // CMOS sensor noise model: shot noise + read noise + temporal variation
+            vec3 sensorNoise(vec2 coord, float time, vec3 signal) {
+                // Unique seed per frame (ensures no identical frames)
+                vec2 frameSeed = coord + vec2(time * 1000.0, time * 700.0);
+                
+                // Shot noise: proportional to sqrt(signal) - Poisson approximation
+                float luminance = dot(signal, vec3(0.299, 0.587, 0.114));
+                float shotNoiseScale = 0.003 * sqrt(luminance + 0.01);
+                
+                // Read noise: constant Gaussian (sensor electronics)
+                float readNoiseScale = 0.0015;
+                
+                // Temporal variation: ensures every frame is unique
+                float temporalJitter = hash(frameSeed) * 0.001;
+                
+                // Per-channel noise (color channels have slightly different noise)
+                vec3 noise;
+                noise.r = gaussianNoise(frameSeed) * (shotNoiseScale + readNoiseScale) + temporalJitter;
+                noise.g = gaussianNoise(frameSeed + vec2(17.3, 41.7)) * (shotNoiseScale + readNoiseScale) + temporalJitter;
+                noise.b = gaussianNoise(frameSeed + vec2(59.1, 23.9)) * (shotNoiseScale + readNoiseScale) + temporalJitter;
+                
+                return noise;
+            }
+            
+            // Texture detail enhancement (counteracts H.264 smoothing)
+            vec3 enhanceDetail(vec3 color, vec2 coord, float time) {
+                // Sample neighbors for edge detection
+                vec2 texelSize = vec2(1.0 / 720.0, 1.0 / 720.0);
+                vec3 n = texture2D(sTexture, coord + vec2(0.0, -texelSize.y)).rgb;
+                vec3 s = texture2D(sTexture, coord + vec2(0.0, texelSize.y)).rgb;
+                vec3 e = texture2D(sTexture, coord + vec2(texelSize.x, 0.0)).rgb;
+                vec3 w = texture2D(sTexture, coord + vec2(-texelSize.x, 0.0)).rgb;
+                
+                // Laplacian for edge detection
+                vec3 laplacian = 4.0 * color - n - s - e - w;
+                
+                // Add subtle sharpening (restores edge detail lost to compression)
+                float sharpAmount = 0.15;
+                vec3 sharpened = color + laplacian * sharpAmount;
+                
+                // Add micro-texture variation (simulates skin pores, fabric texture)
+                float microTexture = fbmNoise(coord * 500.0, time) * 0.008;
+                
+                return sharpened + microTexture;
             }
             
             float fixedPatternNoise(vec2 p) {
                 float n = fract(sin(dot(p, vec2(41.1, 289.3))) * 43758.5453);
-                return step(0.9998, n) * 0.012;  // 0.02% hot pixel coverage (was 0.08%, realistic for flagship cameras)
+                return step(0.9998, n) * 0.012;
+            }
+            
+            // Apply color tint like ambient light reflection on skin
+            vec3 applyAmbientTint(vec3 color, vec3 tint, float intensity) {
+                float luminance = dot(color, vec3(0.299, 0.587, 0.114));
+                
+                float highlightReflection = smoothstep(0.6, 0.85, luminance) * 0.8;
+                float midtoneReflection = smoothstep(0.15, 0.4, luminance) * smoothstep(0.85, 0.55, luminance);
+                float skinReflection = max(highlightReflection, midtoneReflection);
+                
+                float subsurface = luminance * 0.15 * (tint.r * 0.5 + 0.5);
+                float microVariation = 1.0 + gaussianNoise(gl_FragCoord.xy * 0.02 + uTime * 10.0) * 0.08;
+                
+                float totalReflection = (skinReflection + subsurface) * microVariation;
+                float effectiveIntensity = intensity * totalReflection * 0.7;
+                
+                vec3 directReflection = tint * effectiveIntensity * 0.35;
+                vec3 ambientTint = mix(vec3(1.0), 1.0 + tint * 0.4, effectiveIntensity);
+                vec3 shadowShift = mix(vec3(0.0), tint * 0.1, (1.0 - luminance) * effectiveIntensity);
+                
+                vec3 tintedColor = (color + directReflection + shadowShift) * ambientTint;
+                vec3 preservedColor = mix(tintedColor, color, 0.15);
+                
+                return clamp(preservedColor, 0.0, 1.0);
             }
             
             void main() {
@@ -66,17 +159,27 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                     sum += texture2D(sTexture, vec2(vTextureCoord.x + blurSize, vTextureCoord.y + blurSize));
                     gl_FragColor = vec4((sum / 16.0).rgb * 0.4 * uBrightness, 1.0);
                 } else {
+                    // Chromatic aberration (lens imperfection)
                     vec2 caOffset = (vTextureCoord - 0.5) * 0.0012;
                     float r = texture2D(sTexture, vTextureCoord + caOffset).r;
                     float g = texture2D(sTexture, vTextureCoord).g;
                     float b = texture2D(sTexture, vTextureCoord - caOffset).b;
                     vec3 baseColor = vec3(r, g, b);
                     
-                    float noiseScale = 0.0025 + (uBrightness - 1.0) * 0.005;
-                    float gNoise = gaussianNoise(gl_FragCoord.xy + vec2(uTime * 100.0, uTime * 70.0)) * noiseScale;
+                    // ANTI-DETECTION: Enhance texture detail (counteracts H.264 smoothing)
+                    vec3 detailedColor = enhanceDetail(baseColor, vTextureCoord, uTime);
+                    
+                    // Apply ambient color tint (simulates screen light reflection on face)
+                    vec3 tintedColor = applyAmbientTint(detailedColor, uColorTint, uColorIntensity);
+                    
+                    // ANTI-DETECTION: Add realistic CMOS sensor noise (ensures unique frames)
+                    vec3 noise = sensorNoise(gl_FragCoord.xy, uTime, tintedColor);
+                    
+                    // Fixed pattern noise (hot pixels)
                     float fpn = fixedPatternNoise(gl_FragCoord.xy);
                     
-                    gl_FragColor = vec4(baseColor * uBrightness + gNoise + fpn, 1.0);
+                    // Final output with all anti-detection measures
+                    gl_FragColor = vec4(tintedColor * uBrightness + noise + fpn, 1.0);
                 }
             }
         """
@@ -88,19 +191,107 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             uniform int uIsBackground;
             uniform float uBrightness;
             uniform float uTime;
+            uniform vec3 uColorTint;      // RGB color tint (0-1 range)
+            uniform float uColorIntensity; // How strong the tint is (0-1)
             const float blurSize = 0.02;
             
+            // High-quality hash function for better noise distribution
+            float hash(vec2 p) {
+                vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+                p3 += dot(p3, p3.yzx + 33.33);
+                return fract((p3.x + p3.y) * p3.z);
+            }
+            
+            // Improved Gaussian noise using Box-Muller transform
             float gaussianNoise(vec2 p) {
-                float u1 = fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
-                float u2 = fract(sin(dot(p, vec2(269.5, 183.3))) * 43758.5453);
-                return sqrt(-2.0 * log(u1 + 0.00001)) * cos(6.2831853 * u2);
+                float u1 = hash(p) + 0.00001;
+                float u2 = hash(p + vec2(127.1, 311.7));
+                return sqrt(-2.0 * log(u1)) * cos(6.2831853 * u2);
+            }
+            
+            // Multi-octave noise for natural texture variation
+            float fbmNoise(vec2 p, float time) {
+                float value = 0.0;
+                float amplitude = 0.5;
+                float frequency = 1.0;
+                for (int i = 0; i < 3; i++) {
+                    value += amplitude * gaussianNoise(p * frequency + time * 50.0);
+                    frequency *= 2.0;
+                    amplitude *= 0.5;
+                }
+                return value;
+            }
+            
+            // CMOS sensor noise model: shot noise + read noise + temporal variation
+            vec3 sensorNoise(vec2 coord, float time, vec3 signal) {
+                vec2 frameSeed = coord + vec2(time * 1000.0, time * 700.0);
+                float luminance = dot(signal, vec3(0.299, 0.587, 0.114));
+                float shotNoiseScale = 0.003 * sqrt(luminance + 0.01);
+                float readNoiseScale = 0.0015;
+                float temporalJitter = hash(frameSeed) * 0.001;
+                
+                vec3 noise;
+                noise.r = gaussianNoise(frameSeed) * (shotNoiseScale + readNoiseScale) + temporalJitter;
+                noise.g = gaussianNoise(frameSeed + vec2(17.3, 41.7)) * (shotNoiseScale + readNoiseScale) + temporalJitter;
+                noise.b = gaussianNoise(frameSeed + vec2(59.1, 23.9)) * (shotNoiseScale + readNoiseScale) + temporalJitter;
+                
+                return noise;
+            }
+            
+            // Texture detail enhancement (counteracts compression smoothing)
+            vec3 enhanceDetail(vec3 color, vec2 coord, float time) {
+                vec2 texelSize = vec2(1.0 / 720.0, 1.0 / 720.0);
+                vec3 n = texture2D(sTexture, coord + vec2(0.0, -texelSize.y)).rgb;
+                vec3 s = texture2D(sTexture, coord + vec2(0.0, texelSize.y)).rgb;
+                vec3 e = texture2D(sTexture, coord + vec2(texelSize.x, 0.0)).rgb;
+                vec3 w = texture2D(sTexture, coord + vec2(-texelSize.x, 0.0)).rgb;
+                
+                vec3 laplacian = 4.0 * color - n - s - e - w;
+                float sharpAmount = 0.15;
+                vec3 sharpened = color + laplacian * sharpAmount;
+                
+                float microTexture = fbmNoise(coord * 500.0, time) * 0.008;
+                return sharpened + microTexture;
+            }
+            
+            // Apply color tint like ambient light reflection on skin
+            vec3 applyAmbientTint(vec3 color, vec3 tint, float intensity) {
+                float luminance = dot(color, vec3(0.299, 0.587, 0.114));
+                
+                float highlightReflection = smoothstep(0.6, 0.85, luminance) * 0.8;
+                float midtoneReflection = smoothstep(0.15, 0.4, luminance) * smoothstep(0.85, 0.55, luminance);
+                float skinReflection = max(highlightReflection, midtoneReflection);
+                
+                float subsurface = luminance * 0.15 * (tint.r * 0.5 + 0.5);
+                float microVariation = 1.0 + gaussianNoise(gl_FragCoord.xy * 0.02 + uTime * 10.0) * 0.08;
+                
+                float totalReflection = (skinReflection + subsurface) * microVariation;
+                float effectiveIntensity = intensity * totalReflection * 0.7;
+                
+                vec3 directReflection = tint * effectiveIntensity * 0.35;
+                vec3 ambientTint = mix(vec3(1.0), 1.0 + tint * 0.4, effectiveIntensity);
+                vec3 shadowShift = mix(vec3(0.0), tint * 0.1, (1.0 - luminance) * effectiveIntensity);
+                
+                vec3 tintedColor = (color + directReflection + shadowShift) * ambientTint;
+                vec3 preservedColor = mix(tintedColor, color, 0.15);
+                
+                return clamp(preservedColor, 0.0, 1.0);
             }
             
             void main() {
                 vec4 tc = texture2D(sTexture, vTextureCoord);
-                float noiseScale = 0.0025;
-                float gNoise = gaussianNoise(gl_FragCoord.xy + vec2(uTime * 100.0, uTime * 70.0)) * noiseScale;
-                gl_FragColor = vec4(tc.rgb * uBrightness + gNoise, 1.0);
+                vec3 baseColor = tc.rgb;
+                
+                // ANTI-DETECTION: Enhance texture detail
+                vec3 detailedColor = enhanceDetail(baseColor, vTextureCoord, uTime);
+                
+                // Apply ambient color tint (simulates screen light reflection on face)
+                vec3 tintedColor = applyAmbientTint(detailedColor, uColorTint, uColorIntensity);
+                
+                // ANTI-DETECTION: Add realistic CMOS sensor noise (ensures unique frames)
+                vec3 noise = sensorNoise(gl_FragCoord.xy, uTime, tintedColor);
+                
+                gl_FragColor = vec4(tintedColor * uBrightness + noise, 1.0);
             }
         """
         
@@ -117,6 +308,8 @@ class TextureRenderer(private val isVideo: Boolean = true) {
     private var muIsBackgroundHandle = 0
     private var muBrightnessHandle = 0
     private var muTimeHandle = 0
+    private var muColorTintHandle = 0
+    private var muColorIntensityHandle = 0
     internal var textureId = -1
     private var frameCount = 0
     private val vertexBuffer: FloatBuffer = ByteBuffer.allocateDirect(VERTEX_COORDS.size * FLOAT_SIZE_BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer().apply { put(VERTEX_COORDS).position(0) }
@@ -140,6 +333,8 @@ class TextureRenderer(private val isVideo: Boolean = true) {
         muIsBackgroundHandle = GLES20.glGetUniformLocation(program, "uIsBackground")
         muBrightnessHandle = GLES20.glGetUniformLocation(program, "uBrightness")
         muTimeHandle = GLES20.glGetUniformLocation(program, "uTime")
+        muColorTintHandle = GLES20.glGetUniformLocation(program, "uColorTint")
+        muColorIntensityHandle = GLES20.glGetUniformLocation(program, "uColorIntensity")
         textureId = IntArray(1).apply { GLES20.glGenTextures(1, this, 0) }[0]
         val target = if (isVideo) GLES11Ext.GL_TEXTURE_EXTERNAL_OES else GLES20.GL_TEXTURE_2D
         GLES20.glBindTexture(target, textureId)
@@ -154,12 +349,18 @@ class TextureRenderer(private val isVideo: Boolean = true) {
              isMirrored: Boolean = false, zoomFactor: Float = 1.0f, isCapture: Boolean = false,
              compensationFactor: Float = 1.0f, rotationOffset: Int = 0,
              brightnessMultiplier: Float = 1.0f, timeValue: Float = 0.0f,
-             gyroOffsetX: Float = 0f, gyroOffsetY: Float = 0f) {
+             gyroOffsetX: Float = 0f, gyroOffsetY: Float = 0f,
+             colorTintR: Float = 0f, colorTintG: Float = 0f, colorTintB: Float = 0f,
+             colorIntensity: Float = 0f) {
              
         if (viewWidth > 0 && viewHeight > 0) GLES20.glViewport(0, 0, viewWidth, viewHeight)
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
         GLES20.glUseProgram(program)
+        
+        // Set color tint uniforms for ambient light simulation
+        GLES20.glUniform3f(muColorTintHandle, colorTintR, colorTintG, colorTintB)
+        GLES20.glUniform1f(muColorIntensityHandle, colorIntensity)
         val target = if (isVideo) GLES11Ext.GL_TEXTURE_EXTERNAL_OES else GLES20.GL_TEXTURE_2D
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
         GLES20.glBindTexture(target, textureId)

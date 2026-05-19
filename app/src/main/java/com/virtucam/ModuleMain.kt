@@ -5,6 +5,7 @@ import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.callbacks.XC_LoadPackage
 import com.virtucam.hooks.CameraHook
+import com.virtucam.hooks.ScreenColorDetector
 
 /**
  * Xposed Module Entry Point
@@ -32,6 +33,10 @@ class ModuleMain : IXposedHookLoadPackage {
             // Initialize camera hooks with defensive catch
             CameraHook.init(lpparam)
             Log.d(TAG, "VirtuCam_Main: CameraHook.init() successfully called.")
+            
+            // Initialize screen color detection for color flash challenges
+            ScreenColorDetector.getInstance().hookViewDrawing(lpparam)
+            Log.d(TAG, "VirtuCam_Main: ScreenColorDetector hooks initialized.")
         } catch (t: Throwable) {
             Log.e(TAG, "VirtuCam_Main: FAILED to initialize hooks for ${lpparam.packageName}", t)
         }

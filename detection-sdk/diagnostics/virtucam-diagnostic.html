@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VirtuCam Stream Diagnostic - Production Analysis Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #ffffff;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+        
+        header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .controls {
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        
+        button:hover:not(:disabled) {
+            background: #2980b9;
+        }
+        
+        button:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        button.secondary {
+            background: #7f8c8d;
+        }
+        
+        button.secondary:hover:not(:disabled) {
+            background: #6c7a7b;
+        }
+        
+        .video-section {
+            background: #000;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        video {
+            width: 100%;
+            max-width: 640px;
+            border-radius: 4px;
+        }
+        
+        .verdict {
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .verdict.critical {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .verdict.warning {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .verdict.pass {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .verdict .score {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .verdict .details {
+            font-size: 14px;
+            margin-top: 10px;
+            opacity: 0.9;
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .analysis-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .analysis-card.critical {
+            border-color: #e74c3c;
+        }
+        
+        .analysis-card.warning {
+            border-color: #f39c12;
+        }
+        
+        .analysis-card.pass {
+            border-color: #27ae60;
+        }
+        
+        .card-header {
+            background: #34495e;
+            color: white;
+            padding: 15px 20px;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .analysis-card.critical .card-header {
+            background: #c0392b;
+        }
+        
+        .analysis-card.warning .card-header {
+            background: #d68910;
+        }
+        
+        .analysis-card.pass .card-header {
+            background: #1e8449;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        .flag-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .flag-item.critical {
+            background: #fadbd8;
+            border-left: 4px solid #e74c3c;
+            color: #c0392b;
+        }
+        
+        .flag-item.warning {
+            background: #fdebd0;
+            border-left: 4px solid #f39c12;
+            color: #d68910;
+        }
+        
+        .flag-item.info {
+            background: #d6eaf8;
+            border-left: 4px solid #3498db;
+            color: #2874a6;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .data-table td {
+            padding: 10px;
+            border-bottom: 1px solid #ecf0f1;
+            font-size: 13px;
+        }
+        
+        .data-table td:first-child {
+            font-weight: 600;
+            color: #7f8c8d;
+            width: 40%;
+        }
+        
+        .data-table td:last-child {
+            font-family: 'Courier New', monospace;
+            color: #2c3e50;
+        }
+        
+        .data-table td.value-bad {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+        
+        .data-table td.value-warning {
+            color: #f39c12;
+            font-weight: 600;
+        }
+        
+        .expandable {
+            margin-top: 15px;
+        }
+        
+        .expandable summary {
+            cursor: pointer;
+            padding: 10px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            font-weight: 600;
+            user-select: none;
+        }
+        
+        .expandable summary:hover {
+            background: #d5dbdb;
+        }
+        
+        .expandable pre {
+            margin-top: 10px;
+            padding: 15px;
+            background: #2c3e50;
+            color: #ecf0f1;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .stat-box {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: #7f8c8d;
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+        
+        .no-flags {
+            padding: 15px;
+            text-align: center;
+            color: #27ae60;
+            font-weight: 600;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+        
+        .spinner {
+            border: 4px solid #ecf0f1;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>VirtuCam Stream Diagnostic Tool</h1>
+            <p>Production-grade analysis of camera stream properties as seen by KYC providers (Sumsub, Veriff, Onfido)</p>
+            <p style="margin-top: 5px; font-size: 12px;">Version 1.0 | Analysis based on actual KYC provider detection methods</p>
+        </header>
+        
+        <div class="controls">
+            <button id="btnStart" onclick="startDiagnostic()">Start Analysis</button>
+            <button id="btnStop" onclick="stopDiagnostic()" disabled class="secondary">Stop</button>
+            <button id="btnCopy" onclick="copyReport()" disabled class="secondary">Copy JSON Report</button>
+            <button id="btnDownload" onclick="downloadReport()" disabled class="secondary">Download Report</button>
+            <div style="flex: 1;"></div>
+            <span id="statusText" style="color: #7f8c8d; font-size: 14px;">Ready</span>
+        </div>
+        
+        <div class="video-section">
+            <video id="video" autoplay playsinline muted></video>
+        </div>
+        
+        <div id="verdict"></div>
+        
+        <div id="results" class="results-grid"></div>
+    </div>
+    
+    <script>
+        let stream = null;
+        let analysisInterval = null;
+        let diagnosticData = null;
+        let frameAnalysisData = {
+            frames: [],
+            pixelDiffs: [],
+            count: 0
+        };
+        
+        async function startDiagnostic() {
+            document.getElementById('btnStart').disabled = true;
+            document.getElementById('btnStop').disabled = false;
+            document.getElementById('statusText').textContent = 'Initializing...';
+            
+            diagnosticData = {
+                timestamp: new Date().toISOString(),
+                version: '1.0',
+                sections: {},
+                verdict: null
+            };
+            
+            document.getElementById('results').innerHTML = '<div class="loading"><div class="spinner"></div><p>Running diagnostic analysis...</p></div>';
+            
+            try {
+                // Step 1: Environment analysis
+                document.getElementById('statusText').textContent = 'Analyzing environment...';
+                await analyzeEnvironment();
+                
+                // Step 2: Camera stream analysis
+                document.getElementById('statusText').textContent = 'Analyzing camera stream...';
+                await analyzeCameraStream();
+                
+                // Step 3: Start continuous frame analysis
+                document.getElementById('statusText').textContent = 'Analyzing frames...';
+                startFrameAnalysis();
+                
+                // Step 4: Generate verdict
+                setTimeout(() => {
+                    generateVerdict();
+                    document.getElementById('btnCopy').disabled = false;
+                    document.getElementById('btnDownload').disabled = false;
+                    document.getElementById('statusText').textContent = 'Analysis complete';
+                }, 3000);
+                
+            } catch (error) {
+                document.getElementById('results').innerHTML = `
+                    <div class="analysis-card critical">
+                        <div class="card-header">Error</div>
+                        <div class="card-body">
+                            <div class="flag-item critical">
+                                Failed to complete diagnostic: ${error.message}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('statusText').textContent = 'Error';
+                document.getElementById('btnStart').disabled = false;
+                document.getElementById('btnStop').disabled = true;
+            }
+        }
+        
+        function stopDiagnostic() {
+            if (analysisInterval) {
+                clearInterval(analysisInterval);
+                analysisInterval = null;
+            }
+            
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            
+            document.getElementById('video').srcObject = null;
+            document.getElementById('btnStart').disabled = false;
+            document.getElementById('btnStop').disabled = true;
+            document.getElementById('statusText').textContent = 'Stopped';
+        }
+        
+        async function analyzeEnvironment() {
+            const flags = [];
+            const data = {};
+            
+            // User Agent
+            data.userAgent = navigator.userAgent;
+            
+            // Device Type Detection
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const isAndroid = /Android/i.test(navigator.userAgent);
+            const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+            const isDesktop = !isMobile;
+            
+            data.deviceType = isMobile ? 'Mobile' : 'Desktop';
+            data.isMobile = isMobile;
+            data.isAndroid = isAndroid;
+            data.isIOS = isIOS;
+            data.isDesktop = isDesktop;
+            
+            if (isDesktop) {
+                flags.push({
+                    severity: 'critical',
+                    message: 'Device type is DESKTOP - KYC providers expect mobile devices for camera verification'
+                });
+            }
+            
+            // Platform
+            data.platform = navigator.platform;
+            
+            // Check for emulator/VM signatures
+            if (data.platform.includes('Linux') && !data.platform.includes('arm')) {
+                if (isAndroid) {
+                    flags.push({
+                        severity: 'critical',
+                        message: 'Android user agent but x86_64 platform - indicates Android emulator or virtual machine'
+                    });
+                } else {
+                    flags.push({
+                        severity: 'warning',
+                        message: 'Platform is Linux x86_64 - indicates desktop Linux or virtual machine'
+                    });
+                }
+            }
+            
+            // Check for real mobile platform
+            if (isMobile && !data.platform.includes('arm') && !data.platform.includes('Linux armv')) {
+                flags.push({
+                    severity: 'warning',
+                    message: 'Mobile user agent but non-ARM platform - suspicious for real mobile device'
+                });
+            }
+            
+            // Hardware
+            data.hardwareConcurrency = navigator.hardwareConcurrency || 'Unknown';
+            if (typeof data.hardwareConcurrency === 'number' && data.hardwareConcurrency < 4) {
+                flags.push({
+                    severity: 'warning',
+                    message: `Low CPU core count (${data.hardwareConcurrency}) - typical of virtual machines`
+                });
+            }
+            
+            data.deviceMemory = navigator.deviceMemory || 'Unknown';
+            if (typeof data.deviceMemory === 'number' && data.deviceMemory < 4) {
+                flags.push({
+                    severity: 'warning',
+                    message: `Low device memory (${data.deviceMemory}GB) - typical of virtual machines`
+                });
+            }
+            
+            // Screen
+            data.screenWidth = screen.width;
+            data.screenHeight = screen.height;
+            data.screenResolution = `${screen.width}x${screen.height}`;
+            data.pixelRatio = window.devicePixelRatio || 1;
+            
+            // Check for common VM/emulator resolutions
+            const commonVMResolutions = [
+                '1024x768', '1280x720', '1280x800', '1366x768', '1440x900'
+            ];
+            
+            const commonEmulatorResolutions = [
+                '1080x1920', '720x1280', '1440x2560'  // Common Android emulator defaults
+            ];
+            
+            if (isDesktop && commonVMResolutions.includes(data.screenResolution)) {
+                flags.push({
+                    severity: 'warning',
+                    message: `Desktop resolution ${data.screenResolution} is commonly used in virtual machines`
+                });
+            }
+            
+            if (isAndroid && commonEmulatorResolutions.includes(data.screenResolution) && data.pixelRatio === 1) {
+                flags.push({
+                    severity: 'warning',
+                    message: `Resolution ${data.screenResolution} with pixel ratio 1.0 is typical of Android emulators (real phones usually have higher pixel ratios)`
+                });
+            }
+            
+            // Check touch support (real mobile devices have touch)
+            data.touchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            
+            if (isMobile && !data.touchSupport) {
+                flags.push({
+                    severity: 'critical',
+                    message: 'Mobile user agent but NO touch support detected - indicates emulator or spoofed user agent'
+                });
+            }
+            
+            // Check orientation support (real mobile devices support orientation)
+            data.orientationSupport = 'orientation' in window || 'onorientationchange' in window;
+            
+            if (isMobile && !data.orientationSupport) {
+                flags.push({
+                    severity: 'warning',
+                    message: 'Mobile device but no orientation support - suspicious for real mobile'
+                });
+            }
+            
+            // Check for battery API (real mobile devices have battery)
+            data.hasBatteryAPI = 'getBattery' in navigator;
+            
+            if (isMobile && !data.hasBatteryAPI) {
+                flags.push({
+                    severity: 'info',
+                    message: 'Battery API not available - some browsers don\'t expose this'
+                });
+            }
+            
+            // Xposed/Root Detection (Android-specific)
+            if (isAndroid) {
+                // Check for common Xposed/root indicators in user agent or properties
+                const xposedIndicators = [];
+                
+                // Check if running in WebView with suspicious properties
+                if (typeof Android !== 'undefined') {
+                    xposedIndicators.push('Android JavaScript interface detected');
+                }
+                
+                // Check for Magisk/Xposed common properties
+                if (navigator.userAgent.includes('Magisk') || 
+                    navigator.userAgent.includes('Xposed') ||
+                    navigator.userAgent.includes('EdXposed') ||
+                    navigator.userAgent.includes('LSPosed')) {
+                    xposedIndicators.push('Xposed/Magisk detected in user agent');
+                }
+                
+                // Check for common root/Xposed app package names in referrer
+                if (document.referrer) {
+                    const suspiciousPackages = [
+                        'de.robv.android.xposed',
+                        'org.meowcat.edxposed',
+                        'org.lsposed',
+                        'com.topjohnwu.magisk'
+                    ];
+                    
+                    for (const pkg of suspiciousPackages) {
+                        if (document.referrer.includes(pkg)) {
+                            xposedIndicators.push(`Suspicious package in referrer: ${pkg}`);
+                        }
+                    }
+                }
+                
+                data.xposedIndicators = xposedIndicators;
+                
+                if (xposedIndicators.length > 0) {
+                    flags.push({
+                        severity: 'critical',
+                        message: `Xposed/Root indicators detected: ${xposedIndicators.join(', ')} - KYC providers block rooted/modified devices`
+                    });
+                }
+            }
+            
+            // WebGL
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            
+            if (gl) {
+                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                if (debugInfo) {
+                    data.webglVendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+                    data.webglRenderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+                    
+                    // Check for software rendering
+                    if (data.webglRenderer.toLowerCase().includes('llvmpipe')) {
+                        flags.push({
+                            severity: 'critical',
+                            message: 'WebGL renderer is llvmpipe (software rendering) - STRONG indicator of virtual machine'
+                        });
+                    }
+                    
+                    if (data.webglRenderer.toLowerCase().includes('swiftshader')) {
+                        flags.push({
+                            severity: 'critical',
+                            message: 'WebGL renderer is SwiftShader (software rendering) - STRONG indicator of virtual machine'
+                        });
+                    }
+                    
+                    if (data.webglRenderer.toLowerCase().includes('vmware') || 
+                        data.webglRenderer.toLowerCase().includes('virtualbox')) {
+                        flags.push({
+                            severity: 'critical',
+                            message: 'WebGL renderer indicates virtual machine GPU'
+                        });
+                    }
+                } else {
+                    data.webglVendor = 'Unknown';
+                    data.webglRenderer = 'Unknown';
+                    flags.push({
+                        severity: 'warning',
+                        message: 'Unable to detect WebGL renderer - debug info not available'
+                    });
+                }
+            } else {
+                data.webglVendor = 'N/A';
+                data.webglRenderer = 'N/A';
+                flags.push({
+                    severity: 'warning',
+                    message: 'WebGL not supported in this browser'
+                });
+            }
+            
+            diagnosticData.sections.environment = {
+                title: 'Environment Fingerprint',
+                data: data,
+                flags: flags,
+                severity: calculateSeverity(flags)
+            };
+            
+            renderSection('environment');
+        }
+        
+        async function analyzeCameraStream() {
+            const flags = [];
+            const data = {};
+            
+            try {
+                // Request camera access
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: 'user',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                });
+                
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+                
+                const track = stream.getVideoTracks()[0];
+                
+                // Basic track properties
+                data.label = track.label;
+                data.id = track.id;
+                data.readyState = track.readyState;
+                data.muted = track.muted;
+                data.enabled = track.enabled;
+                
+                // Check device label for virtual camera keywords
+                const virtualKeywords = ['virtual', 'obs', 'virtucam', 'manycam', 'snap camera', 'xsplit'];
+                const labelLower = data.label.toLowerCase();
+                
+                for (const keyword of virtualKeywords) {
+                    if (labelLower.includes(keyword)) {
+                        flags.push({
+                            severity: 'critical',
+                            message: `Device label contains "${keyword}" - INSTANT detection as virtual camera`
+                        });
+                        break;
+                    }
+                }
+                
+                // Get capabilities
+                const capabilities = track.getCapabilities();
+                data.capabilities = capabilities;
+                
+                // Detect browser type
+                const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+                const isFirefox = /Firefox/.test(navigator.userAgent);
+                const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+                
+                data.browserType = isChrome ? 'Chrome/Chromium' : (isFirefox ? 'Firefox' : (isSafari ? 'Safari' : 'Unknown'));
+                
+                // Check for hardware capabilities (browser-dependent)
+                const requiredCapabilities = [
+                    { name: 'exposureMode', description: 'camera exposure control' },
+                    { name: 'focusMode', description: 'camera focus control' },
+                    { name: 'whiteBalanceMode', description: 'white balance control' },
+                    { name: 'zoom', description: 'zoom capability' }
+                ];
+                
+                for (const cap of requiredCapabilities) {
+                    if (!capabilities[cap.name]) {
+                        // Firefox doesn't expose these even on real cameras
+                        if (isFirefox) {
+                            flags.push({
+                                severity: 'info',
+                                message: `Missing ${cap.name} capability - Firefox doesn't expose this even on real cameras (browser limitation)`
+                            });
+                        } else if (isChrome || isSafari) {
+                            // Chrome/Safari should expose these on real cameras
+                            flags.push({
+                                severity: 'critical',
+                                message: `Missing ${cap.name} capability - Chrome/Safari expose this on real cameras, absence indicates virtual camera`
+                            });
+                        } else {
+                            flags.push({
+                                severity: 'warning',
+                                message: `Missing ${cap.name} capability - unable to determine if this is browser limitation or virtual camera`
+                            });
+                        }
+                    }
+                }
+                
+                // Torch capability check removed - many real cameras don't expose this
+                
+                // Check for fixed resolution (virtual cameras often have fixed resolution)
+                if (capabilities.width) {
+                    if (capabilities.width.min === capabilities.width.max) {
+                        flags.push({
+                            severity: 'critical',
+                            message: `Width resolution is fixed at ${capabilities.width.min}px - real cameras support multiple resolutions`
+                        });
+                    }
+                }
+                
+                if (capabilities.height) {
+                    if (capabilities.height.min === capabilities.height.max) {
+                        flags.push({
+                            severity: 'critical',
+                            message: `Height resolution is fixed at ${capabilities.height.min}px - real cameras support multiple resolutions`
+                        });
+                    }
+                }
+                
+                if (capabilities.frameRate) {
+                    if (capabilities.frameRate.min === capabilities.frameRate.max) {
+                        flags.push({
+                            severity: 'warning',
+                            message: `Frame rate is fixed at ${capabilities.frameRate.min}fps - real cameras typically support variable frame rates`
+                        });
+                    }
+                }
+                
+                // Get settings
+                const settings = track.getSettings();
+                data.settings = settings;
+                
+                // Check settings
+                if (!settings.exposureMode) {
+                    flags.push({
+                        severity: 'warning',
+                        message: 'No exposureMode in current settings'
+                    });
+                }
+                
+                if (!settings.focusMode) {
+                    flags.push({
+                        severity: 'warning',
+                        message: 'No focusMode in current settings'
+                    });
+                }
+                
+                if (!settings.whiteBalanceMode) {
+                    flags.push({
+                        severity: 'warning',
+                        message: 'No whiteBalanceMode in current settings'
+                    });
+                }
+                
+                // Get constraints
+                const constraints = track.getConstraints();
+                data.constraints = constraints;
+                
+                // Stream properties
+                data.streamId = stream.id;
+                data.streamActive = stream.active;
+                
+                // Video element properties (check after video loads)
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                data.videoWidth = video.videoWidth;
+                data.videoHeight = video.videoHeight;
+                data.videoDuration = video.duration;
+                
+                if (video.duration !== Infinity) {
+                    flags.push({
+                        severity: 'critical',
+                        message: `Video has finite duration (${video.duration}s) - this is a video file, not a live camera stream`
+                    });
+                }
+                
+            } catch (error) {
+                flags.push({
+                    severity: 'critical',
+                    message: `Camera access failed: ${error.message}`
+                });
+            }
+            
+            diagnosticData.sections.camera = {
+                title: 'Camera Stream Properties',
+                data: data,
+                flags: flags,
+                severity: calculateSeverity(flags)
+            };
+            
+            renderSection('camera');
+        }
+        
+        function startFrameAnalysis() {
+            const video = document.getElementById('video');
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            let previousImageData = null;
+            
+            analysisInterval = setInterval(() => {
+                if (video.readyState >= video.HAVE_CURRENT_DATA) {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    ctx.drawImage(video, 0, 0);
+                    
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    
+                    if (previousImageData) {
+                        const diff = calculatePixelDifference(previousImageData, imageData);
+                        frameAnalysisData.pixelDiffs.push(diff);
+                        frameAnalysisData.count++;
+                        
+                        // Update frame analysis every 10 frames
+                        if (frameAnalysisData.count % 10 === 0) {
+                            updateFrameAnalysis();
+                        }
+                    }
+                    
+                    previousImageData = imageData;
+                }
+            }, 100);
+        }
+        
+        function calculatePixelDifference(imageData1, imageData2) {
+            const data1 = imageData1.data;
+            const data2 = imageData2.data;
+            let totalDiff = 0;
+            const sampleRate = 10; // Sample every 10th pixel for performance
+            
+            for (let i = 0; i < data1.length; i += 4 * sampleRate) {
+                const dr = Math.abs(data1[i] - data2[i]);
+                const dg = Math.abs(data1[i + 1] - data2[i + 1]);
+                const db = Math.abs(data1[i + 2] - data2[i + 2]);
+                totalDiff += (dr + dg + db) / 3;
+            }
+            
+            const pixelCount = data1.length / (4 * sampleRate);
+            return (totalDiff / pixelCount) / 255 * 100;
+        }
+        
+        function updateFrameAnalysis() {
+            const flags = [];
+            const data = {};
+            
+            const diffs = frameAnalysisData.pixelDiffs;
+            
+            if (diffs.length > 0) {
+                const sum = diffs.reduce((a, b) => a + b, 0);
+                const avg = sum / diffs.length;
+                const min = Math.min(...diffs);
+                const max = Math.max(...diffs);
+                
+                // Calculate variance
+                const variance = diffs.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / diffs.length;
+                const stdDev = Math.sqrt(variance);
+                
+                data.framesAnalyzed = frameAnalysisData.count;
+                data.avgPixelDiff = avg.toFixed(3) + '%';
+                data.minPixelDiff = min.toFixed(3) + '%';
+                data.maxPixelDiff = max.toFixed(3) + '%';
+                data.stdDev = stdDev.toFixed(3) + '%';
+                
+                // Check for anomalies
+                if (avg < 0.1) {
+                    flags.push({
+                        severity: 'critical',
+                        message: `Average pixel difference is very low (${avg.toFixed(3)}%) - indicates static or frozen video`
+                    });
+                }
+                
+                if (avg > 5) {
+                    flags.push({
+                        severity: 'warning',
+                        message: `Average pixel difference is very high (${avg.toFixed(3)}%) - may indicate compression artifacts or screen recording`
+                    });
+                }
+                
+                if (stdDev < 0.05) {
+                    flags.push({
+                        severity: 'warning',
+                        message: `Very low variance in pixel differences (${stdDev.toFixed(3)}%) - may indicate synthetic or looping video`
+                    });
+                }
+                
+                // Check for identical frames
+                const identicalFrames = diffs.filter(d => d < 0.01).length;
+                if (identicalFrames > diffs.length * 0.1) {
+                    flags.push({
+                        severity: 'warning',
+                        message: `${identicalFrames} identical or near-identical frames detected (${(identicalFrames/diffs.length*100).toFixed(1)}% of total)`
+                    });
+                }
+            }
+            
+            diagnosticData.sections.frames = {
+                title: 'Frame-to-Frame Analysis',
+                data: data,
+                flags: flags,
+                severity: calculateSeverity(flags)
+            };
+            
+            renderSection('frames');
+        }
+        
+        function calculateSeverity(flags) {
+            const hasCritical = flags.some(f => f.severity === 'critical');
+            const hasWarning = flags.some(f => f.severity === 'warning');
+            
+            if (hasCritical) return 'critical';
+            if (hasWarning) return 'warning';
+            return 'pass';
+        }
+        
+        function generateVerdict() {
+            let criticalCount = 0;
+            let warningCount = 0;
+            
+            for (const key in diagnosticData.sections) {
+                const section = diagnosticData.sections[key];
+                criticalCount += section.flags.filter(f => f.severity === 'critical').length;
+                warningCount += section.flags.filter(f => f.severity === 'warning').length;
+            }
+            
+            let verdictClass, verdictText, score;
+            
+            if (criticalCount > 0) {
+                verdictClass = 'critical';
+                verdictText = 'VIRTUAL CAMERA DETECTED';
+                score = Math.max(0, 100 - (criticalCount * 20 + warningCount * 5));
+            } else if (warningCount >= 3) {
+                verdictClass = 'warning';
+                verdictText = 'SUSPICIOUS - LIKELY TO BE DETECTED';
+                score = Math.max(0, 100 - (warningCount * 10));
+            } else if (warningCount > 0) {
+                verdictClass = 'warning';
+                verdictText = 'MINOR ISSUES DETECTED';
+                score = Math.max(0, 100 - (warningCount * 15));
+            } else {
+                verdictClass = 'pass';
+                verdictText = 'APPEARS TO BE REAL CAMERA';
+                score = 100;
+            }
+            
+            diagnosticData.verdict = {
+                result: verdictText,
+                score: score,
+                criticalIssues: criticalCount,
+                warnings: warningCount
+            };
+            
+            const verdictDiv = document.getElementById('verdict');
+            verdictDiv.innerHTML = `
+                <div class="verdict ${verdictClass}">
+                    <div>${verdictText}</div>
+                    <div class="score">${score}/100</div>
+                    <div class="details">
+                        Critical Issues: ${criticalCount} | Warnings: ${warningCount}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderSection(sectionKey) {
+            const section = diagnosticData.sections[sectionKey];
+            const resultsDiv = document.getElementById('results');
+            
+            let existingCard = document.getElementById('card-' + sectionKey);
+            if (!existingCard) {
+                existingCard = document.createElement('div');
+                existingCard.id = 'card-' + sectionKey;
+                resultsDiv.appendChild(existingCard);
+            }
+            
+            existingCard.className = 'analysis-card ' + section.severity;
+            
+            let html = `<div class="card-header">${section.title}</div><div class="card-body">`;
+            
+            // Render flags
+            if (section.flags.length > 0) {
+                section.flags.forEach(flag => {
+                    html += `<div class="flag-item ${flag.severity}">${flag.message}</div>`;
+                });
+            } else {
+                html += '<div class="no-flags">✓ No issues detected</div>';
+            }
+            
+            // Render data table
+            html += '<table class="data-table">';
+            for (const key in section.data) {
+                if (typeof section.data[key] === 'object' && section.data[key] !== null) {
+                    continue; // Skip objects for now
+                }
+                
+                const value = section.data[key];
+                const isBad = section.flags.some(f => f.message.toLowerCase().includes(key.toLowerCase()));
+                const valueClass = isBad ? 'value-bad' : '';
+                
+                html += `
+                    <tr>
+                        <td>${formatLabel(key)}</td>
+                        <td class="${valueClass}">${value}</td>
+                    </tr>
+                `;
+            }
+            html += '</table>';
+            
+            // Render complex objects in expandable sections
+            for (const key in section.data) {
+                if (typeof section.data[key] === 'object' && section.data[key] !== null) {
+                    html += `
+                        <details class="expandable">
+                            <summary>${formatLabel(key)}</summary>
+                            <pre>${JSON.stringify(section.data[key], null, 2)}</pre>
+                        </details>
+                    `;
+                }
+            }
+            
+            html += '</div>';
+            existingCard.innerHTML = html;
+        }
+        
+        function formatLabel(key) {
+            return key
+                .replace(/([A-Z])/g, ' $1')
+                .replace(/^./, str => str.toUpperCase())
+                .trim();
+        }
+        
+        function copyReport() {
+            const json = JSON.stringify(diagnosticData, null, 2);
+            navigator.clipboard.writeText(json).then(() => {
+                alert('Diagnostic report copied to clipboard');
+            }).catch(err => {
+                alert('Failed to copy: ' + err.message);
+            });
+        }
+        
+        function downloadReport() {
+            const json = JSON.stringify(diagnosticData, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `virtucam-diagnostic-${Date.now()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>

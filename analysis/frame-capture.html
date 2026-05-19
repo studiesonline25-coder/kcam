@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VirtuCam Frame Capture Tool</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 0.9rem;
+        }
+
+        /* Capture Type Selection */
+        .capture-type {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .type-option {
+            flex: 1;
+            padding: 20px;
+            border: 3px solid #333;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .type-option:hover {
+            border-color: #555;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .type-option.selected.real {
+            border-color: #4ade80;
+            background: rgba(74, 222, 128, 0.15);
+        }
+
+        .type-option.selected.spoofed {
+            border-color: #f97316;
+            background: rgba(249, 115, 22, 0.15);
+        }
+
+        .type-option .icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .type-option .label {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .type-option .desc {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        /* Video Preview */
+        .preview-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        #videoPreview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .preview-overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            display: none;
+        }
+
+        .preview-overlay.recording {
+            display: block;
+            background: rgba(239, 68, 68, 0.9);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* Hidden canvas for frame capture */
+        #captureCanvas {
+            display: none;
+        }
+
+        /* Progress Section */
+        .progress-section {
+            margin-bottom: 25px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .progress-bar {
+            height: 12px;
+            background: #333;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            border-radius: 6px;
+            transition: width 0.2s ease;
+        }
+
+        .progress-fill.real {
+            background: linear-gradient(90deg, #22c55e, #4ade80);
+        }
+
+        .progress-fill.spoofed {
+            background: linear-gradient(90deg, #f97316, #fb923c);
+        }
+
+        /* Settings */
+        .settings {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 25px;
+        }
+
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .setting-row:last-child {
+            border-bottom: none;
+        }
+
+        .setting-label {
+            font-size: 0.9rem;
+        }
+
+        .setting-value {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .setting-value input {
+            width: 80px;
+            padding: 8px;
+            border: 1px solid #444;
+            border-radius: 6px;
+            background: #1a1a2e;
+            color: #fff;
+            text-align: center;
+        }
+
+        /* Buttons */
+        .buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        button {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #startBtn {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+        }
+
+        #startBtn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+        }
+
+        #startBtn.recording {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        #submitBtn {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+        }
+
+        #submitBtn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(34, 197, 94, 0.3);
+        }
+
+        /* Status Messages */
+        .status {
+            text-align: center;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .status.info {
+            display: block;
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid #3b82f6;
+        }
+
+        .status.success {
+            display: block;
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid #22c55e;
+        }
+
+        .status.error {
+            display: block;
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+        }
+
+        /* Frame Preview Grid */
+        .frame-preview {
+            margin-top: 25px;
+        }
+
+        .frame-preview h3 {
+            margin-bottom: 15px;
+            font-size: 1rem;
+        }
+
+        .frame-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+
+        .frame-thumb {
+            aspect-ratio: 4/3;
+            background: #333;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .frame-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Instructions */
+        .instructions {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .instructions h3 {
+            margin-bottom: 15px;
+            color: #8b5cf6;
+        }
+
+        .instructions ol {
+            padding-left: 20px;
+            line-height: 1.8;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        .instructions code {
+            background: rgba(0,0,0,0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>VirtuCam Frame Capture</h1>
+        <p class="subtitle">Capture frames for analysis - Real vs Spoofed comparison</p>
+
+        <!-- Capture Type Selection -->
+        <div class="capture-type">
+            <div class="type-option real" onclick="selectType('real')">
+                <div class="icon">📷</div>
+                <div class="label">Real Camera</div>
+                <div class="desc">VirtuCam disabled</div>
+            </div>
+            <div class="type-option spoofed" onclick="selectType('spoofed')">
+                <div class="icon">🎭</div>
+                <div class="label">Spoofed</div>
+                <div class="desc">VirtuCam active</div>
+            </div>
+        </div>
+
+        <!-- Video Preview -->
+        <div class="preview-container">
+            <video id="videoPreview" autoplay playsinline muted></video>
+            <div class="preview-overlay" id="recordingIndicator">● REC</div>
+            <canvas id="captureCanvas"></canvas>
+        </div>
+
+        <!-- Settings -->
+        <div class="settings">
+            <div class="setting-row">
+                <span class="setting-label">Number of frames</span>
+                <div class="setting-value">
+                    <input type="number" id="frameCount" value="100" min="10" max="500">
+                </div>
+            </div>
+            <div class="setting-row">
+                <span class="setting-label">Capture duration (seconds)</span>
+                <div class="setting-value">
+                    <input type="number" id="duration" value="10" min="1" max="60">
+                </div>
+            </div>
+            <div class="setting-row">
+                <span class="setting-label">Image format</span>
+                <div class="setting-value">
+                    <select id="imageFormat" style="padding: 8px; border-radius: 6px; background: #1a1a2e; color: #fff; border: 1px solid #444;">
+                        <option value="jpeg">JPEG (smaller)</option>
+                        <option value="png">PNG (lossless)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress -->
+        <div class="progress-section">
+            <div class="progress-header">
+                <span>Frames captured: <strong id="capturedCount">0</strong> / <span id="totalCount">100</span></span>
+                <span id="progressPercent">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="buttons">
+            <button id="startBtn" onclick="toggleCapture()">Start Capture</button>
+            <button id="submitBtn" onclick="submitFrames()" disabled>Download ZIP</button>
+        </div>
+
+        <!-- Status -->
+        <div class="status" id="status"></div>
+
+        <!-- Frame Preview -->
+        <div class="frame-preview" id="framePreview" style="display: none;">
+            <h3>Captured Frames Preview (showing last 10)</h3>
+            <div class="frame-grid" id="frameGrid"></div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="instructions">
+            <h3>How to Use</h3>
+            <ol>
+                <li>Select <strong>Real Camera</strong> or <strong>Spoofed (VirtuCam)</strong></li>
+                <li>Allow camera access when prompted</li>
+                <li>Click <strong>Start Capture</strong> to begin recording frames</li>
+                <li>Hold the phone steady, face the camera naturally</li>
+                <li>Wait for capture to complete</li>
+                <li>Click <strong>Download ZIP</strong> to save frames</li>
+                <li>Extract ZIP to: <code>kcam/analysis/real/</code> or <code>kcam/analysis/spoofed/</code></li>
+                <li>Repeat for the other capture type</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let selectedType = null;
+        let isCapturing = false;
+        let capturedFrames = [];
+        let captureInterval = null;
+        let stream = null;
+
+        // DOM Elements
+        const video = document.getElementById('videoPreview');
+        const canvas = document.getElementById('captureCanvas');
+        const ctx = canvas.getContext('2d');
+        const startBtn = document.getElementById('startBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const recordingIndicator = document.getElementById('recordingIndicator');
+        const progressFill = document.getElementById('progressFill');
+        const capturedCount = document.getElementById('capturedCount');
+        const totalCount = document.getElementById('totalCount');
+        const progressPercent = document.getElementById('progressPercent');
+        const statusEl = document.getElementById('status');
+        const framePreview = document.getElementById('framePreview');
+        const frameGrid = document.getElementById('frameGrid');
+
+        // Select capture type
+        function selectType(type) {
+            selectedType = type;
+            
+            // Update UI
+            document.querySelectorAll('.type-option').forEach(el => {
+                el.classList.remove('selected');
+            });
+            document.querySelector(`.type-option.${type}`).classList.add('selected');
+            
+            // Update progress bar color
+            progressFill.className = `progress-fill ${type}`;
+            
+            // Initialize camera
+            initCamera();
+            
+            showStatus(`Selected: ${type === 'real' ? 'Real Camera' : 'Spoofed (VirtuCam)'}`, 'info');
+        }
+
+        // Initialize camera
+        async function initCamera() {
+            try {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: 'user',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: false
+                });
+
+                video.srcObject = stream;
+                
+                // Set canvas size to match video
+                video.onloadedmetadata = () => {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                };
+
+                startBtn.disabled = false;
+                
+            } catch (err) {
+                showStatus(`Camera error: ${err.message}`, 'error');
+                console.error('Camera error:', err);
+            }
+        }
+
+        // Toggle capture
+        function toggleCapture() {
+            if (!selectedType) {
+                showStatus('Please select Real or Spoofed first!', 'error');
+                return;
+            }
+
+            if (isCapturing) {
+                stopCapture();
+            } else {
+                startCapture();
+            }
+        }
+
+        // Start capturing frames
+        function startCapture() {
+            const targetFrames = parseInt(document.getElementById('frameCount').value);
+            const duration = parseInt(document.getElementById('duration').value) * 1000;
+            const interval = duration / targetFrames;
+
+            totalCount.textContent = targetFrames;
+            capturedFrames = [];
+            updateProgress(0, targetFrames);
+
+            isCapturing = true;
+            startBtn.textContent = 'Stop Capture';
+            startBtn.classList.add('recording');
+            recordingIndicator.classList.add('recording');
+            submitBtn.disabled = true;
+            framePreview.style.display = 'none';
+
+            showStatus('Capturing frames... Hold steady!', 'info');
+
+            let framesCaptured = 0;
+            const startTime = Date.now();
+
+            captureInterval = setInterval(() => {
+                if (framesCaptured >= targetFrames) {
+                    stopCapture();
+                    return;
+                }
+
+                // Capture frame
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                const format = document.getElementById('imageFormat').value;
+                const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
+                const quality = format === 'png' ? 1.0 : 0.92;
+                
+                const dataUrl = canvas.toDataURL(mimeType, quality);
+                
+                capturedFrames.push({
+                    index: framesCaptured + 1,
+                    timestamp: Date.now() - startTime,
+                    data: dataUrl,
+                    format: format
+                });
+
+                framesCaptured++;
+                updateProgress(framesCaptured, targetFrames);
+
+            }, interval);
+        }
+
+        // Stop capturing
+        function stopCapture() {
+            isCapturing = false;
+            clearInterval(captureInterval);
+            
+            startBtn.textContent = 'Start Capture';
+            startBtn.classList.remove('recording');
+            recordingIndicator.classList.remove('recording');
+
+            if (capturedFrames.length > 0) {
+                submitBtn.disabled = false;
+                showStatus(`Captured ${capturedFrames.length} frames! Ready to download.`, 'success');
+                showFramePreview();
+            } else {
+                showStatus('No frames captured.', 'error');
+            }
+        }
+
+        // Update progress bar
+        function updateProgress(current, total) {
+            const percent = Math.round((current / total) * 100);
+            progressFill.style.width = `${percent}%`;
+            capturedCount.textContent = current;
+            progressPercent.textContent = `${percent}%`;
+        }
+
+        // Show frame preview
+        function showFramePreview() {
+            framePreview.style.display = 'block';
+            frameGrid.innerHTML = '';
+
+            // Show last 10 frames
+            const previewFrames = capturedFrames.slice(-10);
+            previewFrames.forEach(frame => {
+                const thumb = document.createElement('div');
+                thumb.className = 'frame-thumb';
+                thumb.innerHTML = `<img src="${frame.data}" alt="Frame ${frame.index}">`;
+                frameGrid.appendChild(thumb);
+            });
+        }
+
+        // Submit/Download frames as ZIP
+        async function submitFrames() {
+            if (capturedFrames.length === 0) {
+                showStatus('No frames to download!', 'error');
+                return;
+            }
+
+            showStatus('Creating ZIP file...', 'info');
+            submitBtn.disabled = true;
+
+            try {
+                const zip = new JSZip();
+                const folder = zip.folder(selectedType);
+
+                // Add metadata
+                const metadata = {
+                    type: selectedType,
+                    captureDate: new Date().toISOString(),
+                    frameCount: capturedFrames.length,
+                    duration: capturedFrames[capturedFrames.length - 1].timestamp,
+                    resolution: `${canvas.width}x${canvas.height}`,
+                    format: document.getElementById('imageFormat').value,
+                    userAgent: navigator.userAgent
+                };
+                folder.file('metadata.json', JSON.stringify(metadata, null, 2));
+
+                // Add frames
+                for (const frame of capturedFrames) {
+                    const paddedIndex = String(frame.index).padStart(4, '0');
+                    const filename = `frame_${paddedIndex}.${frame.format}`;
+                    
+                    // Convert data URL to blob
+                    const base64Data = frame.data.split(',')[1];
+                    folder.file(filename, base64Data, { base64: true });
+                }
+
+                // Generate ZIP
+                const content = await zip.generateAsync({ 
+                    type: 'blob',
+                    compression: 'DEFLATE',
+                    compressionOptions: { level: 6 }
+                });
+
+                // Download
+                const url = URL.createObjectURL(content);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `virtucam_${selectedType}_frames_${Date.now()}.zip`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                showStatus(`Downloaded ${capturedFrames.length} frames as ZIP!`, 'success');
+                
+            } catch (err) {
+                showStatus(`Error creating ZIP: ${err.message}`, 'error');
+                console.error('ZIP error:', err);
+            }
+
+            submitBtn.disabled = false;
+        }
+
+        // Show status message
+        function showStatus(message, type) {
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+        }
+
+        // Initialize on load
+        window.onload = () => {
+            showStatus('Select Real or Spoofed to begin', 'info');
+        };
+    </script>
+</body>
+</html>

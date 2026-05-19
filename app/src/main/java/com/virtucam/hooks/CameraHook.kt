@@ -114,6 +114,9 @@ object CameraHook {
     var isLivenessEnabled: Boolean = true
 
     @Volatile
+    var isColorFlashEnabled: Boolean = true
+
+    @Volatile
     var isTestPatternMode: Boolean = false
 
     // [STEALTH MODE] Global toggle for diagnostic logging (disable for production/KYC)
@@ -2472,6 +2475,7 @@ object CameraHook {
                         rtspUseTcp = if (it.columnCount > 9) it.getInt(9) == 1 else true
                         isColorSwapped = if (it.columnCount > 11) it.getInt(11) == 1 else false
                         isLivenessEnabled = if (it.columnCount > 12) it.getInt(12) == 1 else true
+                        isColorFlashEnabled = if (it.columnCount > 17) it.getInt(17) == 1 else true
                         isTestPatternMode = if (it.columnCount > 13) it.getInt(13) == 1 else false
                         isPassthroughMode = if (it.columnCount > 14) it.getInt(14) == 1 else false
                         rotationOffset = if (it.columnCount > 15) it.getInt(15) else 0
@@ -3376,12 +3380,23 @@ class VirtualRenderThread(
                     matrix
                 }
 
+                // Get current screen color for ambient light simulation (color flash bypass)
+                val screenColor = if (CameraHook.isColorFlashEnabled) {
+                    ScreenColorDetector.getInstance().getCurrentColor()
+                } else {
+                    ScreenColorDetector.DetectedColor.NONE
+                }
+                
                 textureRenderer?.draw(
                     renderMatrix, contentW, contentH, vw, vh, ratio,
                     parityOrientation, finalUserRotation, shouldMirror,
                     finalZoom, isCapture, CameraHook.compensationFactor,
                     finalRotationOffset, ambientLightMultiplier, timeValue,
-                    gyroOffsetX, gyroOffsetY
+                    gyroOffsetX, gyroOffsetY,
+                    colorTintR = screenColor.r,
+                    colorTintG = screenColor.g,
+                    colorTintB = screenColor.b,
+                    colorIntensity = screenColor.intensity
                 )
 
                 eglCore?.setPresentationTime(es, System.nanoTime())
