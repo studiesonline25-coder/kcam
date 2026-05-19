@@ -85,6 +85,9 @@ class ScreenColorDetector {
     // Last sample time to avoid over-sampling
     private var lastSampleTime = 0L
     
+    // Transition timing for smooth color changes
+    private var transitionStartTime = 0L
+    
     // Cached bitmap for sampling (reused to avoid allocations)
     private var sampleBitmap: Bitmap? = null
     private var sampleCanvas: Canvas? = null

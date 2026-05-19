@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Device & Camera Fingerprint Analyzer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            padding: 20px;
+            line-height: 1.4;
+        }
+        h1 {
+            color: #00ff88;
+            margin-bottom: 10px;
+            font-size: 1.5em;
+        }
+        h2 {
+            color: #00aaff;
+            margin: 20px 0 10px 0;
+            font-size: 1.2em;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+        }
+        h3 {
+            color: #ffaa00;
+            margin: 15px 0 8px 0;
+            font-size: 1em;
+        }
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        .section {
+            background: #1a1a1a;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #333;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .item {
+            background: #252525;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+        }
+        .item-full {
+            grid-column: 1 / -1;
+        }
+        .label {
+            color: #888;
+            font-size: 0.75em;
+            display: block;
+            margin-bottom: 2px;
+        }
+        .value {
+            color: #fff;
+            word-break: break-all;
+            font-family: 'Consolas', monospace;
+            font-size: 0.9em;
+        }
+        .value.warning {
+            color: #ffaa00;
+        }
+        .value.error {
+            color: #ff4444;
+        }
+        .value.success {
+            color: #00ff88;
+        }
+        button {
+            background: #00aaff;
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            margin: 5px;
+        }
+        button:hover {
+            background: #00ccff;
+        }
+        button:disabled {
+            background: #555;
+            color: #888;
+            cursor: not-allowed;
+        }
+        .btn-secondary {
+            background: #444;
+            color: #fff;
+        }
+        .btn-secondary:hover {
+            background: #555;
+        }
+        #videoContainer {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin: 10px auto;
+        }
+        video {
+            width: 100%;
+            border-radius: 8px;
+            background: #000;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+        .status.info {
+            background: #1a3a5c;
+            border: 1px solid #00aaff;
+        }
+        .status.success {
+            background: #1a3c1a;
+            border: 1px solid #00ff88;
+        }
+        .status.error {
+            background: #3c1a1a;
+            border: 1px solid #ff4444;
+        }
+        .json-output {
+            background: #0d0d0d;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.75em;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 300px;
+            overflow-y: auto;
+            color: #aaa;
+        }
+        .controls {
+            text-align: center;
+            margin: 15px 0;
+        }
+        .tab-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        .tab {
+            padding: 8px 16px;
+            background: #333;
+            border: none;
+            border-radius: 4px 4px 0 0;
+            color: #888;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+        .tab.active {
+            background: #1a1a1a;
+            color: #00aaff;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8em;
+        }
+        th, td {
+            padding: 6px 8px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+        th {
+            background: #252525;
+            color: #00aaff;
+        }
+        .anomaly {
+            background: #3c2a1a !important;
+        }
+        .copy-btn {
+            font-size: 0.7em;
+            padding: 4px 8px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Device & Camera Fingerprint Analyzer</h1>
+        <p style="color: #888; margin-bottom: 15px; font-size: 0.9em;">
+            Extracts all device/camera metadata that KYC systems like Sumsub may query for spoof detection.
+        </p>
+
+        <div class="controls">
+            <button id="startBtn" onclick="startAnalysis()">Start Camera Analysis</button>
+            <button id="stopBtn" onclick="stopCamera()" disabled class="btn-secondary">Stop Camera</button>
+            <button onclick="exportReport()" class="btn-secondary">Export JSON Report</button>
+        </div>
+
+        <div id="status" class="status info">Click "Start Camera Analysis" to begin.</div>
+
+        <div id="videoContainer" style="display: none;">
+            <video id="video" autoplay playsinline muted></video>
+        </div>
+
+        <div class="tab-container">
+            <button class="tab active" onclick="showTab('device')">Device</button>
+            <button class="tab" onclick="showTab('browser')">Browser</button>
+            <button class="tab" onclick="showTab('camera')">Camera</button>
+            <button class="tab" onclick="showTab('media')">Media Caps</button>
+            <button class="tab" onclick="showTab('webgl')">WebGL</button>
+            <button class="tab" onclick="showTab('sensors')">Sensors</button>
+            <button class="tab" onclick="showTab('network')">Network</button>
+            <button class="tab" onclick="showTab('anomalies')">Anomalies</button>
+        </div>
+
+        <!-- Device Info Tab -->
+        <div id="tab-device" class="tab-content active">
+            <div class="section">
+                <h2>Device Information</h2>
+                <div class="grid" id="deviceInfo"></div>
+            </div>
+        </div>
+
+        <!-- Browser Tab -->
+        <div id="tab-browser" class="tab-content">
+            <div class="section">
+                <h2>Browser & Navigator</h2>
+                <div class="grid" id="browserInfo"></div>
+            </div>
+        </div>
+
+        <!-- Camera Tab -->
+        <div id="tab-camera" class="tab-content">
+            <div class="section">
+                <h2>Camera Devices</h2>
+                <div id="cameraDevices"></div>
+            </div>
+            <div class="section">
+                <h2>Active Camera Settings</h2>
+                <div class="grid" id="cameraSettings"></div>
+            </div>
+            <div class="section">
+                <h2>Camera Capabilities</h2>
+                <div class="grid" id="cameraCapabilities"></div>
+            </div>
+            <div class="section">
+                <h2>ImageCapture API</h2>
+                <div class="grid" id="imageCaptureInfo"></div>
+            </div>
+        </div>
+
+        <!-- Media Capabilities Tab -->
+        <div id="tab-media" class="tab-content">
+            <div class="section">
+                <h2>Supported Constraints</h2>
+                <div id="supportedConstraints"></div>
+            </div>
+            <div class="section">
+                <h2>Media Recorder Codecs</h2>
+                <div id="mediaRecorderCodecs"></div>
+            </div>
+        </div>
+
+        <!-- WebGL Tab -->
+        <div id="tab-webgl" class="tab-content">
+            <div class="section">
+                <h2>WebGL Information</h2>
+                <div class="grid" id="webglInfo"></div>
+            </div>
+            <div class="section">
+                <h2>WebGL Extensions</h2>
+                <div id="webglExtensions" class="json-output"></div>
+            </div>
+        </div>
+
+        <!-- Sensors Tab -->
+        <div id="tab-sensors" class="tab-content">
+            <div class="section">
+                <h2>Device Sensors</h2>
+                <div class="grid" id="sensorInfo"></div>
+            </div>
+            <div class="section">
+                <h2>Live Sensor Data</h2>
+                <div class="grid" id="liveSensorData"></div>
+            </div>
+        </div>
+
+        <!-- Network Tab -->
+        <div id="tab-network" class="tab-content">
+            <div class="section">
+                <h2>Network Information</h2>
+                <div class="grid" id="networkInfo"></div>
+            </div>
+        </div>
+
+        <!-- Anomalies Tab -->
+        <div id="tab-anomalies" class="tab-content">
+            <div class="section">
+                <h2>Detected Anomalies</h2>
+                <p style="color: #888; font-size: 0.85em; margin-bottom: 10px;">
+                    These are inconsistencies that may trigger spoof detection.
+                </p>
+                <div id="anomaliesList"></div>
+            </div>
+        </div>
+
+        <!-- Raw JSON Output -->
+        <div class="section">
+            <h2>Raw JSON Report <button class="copy-btn" onclick="copyReport()">Copy</button></h2>
+            <div id="jsonOutput" class="json-output">Analysis not started.</div>
+        </div>
+    </div>
+
+    <script>
+        let stream = null;
+        let report = {};
+        let anomalies = [];
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.tab[onclick="showTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+        }
+
+        function setStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+
+        function addItem(containerId, label, value, isAnomaly = false) {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = `item${isAnomaly ? ' anomaly' : ''}`;
+            div.innerHTML = `<span class="label">${label}</span><span class="value">${value ?? 'N/A'}</span>`;
+            container.appendChild(div);
+        }
+
+        function addFullItem(containerId, label, value, isAnomaly = false) {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = `item item-full${isAnomaly ? ' anomaly' : ''}`;
+            div.innerHTML = `<span class="label">${label}</span><span class="value">${value ?? 'N/A'}</span>`;
+            container.appendChild(div);
+        }
+
+        function addAnomaly(category, issue, severity = 'warning') {
+            anomalies.push({ category, issue, severity });
+        }
+
+        async function startAnalysis() {
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+            setStatus('Starting analysis...', 'info');
+
+            report = {
+                timestamp: new Date().toISOString(),
+                device: {},
+                browser: {},
+                camera: {},
+                media: {},
+                webgl: {},
+                sensors: {},
+                network: {},
+                anomalies: []
+            };
+            anomalies = [];
+
+            // Clear previous results
+            ['deviceInfo', 'browserInfo', 'cameraDevices', 'cameraSettings', 
+             'cameraCapabilities', 'imageCaptureInfo', 'supportedConstraints',
+             'mediaRecorderCodecs', 'webglInfo', 'webglExtensions', 'sensorInfo',
+             'liveSensorData', 'networkInfo', 'anomaliesList'].forEach(id => {
+                document.getElementById(id).innerHTML = '';
+            });
+
+            try {
+                await collectDeviceInfo();
+                await collectBrowserInfo();
+                await collectWebGLInfo();
+                await collectNetworkInfo();
+                await collectSensorInfo();
+                await collectMediaCapabilities();
+                await startCameraAndCollect();
+                
+                analyzeAnomalies();
+                displayAnomalies();
+                updateJsonOutput();
+                
+                setStatus('Analysis complete. Review results below.', 'success');
+            } catch (error) {
+                setStatus(`Error: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        async function collectDeviceInfo() {
+            const info = {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                vendor: navigator.vendor,
+                language: navigator.language,
+                languages: navigator.languages?.join(', '),
+                cookieEnabled: navigator.cookieEnabled,
+                doNotTrack: navigator.doNotTrack,
+                hardwareConcurrency: navigator.hardwareConcurrency,
+                maxTouchPoints: navigator.maxTouchPoints,
+                deviceMemory: navigator.deviceMemory,
+                screenWidth: screen.width,
+                screenHeight: screen.height,
+                screenAvailWidth: screen.availWidth,
+                screenAvailHeight: screen.availHeight,
+                screenColorDepth: screen.colorDepth,
+                screenPixelDepth: screen.pixelDepth,
+                devicePixelRatio: window.devicePixelRatio,
+                innerWidth: window.innerWidth,
+                innerHeight: window.innerHeight,
+                outerWidth: window.outerWidth,
+                outerHeight: window.outerHeight,
+                orientation: screen.orientation?.type,
+                orientationAngle: screen.orientation?.angle,
+                timezoneOffset: new Date().getTimezoneOffset(),
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+            };
+
+            report.device = info;
+
+            addItem('deviceInfo', 'User Agent', info.userAgent);
+            addItem('deviceInfo', 'Platform', info.platform);
+            addItem('deviceInfo', 'Vendor', info.vendor);
+            addItem('deviceInfo', 'Language', info.language);
+            addItem('deviceInfo', 'Languages', info.languages);
+            addItem('deviceInfo', 'Hardware Concurrency', info.hardwareConcurrency);
+            addItem('deviceInfo', 'Max Touch Points', info.maxTouchPoints);
+            addItem('deviceInfo', 'Device Memory (GB)', info.deviceMemory);
+            addItem('deviceInfo', 'Screen', `${info.screenWidth}x${info.screenHeight}`);
+            addItem('deviceInfo', 'Available Screen', `${info.screenAvailWidth}x${info.screenAvailHeight}`);
+            addItem('deviceInfo', 'Color Depth', info.screenColorDepth);
+            addItem('deviceInfo', 'Pixel Depth', info.screenPixelDepth);
+            addItem('deviceInfo', 'Device Pixel Ratio', info.devicePixelRatio);
+            addItem('deviceInfo', 'Viewport', `${info.innerWidth}x${info.innerHeight}`);
+            addItem('deviceInfo', 'Orientation', `${info.orientation} (${info.orientationAngle}°)`);
+            addItem('deviceInfo', 'Timezone', info.timezone);
+            addItem('deviceInfo', 'Timezone Offset', `${info.timezoneOffset} min`);
+
+            // Check for VM/emulator indicators
+            if (info.platform.includes('Linux') && info.userAgent.includes('Android')) {
+                // Expected for Android
+            } else if (info.platform === 'Win32' && info.maxTouchPoints > 0) {
+                addAnomaly('Device', 'Windows with touch points - possible emulator');
+            }
+        }
+
+        async function collectBrowserInfo() {
+            const info = {
+                appName: navigator.appName,
+                appVersion: navigator.appVersion,
+                appCodeName: navigator.appCodeName,
+                product: navigator.product,
+                productSub: navigator.productSub,
+                buildID: navigator.buildID,
+                oscpu: navigator.oscpu,
+                webdriver: navigator.webdriver,
+                pdfViewerEnabled: navigator.pdfViewerEnabled,
+                javaEnabled: navigator.javaEnabled?.() ?? 'N/A',
+                plugins: Array.from(navigator.plugins || []).map(p => p.name).join(', ') || 'None',
+                mimeTypes: Array.from(navigator.mimeTypes || []).map(m => m.type).join(', ') || 'None',
+                connection: navigator.connection ? {
+                    effectiveType: navigator.connection.effectiveType,
+                    downlink: navigator.connection.downlink,
+                    rtt: navigator.connection.rtt,
+                    saveData: navigator.connection.saveData
+                } : null,
+                bluetooth: 'bluetooth' in navigator,
+                usb: 'usb' in navigator,
+                serial: 'serial' in navigator,
+                hid: 'hid' in navigator,
+                nfc: 'nfc' in navigator,
+                xr: 'xr' in navigator,
+                wakeLock: 'wakeLock' in navigator,
+                share: 'share' in navigator,
+                clipboard: 'clipboard' in navigator,
+                credentials: 'credentials' in navigator,
+                geolocation: 'geolocation' in navigator,
+                mediaDevices: 'mediaDevices' in navigator,
+                mediaSession: 'mediaSession' in navigator,
+                permissions: 'permissions' in navigator,
+                presentation: 'presentation' in navigator,
+                serviceWorker: 'serviceWorker' in navigator,
+                storage: 'storage' in navigator,
+                vibrate: 'vibrate' in navigator,
+                getBattery: 'getBattery' in navigator,
+                getGamepads: 'getGamepads' in navigator,
+                requestMIDIAccess: 'requestMIDIAccess' in navigator,
+                sendBeacon: 'sendBeacon' in navigator,
+                locks: 'locks' in navigator
+            };
+
+            report.browser = info;
+
+            addItem('browserInfo', 'App Name', info.appName);
+            addItem('browserInfo', 'App Version', info.appVersion?.substring(0, 50) + '...');
+            addItem('browserInfo', 'Product', info.product);
+            addItem('browserInfo', 'Product Sub', info.productSub);
+            addItem('browserInfo', 'Build ID', info.buildID);
+            addItem('browserInfo', 'OS/CPU', info.oscpu);
+            addItem('browserInfo', 'WebDriver', info.webdriver, info.webdriver === true);
+            addItem('browserInfo', 'PDF Viewer', info.pdfViewerEnabled);
+            addFullItem('browserInfo', 'Plugins', info.plugins || 'None');
+            addItem('browserInfo', 'Bluetooth API', info.bluetooth);
+            addItem('browserInfo', 'USB API', info.usb);
+            addItem('browserInfo', 'Serial API', info.serial);
+            addItem('browserInfo', 'HID API', info.hid);
+            addItem('browserInfo', 'NFC API', info.nfc);
+            addItem('browserInfo', 'WebXR API', info.xr);
+            addItem('browserInfo', 'Wake Lock API', info.wakeLock);
+            addItem('browserInfo', 'Share API', info.share);
+            addItem('browserInfo', 'Clipboard API', info.clipboard);
+            addItem('browserInfo', 'Credentials API', info.credentials);
+            addItem('browserInfo', 'Geolocation API', info.geolocation);
+            addItem('browserInfo', 'MediaDevices API', info.mediaDevices);
+            addItem('browserInfo', 'Permissions API', info.permissions);
+            addItem('browserInfo', 'Service Worker', info.serviceWorker);
+            addItem('browserInfo', 'Vibrate API', info.vibrate);
+            addItem('browserInfo', 'Battery API', info.getBattery);
+            addItem('browserInfo', 'Gamepad API', info.getGamepads);
+            addItem('browserInfo', 'MIDI API', info.requestMIDIAccess);
+
+            if (info.webdriver === true) {
+                addAnomaly('Browser', 'WebDriver detected - automation flag is true', 'error');
+            }
+        }
+
+        async function collectWebGLInfo() {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl2') || canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            
+            if (!gl) {
+                report.webgl = { supported: false };
+                addItem('webglInfo', 'WebGL', 'Not supported');
+                return;
+            }
+
+            const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+            
+            const info = {
+                supported: true,
+                version: gl.getParameter(gl.VERSION),
+                shadingLanguageVersion: gl.getParameter(gl.SHADING_LANGUAGE_VERSION),
+                vendor: gl.getParameter(gl.VENDOR),
+                renderer: gl.getParameter(gl.RENDERER),
+                unmaskedVendor: debugInfo ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) : 'N/A',
+                unmaskedRenderer: debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : 'N/A',
+                maxTextureSize: gl.getParameter(gl.MAX_TEXTURE_SIZE),
+                maxViewportDims: gl.getParameter(gl.MAX_VIEWPORT_DIMS),
+                maxRenderbufferSize: gl.getParameter(gl.MAX_RENDERBUFFER_SIZE),
+                maxVertexAttribs: gl.getParameter(gl.MAX_VERTEX_ATTRIBS),
+                maxVertexUniformVectors: gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS),
+                maxFragmentUniformVectors: gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS),
+                maxVaryingVectors: gl.getParameter(gl.MAX_VARYING_VECTORS),
+                aliasedLineWidthRange: gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE),
+                aliasedPointSizeRange: gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE),
+                maxCombinedTextureImageUnits: gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS),
+                maxCubeMapTextureSize: gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE),
+                maxTextureImageUnits: gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS),
+                maxVertexTextureImageUnits: gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS),
+                redBits: gl.getParameter(gl.RED_BITS),
+                greenBits: gl.getParameter(gl.GREEN_BITS),
+                blueBits: gl.getParameter(gl.BLUE_BITS),
+                alphaBits: gl.getParameter(gl.ALPHA_BITS),
+                depthBits: gl.getParameter(gl.DEPTH_BITS),
+                stencilBits: gl.getParameter(gl.STENCIL_BITS),
+                extensions: gl.getSupportedExtensions()
+            };
+
+            report.webgl = info;
+
+            addItem('webglInfo', 'Version', info.version);
+            addItem('webglInfo', 'GLSL Version', info.shadingLanguageVersion);
+            addItem('webglInfo', 'Vendor', info.vendor);
+            addItem('webglInfo', 'Renderer', info.renderer);
+            addFullItem('webglInfo', 'Unmasked Vendor', info.unmaskedVendor);
+            addFullItem('webglInfo', 'Unmasked Renderer', info.unmaskedRenderer);
+            addItem('webglInfo', 'Max Texture Size', info.maxTextureSize);
+            addItem('webglInfo', 'Max Viewport', info.maxViewportDims?.join('x'));
+            addItem('webglInfo', 'Max Renderbuffer', info.maxRenderbufferSize);
+            addItem('webglInfo', 'Max Vertex Attribs', info.maxVertexAttribs);
+            addItem('webglInfo', 'Max Vertex Uniforms', info.maxVertexUniformVectors);
+            addItem('webglInfo', 'Max Fragment Uniforms', info.maxFragmentUniformVectors);
+            addItem('webglInfo', 'Color Bits (RGBA)', `${info.redBits}/${info.greenBits}/${info.blueBits}/${info.alphaBits}`);
+            addItem('webglInfo', 'Depth Bits', info.depthBits);
+            addItem('webglInfo', 'Stencil Bits', info.stencilBits);
+
+            document.getElementById('webglExtensions').textContent = info.extensions?.join('\n') || 'None';
+
+            // Check for VM indicators
+            const renderer = (info.unmaskedRenderer || '').toLowerCase();
+            if (renderer.includes('swiftshader') || renderer.includes('llvmpipe') || 
+                renderer.includes('virtualbox') || renderer.includes('vmware')) {
+                addAnomaly('WebGL', `Software/VM renderer detected: ${info.unmaskedRenderer}`, 'error');
+            }
+        }
+
+        async function collectNetworkInfo() {
+            const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            
+            const info = {
+                online: navigator.onLine,
+                effectiveType: conn?.effectiveType,
+                downlink: conn?.downlink,
+                downlinkMax: conn?.downlinkMax,
+                rtt: conn?.rtt,
+                saveData: conn?.saveData,
+                type: conn?.type
+            };
+
+            report.network = info;
+
+            addItem('networkInfo', 'Online', info.online);
+            addItem('networkInfo', 'Effective Type', info.effectiveType);
+            addItem('networkInfo', 'Downlink (Mbps)', info.downlink);
+            addItem('networkInfo', 'Downlink Max (Mbps)', info.downlinkMax);
+            addItem('networkInfo', 'RTT (ms)', info.rtt);
+            addItem('networkInfo', 'Save Data', info.saveData);
+            addItem('networkInfo', 'Connection Type', info.type);
+        }
+
+        async function collectSensorInfo() {
+            const sensors = {
+                accelerometer: 'Accelerometer' in window,
+                gyroscope: 'Gyroscope' in window,
+                magnetometer: 'Magnetometer' in window,
+                absoluteOrientationSensor: 'AbsoluteOrientationSensor' in window,
+                relativeOrientationSensor: 'RelativeOrientationSensor' in window,
+                linearAccelerationSensor: 'LinearAccelerationSensor' in window,
+                gravitySensor: 'GravitySensor' in window,
+                ambientLightSensor: 'AmbientLightSensor' in window,
+                deviceMotionEvent: 'DeviceMotionEvent' in window,
+                deviceOrientationEvent: 'DeviceOrientationEvent' in window
+            };
+
+            report.sensors = { available: sensors, live: {} };
+
+            addItem('sensorInfo', 'Accelerometer API', sensors.accelerometer);
+            addItem('sensorInfo', 'Gyroscope API', sensors.gyroscope);
+            addItem('sensorInfo', 'Magnetometer API', sensors.magnetometer);
+            addItem('sensorInfo', 'Absolute Orientation', sensors.absoluteOrientationSensor);
+            addItem('sensorInfo', 'Relative Orientation', sensors.relativeOrientationSensor);
+            addItem('sensorInfo', 'Linear Acceleration', sensors.linearAccelerationSensor);
+            addItem('sensorInfo', 'Gravity Sensor', sensors.gravitySensor);
+            addItem('sensorInfo', 'Ambient Light', sensors.ambientLightSensor);
+            addItem('sensorInfo', 'DeviceMotion Event', sensors.deviceMotionEvent);
+            addItem('sensorInfo', 'DeviceOrientation Event', sensors.deviceOrientationEvent);
+
+            // Try to get live sensor data
+            if (sensors.deviceMotionEvent) {
+                window.addEventListener('devicemotion', (e) => {
+                    const data = {
+                        accelerationX: e.acceleration?.x?.toFixed(3),
+                        accelerationY: e.acceleration?.y?.toFixed(3),
+                        accelerationZ: e.acceleration?.z?.toFixed(3),
+                        rotationAlpha: e.rotationRate?.alpha?.toFixed(3),
+                        rotationBeta: e.rotationRate?.beta?.toFixed(3),
+                        rotationGamma: e.rotationRate?.gamma?.toFixed(3),
+                        interval: e.interval
+                    };
+                    report.sensors.live.motion = data;
+                    
+                    const container = document.getElementById('liveSensorData');
+                    container.innerHTML = '';
+                    addItem('liveSensorData', 'Accel X', data.accelerationX);
+                    addItem('liveSensorData', 'Accel Y', data.accelerationY);
+                    addItem('liveSensorData', 'Accel Z', data.accelerationZ);
+                    addItem('liveSensorData', 'Rotation Alpha', data.rotationAlpha);
+                    addItem('liveSensorData', 'Rotation Beta', data.rotationBeta);
+                    addItem('liveSensorData', 'Rotation Gamma', data.rotationGamma);
+                    addItem('liveSensorData', 'Interval', data.interval);
+                }, { once: false });
+            }
+
+            if (sensors.deviceOrientationEvent) {
+                window.addEventListener('deviceorientation', (e) => {
+                    const data = {
+                        alpha: e.alpha?.toFixed(3),
+                        beta: e.beta?.toFixed(3),
+                        gamma: e.gamma?.toFixed(3),
+                        absolute: e.absolute
+                    };
+                    report.sensors.live.orientation = data;
+                }, { once: false });
+            }
+        }
+
+        async function collectMediaCapabilities() {
+            // Supported constraints
+            const supportedConstraints = navigator.mediaDevices?.getSupportedConstraints() || {};
+            report.media = { supportedConstraints };
+
+            const constraintsContainer = document.getElementById('supportedConstraints');
+            const constraintsList = Object.entries(supportedConstraints)
+                .map(([key, value]) => `<span style="color: ${value ? '#00ff88' : '#ff4444'}">${key}: ${value}</span>`)
+                .join('<br>');
+            constraintsContainer.innerHTML = `<div class="item item-full"><span class="value" style="font-size: 0.8em;">${constraintsList}</span></div>`;
+
+            // MediaRecorder codecs
+            const codecs = [
+                'video/webm;codecs=vp8',
+                'video/webm;codecs=vp9',
+                'video/webm;codecs=h264',
+                'video/webm;codecs=av1',
+                'video/mp4;codecs=h264',
+                'video/mp4;codecs=avc1',
+                'video/mp4;codecs=hevc',
+                'audio/webm;codecs=opus',
+                'audio/webm;codecs=vorbis',
+                'audio/mp4;codecs=aac'
+            ];
+
+            const codecSupport = {};
+            const codecsContainer = document.getElementById('mediaRecorderCodecs');
+            
+            if (typeof MediaRecorder !== 'undefined') {
+                codecs.forEach(codec => {
+                    const supported = MediaRecorder.isTypeSupported(codec);
+                    codecSupport[codec] = supported;
+                    const div = document.createElement('div');
+                    div.className = 'item';
+                    div.innerHTML = `<span class="value" style="color: ${supported ? '#00ff88' : '#ff4444'}">${codec}: ${supported ? 'Yes' : 'No'}</span>`;
+                    codecsContainer.appendChild(div);
+                });
+            } else {
+                codecsContainer.innerHTML = '<div class="item"><span class="value error">MediaRecorder not supported</span></div>';
+            }
+
+            report.media.codecSupport = codecSupport;
+        }
+
+        async function startCameraAndCollect() {
+            setStatus('Requesting camera access...', 'info');
+
+            // First enumerate devices
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter(d => d.kind === 'videoinput');
+            
+            report.camera.devices = videoDevices.map(d => ({
+                deviceId: d.deviceId,
+                groupId: d.groupId,
+                label: d.label,
+                kind: d.kind
+            }));
+
+            const devicesContainer = document.getElementById('cameraDevices');
+            if (videoDevices.length === 0) {
+                devicesContainer.innerHTML = '<div class="item item-full"><span class="value error">No cameras found</span></div>';
+                addAnomaly('Camera', 'No camera devices found', 'error');
+                return;
+            }
+
+            videoDevices.forEach((device, index) => {
+                const div = document.createElement('div');
+                div.className = 'item item-full';
+                div.innerHTML = `
+                    <span class="label">Camera ${index + 1}</span>
+                    <span class="value">
+                        Label: ${device.label || 'Unknown'}<br>
+                        Device ID: ${device.deviceId.substring(0, 20)}...<br>
+                        Group ID: ${device.groupId.substring(0, 20)}...
+                    </span>
+                `;
+                devicesContainer.appendChild(div);
+            });
+
+            // Request camera with maximum capabilities
+            const constraints = {
+                video: {
+                    facingMode: 'user',
+                    width: { ideal: 4096 },
+                    height: { ideal: 2160 },
+                    frameRate: { ideal: 60 }
+                },
+                audio: false
+            };
+
+            try {
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+                
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+                document.getElementById('videoContainer').style.display = 'block';
+                
+                await new Promise(resolve => {
+                    video.onloadedmetadata = resolve;
+                });
+
+                const track = stream.getVideoTracks()[0];
+                await collectTrackInfo(track);
+                await collectImageCaptureInfo(track);
+
+            } catch (error) {
+                setStatus(`Camera error: ${error.message}`, 'error');
+                addAnomaly('Camera', `Failed to access camera: ${error.message}`, 'error');
+            }
+        }
+
+        async function collectTrackInfo(track) {
+            const settings = track.getSettings();
+            const capabilities = track.getCapabilities ? track.getCapabilities() : {};
+            const constraints = track.getConstraints();
+
+            report.camera.settings = settings;
+            report.camera.capabilities = capabilities;
+            report.camera.constraints = constraints;
+            report.camera.trackInfo = {
+                id: track.id,
+                kind: track.kind,
+                label: track.label,
+                enabled: track.enabled,
+                muted: track.muted,
+                readyState: track.readyState,
+                contentHint: track.contentHint
+            };
+
+            // Display settings
+            const settingsContainer = document.getElementById('cameraSettings');
+            addItem('cameraSettings', 'Track ID', track.id);
+            addItem('cameraSettings', 'Label', track.label);
+            addItem('cameraSettings', 'Ready State', track.readyState);
+            addItem('cameraSettings', 'Device ID', settings.deviceId?.substring(0, 20) + '...');
+            addItem('cameraSettings', 'Group ID', settings.groupId?.substring(0, 20) + '...');
+            addItem('cameraSettings', 'Resolution', `${settings.width}x${settings.height}`);
+            addItem('cameraSettings', 'Frame Rate', settings.frameRate?.toFixed(2));
+            addItem('cameraSettings', 'Aspect Ratio', settings.aspectRatio?.toFixed(4));
+            addItem('cameraSettings', 'Facing Mode', settings.facingMode);
+            addItem('cameraSettings', 'Resize Mode', settings.resizeMode);
+            
+            // Advanced settings (may not be available on all devices)
+            if (settings.brightness !== undefined) addItem('cameraSettings', 'Brightness', settings.brightness);
+            if (settings.contrast !== undefined) addItem('cameraSettings', 'Contrast', settings.contrast);
+            if (settings.saturation !== undefined) addItem('cameraSettings', 'Saturation', settings.saturation);
+            if (settings.sharpness !== undefined) addItem('cameraSettings', 'Sharpness', settings.sharpness);
+            if (settings.focusMode !== undefined) addItem('cameraSettings', 'Focus Mode', settings.focusMode);
+            if (settings.focusDistance !== undefined) addItem('cameraSettings', 'Focus Distance', settings.focusDistance);
+            if (settings.exposureMode !== undefined) addItem('cameraSettings', 'Exposure Mode', settings.exposureMode);
+            if (settings.exposureTime !== undefined) addItem('cameraSettings', 'Exposure Time', settings.exposureTime);
+            if (settings.exposureCompensation !== undefined) addItem('cameraSettings', 'Exposure Comp', settings.exposureCompensation);
+            if (settings.iso !== undefined) addItem('cameraSettings', 'ISO', settings.iso);
+            if (settings.whiteBalanceMode !== undefined) addItem('cameraSettings', 'WB Mode', settings.whiteBalanceMode);
+            if (settings.colorTemperature !== undefined) addItem('cameraSettings', 'Color Temp', settings.colorTemperature);
+            if (settings.torch !== undefined) addItem('cameraSettings', 'Torch', settings.torch);
+            if (settings.zoom !== undefined) addItem('cameraSettings', 'Zoom', settings.zoom);
+            if (settings.pan !== undefined) addItem('cameraSettings', 'Pan', settings.pan);
+            if (settings.tilt !== undefined) addItem('cameraSettings', 'Tilt', settings.tilt);
+
+            // Display capabilities
+            const capsContainer = document.getElementById('cameraCapabilities');
+            
+            const capabilityKeys = [
+                'width', 'height', 'frameRate', 'aspectRatio', 'facingMode', 'resizeMode',
+                'brightness', 'contrast', 'saturation', 'sharpness', 'focusMode', 'focusDistance',
+                'exposureMode', 'exposureTime', 'exposureCompensation', 'iso', 'whiteBalanceMode',
+                'colorTemperature', 'torch', 'zoom', 'pan', 'tilt', 'pointsOfInterest',
+                'backgroundBlur', 'backgroundSegmentationMask', 'eyeGazeCorrection', 'faceFraming'
+            ];
+
+            capabilityKeys.forEach(key => {
+                if (capabilities[key] !== undefined) {
+                    let value = capabilities[key];
+                    if (typeof value === 'object') {
+                        if (value.min !== undefined && value.max !== undefined) {
+                            value = `${value.min} - ${value.max}`;
+                            if (value.step) value += ` (step: ${value.step})`;
+                        } else if (Array.isArray(value)) {
+                            value = value.join(', ');
+                        } else {
+                            value = JSON.stringify(value);
+                        }
+                    }
+                    addItem('cameraCapabilities', key, value);
+                }
+            });
+
+            // Check for anomalies
+            if (!settings.facingMode) {
+                addAnomaly('Camera', 'facingMode not reported - may indicate virtual camera');
+            }
+            if (settings.frameRate && settings.frameRate < 15) {
+                addAnomaly('Camera', `Low frame rate: ${settings.frameRate} fps`);
+            }
+            if (!capabilities.focusMode || capabilities.focusMode.length === 0) {
+                addAnomaly('Camera', 'No focus modes reported - unusual for real camera');
+            }
+            if (!capabilities.exposureMode || capabilities.exposureMode.length === 0) {
+                addAnomaly('Camera', 'No exposure modes reported - unusual for real camera');
+            }
+        }
+
+        async function collectImageCaptureInfo(track) {
+            if (typeof ImageCapture === 'undefined') {
+                report.camera.imageCapture = { supported: false };
+                addItem('imageCaptureInfo', 'ImageCapture API', 'Not supported');
+                return;
+            }
+
+            try {
+                const imageCapture = new ImageCapture(track);
+                const photoCapabilities = await imageCapture.getPhotoCapabilities();
+                const photoSettings = await imageCapture.getPhotoSettings();
+
+                report.camera.imageCapture = {
+                    supported: true,
+                    photoCapabilities,
+                    photoSettings
+                };
+
+                addItem('imageCaptureInfo', 'ImageCapture API', 'Supported');
+                
+                // Photo capabilities
+                if (photoCapabilities.imageWidth) {
+                    addItem('imageCaptureInfo', 'Image Width', `${photoCapabilities.imageWidth.min} - ${photoCapabilities.imageWidth.max}`);
+                }
+                if (photoCapabilities.imageHeight) {
+                    addItem('imageCaptureInfo', 'Image Height', `${photoCapabilities.imageHeight.min} - ${photoCapabilities.imageHeight.max}`);
+                }
+                if (photoCapabilities.redEyeReduction) {
+                    addItem('imageCaptureInfo', 'Red Eye Reduction', photoCapabilities.redEyeReduction);
+                }
+                if (photoCapabilities.fillLightMode) {
+                    addItem('imageCaptureInfo', 'Fill Light Modes', photoCapabilities.fillLightMode.join(', '));
+                }
+
+                // Photo settings
+                addItem('imageCaptureInfo', 'Current Width', photoSettings.imageWidth);
+                addItem('imageCaptureInfo', 'Current Height', photoSettings.imageHeight);
+                if (photoSettings.fillLightMode) {
+                    addItem('imageCaptureInfo', 'Current Fill Light', photoSettings.fillLightMode);
+                }
+
+            } catch (error) {
+                report.camera.imageCapture = { supported: true, error: error.message };
+                addItem('imageCaptureInfo', 'ImageCapture Error', error.message);
+            }
+        }
+
+        function analyzeAnomalies() {
+            // Check for common spoofing indicators
+            
+            // 1. Check if device claims to be mobile but has desktop characteristics
+            const ua = navigator.userAgent.toLowerCase();
+            const isMobileUA = /android|iphone|ipad|mobile/i.test(ua);
+            const hasTouch = navigator.maxTouchPoints > 0;
+            
+            if (isMobileUA && !hasTouch) {
+                addAnomaly('Device', 'Mobile user agent but no touch support', 'error');
+            }
+
+            // 2. Check for missing expected mobile APIs
+            if (isMobileUA) {
+                if (!('DeviceMotionEvent' in window)) {
+                    addAnomaly('Sensors', 'Mobile device without DeviceMotionEvent', 'warning');
+                }
+                if (!('DeviceOrientationEvent' in window)) {
+                    addAnomaly('Sensors', 'Mobile device without DeviceOrientationEvent', 'warning');
+                }
+            }
+
+            // 3. Check camera label for virtual camera indicators
+            const cameraLabel = report.camera?.settings?.label?.toLowerCase() || '';
+            const virtualIndicators = ['obs', 'virtual', 'fake', 'manycam', 'snap camera', 'xsplit', 'droidcam', 'iriun', 'epoccam'];
+            virtualIndicators.forEach(indicator => {
+                if (cameraLabel.includes(indicator)) {
+                    addAnomaly('Camera', `Virtual camera indicator in label: "${indicator}"`, 'error');
+                }
+            });
+
+            // 4. Check for unusual resolution
+            const width = report.camera?.settings?.width;
+            const height = report.camera?.settings?.height;
+            if (width && height) {
+                const aspectRatio = width / height;
+                // Common mobile aspect ratios: 4:3 (1.33), 16:9 (1.78), 19.5:9 (2.17)
+                const commonRatios = [1.33, 1.5, 1.78, 2.0, 2.17];
+                const isCommonRatio = commonRatios.some(r => Math.abs(aspectRatio - r) < 0.1);
+                if (!isCommonRatio && aspectRatio !== 1) {
+                    addAnomaly('Camera', `Unusual aspect ratio: ${aspectRatio.toFixed(2)}`, 'warning');
+                }
+            }
+
+            // 5. Check for missing camera capabilities that real cameras have
+            const caps = report.camera?.capabilities || {};
+            if (Object.keys(caps).length < 5) {
+                addAnomaly('Camera', 'Very limited camera capabilities reported', 'warning');
+            }
+
+            // 6. Check WebGL for software rendering
+            const renderer = report.webgl?.unmaskedRenderer?.toLowerCase() || '';
+            if (renderer.includes('swiftshader') || renderer.includes('software') || renderer.includes('llvmpipe')) {
+                addAnomaly('WebGL', 'Software rendering detected - possible VM/emulator', 'error');
+            }
+
+            // 7. Check for automation
+            if (navigator.webdriver) {
+                addAnomaly('Browser', 'WebDriver automation detected', 'error');
+            }
+
+            // 8. Check timezone consistency
+            const tzOffset = new Date().getTimezoneOffset();
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            // Could add more sophisticated timezone vs location checks
+
+            // 9. Check for headless browser indicators
+            if (!navigator.plugins || navigator.plugins.length === 0) {
+                // This is normal on mobile, but suspicious on desktop
+                if (!isMobileUA) {
+                    addAnomaly('Browser', 'No plugins detected on desktop browser', 'warning');
+                }
+            }
+
+            report.anomalies = anomalies;
+        }
+
+        function displayAnomalies() {
+            const container = document.getElementById('anomaliesList');
+            
+            if (anomalies.length === 0) {
+                container.innerHTML = '<div class="item item-full"><span class="value success">No anomalies detected!</span></div>';
+                return;
+            }
+
+            anomalies.forEach(anomaly => {
+                const div = document.createElement('div');
+                div.className = `item item-full ${anomaly.severity === 'error' ? 'anomaly' : ''}`;
+                div.innerHTML = `
+                    <span class="label">${anomaly.category}</span>
+                    <span class="value ${anomaly.severity}">${anomaly.issue}</span>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function updateJsonOutput() {
+            document.getElementById('jsonOutput').textContent = JSON.stringify(report, null, 2);
+        }
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            document.getElementById('videoContainer').style.display = 'none';
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            setStatus('Camera stopped.', 'info');
+        }
+
+        function exportReport() {
+            const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `device-fingerprint-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function copyReport() {
+            navigator.clipboard.writeText(JSON.stringify(report, null, 2))
+                .then(() => setStatus('Report copied to clipboard!', 'success'))
+                .catch(err => setStatus('Failed to copy: ' + err.message, 'error'));
+        }
+
+        // Auto-start on page load (optional)
+        // window.onload = startAnalysis;
+    </script>
+</body>
+</html>
