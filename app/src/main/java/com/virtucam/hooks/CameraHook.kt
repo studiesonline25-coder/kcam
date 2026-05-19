@@ -2955,6 +2955,13 @@ class VirtualRenderThread(
     // Background maintenance thread for non-render-critical tasks
     private var maintenanceThread: Thread? = null
     @Volatile private var maintenanceRunning = false
+    
+    // ANTI-DETECTION: Temporal smoothing state for motion normalization
+    // Tracks frame timing to ensure consistent frame-to-frame differences
+    private var lastFrameTimeNs = 0L
+    private var lastNewFrameTimeNs = 0L
+    private var framesSinceNewContent = 0
+    private var smoothedMotionFactor = 0f  // Exponential smoothing of motion magnitude
 
     private fun getTargetRatio(vW: Int, vH: Int, isSurfaceView: Boolean): Float {
         return try {
@@ -3196,14 +3203,24 @@ class VirtualRenderThread(
 
                         if (CameraHook.isLivenessEnabled) {
                             val timeMs = System.currentTimeMillis()
-                            // Minimal hand tremor: barely perceptible when "staying still"
-                            val scale = 1.0f + (Math.sin(timeMs / 800.0) * 0.0015f).toFloat()  // ±0.15% breathing (was ±0.8%)
-                            val trX = (Math.sin(timeMs / 400.0) * 0.001f).toFloat()  // ±0.1% horizontal (was ±0.5%)
-                            val trY = (Math.cos(timeMs / 550.0) * 0.001f).toFloat()  // ±0.1% vertical (was ±0.5%)
+                            // Base hand tremor (breathing, micro-movements)
+                            val baseScale = 1.0f + (Math.sin(timeMs / 800.0) * 0.0015f).toFloat()
+                            val baseTrX = (Math.sin(timeMs / 400.0) * 0.001f).toFloat()
+                            val baseTrY = (Math.cos(timeMs / 550.0) * 0.001f).toFloat()
+                            
+                            // ANTI-DETECTION: Add high-frequency micro-jitter to ensure unique frames
+                            // This is imperceptible but ensures no two frames are pixel-identical
+                            val jitterX = (Math.sin(timeMs / 17.0) * 0.0002f).toFloat()
+                            val jitterY = (Math.cos(timeMs / 23.0) * 0.0002f).toFloat()
+                            val jitterScale = 1.0f + (Math.sin(timeMs / 31.0) * 0.0001f).toFloat()
+                            
+                            val finalTrX = baseTrX + jitterX
+                            val finalTrY = baseTrY + jitterY
+                            val finalScale = baseScale * jitterScale
 
-                            Matrix.translateM(matrix, 0, trX, trY, 0f)
+                            Matrix.translateM(matrix, 0, finalTrX, finalTrY, 0f)
                             Matrix.translateM(matrix, 0, 0.5f, 0.5f, 0f)
-                            Matrix.scaleM(matrix, 0, scale, scale, 1f)
+                            Matrix.scaleM(matrix, 0, finalScale, finalScale, 1f)
                             Matrix.translateM(matrix, 0, -0.5f, -0.5f, 0f)
                         }
 
@@ -3242,25 +3259,59 @@ class VirtualRenderThread(
 
     private fun renderLoop(hasNewFrame: java.util.concurrent.atomic.AtomicBoolean, sizeProvider: () -> Pair<Int, Int>) {
         val matrix = FloatArray(16)
+        val currentTimeNs = System.nanoTime()
+        lastFrameTimeNs = currentTimeNs
+        lastNewFrameTimeNs = currentTimeNs
+        
         while (isRunning) {
             frameCount++
-            // Config polling and JPEG pre-warming moved to background maintenance thread
+            val nowNs = System.nanoTime()
+            val deltaNs = nowNs - lastFrameTimeNs
+            lastFrameTimeNs = nowNs
             
-            if (hasNewFrame.compareAndSet(true, false)) {
+            // ANTI-DETECTION: Track new frame arrivals for motion smoothing
+            val gotNewFrame = hasNewFrame.compareAndSet(true, false)
+            if (gotNewFrame) {
                 try { mediaSurfaceTexture?.updateTexImage() } catch (_: Exception) {}
+                framesSinceNewContent = 0
+                lastNewFrameTimeNs = nowNs
+            } else {
+                framesSinceNewContent++
             }
             mediaSurfaceTexture?.getTransformMatrix(matrix)
             
+            // ANTI-DETECTION: Temporal motion smoothing
+            // Real cameras have consistent small motion between frames
+            // We add micro-motion that scales inversely with time since last new frame
+            // This ensures frames are never identical while maintaining smooth motion
+            val timeMs = System.currentTimeMillis()
+            val timeSinceNewFrameMs = (nowNs - lastNewFrameTimeNs) / 1_000_000f
+            
+            // Motion factor decreases smoothly as we wait for new content
+            // This creates natural "settling" behavior like a real camera
+            val motionDecay = 1.0f / (1.0f + timeSinceNewFrameMs * 0.01f)
+            smoothedMotionFactor = smoothedMotionFactor * 0.9f + motionDecay * 0.1f
+            
             if (CameraHook.isLivenessEnabled) {
-                val timeMs = System.currentTimeMillis()
-                // Minimal hand tremor: barely perceptible when "staying still"
-                val scale = 1.0f + (Math.sin(timeMs / 800.0) * 0.0015f).toFloat()  // ±0.15% breathing (was ±0.8%)
-                val trX = (Math.sin(timeMs / 400.0) * 0.001f).toFloat()  // ±0.1% horizontal (was ±0.5%)
-                val trY = (Math.cos(timeMs / 550.0) * 0.001f).toFloat()  // ±0.1% vertical (was ±0.5%)
+                // Base hand tremor (breathing, micro-movements)
+                val baseScale = 1.0f + (Math.sin(timeMs / 800.0) * 0.0015f).toFloat()
+                val baseTrX = (Math.sin(timeMs / 400.0) * 0.001f).toFloat()
+                val baseTrY = (Math.cos(timeMs / 550.0) * 0.001f).toFloat()
+                
+                // ANTI-DETECTION: Add high-frequency micro-jitter to ensure unique frames
+                // This is imperceptible but ensures no two frames are pixel-identical
+                val jitterX = (Math.sin(timeMs / 17.0) * 0.0002f).toFloat()  // ~60Hz jitter
+                val jitterY = (Math.cos(timeMs / 23.0) * 0.0002f).toFloat()  // Prime frequency
+                val jitterScale = 1.0f + (Math.sin(timeMs / 31.0) * 0.0001f).toFloat()
+                
+                // Combine base motion with micro-jitter
+                val finalTrX = baseTrX + jitterX * smoothedMotionFactor
+                val finalTrY = baseTrY + jitterY * smoothedMotionFactor
+                val finalScale = baseScale * jitterScale
 
-                Matrix.translateM(matrix, 0, trX, trY, 0f)
+                Matrix.translateM(matrix, 0, finalTrX, finalTrY, 0f)
                 Matrix.translateM(matrix, 0, 0.5f, 0.5f, 0f)
-                Matrix.scaleM(matrix, 0, scale, scale, 1f)
+                Matrix.scaleM(matrix, 0, finalScale, finalScale, 1f)
                 Matrix.translateM(matrix, 0, -0.5f, -0.5f, 0f)
             }
             
