@@ -1203,7 +1203,7 @@ object CameraHook {
                         if (param.method.name == "capture" || param.method.name == "captureBurst") {
                             synchronized(CameraHook) {
                                 captureCount++
-                                captureQueue.offer(Pair(System.nanoTime(), captureCount))
+                                captureQueue.offer(Pair(android.os.SystemClock.elapsedRealtimeNanos(), captureCount))
                                 Log.e(TAG, "CAPT_LOG [1]: Capture Event Detected (null callback). Method=${param.method.name}, captureCount=${captureCount}")
                             }
                         }
@@ -1218,7 +1218,7 @@ object CameraHook {
                         
                                 override fun onCaptureCompleted(session: android.hardware.camera2.CameraCaptureSession, request: android.hardware.camera2.CaptureRequest, result: android.hardware.camera2.TotalCaptureResult) {
                                     try {
-                                        val sensorTimestamp = result.get(android.hardware.camera2.CaptureResult.SENSOR_TIMESTAMP) ?: System.nanoTime()
+                                        val sensorTimestamp = result.get(android.hardware.camera2.CaptureResult.SENSOR_TIMESTAMP) ?: android.os.SystemClock.elapsedRealtimeNanos()
 
                                         // [ABSOLUTE PARITY] Directly store the current UI state for this frame's timestamp
                                         // This replaces the LENS_FOCUS_DISTANCE courier which was colliding with real hardware.
@@ -1354,7 +1354,7 @@ object CameraHook {
                         
                         override fun onCaptureCompleted(session: android.hardware.camera2.CameraCaptureSession, request: android.hardware.camera2.CaptureRequest, result: android.hardware.camera2.TotalCaptureResult) {
                             try {
-                                val sensorTimestamp = result.get(android.hardware.camera2.CaptureResult.SENSOR_TIMESTAMP) ?: System.nanoTime()
+                                val sensorTimestamp = result.get(android.hardware.camera2.CaptureResult.SENSOR_TIMESTAMP) ?: android.os.SystemClock.elapsedRealtimeNanos()
                                 metadataCourierMap[sensorTimestamp] = TransformationState(compensationFactor, rotationOffset, isMirrored)
                                 
                                 if (metadataCourierMap.size > 120) {
@@ -2297,7 +2297,7 @@ object CameraHook {
                 if (readerFormat == 256 && bridge != null) {
                     synchronized(CameraHook) {
                         CameraHook.captureCount++
-                        CameraHook.captureQueue.offer(Pair(System.nanoTime(), CameraHook.captureCount))
+                        CameraHook.captureQueue.offer(Pair(android.os.SystemClock.elapsedRealtimeNanos(), CameraHook.captureCount))
                         Log.e(TAG, "CAPT_LOG [0]: JPEG Dummy Sink fired! captureCount incremented to ${CameraHook.captureCount} (browser-safe trigger)")
                     }
                 }
@@ -3230,7 +3230,7 @@ class VirtualRenderThread(
                         synchronized(CameraHook) {
                             while (CameraHook.captureCount > 0) {
                                 val capture = CameraHook.captureQueue.poll()
-                                val timestamp = capture?.first ?: System.nanoTime()
+                                val timestamp = capture?.first ?: android.os.SystemClock.elapsedRealtimeNanos()
                                 Log.e(TAG, "CAPT_LOG [2]: VirtualRenderThread draining captureQueue. Pushing to bridges. captureCount=${CameraHook.captureCount}")
                                 CameraHook.formatBridges.values.forEach { 
                                     it.pushLatestFrameToWriter(timestamp)
@@ -3322,7 +3322,7 @@ class VirtualRenderThread(
             synchronized(CameraHook) {
                 while (CameraHook.captureCount > 0) {
                     val capture = CameraHook.captureQueue.poll()
-                    val timestamp = capture?.first ?: System.nanoTime()
+                    val timestamp = capture?.first ?: android.os.SystemClock.elapsedRealtimeNanos()
                     
                     CameraHook.latestVirtualJpegArea = 0
                     
@@ -3450,7 +3450,7 @@ class VirtualRenderThread(
                     colorIntensity = screenColor.intensity
                 )
 
-                eglCore?.setPresentationTime(es, System.nanoTime())
+                eglCore?.setPresentationTime(es, android.os.SystemClock.elapsedRealtimeNanos())
                 if (eglCore?.swapBuffers(es) == false) {
                     Log.w("VirtuCam_Render", "Surface abandoned, removing.")
                     it.remove()
