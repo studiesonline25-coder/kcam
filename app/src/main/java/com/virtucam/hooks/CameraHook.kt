@@ -3450,7 +3450,7 @@ class VirtualRenderThread(
                     colorIntensity = screenColor.intensity
                 )
 
-                eglCore?.setPresentationTime(es, android.os.SystemClock.elapsedRealtimeNanos())
+                // eglCore?.setPresentationTime(es, android.os.SystemClock.elapsedRealtimeNanos())
                 if (eglCore?.swapBuffers(es) == false) {
                     Log.w("VirtuCam_Render", "Surface abandoned, removing.")
                     it.remove()
