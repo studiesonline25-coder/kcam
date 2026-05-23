@@ -72,20 +72,30 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             
             // CMOS sensor noise model: shot noise + read noise + temporal variation
             vec3 sensorNoise(vec2 coord, float time, vec3 signal) {
+                // 1. MACROBLOCK SMEARING: Simulate ISP chroma-subsampling and noise compression
+                // Snap coordinates to 2x2 pixel blocks so noise isn't perfectly per-pixel crisp
+                vec2 blockCoord = floor(coord / 2.0) * 2.0;
+                
                 // Unique seed per frame (ensures no identical frames)
-                vec2 frameSeed = coord + vec2(time * 1000.0, time * 700.0);
+                vec2 frameSeed = blockCoord + vec2(time * 1000.0, time * 700.0);
                 
-                // Shot noise: proportional to sqrt(signal) - Poisson approximation
                 float luminance = dot(signal, vec3(0.299, 0.587, 0.114));
-                float shotNoiseScale = 0.003 * sqrt(luminance + 0.01);
                 
-                // Read noise: constant Gaussian (sensor electronics)
-                float readNoiseScale = 0.0015;
+                // 2. LUMA-CLAMPED ISO: Real cameras suppress read noise in bright environments
+                // Scales from 0.1 (bright) to 1.0 (dark)
+                float isoScale = mix(0.1, 1.0, smoothstep(0.7, 0.2, luminance));
+                
+                // 3. LOWER AMPLITUDE: Reduced for human invisibility while maintaining mathematical uniqueness
+                // Shot noise: proportional to sqrt(signal) - Poisson approximation
+                float shotNoiseScale = 0.0018 * sqrt(luminance + 0.01);
+                
+                // Read noise: Gaussian sensor electronics noise, scales dynamically with "ISO"
+                float readNoiseScale = 0.0010 * isoScale;
                 
                 // Temporal variation: ensures every frame is unique
-                float temporalJitter = hash(frameSeed) * 0.001;
+                float temporalJitter = hash(frameSeed) * 0.0005;
                 
-                // Per-channel noise (color channels have slightly different noise)
+                // Per-channel noise
                 vec3 noise;
                 noise.r = gaussianNoise(frameSeed) * (shotNoiseScale + readNoiseScale) + temporalJitter;
                 noise.g = gaussianNoise(frameSeed + vec2(17.3, 41.7)) * (shotNoiseScale + readNoiseScale) + temporalJitter;
