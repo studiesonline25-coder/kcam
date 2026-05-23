@@ -98,6 +98,10 @@ object CameraHook {
     val captureQueue = java.util.concurrent.LinkedBlockingQueue<Pair<Long, Int>>()
     val formatBridges = java.util.concurrent.ConcurrentHashMap<android.util.Size, FormatConverterBridge>()
     
+    // Hardware vsync synchronization for VirtualRenderThread
+    val frameSyncObject = Object()
+    @Volatile var latestSensorTimestamp = 0L
+    
     // Global telemetry for surface dimensions
     private val surfaceSizes = java.util.Collections.synchronizedMap(java.util.WeakHashMap<Surface, Pair<Int, Int>>())
     private val surfaceTextureSizes = java.util.Collections.synchronizedMap(java.util.WeakHashMap<SurfaceTexture, Pair<Int, Int>>())
@@ -1303,6 +1307,10 @@ object CameraHook {
                                 try {
                                     val timestamp = result.get(android.hardware.camera2.CaptureResult.SENSOR_TIMESTAMP) ?: 0L
                                     if (timestamp > 0) {
+                                        CameraHook.latestSensorTimestamp = timestamp
+                                        synchronized(CameraHook.frameSyncObject) {
+                                            CameraHook.frameSyncObject.notifyAll()
+                                        }
                                         activeBridges.forEach { 
                                             // [HYBRID TUNING] NEVER push to JPEG bridges via Writer. 
                                             // The synchronous acquireNextImage hook is more reliable and 
@@ -1375,6 +1383,10 @@ object CameraHook {
                                 try {
                                     val timestamp = result.get(android.hardware.camera2.CaptureResult.SENSOR_TIMESTAMP) ?: 0L
                                     if (timestamp > 0) {
+                                        CameraHook.latestSensorTimestamp = timestamp
+                                        synchronized(CameraHook.frameSyncObject) {
+                                            CameraHook.frameSyncObject.notifyAll()
+                                        }
                                         activeBridges.forEach { 
                                             if (it.outputFormat == 256) return@forEach
                                             it.pushLatestFrameToWriter(timestamp) 
@@ -3333,7 +3345,12 @@ class VirtualRenderThread(
                 }
             }
             
-            sleep(30)
+            // Wait for real hardware vsync (up to 100ms) to ensure perfect pacing
+            synchronized(CameraHook.frameSyncObject) {
+                try {
+                    CameraHook.frameSyncObject.wait(100)
+                } catch (e: Exception) {}
+            }
         }
     }
 
@@ -3450,7 +3467,8 @@ class VirtualRenderThread(
                     colorIntensity = screenColor.intensity
                 )
 
-                // eglCore?.setPresentationTime(es, android.os.SystemClock.elapsedRealtimeNanos())
+                val renderPts = if (CameraHook.latestSensorTimestamp > 0) CameraHook.latestSensorTimestamp else android.os.SystemClock.elapsedRealtimeNanos()
+                eglCore?.setPresentationTime(es, renderPts)
                 if (eglCore?.swapBuffers(es) == false) {
                     Log.w("VirtuCam_Render", "Surface abandoned, removing.")
                     it.remove()
