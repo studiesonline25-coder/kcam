@@ -76,24 +76,28 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                 // Snap coordinates to 2x2 pixel blocks so noise isn't perfectly per-pixel crisp
                 vec2 blockCoord = floor(coord / 2.0) * 2.0;
                 
-                // Unique seed per frame (ensures no identical frames)
-                vec2 frameSeed = blockCoord + vec2(time * 1000.0, time * 700.0);
+                // PRECISION FIX: Use fract() to keep seed values in [0,1] range
+                // Raw time*1000 overflows mediump float precision after ~2 min,
+                // causing identical hash outputs and identical noise on consecutive frames.
+                // Two incommensurate fract periods ensure no repetition for hours.
+                vec2 frameSeed = blockCoord + vec2(fract(time * 7.3) * 1000.0, fract(time * 5.1) * 1000.0);
                 
                 float luminance = dot(signal, vec3(0.299, 0.587, 0.114));
                 
                 // 2. LUMA-CLAMPED ISO: Real cameras suppress read noise in bright environments
-                // Scales from 0.1 (bright) to 1.0 (dark)
-                float isoScale = mix(0.1, 1.0, smoothstep(0.7, 0.2, luminance));
+                // Scales from 0.15 (bright) to 1.0 (dark)
+                float isoScale = mix(0.15, 1.0, smoothstep(0.7, 0.2, luminance));
                 
-                // 3. LOWER AMPLITUDE: Reduced for human invisibility while maintaining mathematical uniqueness
+                // 3. ENCODER-SURVIVING AMPLITUDE: Must be >= 2 LSBs (0.008) to survive
+                // H.264 quantization. Previous 0.0018 was sub-1-LSB and got erased.
                 // Shot noise: proportional to sqrt(signal) - Poisson approximation
-                float shotNoiseScale = 0.0018 * sqrt(luminance + 0.01);
+                float shotNoiseScale = 0.005 * sqrt(luminance + 0.01);
                 
                 // Read noise: Gaussian sensor electronics noise, scales dynamically with "ISO"
-                float readNoiseScale = 0.0010 * isoScale;
+                float readNoiseScale = 0.003 * isoScale;
                 
                 // Temporal variation: ensures every frame is unique
-                float temporalJitter = hash(frameSeed) * 0.0005;
+                float temporalJitter = hash(frameSeed) * 0.002;
                 
                 // Per-channel noise
                 vec3 noise;
@@ -234,11 +238,16 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             
             // CMOS sensor noise model: shot noise + read noise + temporal variation
             vec3 sensorNoise(vec2 coord, float time, vec3 signal) {
-                vec2 frameSeed = coord + vec2(time * 1000.0, time * 700.0);
+                // PRECISION FIX: fract() prevents mediump float overflow after ~2 min
+                vec2 frameSeed = coord + vec2(fract(time * 7.3) * 1000.0, fract(time * 5.1) * 1000.0);
                 float luminance = dot(signal, vec3(0.299, 0.587, 0.114));
-                float shotNoiseScale = 0.003 * sqrt(luminance + 0.01);
-                float readNoiseScale = 0.0015;
-                float temporalJitter = hash(frameSeed) * 0.001;
+                
+                float isoScale = mix(0.15, 1.0, smoothstep(0.7, 0.2, luminance));
+                
+                // ENCODER-SURVIVING AMPLITUDE: >= 2 LSBs to survive H.264 quantization
+                float shotNoiseScale = 0.005 * sqrt(luminance + 0.01);
+                float readNoiseScale = 0.003 * isoScale;
+                float temporalJitter = hash(frameSeed) * 0.002;
                 
                 vec3 noise;
                 noise.r = gaussianNoise(frameSeed) * (shotNoiseScale + readNoiseScale) + temporalJitter;
