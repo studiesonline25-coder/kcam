@@ -67,6 +67,11 @@ class FormatConverterBridge(
     private var readyBuffer: ByteArray? = null
     private var conversionBuffer: ByteArray? = null
 
+    // [PERF] Pre-allocated row caches for bulk YUV conversion (avoid per-frame GC)
+    private var yRowCache: ByteArray? = null
+    private var uvRowCache: ByteArray? = null
+    private var chromaRowCache: ByteArray? = null
+
     private var debugCounter = 0
     private var lastBufferDumpMs = 0L
 
@@ -498,19 +503,48 @@ class FormatConverterBridge(
             val processH = h.coerceAtMost(height)
             val processW = w.coerceAtMost(width)
 
-            for (ty in 0 until processH) {
-                val rowPos = ty * yRowStride
-                val srcRowBase = ty * srcStrideArr
-                for (tx in 0 until processW) {
-                    val rgbaOff = srcRowBase + (tx * 4)
-                    if (rgbaOff + 3 < rgbaBytes.size) {
-                        val r = rgbaBytes[rgbaOff].toInt() and 0xFF
-                        val g = rgbaBytes[rgbaOff+1].toInt() and 0xFF
-                        val b = rgbaBytes[rgbaOff+2].toInt() and 0xFF
-                        val y = ((66 * r + 129 * g + 25 * b + 128) shr 8) + 16
-                        val pos = rowPos + (tx * yPixStride)
-                        if (pos < yBuffer.capacity()) {
-                            yBuffer.put(pos, y.coerceIn(16, 235).toByte())
+            // [PERF] Bulk row-based Y plane write to avoid per-pixel JNI boundary checks
+            if (yPixStride == 1) {
+                // Fast bulk path (most common: contiguous Y plane)
+                var yRow = yRowCache
+                if (yRow == null || yRow.size < processW) {
+                    yRow = ByteArray(processW)
+                    yRowCache = yRow
+                }
+                for (ty in 0 until processH) {
+                    val rowPos = ty * yRowStride
+                    val srcRowBase = ty * srcStrideArr
+                    for (tx in 0 until processW) {
+                        val rgbaOff = srcRowBase + (tx * 4)
+                        if (rgbaOff + 3 < rgbaBytes.size) {
+                            val r = rgbaBytes[rgbaOff].toInt() and 0xFF
+                            val g = rgbaBytes[rgbaOff+1].toInt() and 0xFF
+                            val b = rgbaBytes[rgbaOff+2].toInt() and 0xFF
+                            val y = ((66 * r + 129 * g + 25 * b + 128) shr 8) + 16
+                            yRow[tx] = y.coerceIn(16, 235).toByte()
+                        }
+                    }
+                    if (rowPos + processW <= yBuffer.capacity()) {
+                        yBuffer.position(rowPos)
+                        yBuffer.put(yRow, 0, processW)
+                    }
+                }
+            } else {
+                // Slow fallback path for non-contiguous Y planes
+                for (ty in 0 until processH) {
+                    val rowPos = ty * yRowStride
+                    val srcRowBase = ty * srcStrideArr
+                    for (tx in 0 until processW) {
+                        val rgbaOff = srcRowBase + (tx * 4)
+                        if (rgbaOff + 3 < rgbaBytes.size) {
+                            val r = rgbaBytes[rgbaOff].toInt() and 0xFF
+                            val g = rgbaBytes[rgbaOff+1].toInt() and 0xFF
+                            val b = rgbaBytes[rgbaOff+2].toInt() and 0xFF
+                            val y = ((66 * r + 129 * g + 25 * b + 128) shr 8) + 16
+                            val pos = rowPos + (tx * yPixStride)
+                            if (pos < yBuffer.capacity()) {
+                                yBuffer.put(pos, y.coerceIn(16, 235).toByte())
+                            }
                         }
                     }
                 }
@@ -531,27 +565,60 @@ class FormatConverterBridge(
                 val tW_out = (w / 2).coerceAtMost(width / 2)
                 val tH_out = (h / 2).coerceAtMost(height / 2)
                 
-                for (ty in 0 until tH_out) {
-                    val rowPos = ty * pStride
-                    val srcRowBase = (ty * 2) * srcStrideArr
-                    for (tx in 0 until tW_out) {
-                        val rgbaOff = srcRowBase + ((tx * 2) * 4)
-                        if (rgbaOff + 3 < rgbaBytes.size) {
-                            val r = rgbaBytes[rgbaOff].toInt() and 0xFF
-                            val g = rgbaBytes[rgbaOff+1].toInt() and 0xFF
-                            val b = rgbaBytes[rgbaOff+2].toInt() and 0xFF
-                            
-                            val u = ((-38 * r - 74 * g + 112 * b + 128) shr 8) + 128
-                            val v = ((112 * r - 94 * g - 18 * b + 128) shr 8) + 128
-                            
-                            val effectivelyNv21 = if (isColorSwapped) !isNv21 else isNv21
-                            val firstByte = if (effectivelyNv21) v else u
-                            val secondByte = if (effectivelyNv21) u else v
-                            
-                            val pos = rowPos + (tx * pixStride)
-                            if (pos + 1 < uvBuffer.capacity()) {
-                                uvBuffer.put(pos, firstByte.coerceIn(16, 240).toByte())
-                                uvBuffer.put(pos + 1, secondByte.coerceIn(16, 240).toByte())
+                val effectivelyNv21 = if (isColorSwapped) !isNv21 else isNv21
+
+                // [PERF] Bulk row-based UV write
+                if (pixStride == 2) {
+                    // Fast bulk path (most common for NV21/NV12: interleaved UV pairs)
+                    val rowBytes = tW_out * 2
+                    var uvRow = uvRowCache
+                    if (uvRow == null || uvRow.size < rowBytes) {
+                        uvRow = ByteArray(rowBytes)
+                        uvRowCache = uvRow
+                    }
+                    for (ty in 0 until tH_out) {
+                        val rowPos = ty * pStride
+                        val srcRowBase = (ty * 2) * srcStrideArr
+                        for (tx in 0 until tW_out) {
+                            val rgbaOff = srcRowBase + ((tx * 2) * 4)
+                            if (rgbaOff + 3 < rgbaBytes.size) {
+                                val r = rgbaBytes[rgbaOff].toInt() and 0xFF
+                                val g = rgbaBytes[rgbaOff+1].toInt() and 0xFF
+                                val b = rgbaBytes[rgbaOff+2].toInt() and 0xFF
+                                val u = ((-38 * r - 74 * g + 112 * b + 128) shr 8) + 128
+                                val v = ((112 * r - 94 * g - 18 * b + 128) shr 8) + 128
+                                val firstByte = if (effectivelyNv21) v else u
+                                val secondByte = if (effectivelyNv21) u else v
+                                val off = tx * 2
+                                uvRow[off] = firstByte.coerceIn(16, 240).toByte()
+                                uvRow[off + 1] = secondByte.coerceIn(16, 240).toByte()
+                            }
+                        }
+                        if (rowPos + rowBytes <= uvBuffer.capacity()) {
+                            uvBuffer.position(rowPos)
+                            uvBuffer.put(uvRow, 0, rowBytes)
+                        }
+                    }
+                } else {
+                    // Slow fallback path for unusual pixStride
+                    for (ty in 0 until tH_out) {
+                        val rowPos = ty * pStride
+                        val srcRowBase = (ty * 2) * srcStrideArr
+                        for (tx in 0 until tW_out) {
+                            val rgbaOff = srcRowBase + ((tx * 2) * 4)
+                            if (rgbaOff + 3 < rgbaBytes.size) {
+                                val r = rgbaBytes[rgbaOff].toInt() and 0xFF
+                                val g = rgbaBytes[rgbaOff+1].toInt() and 0xFF
+                                val b = rgbaBytes[rgbaOff+2].toInt() and 0xFF
+                                val u = ((-38 * r - 74 * g + 112 * b + 128) shr 8) + 128
+                                val v = ((112 * r - 94 * g - 18 * b + 128) shr 8) + 128
+                                val firstByte = if (effectivelyNv21) v else u
+                                val secondByte = if (effectivelyNv21) u else v
+                                val pos = rowPos + (tx * pixStride)
+                                if (pos + 1 < uvBuffer.capacity()) {
+                                    uvBuffer.put(pos, firstByte.coerceIn(16, 240).toByte())
+                                    uvBuffer.put(pos + 1, secondByte.coerceIn(16, 240).toByte())
+                                }
                             }
                         }
                     }
@@ -569,25 +636,56 @@ class FormatConverterBridge(
                     val tW_out = (w / 2).coerceAtMost(width / 2)
                     val tH_out = (h / 2).coerceAtMost(height / 2)
                     
-                    for (ty in 0 until tH_out) {
-                        val rowPos = ty * pStride
-                        val srcRowBase = (ty * 2) * srcStrideArr
-                        for (tx in 0 until tW_out) {
-                            val rgbaOff = srcRowBase + ((tx * 2) * 4)
-                            if (rgbaOff + 3 < rgbaBytes.size) {
-                                val r = rgbaBytes[rgbaOff].toInt() and 0xFF
-                                val g = rgbaBytes[rgbaOff+1].toInt() and 0xFF
-                                val b = rgbaBytes[rgbaOff+2].toInt() and 0xFF
-                                
-                                val chroma = if (isU) {
-                                    ((-38 * r - 74 * g + 112 * b + 128) shr 8) + 128
-                                } else {
-                                    ((112 * r - 94 * g - 18 * b + 128) shr 8) + 128
+                    // [PERF] Bulk row-based chroma write
+                    if (pixStride == 1) {
+                        // Fast bulk path (most common for planar: contiguous chroma)
+                        var cRow = chromaRowCache
+                        if (cRow == null || cRow.size < tW_out) {
+                            cRow = ByteArray(tW_out)
+                            chromaRowCache = cRow
+                        }
+                        for (ty in 0 until tH_out) {
+                            val rowPos = ty * pStride
+                            val srcRowBase = (ty * 2) * srcStrideArr
+                            for (tx in 0 until tW_out) {
+                                val rgbaOff = srcRowBase + ((tx * 2) * 4)
+                                if (rgbaOff + 3 < rgbaBytes.size) {
+                                    val r = rgbaBytes[rgbaOff].toInt() and 0xFF
+                                    val g = rgbaBytes[rgbaOff+1].toInt() and 0xFF
+                                    val b = rgbaBytes[rgbaOff+2].toInt() and 0xFF
+                                    val chroma = if (isU) {
+                                        ((-38 * r - 74 * g + 112 * b + 128) shr 8) + 128
+                                    } else {
+                                        ((112 * r - 94 * g - 18 * b + 128) shr 8) + 128
+                                    }
+                                    cRow[tx] = chroma.coerceIn(16, 240).toByte()
                                 }
-
-                                val pos = rowPos + (tx * pixStride)
-                                if (pos < buffer.capacity()) {
-                                    buffer.put(pos, chroma.coerceIn(16, 240).toByte())
+                            }
+                            if (rowPos + tW_out <= buffer.capacity()) {
+                                buffer.position(rowPos)
+                                buffer.put(cRow, 0, tW_out)
+                            }
+                        }
+                    } else {
+                        // Slow fallback path for non-contiguous chroma planes
+                        for (ty in 0 until tH_out) {
+                            val rowPos = ty * pStride
+                            val srcRowBase = (ty * 2) * srcStrideArr
+                            for (tx in 0 until tW_out) {
+                                val rgbaOff = srcRowBase + ((tx * 2) * 4)
+                                if (rgbaOff + 3 < rgbaBytes.size) {
+                                    val r = rgbaBytes[rgbaOff].toInt() and 0xFF
+                                    val g = rgbaBytes[rgbaOff+1].toInt() and 0xFF
+                                    val b = rgbaBytes[rgbaOff+2].toInt() and 0xFF
+                                    val chroma = if (isU) {
+                                        ((-38 * r - 74 * g + 112 * b + 128) shr 8) + 128
+                                    } else {
+                                        ((112 * r - 94 * g - 18 * b + 128) shr 8) + 128
+                                    }
+                                    val pos = rowPos + (tx * pixStride)
+                                    if (pos < buffer.capacity()) {
+                                        buffer.put(pos, chroma.coerceIn(16, 240).toByte())
+                                    }
                                 }
                             }
                         }
@@ -799,8 +897,8 @@ class FormatConverterBridge(
             return
         }
         
-        Log.e(TAG, "CAPT_LOG [3b]: pushLatestFrameToWriter starting Thread to dequeue and push frame. timestamp=$timestamp")
-        Thread {
+        Log.e(TAG, "CAPT_LOG [3b]: pushLatestFrameToWriter posting to pushHandler to dequeue and push frame. timestamp=$timestamp")
+        pushHandler?.post {
             try {
 
                 val outImage = try { writer.dequeueInputImage() } catch (e: Exception) { 
@@ -808,7 +906,7 @@ class FormatConverterBridge(
                     null 
                 } ?: run {
                     Log.e(TAG, "CAPT_LOG [3-ERR]: dequeueInputImage returned NULL! Buffer queue likely full or not ready.")
-                    return@Thread
+                    return@post
                 }
                 
                 var success = false
@@ -830,7 +928,40 @@ class FormatConverterBridge(
                     }
                 }
             } catch (e: Exception) {}
-        }.start()
+        } ?: run {
+            Log.w(TAG, "CAPT_LOG [3b-WARN]: pushHandler is null, falling back to Thread")
+            Thread {
+                try {
+
+                    val outImage = try { writer.dequeueInputImage() } catch (e: Exception) { 
+                        Log.e(TAG, "CAPT_LOG [3-ERR]: dequeueInputImage threw exception: ${e.message}")
+                        null 
+                    } ?: run {
+                        Log.e(TAG, "CAPT_LOG [3-ERR]: dequeueInputImage returned NULL! Buffer queue likely full or not ready.")
+                        return@Thread
+                    }
+                    
+                    var success = false
+                    try {
+                        outImage.timestamp = timestamp
+                        
+                        val fmt = outImage.format
+                        if (fmt == 256) { // JPEG
+                            overwriteImageWithLatestJpeg(outImage)
+                        } else {
+                            overwriteImageWithLatestYuv(outImage, timestamp)
+                        }
+                        
+                        writer.queueInputImage(outImage)
+                        success = true
+                    } finally {
+                        if (!success) {
+                            try { outImage.close() } catch (e: Exception) {}
+                        }
+                    }
+                } catch (e: Exception) {}
+            }.start()
+        }
     }
 
     fun release() {

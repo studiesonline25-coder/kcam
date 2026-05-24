@@ -101,6 +101,9 @@ object CameraHook {
     // Hardware vsync synchronization for VirtualRenderThread
     val frameSyncObject = Object()
     @Volatile var latestSensorTimestamp = 0L
+    // [PERF OPT 3] Tracks the last time hardware sync was received.
+    // Used by VirtualRenderThread to detect Camera1/burst-mode apps that never call notifyAll.
+    @Volatile var lastFrameSyncMs = System.currentTimeMillis()
     
     // Global telemetry for surface dimensions
     private val surfaceSizes = java.util.Collections.synchronizedMap(java.util.WeakHashMap<Surface, Pair<Int, Int>>())
@@ -1309,6 +1312,7 @@ object CameraHook {
                                     if (timestamp > 0) {
                                         CameraHook.latestSensorTimestamp = timestamp
                                         synchronized(CameraHook.frameSyncObject) {
+                                            CameraHook.lastFrameSyncMs = System.currentTimeMillis()
                                             CameraHook.frameSyncObject.notifyAll()
                                         }
                                         activeBridges.forEach { 
@@ -1385,6 +1389,7 @@ object CameraHook {
                                     if (timestamp > 0) {
                                         CameraHook.latestSensorTimestamp = timestamp
                                         synchronized(CameraHook.frameSyncObject) {
+                                            CameraHook.lastFrameSyncMs = System.currentTimeMillis()
                                             CameraHook.frameSyncObject.notifyAll()
                                         }
                                         activeBridges.forEach { 
@@ -2146,9 +2151,19 @@ object CameraHook {
                         ImageFormat.YUV_420_888, ImageFormat.YV12, 35 -> {
                             // YUV Data Override path - Hybrid Strategy (Hook + Writer)
                             if (bridge != null) {
-                                Log.e(TAG, "CAPT_LOG [4a]: Native Camera acquireNextImage (YUV 35) overriding directly. Image: ${image.width}x${image.height}")
-                                bridge.overwriteImageWithLatestYuv(image, image.timestamp)
-                                Log.d(TAG, "VirtuCam_Hook: Overwrote YUV image ${image.width}x${image.height}")
+                                // [PERF OPT 1] Skip redundant synchronous YUV overwrite if ImageWriter
+                                // already pushed pre-spoofed frames into this reader's buffer queue.
+                                // The ImageWriter path (pushLatestFrameToWriter) already converts RGBA→YUV
+                                // asynchronously on our background thread. Doing it again here on the app's
+                                // main/callback thread is wasteful (30-100ms CPU burn per frame) and is the
+                                // #1 cause of lag in native camera apps.
+                                if (bridge.hasImageWriter) {
+                                    Log.d(TAG, "CAPT_LOG [4a-SKIP]: YUV overwrite skipped — ImageWriter already active for ${image.width}x${image.height}")
+                                } else {
+                                    Log.e(TAG, "CAPT_LOG [4a]: Native Camera acquireNextImage (YUV 35) overriding directly (no ImageWriter). Image: ${image.width}x${image.height}")
+                                    bridge.overwriteImageWithLatestYuv(image, image.timestamp)
+                                    Log.d(TAG, "VirtuCam_Hook: Overwrote YUV image ${image.width}x${image.height}")
+                                }
                                 // [STAGE DUMP 3] Final consumed buffer — heavily throttled
                                 if (isBufferCaptureEnabled) {
                                     val now = System.currentTimeMillis()
@@ -2955,6 +2970,8 @@ class VirtualRenderThread(
     private val eglSurfaceTargets = mutableListOf<Triple<android.opengl.EGLSurface, Boolean, Int>>()
     // Parallel list of original Surface objects for EGL surface recreation on resize
     private val originalSurfaceBackings = mutableListOf<Surface>()
+    // [PERF OPT 4] Tracks consecutive slow swapBuffers per surface index for adaptive throttling
+    private val surfaceThrottleMap = mutableMapOf<Int, Int>()
     private var textureRenderer: TextureRenderer? = null
     
     private var videoPlayer: VideoPlayer? = null
@@ -3345,11 +3362,22 @@ class VirtualRenderThread(
                 }
             }
             
-            // Wait for real hardware vsync (up to 100ms) to ensure perfect pacing
-            synchronized(CameraHook.frameSyncObject) {
-                try {
-                    CameraHook.frameSyncObject.wait(100)
-                } catch (e: Exception) {}
+            // [PERF OPT 3] Dynamic Capture-Sync Fallback
+            // Wait for real hardware vsync, but if no hardware sync notification has arrived
+            // for >200ms (indicating Camera1 API, burst requests, or no onCaptureCompleted hook),
+            // bypass the blocking wait and fall back to a standard 33ms sleep timer for smooth 30 FPS.
+            val msSinceLastSync = System.currentTimeMillis() - CameraHook.lastFrameSyncMs
+            if (msSinceLastSync > 200) {
+                // No hardware sync signal for >200ms — Camera1 or unhooked burst mode.
+                // Fall back to timer-based pacing to avoid 10 FPS lockup.
+                try { Thread.sleep(33) } catch (_: InterruptedException) {}
+            } else {
+                // Hardware sync is active — wait for the next vsync notification (up to 100ms)
+                synchronized(CameraHook.frameSyncObject) {
+                    try {
+                        CameraHook.frameSyncObject.wait(100)
+                    } catch (_: Exception) {}
+                }
             }
         }
     }
@@ -3359,12 +3387,25 @@ class VirtualRenderThread(
         if (CameraHook.pendingSurfaceResize.compareAndSet(true, false)) {
             recreateEglSurfaces()
         }
+        // [PERF OPT 4] Surface throttle state: tracks consecutive slow swaps per surface index
+        // Surfaces whose swapBuffers blocks >25ms are likely inactive (consumer not dequeuing).
+        // We throttle rendering to them (1 in 10 frames) to prevent stalling the preview.
+        
         val it = eglSurfaceTargets.iterator()
+        var surfaceIndex = 0
         while (it.hasNext()) {
             val it_triple = it.next()
             val es = it_triple.first
             val isCapture = it_triple.second
             val format = it_triple.third
+
+            // [PERF OPT 4] Check if this surface is throttled due to slow swaps
+            val throttleCount = surfaceThrottleMap.getOrDefault(surfaceIndex, 0)
+            if (throttleCount >= 3 && frameCount % 10 != 0) {
+                // This surface has been slow for 3+ consecutive frames — throttle to 1-in-10
+                surfaceIndex++
+                continue
+            }
 
             // [BROWSER CAPTURE FIX] Always render to JPEG bridge surfaces.
             // Previously gated by captureCount > 0, but this created a chicken-and-egg timing
@@ -3469,18 +3510,41 @@ class VirtualRenderThread(
 
                 val renderPts = if (CameraHook.latestSensorTimestamp > 0) CameraHook.latestSensorTimestamp else android.os.SystemClock.elapsedRealtimeNanos()
                 eglCore?.setPresentationTime(es, renderPts)
+                
+                // [PERF OPT 4] Measure swapBuffers time to detect inactive surfaces
+                val swapStart = System.nanoTime()
                 if (eglCore?.swapBuffers(es) == false) {
                     Log.w("VirtuCam_Render", "Surface abandoned, removing.")
                     it.remove()
+                    surfaceIndex++
+                    continue
+                }
+                val swapElapsedMs = (System.nanoTime() - swapStart) / 1_000_000
+                
+                // [PERF OPT 4] Track slow swaps for adaptive throttling
+                if (swapElapsedMs > 25) {
+                    // swapBuffers blocked >25ms — consumer likely inactive
+                    val prevCount = surfaceThrottleMap.getOrDefault(surfaceIndex, 0)
+                    surfaceThrottleMap[surfaceIndex] = (prevCount + 1).coerceAtMost(10)
+                    if (prevCount == 2) { // Just crossed the threshold
+                        Log.w("VirtuCam_Render", "[PERF OPT 4] Surface $surfaceIndex swap took ${swapElapsedMs}ms — throttling to 1-in-10 frames")
+                    }
+                } else {
+                    // Surface is responsive — clear throttle immediately
+                    if (surfaceThrottleMap.containsKey(surfaceIndex)) {
+                        Log.d("VirtuCam_Render", "[PERF OPT 4] Surface $surfaceIndex restored to full-rate rendering (swap=${swapElapsedMs}ms)")
+                        surfaceThrottleMap.remove(surfaceIndex)
+                    }
                 }
 
                 if (frameCount % 60 == 0) {
                     val tEnd = System.nanoTime()
-                    Log.d("VIRTUCAM_PERF", "Render target $vw x $vh took ${(tEnd - tStart)/1_000_000}ms")
+                    Log.d("VIRTUCAM_PERF", "Render target $vw x $vh took ${(tEnd - tStart)/1_000_000}ms (swap=${swapElapsedMs}ms)")
                 }
             } catch (e: Exception) {
                 it.remove()
             }
+            surfaceIndex++
         }
         return eglSurfaceTargets.isNotEmpty()
     }
