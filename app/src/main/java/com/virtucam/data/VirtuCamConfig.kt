@@ -117,6 +117,14 @@ class VirtuCamConfig(context: Context) {
         set(value) = prefs.edit().putBoolean("is_color_flash_enabled", value).apply()
 
     /**
+     * Refine Mode (AI Laundering)
+     * Applies sub-pixel blur, TAA frame blending, and Chrominance Poisson noise to destroy GAN artifacts.
+     */
+    var isRefineMode: Boolean
+        get() = prefs.getBoolean("is_refine_mode", false)
+        set(value) = prefs.edit().putBoolean("is_refine_mode", value).apply()
+
+    /**
      * [INVESTIGATION] Test pattern mode.
      * When ON, replaces user-uploaded media with a known-orientation test pattern
      * (TOP/BOTTOM/L/R labels + arrow). Used for rotation/mirror analysis.

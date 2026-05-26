@@ -97,6 +97,7 @@ class MainActivity : AppCompatActivity() {
             put("bufferCapture", config.isBufferCaptureEnabled)
             put("passthrough", config.isPassthroughMode)
             put("testPattern", config.isTestPatternMode)
+            put("refineMode", config.isRefineMode)
         }
         webView.evaluateJavascript("if(window.onAndroidSync) window.onAndroidSync('$state')", null)
     }
@@ -107,6 +108,7 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface fun setTestPatternMode(enabled: Boolean) { config.isTestPatternMode = enabled }
         @JavascriptInterface fun setPassthroughMode(enabled: Boolean) { config.isPassthroughMode = enabled }
         @JavascriptInterface fun setBufferCapture(enabled: Boolean) { config.isBufferCaptureEnabled = enabled }
+        @JavascriptInterface fun setRefineMode(enabled: Boolean) { config.isRefineMode = enabled }
         @JavascriptInterface fun setRotationOffset(offset: Int) { config.rotationOffset = offset }
         @JavascriptInterface fun updateZoom(valZoom: Float) { config.zoomFactor = valZoom }
         @JavascriptInterface fun updateStretch(valStretch: Float) { config.compensationFactor = valStretch }
@@ -236,6 +238,7 @@ class MainActivity : AppCompatActivity() {
                     container.appendChild(createRow('Buffer Capture', 'bufferCapture', 'setBufferCapture'));
                     container.appendChild(createRow('Passthrough Mode', 'passthrough', 'setPassthroughMode'));
                     container.appendChild(createRow('Test Pattern', 'testPattern', 'setTestPatternMode'));
+                    container.appendChild(createRow('Refine Mode (AI Fix)', 'refineMode', 'setRefineMode'));
                     panel.appendChild(container);
                 }
 

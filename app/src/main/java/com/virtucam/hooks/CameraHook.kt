@@ -127,7 +127,7 @@ object CameraHook {
     var isTestPatternMode: Boolean = false
 
     @Volatile
-    var isRefineEnabled: Boolean = true
+    var isRefineEnabled: Boolean = false
 
     // [STEALTH MODE] Global toggle for diagnostic logging (disable for production/KYC)
     @Volatile
@@ -2510,8 +2510,9 @@ object CameraHook {
                         isPassthroughMode = if (it.columnCount > 14) it.getInt(14) == 1 else false
                         rotationOffset = if (it.columnCount > 15) it.getInt(15) else 0
                         isBufferCaptureEnabled = if (it.columnCount > 16) it.getInt(16) == 1 else false
+                        isRefineEnabled = if (it.columnCount > 18) it.getInt(18) == 1 else false
                         
-                        Log.d(TAG, "VirtuCam_Hook: Config loaded. Enabled: $isEnabled, Zoom: $zoomFactor, Stretch: $compensationFactor, liveness: $isLivenessEnabled, passthrough: $isPassthroughMode, offset: $rotationOffset")
+                        Log.d(TAG, "VirtuCam_Hook: Config loaded. Enabled: $isEnabled, Zoom: $zoomFactor, Stretch: $compensationFactor, liveness: $isLivenessEnabled, passthrough: $isPassthroughMode, offset: $rotationOffset, refine: $isRefineEnabled")
                     } catch (innerE: Exception) {
                         Log.e(TAG, "VirtuCam_Hook: Error parsing cursor columns", innerE)
                     }
