@@ -138,7 +138,7 @@ class VirtuCamConfig(context: Context) {
         set(value) = prefs.edit().putBoolean("is_passthrough_mode", value).apply()
 
     var isBufferCaptureEnabled: Boolean
-        get() = prefs.getBoolean("is_buffer_capture_enabled", true)
+        get() = prefs.getBoolean("is_buffer_capture_enabled", false)
         set(value) = prefs.edit().putBoolean("is_buffer_capture_enabled", value).apply()
 
     var rotationOffset: Int
