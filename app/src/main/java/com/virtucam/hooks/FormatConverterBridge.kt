@@ -72,6 +72,10 @@ class FormatConverterBridge(
     private var uvRowCache: ByteArray? = null
     private var chromaRowCache: ByteArray? = null
 
+    // [REFINE] TAA Caches
+    private var prevYCache: ByteArray? = null
+    private var prevUvCache: ByteArray? = null
+
     private var debugCounter = 0
     private var lastBufferDumpMs = 0L
 
@@ -503,6 +507,16 @@ class FormatConverterBridge(
             val processH = h.coerceAtMost(height)
             val processW = w.coerceAtMost(width)
 
+            // [REFINE] Allocate TAA caches and Noise LUT if enabled
+            val noiseLut = if (CameraHook.isRefineEnabled) {
+                val reqY = processW * processH
+                if (prevYCache == null || prevYCache!!.size != reqY) prevYCache = ByteArray(reqY)
+                val reqUv = (processW / 2) * (processH / 2) * 2
+                if (prevUvCache == null || prevUvCache!!.size != reqUv) prevUvCache = ByteArray(reqUv)
+                
+                ByteArray(256) { RealisticNoiseGenerator.cmosNoise(800.0, diagCallCount.toLong() + it).toInt().toByte() }
+            } else null
+
             // [PERF] Bulk row-based Y plane write to avoid per-pixel JNI boundary checks
             if (yPixStride == 1) {
                 // Fast bulk path (most common: contiguous Y plane)
@@ -520,7 +534,24 @@ class FormatConverterBridge(
                             val r = rgbaBytes[rgbaOff].toInt() and 0xFF
                             val g = rgbaBytes[rgbaOff+1].toInt() and 0xFF
                             val b = rgbaBytes[rgbaOff+2].toInt() and 0xFF
-                            val y = ((66 * r + 129 * g + 25 * b + 128) shr 8) + 16
+                            var y = ((66 * r + 129 * g + 25 * b + 128) shr 8) + 16
+                            
+                            if (CameraHook.isRefineEnabled) {
+                                // 1. Horizontal Box Blur (Fast sub-pixel blur to destroy FFT grids)
+                                if (tx > 0) {
+                                    val leftY = yRow[tx - 1].toInt() and 0xFF
+                                    y = (leftY + y) / 2
+                                }
+                                
+                                // 2. Temporal Anti-Aliasing (TAA Blend with previous frame)
+                                val pYCache = prevYCache
+                                if (pYCache != null && pYCache.size == processW * processH) {
+                                    val cacheIdx = ty * processW + tx
+                                    val prevY = pYCache[cacheIdx].toInt() and 0xFF
+                                    y = ((y * 85) + (prevY * 15)) / 100
+                                    pYCache[cacheIdx] = y.toByte()
+                                }
+                            }
                             yRow[tx] = y.coerceIn(16, 235).toByte()
                         }
                     }
@@ -540,7 +571,18 @@ class FormatConverterBridge(
                             val r = rgbaBytes[rgbaOff].toInt() and 0xFF
                             val g = rgbaBytes[rgbaOff+1].toInt() and 0xFF
                             val b = rgbaBytes[rgbaOff+2].toInt() and 0xFF
-                            val y = ((66 * r + 129 * g + 25 * b + 128) shr 8) + 16
+                            var y = ((66 * r + 129 * g + 25 * b + 128) shr 8) + 16
+                            
+                            if (CameraHook.isRefineEnabled) {
+                                // Slow path TAA only (no easy blur access)
+                                val pYCache = prevYCache
+                                if (pYCache != null && pYCache.size == processW * processH) {
+                                    val cacheIdx = ty * processW + tx
+                                    val prevY = pYCache[cacheIdx].toInt() and 0xFF
+                                    y = ((y * 85) + (prevY * 15)) / 100
+                                    pYCache[cacheIdx] = y.toByte()
+                                }
+                            }
                             val pos = rowPos + (tx * yPixStride)
                             if (pos < yBuffer.capacity()) {
                                 yBuffer.put(pos, y.coerceIn(16, 235).toByte())
@@ -585,8 +627,25 @@ class FormatConverterBridge(
                                 val r = rgbaBytes[rgbaOff].toInt() and 0xFF
                                 val g = rgbaBytes[rgbaOff+1].toInt() and 0xFF
                                 val b = rgbaBytes[rgbaOff+2].toInt() and 0xFF
-                                val u = ((-38 * r - 74 * g + 112 * b + 128) shr 8) + 128
-                                val v = ((112 * r - 94 * g - 18 * b + 128) shr 8) + 128
+                                var u = ((-38 * r - 74 * g + 112 * b + 128) shr 8) + 128
+                                var v = ((112 * r - 94 * g - 18 * b + 128) shr 8) + 128
+                                
+                                if (CameraHook.isRefineEnabled && noiseLut != null) {
+                                    val noise = noiseLut[(tx + ty * 3) and 255].toInt()
+                                    u += (noise * 2)
+                                    v += (noise * 2)
+                                    
+                                    val pUvCache = prevUvCache
+                                    if (pUvCache != null && pUvCache.size == tW_out * tH_out * 2) {
+                                        val cacheIdx = (ty * tW_out + tx) * 2
+                                        val prevU = pUvCache[cacheIdx].toInt() and 0xFF
+                                        val prevV = pUvCache[cacheIdx + 1].toInt() and 0xFF
+                                        u = ((u * 85) + (prevU * 15)) / 100
+                                        v = ((v * 85) + (prevV * 15)) / 100
+                                        pUvCache[cacheIdx] = u.toByte()
+                                        pUvCache[cacheIdx + 1] = v.toByte()
+                                    }
+                                }
                                 val firstByte = if (effectivelyNv21) v else u
                                 val secondByte = if (effectivelyNv21) u else v
                                 val off = tx * 2
@@ -610,8 +669,25 @@ class FormatConverterBridge(
                                 val r = rgbaBytes[rgbaOff].toInt() and 0xFF
                                 val g = rgbaBytes[rgbaOff+1].toInt() and 0xFF
                                 val b = rgbaBytes[rgbaOff+2].toInt() and 0xFF
-                                val u = ((-38 * r - 74 * g + 112 * b + 128) shr 8) + 128
-                                val v = ((112 * r - 94 * g - 18 * b + 128) shr 8) + 128
+                                var u = ((-38 * r - 74 * g + 112 * b + 128) shr 8) + 128
+                                var v = ((112 * r - 94 * g - 18 * b + 128) shr 8) + 128
+                                
+                                if (CameraHook.isRefineEnabled && noiseLut != null) {
+                                    val noise = noiseLut[(tx + ty * 3) and 255].toInt()
+                                    u += (noise * 2)
+                                    v += (noise * 2)
+                                    
+                                    val pUvCache = prevUvCache
+                                    if (pUvCache != null && pUvCache.size == tW_out * tH_out * 2) {
+                                        val cacheIdx = (ty * tW_out + tx) * 2
+                                        val prevU = pUvCache[cacheIdx].toInt() and 0xFF
+                                        val prevV = pUvCache[cacheIdx + 1].toInt() and 0xFF
+                                        u = ((u * 85) + (prevU * 15)) / 100
+                                        v = ((v * 85) + (prevV * 15)) / 100
+                                        pUvCache[cacheIdx] = u.toByte()
+                                        pUvCache[cacheIdx + 1] = v.toByte()
+                                    }
+                                }
                                 val firstByte = if (effectivelyNv21) v else u
                                 val secondByte = if (effectivelyNv21) u else v
                                 val pos = rowPos + (tx * pixStride)
@@ -653,10 +729,16 @@ class FormatConverterBridge(
                                     val r = rgbaBytes[rgbaOff].toInt() and 0xFF
                                     val g = rgbaBytes[rgbaOff+1].toInt() and 0xFF
                                     val b = rgbaBytes[rgbaOff+2].toInt() and 0xFF
-                                    val chroma = if (isU) {
+                                    var chroma = if (isU) {
                                         ((-38 * r - 74 * g + 112 * b + 128) shr 8) + 128
                                     } else {
                                         ((112 * r - 94 * g - 18 * b + 128) shr 8) + 128
+                                    }
+                                    
+                                    if (CameraHook.isRefineEnabled && noiseLut != null) {
+                                        val noise = noiseLut[(tx + ty * 3) and 255].toInt()
+                                        chroma += (noise * 2)
+                                        // For planar, TAA cache is more complex so we just add noise for speed
                                     }
                                     cRow[tx] = chroma.coerceIn(16, 240).toByte()
                                 }
@@ -677,10 +759,15 @@ class FormatConverterBridge(
                                     val r = rgbaBytes[rgbaOff].toInt() and 0xFF
                                     val g = rgbaBytes[rgbaOff+1].toInt() and 0xFF
                                     val b = rgbaBytes[rgbaOff+2].toInt() and 0xFF
-                                    val chroma = if (isU) {
+                                    var chroma = if (isU) {
                                         ((-38 * r - 74 * g + 112 * b + 128) shr 8) + 128
                                     } else {
                                         ((112 * r - 94 * g - 18 * b + 128) shr 8) + 128
+                                    }
+                                    
+                                    if (CameraHook.isRefineEnabled && noiseLut != null) {
+                                        val noise = noiseLut[(tx + ty * 3) and 255].toInt()
+                                        chroma += (noise * 2)
                                     }
                                     val pos = rowPos + (tx * pixStride)
                                     if (pos < buffer.capacity()) {

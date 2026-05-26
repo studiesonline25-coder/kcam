@@ -126,6 +126,9 @@ object CameraHook {
     @Volatile
     var isTestPatternMode: Boolean = false
 
+    @Volatile
+    var isRefineEnabled: Boolean = true
+
     // [STEALTH MODE] Global toggle for diagnostic logging (disable for production/KYC)
     @Volatile
     var enableDiagnosticLogs: Boolean = false  // Set to true for debugging
