@@ -187,61 +187,6 @@ class MainActivity : AppCompatActivity() {
                     return Array.from(document.querySelectorAll(selector)).find(el => el.innerText && el.innerText.includes(text));
                 }
 
-                function injectSettingsUI() {
-                    ['PASSTHROUGH', 'TEST PATTERN', 'INVESTIGATION TOOLS'].forEach(text => {
-                        let el = findByText(text);
-                        if (el) {
-                            let parent = el.closest('div'); 
-                            if (parent && parent.children.length < 5) parent.style.display = 'none';
-                        }
-                    });
-
-                    let settingsHeader = findByText('ADVANCED SETTINGS');
-                    if (!settingsHeader) return;
-
-                    let panel = settingsHeader.parentElement;
-                    if (!panel || document.getElementById('vc-injected-settings')) return;
-
-                    let container = document.createElement('div');
-                    container.id = 'vc-injected-settings';
-                    container.style.borderTop = '1px solid #333';
-                    container.style.marginTop = '20px';
-                    container.style.paddingTop = '10px';
-                    
-                    function createRow(label, stateKey, callback) {
-                        let row = document.createElement('div');
-                        row.style.display = 'flex'; row.style.justifyContent = 'space-between'; row.style.alignItems = 'center';
-                        row.style.padding = '12px 0';
-                        row.innerHTML = '<span>' + label + '</span>';
-                        let toggle = document.createElement('div');
-                        toggle.style.width = '44px'; toggle.style.height = '24px'; toggle.style.borderRadius = '12px';
-                        toggle.style.backgroundColor = window.vcState && window.vcState[stateKey] ? '#22c55e' : '#444';
-                        toggle.style.position = 'relative'; toggle.style.cursor = 'pointer';
-                        let knob = document.createElement('div');
-                        knob.style.width = '20px'; knob.style.height = '20px'; knob.style.borderRadius = '10px';
-                        knob.style.backgroundColor = '#fff'; knob.style.position = 'absolute'; knob.style.top = '2px';
-                        knob.style.left = window.vcState && window.vcState[stateKey] ? '22px' : '2px';
-                        knob.style.transition = '0.2s';
-                        toggle.appendChild(knob);
-                        toggle.onclick = () => {
-                            let newVal = !(window.vcState && window.vcState[stateKey]);
-                            if (!window.vcState) window.vcState = {};
-                            window.vcState[stateKey] = newVal;
-                            toggle.style.backgroundColor = newVal ? '#22c55e' : '#444';
-                            knob.style.left = newVal ? '22px' : '2px';
-                            if (window.Android) window.Android[callback](newVal);
-                        };
-                        row.appendChild(toggle);
-                        return row;
-                    }
-
-                    container.appendChild(createRow('Buffer Capture', 'bufferCapture', 'setBufferCapture'));
-                    container.appendChild(createRow('Passthrough Mode', 'passthrough', 'setPassthroughMode'));
-                    container.appendChild(createRow('Test Pattern', 'testPattern', 'setTestPatternMode'));
-                    container.appendChild(createRow('Refine Mode (AI Fix)', 'refineMode', 'setRefineMode'));
-                    panel.appendChild(container);
-                }
-
                 function updateMediaPreview() {
                     let selectArea = findByText('SELECT MEDIA');
                     if (!selectArea) return;
@@ -292,7 +237,6 @@ class MainActivity : AppCompatActivity() {
                     if (isRunning) return;
                     isRunning = true;
                     try {
-                        injectSettingsUI();
                         updateMediaPreview();
                         fixStreamField();
                     } finally {

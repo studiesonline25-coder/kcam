@@ -52,7 +52,7 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             
             // Improved Gaussian noise using Box-Muller transform
             float gaussianNoise(vec2 p) {
-                float u1 = hash(p) + 0.00001;
+                float u1 = clamp(hash(p), 0.00001, 0.99999);
                 float u2 = hash(p + vec2(127.1, 311.7));
                 return sqrt(-2.0 * log(u1)) * cos(6.2831853 * u2);
             }
@@ -218,7 +218,7 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             
             // Improved Gaussian noise using Box-Muller transform
             float gaussianNoise(vec2 p) {
-                float u1 = hash(p) + 0.00001;
+                float u1 = clamp(hash(p), 0.00001, 0.99999);
                 float u2 = hash(p + vec2(127.1, 311.7));
                 return sqrt(-2.0 * log(u1)) * cos(6.2831853 * u2);
             }

@@ -1,4 +1,4 @@
-import { Eye, Settings, LayoutGrid, Sparkles, Info, Upload, Network, Play, CheckCircle2, Zap, SlidersHorizontal, Copy, Palette, Globe, ShieldAlert, Bug, RotateCcw, RotateCw } from 'lucide-react';
+import { Eye, Settings, LayoutGrid, Sparkles, Info, Upload, Network, Play, CheckCircle2, Zap, SlidersHorizontal, Copy, Palette, Globe, ShieldAlert, Bug, RotateCcw, RotateCw, Wand2 } from 'lucide-react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -211,6 +211,7 @@ const AdvancedControl = () => {
   const [passthrough, setPassthrough] = useState(false);
   const [testPattern, setTestPattern] = useState(false);
   const [rotationOffset, setRotationOffset] = useState(0);
+  const [refineMode, setRefineMode] = useState(false);
 
   useEffect(() => {
     const handleSync = (e: any) => {
@@ -222,6 +223,7 @@ const AdvancedControl = () => {
       if (data.isPassthroughMode !== undefined) setPassthrough(data.isPassthroughMode);
       if (data.isTestPatternMode !== undefined) setTestPattern(data.isTestPatternMode);
       if (data.rotationOffset !== undefined) setRotationOffset(data.rotationOffset);
+      if (data.refineMode !== undefined) setRefineMode(data.refineMode);
     };
     window.addEventListener('android-sync', handleSync as any);
     return () => window.removeEventListener('android-sync', handleSync as any);
@@ -269,6 +271,12 @@ const AdvancedControl = () => {
     (window as any).Android?.setRotationOffset(next);
   };
 
+  const toggleRefine = () => {
+    const next = !refineMode;
+    setRefineMode(next);
+    (window as any).Android?.setRefineMode(next);
+  };
+
   return (
     <div className="space-y-6 mt-8">
       <div className="flex items-center gap-2 mb-4">
@@ -307,6 +315,14 @@ const AdvancedControl = () => {
         >
           <Sparkles className={`w-5 h-5 ${liveness ? 'text-emerald-neon' : 'text-gray-500'}`} />
           <span className="text-[10px] font-bold uppercase">AI Jitter</span>
+        </button>
+
+        <button 
+          onClick={toggleRefine}
+          className={`border p-4 rounded-2xl flex flex-col items-center gap-2 transition-all ${refineMode ? 'bg-emerald-neon/10 border-emerald-neon' : 'bg-card-dark border-border-dark'}`}
+        >
+          <Wand2 className={`w-5 h-5 ${refineMode ? 'text-emerald-neon' : 'text-gray-500'}`} />
+          <span className="text-[10px] font-bold uppercase">{refineMode ? 'Refine ON' : 'Refine OFF'}</span>
         </button>
       </div>
 
