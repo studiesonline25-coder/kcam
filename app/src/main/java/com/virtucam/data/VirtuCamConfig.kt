@@ -125,6 +125,23 @@ class VirtuCamConfig(context: Context) {
         set(value) = prefs.edit().putBoolean("is_refine_mode", value).apply()
 
     /**
+     * rPPG Heartbeat Injection
+     * Injects an invisible synthetic blood volume pulse (BVP) into the green channel
+     * of the camera output. Fools FFT-based heartbeat liveness detectors.
+     */
+    var isRppgEnabled: Boolean
+        get() = prefs.getBoolean("is_rppg_enabled", true) // Default to ON
+        set(value) = prefs.edit().putBoolean("is_rppg_enabled", value).apply()
+
+    /**
+     * Target heart rate for rPPG injection in BPM (beats per minute).
+     * Realistic resting range: 60-80 BPM.
+     */
+    var rppgBpm: Int
+        get() = prefs.getInt("rppg_bpm", 72) // Default 72 BPM
+        set(value) = prefs.edit().putInt("rppg_bpm", value).apply()
+
+    /**
      * [INVESTIGATION] Test pattern mode.
      * When ON, replaces user-uploaded media with a known-orientation test pattern
      * (TOP/BOTTOM/L/R labels + arrow). Used for rotation/mirror analysis.

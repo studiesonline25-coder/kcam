@@ -247,4 +247,58 @@ object RealisticNoiseGenerator {
         
         return (baseColorTemp + totalNoise).toInt().coerceIn(2000, 10000)
     }
+
+    /**
+     * Biologically Realistic rPPG Pulse Modulator
+     * 
+     * Generates a per-frame green channel multiplier that simulates blood volume pulse (BVP).
+     * Unlike a simple sine wave, this models:
+     * 1. Heart Rate Variability (HRV) — subtle inter-beat interval drift via Perlin noise
+     * 2. Dicrotic Notch — the secondary bump in a real blood pressure waveform
+     * 3. Asymmetric systolic/diastolic phases — real heartbeats rise fast and fall slow
+     * 
+     * The output is a multiplier centered around 1.0, e.g., 0.985 to 1.015.
+     * Apply this to the Green channel (or Y luma) before YUV conversion.
+     * 
+     * @param frameNumber Current frame number (monotonically increasing)
+     * @param fps Video frame rate (e.g., 30.0)
+     * @param targetBpm Target heart rate in beats per minute
+     * @param amplitude Peak-to-peak modulation depth (0.015 = 1.5%)
+     * @return Multiplier to apply to the green channel (range: ~0.985 to ~1.015)
+     */
+    fun rppgPulseModulator(frameNumber: Long, fps: Double = 30.0, targetBpm: Int = 72, amplitude: Double = 0.015): Double {
+        val t = frameNumber.toDouble() / fps  // Time in seconds
+        
+        // 1. Heart Rate Variability (HRV)
+        // Real hearts don't beat at a perfectly constant rate.
+        // We use slow Perlin noise to drift the instantaneous BPM by ±4 BPM.
+        val hrvDrift = perlin1D(t * 0.15) * 4.0  // Very slow drift (period ~6.7s)
+        val instantBpm = targetBpm + hrvDrift
+        val freq = instantBpm / 60.0  // Instantaneous frequency in Hz
+        
+        // 2. Phase accumulation (handles varying frequency correctly)
+        // Instead of sin(2*PI*freq*t), we integrate the instantaneous frequency
+        // to get a smooth, continuously varying phase. For simplicity with Perlin HRV,
+        // we approximate this as a slowly-drifting frequency applied to a fixed phase.
+        val phase = 2.0 * Math.PI * freq * t
+        
+        // 3. Asymmetric waveform (systolic rise is faster than diastolic fall)
+        // A real BVP waveform is not a perfect sine wave.
+        // We use a combination of sin harmonics to create the asymmetry.
+        val systolic = kotlin.math.sin(phase)  // Fundamental
+        val dicroticNotch = kotlin.math.sin(2.0 * phase) * 0.25  // 2nd harmonic (dicrotic notch)
+        val asymmetry = kotlin.math.sin(3.0 * phase) * 0.08  // 3rd harmonic (asymmetric rise/fall)
+        
+        // 4. Combine into a biologically plausible waveform
+        val bvpWaveform = systolic + dicroticNotch + asymmetry
+        
+        // 5. Normalize: the combined harmonics can exceed [-1, 1], so we scale down
+        val normalizedBvp = bvpWaveform / 1.33  // ~max amplitude of combined harmonics
+        
+        // 6. Add micro-jitter (sensor noise on the pulse signal itself)
+        val sensorJitter = perlin1D(t * 12.0) * 0.1 * amplitude  // Fast, tiny noise
+        
+        // 7. Final multiplier: 1.0 ± amplitude
+        return 1.0 + (normalizedBvp * amplitude) + sensorJitter
+    }
 }

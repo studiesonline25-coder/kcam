@@ -1,4 +1,4 @@
-import { Eye, Settings, LayoutGrid, Sparkles, Info, Upload, Network, Play, CheckCircle2, Zap, SlidersHorizontal, Copy, Palette, Globe, ShieldAlert, Bug, RotateCcw, RotateCw, Wand2 } from 'lucide-react';
+import { Eye, Settings, LayoutGrid, Sparkles, Info, Upload, Network, Play, CheckCircle2, Zap, SlidersHorizontal, Copy, Palette, Globe, ShieldAlert, Bug, RotateCcw, RotateCw, Wand2, HeartPulse } from 'lucide-react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -212,6 +212,8 @@ const AdvancedControl = () => {
   const [testPattern, setTestPattern] = useState(false);
   const [rotationOffset, setRotationOffset] = useState(0);
   const [refineMode, setRefineMode] = useState(false);
+  const [rppgEnabled, setRppgEnabled] = useState(true);
+  const [rppgBpm, setRppgBpm] = useState(72);
 
   useEffect(() => {
     const handleSync = (e: any) => {
@@ -224,6 +226,8 @@ const AdvancedControl = () => {
       if (data.isTestPatternMode !== undefined) setTestPattern(data.isTestPatternMode);
       if (data.rotationOffset !== undefined) setRotationOffset(data.rotationOffset);
       if (data.refineMode !== undefined) setRefineMode(data.refineMode);
+      if (data.rppgEnabled !== undefined) setRppgEnabled(data.rppgEnabled);
+      if (data.rppgBpm !== undefined) setRppgBpm(data.rppgBpm);
     };
     window.addEventListener('android-sync', handleSync as any);
     return () => window.removeEventListener('android-sync', handleSync as any);
@@ -277,6 +281,17 @@ const AdvancedControl = () => {
     (window as any).Android?.setRefineMode(next);
   };
 
+  const toggleRppg = () => {
+    const next = !rppgEnabled;
+    setRppgEnabled(next);
+    (window as any).Android?.setRppgEnabled(next);
+  };
+
+  const updateRppgBpm = (bpm: number) => {
+    setRppgBpm(bpm);
+    (window as any).Android?.setRppgBpm(bpm);
+  };
+
   return (
     <div className="space-y-6 mt-8">
       <div className="flex items-center gap-2 mb-4">
@@ -324,7 +339,40 @@ const AdvancedControl = () => {
           <Wand2 className={`w-5 h-5 ${refineMode ? 'text-emerald-neon' : 'text-gray-500'}`} />
           <span className="text-[10px] font-bold uppercase">{refineMode ? 'Refine ON' : 'Refine OFF'}</span>
         </button>
+
+        <button 
+          onClick={toggleRppg}
+          className={`border p-4 rounded-2xl flex flex-col items-center gap-2 transition-all ${rppgEnabled ? 'bg-red-500/10 border-red-500' : 'bg-card-dark border-border-dark'}`}
+        >
+          <HeartPulse className={`w-5 h-5 ${rppgEnabled ? 'text-red-500 animate-pulse' : 'text-gray-500'}`} />
+          <span className="text-[10px] font-bold uppercase">{rppgEnabled ? 'Pulse ON' : 'Pulse OFF'}</span>
+        </button>
       </div>
+
+      {rppgEnabled && (
+        <div className="bg-card-dark border border-red-500/20 rounded-2xl p-4 space-y-3 mt-2">
+          <div className="flex justify-between text-[10px] uppercase tracking-wider font-bold">
+            <span className="text-gray-500 flex items-center gap-1.5">
+              <HeartPulse className="w-3 h-3 text-red-500" />
+              Heart Rate
+            </span>
+            <span className="text-red-500 font-mono">{rppgBpm} BPM</span>
+          </div>
+          <input 
+            type="range" 
+            min={55} 
+            max={100} 
+            value={rppgBpm} 
+            onChange={(e) => updateRppgBpm(parseInt(e.target.value))}
+            onPointerDown={(e) => e.stopPropagation()}
+            className="w-full h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-red-500"
+          />
+          <div className="flex justify-between text-[8px] text-gray-600 uppercase tracking-wider font-bold">
+            <span>55 Resting</span>
+            <span>100 Active</span>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-6 mt-8">
         <div className="flex items-center gap-2 mb-4">

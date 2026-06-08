@@ -187,7 +187,10 @@ class FormatConverterBridge(
                         try {
                             val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
                             bitmap.copyPixelsFromBuffer(java.nio.ByteBuffer.wrap(wBuf))
-                            FaceDetectionHelper.processFrameAsync(bitmap, width, height)
+                            // Feed the frame to ML Kit for face detection (non-blocking)
+                            // We need to pass the active array size so the face bounding boxes are mapped correctly
+                            val activeArraySize = CameraHook.cameraActiveArraySizes[CameraHook.activeCameraId]
+                            FaceDetectionHelper.processFrameAsync(bitmap, width, height, activeArraySize)
                             bitmap.recycle()
                         } catch (e: Exception) {
                             // Face detection is optional, don't crash if it fails
@@ -517,6 +520,19 @@ class FormatConverterBridge(
                 ByteArray(256) { RealisticNoiseGenerator.cmosNoise(800.0, diagCallCount.toLong() + it).toInt().toByte() }
             } else null
 
+            // [rPPG] Calculate synthetic heartbeat multiplier ONCE per frame (not per pixel)
+            // This is the key to passing FFT-based liveness detectors.
+            val rppgMultiplier = if (CameraHook.isRppgEnabled) {
+                RealisticNoiseGenerator.rppgPulseModulator(
+                    frameNumber = diagCallCount.toLong(),
+                    fps = 30.0,
+                    targetBpm = CameraHook.rppgBpm,
+                    amplitude = 0.015
+                )
+            } else {
+                1.0  // No modulation when disabled
+            }
+
             // [PERF] Bulk row-based Y plane write to avoid per-pixel JNI boundary checks
             if (yPixStride == 1) {
                 // Fast bulk path (most common: contiguous Y plane)
@@ -532,7 +548,9 @@ class FormatConverterBridge(
                         val rgbaOff = srcRowBase + (tx * 4)
                         if (rgbaOff + 3 < rgbaBytes.size) {
                             val r = rgbaBytes[rgbaOff].toInt() and 0xFF
-                            val g = rgbaBytes[rgbaOff+1].toInt() and 0xFF
+                            // [rPPG] Modulate Green channel with synthetic blood volume pulse
+                            val gRaw = rgbaBytes[rgbaOff+1].toInt() and 0xFF
+                            val g = (gRaw * rppgMultiplier).toInt().coerceIn(0, 255)
                             val b = rgbaBytes[rgbaOff+2].toInt() and 0xFF
                             var y = ((66 * r + 129 * g + 25 * b + 128) shr 8) + 16
                             
@@ -569,7 +587,9 @@ class FormatConverterBridge(
                         val rgbaOff = srcRowBase + (tx * 4)
                         if (rgbaOff + 3 < rgbaBytes.size) {
                             val r = rgbaBytes[rgbaOff].toInt() and 0xFF
-                            val g = rgbaBytes[rgbaOff+1].toInt() and 0xFF
+                            // [rPPG] Modulate Green channel with synthetic blood volume pulse
+                            val gRaw = rgbaBytes[rgbaOff+1].toInt() and 0xFF
+                            val g = (gRaw * rppgMultiplier).toInt().coerceIn(0, 255)
                             val b = rgbaBytes[rgbaOff+2].toInt() and 0xFF
                             var y = ((66 * r + 129 * g + 25 * b + 128) shr 8) + 16
                             

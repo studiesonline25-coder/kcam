@@ -98,6 +98,8 @@ class MainActivity : AppCompatActivity() {
             put("passthrough", config.isPassthroughMode)
             put("testPattern", config.isTestPatternMode)
             put("refineMode", config.isRefineMode)
+            put("rppgEnabled", config.isRppgEnabled)
+            put("rppgBpm", config.rppgBpm)
         }
         webView.evaluateJavascript("if(window.onAndroidSync) window.onAndroidSync('$state')", null)
     }
@@ -109,6 +111,8 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface fun setPassthroughMode(enabled: Boolean) { config.isPassthroughMode = enabled }
         @JavascriptInterface fun setBufferCapture(enabled: Boolean) { config.isBufferCaptureEnabled = enabled }
         @JavascriptInterface fun setRefineMode(enabled: Boolean) { config.isRefineMode = enabled }
+        @JavascriptInterface fun setRppgEnabled(enabled: Boolean) { config.isRppgEnabled = enabled }
+        @JavascriptInterface fun setRppgBpm(bpm: Int) { config.rppgBpm = bpm }
         @JavascriptInterface fun setRotationOffset(offset: Int) { config.rotationOffset = offset }
         @JavascriptInterface fun updateZoom(valZoom: Float) { config.zoomFactor = valZoom }
         @JavascriptInterface fun updateStretch(valStretch: Float) { config.compensationFactor = valStretch }

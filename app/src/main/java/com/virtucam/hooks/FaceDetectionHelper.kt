@@ -43,7 +43,7 @@ object FaceDetectionHelper {
      * Process a frame for face detection (async, non-blocking).
      * Updates cachedFaces when detection completes.
      */
-    fun processFrameAsync(bitmap: Bitmap, imageWidth: Int, imageHeight: Int) {
+    fun processFrameAsync(bitmap: Bitmap, imageWidth: Int, imageHeight: Int, activeArraySize: Rect?) {
         val now = System.currentTimeMillis()
         if (now - lastDetectionMs < DETECTION_INTERVAL_MS) return
         lastDetectionMs = now
@@ -59,12 +59,20 @@ object FaceDetectionHelper {
                     val camera2Faces = mlFaces.map { mlFace ->
                         val bounds = mlFace.boundingBox
                         
-                        // Convert pixel coordinates to normalized [-1000, 1000] range
-                        // Camera2 uses active array coordinates, but we'll use normalized coords
-                        val left = ((bounds.left.toFloat() / imageWidth) * 2000 - 1000).toInt()
-                        val top = ((bounds.top.toFloat() / imageHeight) * 2000 - 1000).toInt()
-                        val right = ((bounds.right.toFloat() / imageWidth) * 2000 - 1000).toInt()
-                        val bottom = ((bounds.bottom.toFloat() / imageHeight) * 2000 - 1000).toInt()
+                        // Default to standard 4000x3000 if active array is not available
+                        val arrayWidth = activeArraySize?.width() ?: 4000
+                        val arrayHeight = activeArraySize?.height() ?: 3000
+                        val arrayLeft = activeArraySize?.left ?: 0
+                        val arrayTop = activeArraySize?.top ?: 0
+                        
+                        // Map ML Kit bounds to the active array size
+                        val scaleX = arrayWidth.toFloat() / imageWidth
+                        val scaleY = arrayHeight.toFloat() / imageHeight
+                        
+                        val left = (bounds.left * scaleX + arrayLeft).toInt().coerceIn(arrayLeft, arrayLeft + arrayWidth)
+                        val top = (bounds.top * scaleY + arrayTop).toInt().coerceIn(arrayTop, arrayTop + arrayHeight)
+                        val right = (bounds.right * scaleX + arrayLeft).toInt().coerceIn(arrayLeft, arrayLeft + arrayWidth)
+                        val bottom = (bounds.bottom * scaleY + arrayTop).toInt().coerceIn(arrayTop, arrayTop + arrayHeight)
                         
                         val rect = Rect(left, top, right, bottom)
                         

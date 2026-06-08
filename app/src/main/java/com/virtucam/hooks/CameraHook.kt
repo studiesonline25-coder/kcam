@@ -88,6 +88,7 @@ object CameraHook {
     // Cache real camera optical specs for dynamic injection (device-agnostic)
     private val cameraApertures = java.util.concurrent.ConcurrentHashMap<String, Float>()
     private val cameraFocalLengths = java.util.concurrent.ConcurrentHashMap<String, Float>()
+    internal val cameraActiveArraySizes = java.util.concurrent.ConcurrentHashMap<String, android.graphics.Rect>()
     
     // Global state for Late-Stage Storage Interception
     @Volatile var latestVirtualJpeg: ByteArray? = null
@@ -128,6 +129,12 @@ object CameraHook {
 
     @Volatile
     var isRefineEnabled: Boolean = false
+
+    @Volatile
+    var isRppgEnabled: Boolean = true  // Default ON — inject synthetic heartbeat
+
+    @Volatile
+    var rppgBpm: Int = 72  // Default 72 BPM
 
     // [STEALTH MODE] Global toggle for diagnostic logging (disable for production/KYC)
     @Volatile
@@ -1290,6 +1297,8 @@ object CameraHook {
                                                         val detectedFaces = FaceDetectionHelper.getCachedFaces()
                                                         if (detectedFaces.isNotEmpty()) {
                                                             setResultMetadata(metadataNative, "android.statistics.faces", detectedFaces)
+                                                            // Force face detect mode to FULL so SDKs process the injected faces
+                                                            setResultMetadata(metadataNative, "android.statistics.faceDetectMode", 2) // 2 = FULL
                                                             if (enableDiagnosticLogs) {
                                                                 logD(TAG, "Injected ${detectedFaces.size} face(s) into STATISTICS_FACES")
                                                             }
@@ -1597,11 +1606,16 @@ object CameraHook {
                 // Cache real optical specs for dynamic injection (device-agnostic)
                 val apertures = char.get(android.hardware.camera2.CameraCharacteristics.LENS_INFO_AVAILABLE_APERTURES)
                 val focalLengths = char.get(android.hardware.camera2.CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS)
+                val activeArraySize = char.get(android.hardware.camera2.CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE)
+                
                 if (apertures != null && apertures.isNotEmpty()) {
                     cameraApertures[cameraId] = apertures[0]  // Use first (widest) aperture
                 }
                 if (focalLengths != null && focalLengths.isNotEmpty()) {
                     cameraFocalLengths[cameraId] = focalLengths[0]  // Use first (primary) focal length
+                }
+                if (activeArraySize != null) {
+                    cameraActiveArraySizes[cameraId] = activeArraySize
                 }
                 
                 Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: getCameraCharacteristics($cameraId) -> Facing=$facing, Orient=$orientation, HW_Level=$level, Aperture=${cameraApertures[cameraId]}, FocalLen=${cameraFocalLengths[cameraId]}")
@@ -2511,8 +2525,10 @@ object CameraHook {
                         rotationOffset = if (it.columnCount > 15) it.getInt(15) else 0
                         isBufferCaptureEnabled = if (it.columnCount > 16) it.getInt(16) == 1 else false
                         isRefineEnabled = if (it.columnCount > 18) it.getInt(18) == 1 else false
+                        isRppgEnabled = if (it.columnCount > 19) it.getInt(19) == 1 else true
+                        rppgBpm = if (it.columnCount > 20) it.getInt(20) else 72
                         
-                        Log.d(TAG, "VirtuCam_Hook: Config loaded. Enabled: $isEnabled, Zoom: $zoomFactor, Stretch: $compensationFactor, liveness: $isLivenessEnabled, passthrough: $isPassthroughMode, offset: $rotationOffset, refine: $isRefineEnabled")
+                        Log.d(TAG, "VirtuCam_Hook: Config loaded. Enabled: $isEnabled, Zoom: $zoomFactor, Stretch: $compensationFactor, liveness: $isLivenessEnabled, passthrough: $isPassthroughMode, offset: $rotationOffset, refine: $isRefineEnabled, rppg: $isRppgEnabled (${rppgBpm}bpm)")
                     } catch (innerE: Exception) {
                         Log.e(TAG, "VirtuCam_Hook: Error parsing cursor columns", innerE)
                     }
