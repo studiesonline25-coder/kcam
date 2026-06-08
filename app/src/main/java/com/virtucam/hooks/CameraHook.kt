@@ -74,7 +74,7 @@ object CameraHook {
     private val isSourceLoading = ThreadLocal<Boolean>()
 
     @Volatile
-    private var activeCameraId: String = "0"
+    internal var activeCameraId: String = "0"
     @Volatile
     var xiaomiRequestedOrientation: Int = -1
     
