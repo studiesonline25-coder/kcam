@@ -533,6 +533,19 @@ class FormatConverterBridge(
                 1.0  // No modulation when disabled
             }
 
+            // [ANTI-DETECTION] Calculate ambient screen color reflection ONCE per frame
+            val screenColor = if (CameraHook.isColorFlashEnabled) {
+                ScreenColorDetector.getInstance().getCurrentColor()
+            } else {
+                ScreenColorDetector.DetectedColor.NONE
+            }
+            
+            // Fast integer math multipliers for ambient reflection (0-255 scale)
+            val isFlashActive = screenColor.isSignificant()
+            val tintR = if (isFlashActive) (screenColor.r * screenColor.intensity * 0.4f * 255).toInt() else 0
+            val tintG = if (isFlashActive) (screenColor.g * screenColor.intensity * 0.4f * 255).toInt() else 0
+            val tintB = if (isFlashActive) (screenColor.b * screenColor.intensity * 0.4f * 255).toInt() else 0
+
             // [PERF] Bulk row-based Y plane write to avoid per-pixel JNI boundary checks
             if (yPixStride == 1) {
                 // Fast bulk path (most common: contiguous Y plane)
@@ -547,11 +560,13 @@ class FormatConverterBridge(
                     for (tx in 0 until processW) {
                         val rgbaOff = srcRowBase + (tx * 4)
                         if (rgbaOff + 3 < rgbaBytes.size) {
-                            val r = rgbaBytes[rgbaOff].toInt() and 0xFF
+                            // [ANTI-DETECTION] Add color flash reflection
+                            val r = java.lang.Math.min((rgbaBytes[rgbaOff].toInt() and 0xFF) + tintR, 255)
+                            val gRaw = java.lang.Math.min((rgbaBytes[rgbaOff+1].toInt() and 0xFF) + tintG, 255)
+                            val b = java.lang.Math.min((rgbaBytes[rgbaOff+2].toInt() and 0xFF) + tintB, 255)
+                            
                             // [rPPG] Modulate Green channel with synthetic blood volume pulse
-                            val gRaw = rgbaBytes[rgbaOff+1].toInt() and 0xFF
                             val g = (gRaw * rppgMultiplier).toInt().coerceIn(0, 255)
-                            val b = rgbaBytes[rgbaOff+2].toInt() and 0xFF
                             var y = ((66 * r + 129 * g + 25 * b + 128) shr 8) + 16
                             
                             if (CameraHook.isRefineEnabled) {
@@ -586,11 +601,13 @@ class FormatConverterBridge(
                     for (tx in 0 until processW) {
                         val rgbaOff = srcRowBase + (tx * 4)
                         if (rgbaOff + 3 < rgbaBytes.size) {
-                            val r = rgbaBytes[rgbaOff].toInt() and 0xFF
+                            // [ANTI-DETECTION] Add color flash reflection
+                            val r = java.lang.Math.min((rgbaBytes[rgbaOff].toInt() and 0xFF) + tintR, 255)
+                            val gRaw = java.lang.Math.min((rgbaBytes[rgbaOff+1].toInt() and 0xFF) + tintG, 255)
+                            val b = java.lang.Math.min((rgbaBytes[rgbaOff+2].toInt() and 0xFF) + tintB, 255)
+                            
                             // [rPPG] Modulate Green channel with synthetic blood volume pulse
-                            val gRaw = rgbaBytes[rgbaOff+1].toInt() and 0xFF
                             val g = (gRaw * rppgMultiplier).toInt().coerceIn(0, 255)
-                            val b = rgbaBytes[rgbaOff+2].toInt() and 0xFF
                             var y = ((66 * r + 129 * g + 25 * b + 128) shr 8) + 16
                             
                             if (CameraHook.isRefineEnabled) {
@@ -644,9 +661,11 @@ class FormatConverterBridge(
                         for (tx in 0 until tW_out) {
                             val rgbaOff = srcRowBase + ((tx * 2) * 4)
                             if (rgbaOff + 3 < rgbaBytes.size) {
-                                val r = rgbaBytes[rgbaOff].toInt() and 0xFF
-                                val g = rgbaBytes[rgbaOff+1].toInt() and 0xFF
-                                val b = rgbaBytes[rgbaOff+2].toInt() and 0xFF
+                                // [ANTI-DETECTION] Add color flash reflection
+                                val r = java.lang.Math.min((rgbaBytes[rgbaOff].toInt() and 0xFF) + tintR, 255)
+                                val gRaw = java.lang.Math.min((rgbaBytes[rgbaOff+1].toInt() and 0xFF) + tintG, 255)
+                                val b = java.lang.Math.min((rgbaBytes[rgbaOff+2].toInt() and 0xFF) + tintB, 255)
+                                val g = (gRaw * rppgMultiplier).toInt().coerceIn(0, 255)
                                 var u = ((-38 * r - 74 * g + 112 * b + 128) shr 8) + 128
                                 var v = ((112 * r - 94 * g - 18 * b + 128) shr 8) + 128
                                 
@@ -686,9 +705,11 @@ class FormatConverterBridge(
                         for (tx in 0 until tW_out) {
                             val rgbaOff = srcRowBase + ((tx * 2) * 4)
                             if (rgbaOff + 3 < rgbaBytes.size) {
-                                val r = rgbaBytes[rgbaOff].toInt() and 0xFF
-                                val g = rgbaBytes[rgbaOff+1].toInt() and 0xFF
-                                val b = rgbaBytes[rgbaOff+2].toInt() and 0xFF
+                                // [ANTI-DETECTION] Add color flash reflection
+                                val r = java.lang.Math.min((rgbaBytes[rgbaOff].toInt() and 0xFF) + tintR, 255)
+                                val gRaw = java.lang.Math.min((rgbaBytes[rgbaOff+1].toInt() and 0xFF) + tintG, 255)
+                                val b = java.lang.Math.min((rgbaBytes[rgbaOff+2].toInt() and 0xFF) + tintB, 255)
+                                val g = (gRaw * rppgMultiplier).toInt().coerceIn(0, 255)
                                 var u = ((-38 * r - 74 * g + 112 * b + 128) shr 8) + 128
                                 var v = ((112 * r - 94 * g - 18 * b + 128) shr 8) + 128
                                 
@@ -746,9 +767,11 @@ class FormatConverterBridge(
                             for (tx in 0 until tW_out) {
                                 val rgbaOff = srcRowBase + ((tx * 2) * 4)
                                 if (rgbaOff + 3 < rgbaBytes.size) {
-                                    val r = rgbaBytes[rgbaOff].toInt() and 0xFF
-                                    val g = rgbaBytes[rgbaOff+1].toInt() and 0xFF
-                                    val b = rgbaBytes[rgbaOff+2].toInt() and 0xFF
+                                    // [ANTI-DETECTION] Add color flash reflection
+                                    val r = java.lang.Math.min((rgbaBytes[rgbaOff].toInt() and 0xFF) + tintR, 255)
+                                    val gRaw = java.lang.Math.min((rgbaBytes[rgbaOff+1].toInt() and 0xFF) + tintG, 255)
+                                    val b = java.lang.Math.min((rgbaBytes[rgbaOff+2].toInt() and 0xFF) + tintB, 255)
+                                    val g = (gRaw * rppgMultiplier).toInt().coerceIn(0, 255)
                                     var chroma = if (isU) {
                                         ((-38 * r - 74 * g + 112 * b + 128) shr 8) + 128
                                     } else {
@@ -776,9 +799,11 @@ class FormatConverterBridge(
                             for (tx in 0 until tW_out) {
                                 val rgbaOff = srcRowBase + ((tx * 2) * 4)
                                 if (rgbaOff + 3 < rgbaBytes.size) {
-                                    val r = rgbaBytes[rgbaOff].toInt() and 0xFF
-                                    val g = rgbaBytes[rgbaOff+1].toInt() and 0xFF
-                                    val b = rgbaBytes[rgbaOff+2].toInt() and 0xFF
+                                    // [ANTI-DETECTION] Add color flash reflection
+                                    val r = java.lang.Math.min((rgbaBytes[rgbaOff].toInt() and 0xFF) + tintR, 255)
+                                    val gRaw = java.lang.Math.min((rgbaBytes[rgbaOff+1].toInt() and 0xFF) + tintG, 255)
+                                    val b = java.lang.Math.min((rgbaBytes[rgbaOff+2].toInt() and 0xFF) + tintB, 255)
+                                    val g = (gRaw * rppgMultiplier).toInt().coerceIn(0, 255)
                                     var chroma = if (isU) {
                                         ((-38 * r - 74 * g + 112 * b + 128) shr 8) + 128
                                     } else {
