@@ -922,28 +922,47 @@ class FormatConverterBridge(
             
             Log.e(TAG, "CAPT_LOG [3e]: Virtual JPEG acquired after ${waitCount * 20}ms. Size=${jpegBytes.size} bytes. Writing to Target Buffer Capacity=${jpegBuffer.capacity()}")
             
-            // [Surgical Scrub] Zero out the hardware buffer first to prevent "file corrupted" 
-            // errors caused by trailing sensor data at the end of the buffer.
-            try {
-                jpegBuffer.clear()
-                val zeroArray = ByteArray(Math.min(1024, jpegBuffer.capacity()))
-                var written = 0
-                while (written < jpegBuffer.capacity()) {
-                    val toWrite = Math.min(zeroArray.size, jpegBuffer.capacity() - written)
-                    jpegBuffer.put(zeroArray, 0, toWrite)
-                    written += toWrite
-                }
-                jpegBuffer.clear()
-            } catch (_: Exception) {
-                jpegBuffer.clear()
-            }
-            
             // If cached JPEG is too big for the HAL buffer, re-encode at lower quality to fit.
             // HAL buffers are typically ~290KB while our quality-85 JPEG can be ~520KB.
             val bufCap = jpegBuffer.capacity()
-            if (jpegBytes.size > bufCap && isBufferReady) {
+            if (jpegBytes.size > bufCap) {
                 Log.w(TAG, "FormatConverterBridge: Spoofed JPEG (${jpegBytes.size}) > Buffer Capacity ($bufCap). Re-encoding to fit...")
-                val fitted = encodeJpegFromCache(maxBytes = bufCap)
+                var fitted: ByteArray? = null
+                
+                if (isBufferReady) {
+                    fitted = encodeJpegFromCache(maxBytes = bufCap)
+                } else {
+                    // [FIX] Native Camera App JPEG bridges don't have RGBA cache (isBufferReady=false).
+                    // Ask the PREVIEW bridge to re-encode the cache to fit.
+                    val activePreviewBridge = CameraHook.formatBridges.values.firstOrNull { it.isBufferReady }
+                    if (activePreviewBridge != null) {
+                        fitted = activePreviewBridge.encodeJpegFromCache(maxBytes = bufCap)
+                    }
+                }
+                
+                // Fallback: If bridge encode failed or still too big, decode the bytes and compress manually.
+                if (fitted == null || fitted.size > bufCap) {
+                    try {
+                        val bmp = android.graphics.BitmapFactory.decodeByteArray(jpegBytes, 0, jpegBytes.size)
+                        if (bmp != null) {
+                            var q = 80
+                            do {
+                                val baos = java.io.ByteArrayOutputStream()
+                                bmp.compress(android.graphics.Bitmap.CompressFormat.JPEG, q, baos)
+                                val out = baos.toByteArray()
+                                if (out.size <= bufCap) {
+                                    fitted = out
+                                    break
+                                }
+                                q -= 10
+                            } while (q >= 10)
+                            bmp.recycle()
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "FormatConverterBridge: Manual Bitmap fallback resize failed", e)
+                    }
+                }
+
                 if (fitted != null && fitted.size <= bufCap) {
                     jpegBytes = fitted
                     Log.d(TAG, "FormatConverterBridge: Re-encoded JPEG fits: ${fitted.size} bytes <= $bufCap")
@@ -954,8 +973,24 @@ class FormatConverterBridge(
             
             val finalLimit: Int
             if (jpegBytes.size > bufCap) {
-                finalLimit = bufCap // Last resort: keep original hardware JPEG
+                Log.e(TAG, "FormatConverterBridge: CRITICAL! Spoofed JPEG STILL TOO BIG. Allowing real hardware JPEG to pass to prevent camera hang.")
+                return // Abort! Let the original hardware JPEG through so the app doesn't hang!
             } else {
+                // [Surgical Scrub] Zero out the hardware buffer ONLY NOW since we are sure we can fit the spoofed JPEG.
+                try {
+                    jpegBuffer.clear()
+                    val zeroArray = ByteArray(Math.min(1024, jpegBuffer.capacity()))
+                    var written = 0
+                    while (written < jpegBuffer.capacity()) {
+                        val toWrite = Math.min(zeroArray.size, jpegBuffer.capacity() - written)
+                        jpegBuffer.put(zeroArray, 0, toWrite)
+                        written += toWrite
+                    }
+                    jpegBuffer.clear()
+                } catch (_: Exception) {
+                    jpegBuffer.clear()
+                }
+
                 jpegBuffer.put(jpegBytes, 0, jpegBytes.size)
                 finalLimit = jpegBytes.size
             }
