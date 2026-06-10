@@ -188,6 +188,7 @@ class VideoPlayer(
                 else -> {
                     if (outIndex >= 0) {
                         // === PRECISE PIPELINE PHASE-LOCK ===
+                        val nowNs = System.nanoTime()
                         // We wait for the VirtualRenderThread to request the next frame.
                         // This guarantees perfect 1:1 synchronization with the physical camera HAL.
                         frameSemaphore.acquire()
