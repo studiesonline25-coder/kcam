@@ -892,11 +892,21 @@ class FormatConverterBridge(
             
             // Try cached JPEG first (instant if pre-warmed during preview)
             var jpegBytes = CameraHook.latestVirtualJpeg
-            var waitCount = 0
 
-            // If no cached JPEG, try synchronous generation (blocks ~200-500ms but no poll overhead)
-            if (jpegBytes == null && isBufferReady) {
-                jpegBytes = generateJpegSync()
+            // If no cached JPEG, generate synchronously. Use PREVIEW bridge if capture bridge is cold.
+            if (jpegBytes == null) {
+                if (isBufferReady) {
+                    jpegBytes = generateJpegSync()
+                } else {
+                    // [FIX] Fallback immediately to PREVIEW bridge if JPEG bridge is cold.
+                    // This prevents 1-second timeouts that crash the Native Camera.
+                    val activePreviewBridge = CameraHook.formatBridges.values.firstOrNull { it.isBufferReady }
+                    if (activePreviewBridge != null) {
+                        Log.w(TAG, "CAPT_LOG [3c]: JPEG buffer cold. Generating synchronously from PREVIEW bridge.")
+                        jpegBytes = activePreviewBridge.generateJpegSync()
+                    }
+                }
+                
                 if (jpegBytes != null) {
                     synchronized(CameraHook) {
                         CameraHook.latestVirtualJpeg = jpegBytes
@@ -905,22 +915,13 @@ class FormatConverterBridge(
                 }
             }
 
-            // Last resort: async + short poll (only if RGBA buffer isn't ready yet)
             if (jpegBytes == null) {
-                generateAndStoreSpoofedJpeg()
-                while (jpegBytes == null && waitCount < 50) { // 1 second max
-                    Thread.sleep(20)
-                    jpegBytes = CameraHook.latestVirtualJpeg
-                    waitCount++
-                }
-            }
-
-            if (jpegBytes == null) {
-                Log.e(TAG, "CAPT_LOG [3d]: Failed to get latest Virtual JPEG after waiting ${waitCount * 20}ms. BufferReady=$isBufferReady")
+                Log.e(TAG, "CAPT_LOG [3d]: Failed to get latest Virtual JPEG. Aggressively scrubbing buffer to prevent leak.")
+                scrubBufferToBlack(jpegBuffer)
                 return
             }
             
-            Log.e(TAG, "CAPT_LOG [3e]: Virtual JPEG acquired after ${waitCount * 20}ms. Size=${jpegBytes.size} bytes. Writing to Target Buffer Capacity=${jpegBuffer.capacity()}")
+            Log.e(TAG, "CAPT_LOG [3e]: Virtual JPEG acquired synchronously. Size=${jpegBytes.size} bytes. Target Capacity=${jpegBuffer.capacity()}")
             
             // If cached JPEG is too big for the HAL buffer, re-encode at lower quality to fit.
             // HAL buffers are typically ~290KB while our quality-85 JPEG can be ~520KB.
@@ -973,8 +974,9 @@ class FormatConverterBridge(
             
             val finalLimit: Int
             if (jpegBytes.size > bufCap) {
-                Log.e(TAG, "FormatConverterBridge: CRITICAL! Spoofed JPEG STILL TOO BIG. Allowing real hardware JPEG to pass to prevent camera hang.")
-                return // Abort! Let the original hardware JPEG through so the app doesn't hang!
+                Log.e(TAG, "FormatConverterBridge: CRITICAL! Spoofed JPEG STILL TOO BIG. Scrubbing hardware buffer to prevent leak!")
+                scrubBufferToBlack(jpegBuffer)
+                return 
             } else {
                 // [Surgical Scrub] Zero out the hardware buffer ONLY NOW since we are sure we can fit the spoofed JPEG.
                 try {
@@ -1018,7 +1020,32 @@ class FormatConverterBridge(
             FileOutputStream(file).use { it.write(data) }
             Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Saved debug image to ${file.absolutePath} (${data.size} bytes)")
         } catch (e: Exception) {
-            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Failed to save debug image", e)
+            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Failed to save debug image: ${e.message}")
+        }
+    }
+
+    /**
+     * Aggressively scrubs the target buffer to prevent real-world images from leaking
+     * through if spoofing fails. We write a tiny, invalid/black JPEG payload.
+     */
+    private fun scrubBufferToBlack(buffer: ByteBuffer) {
+        try {
+            buffer.clear()
+            val zeroArray = ByteArray(Math.min(1024, buffer.capacity()))
+            var written = 0
+            while (written < buffer.capacity()) {
+                val toWrite = Math.min(zeroArray.size, buffer.capacity() - written)
+                buffer.put(zeroArray, 0, toWrite)
+                written += toWrite
+            }
+            // Add minimal JPEG header so the app doesn't crash on invalid data, just gets a black image.
+            buffer.clear()
+            val minJpeg = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 0xD9.toByte())
+            buffer.put(minJpeg)
+            buffer.position(0)
+            buffer.limit(minJpeg.size)
+        } catch (e: Exception) {
+            Log.e(TAG, "FormatConverterBridge: Failed to scrub buffer to black", e)
         }
     }
     
