@@ -3344,10 +3344,6 @@ class VirtualRenderThread(
                 framesSinceNewContent++
             }
             
-            // [PIPELINE PHASE-LOCK] Tell the video player it can decode the next frame now.
-            // This guarantees the video decodes perfectly 1:1 with the Native Camera's frame requests.
-            videoPlayer?.requestNextFrame()
-            
             mediaSurfaceTexture?.getTransformMatrix(matrix)
             
             // ANTI-DETECTION: Temporal motion smoothing
@@ -3440,13 +3436,7 @@ class VirtualRenderThread(
             val isCapture = it_triple.second
             val format = it_triple.third
 
-            // [PERF OPT 4] Check if this surface is throttled due to slow swaps
-            val throttleCount = surfaceThrottleMap.getOrDefault(surfaceIndex, 0)
-            if (throttleCount >= 3 && frameCount % 10 != 0) {
-                // This surface has been slow for 3+ consecutive frames — throttle to 1-in-10
-                surfaceIndex++
-                continue
-            }
+            // [PERF OPT 4 REMOVED] Surface throttle state previously caused jumping/crashing
 
             // [BROWSER CAPTURE FIX] Always render to JPEG bridge surfaces.
             // Previously gated by captureCount > 0, but this created a chicken-and-egg timing
@@ -3552,7 +3542,8 @@ class VirtualRenderThread(
                 val renderPts = if (CameraHook.latestSensorTimestamp > 0) CameraHook.latestSensorTimestamp else android.os.SystemClock.elapsedRealtimeNanos()
                 eglCore?.setPresentationTime(es, renderPts)
                 
-                // [PERF OPT 4] Measure swapBuffers time to detect inactive surfaces
+                // [PERF OPT 4 REMOVED] Measure swapBuffers time, but do NOT throttle.
+                // Throttling breaks backpressure and causes the Native Camera to jump and crash.
                 val swapStart = System.nanoTime()
                 if (eglCore?.swapBuffers(es) == false) {
                     Log.w("VirtuCam_Render", "Surface abandoned, removing.")
@@ -3561,22 +3552,6 @@ class VirtualRenderThread(
                     continue
                 }
                 val swapElapsedMs = (System.nanoTime() - swapStart) / 1_000_000
-                
-                // [PERF OPT 4] Track slow swaps for adaptive throttling
-                if (swapElapsedMs > 25) {
-                    // swapBuffers blocked >25ms — consumer likely inactive
-                    val prevCount = surfaceThrottleMap.getOrDefault(surfaceIndex, 0)
-                    surfaceThrottleMap[surfaceIndex] = (prevCount + 1).coerceAtMost(10)
-                    if (prevCount == 2) { // Just crossed the threshold
-                        Log.w("VirtuCam_Render", "[PERF OPT 4] Surface $surfaceIndex swap took ${swapElapsedMs}ms — throttling to 1-in-10 frames")
-                    }
-                } else {
-                    // Surface is responsive — clear throttle immediately
-                    if (surfaceThrottleMap.containsKey(surfaceIndex)) {
-                        Log.d("VirtuCam_Render", "[PERF OPT 4] Surface $surfaceIndex restored to full-rate rendering (swap=${swapElapsedMs}ms)")
-                        surfaceThrottleMap.remove(surfaceIndex)
-                    }
-                }
 
                 if (frameCount % 60 == 0) {
                     val tEnd = System.nanoTime()

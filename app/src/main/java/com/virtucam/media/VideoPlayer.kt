@@ -42,12 +42,6 @@ class VideoPlayer(
     private var playThread: Thread? = null
     @Volatile
     private var isPlaying = false
-    
-    private val frameSemaphore = java.util.concurrent.Semaphore(1) // Start with 1 permit for the first frame
-
-    fun requestNextFrame() {
-        frameSemaphore.release()
-    }
 
     /**
      * Start playback in a background thread
@@ -187,13 +181,21 @@ class VideoPlayer(
                 }
                 else -> {
                     if (outIndex >= 0) {
-                        // === PRECISE PIPELINE PHASE-LOCK ===
+                        // === PRECISE FRAME PACING (Feature 7 - Updated) ===
+                        // Real hardware delivers frames with strict microsecond precision.
+                        // Removed random synthetic jitter that triggers "screensharing" flags.
+                        val targetNs = startNs + (info.presentationTimeUs * 1000L)
                         val nowNs = System.nanoTime()
-                        // We wait for the VirtualRenderThread to request the next frame.
-                        // This guarantees perfect 1:1 synchronization with the physical camera HAL.
-                        frameSemaphore.acquire()
+                        val delayNs = targetNs - nowNs
 
-                        val doRender = info.size != 0
+                        if (delayNs > 0) {
+                            // Use LockSupport for absolute hardware-like precision without
+                            // busy-waiting/spin-waiting which causes CPU thermal throttling.
+                            LockSupport.parkNanos(delayNs)
+                        }
+                        // If delayNs <= 0, we're behind schedule — render immediately (no drop)
+
+                        var doRender = info.size != 0
                         
                         val tBeforeRender = System.nanoTime()
                         // Release buffer and render it to surface
