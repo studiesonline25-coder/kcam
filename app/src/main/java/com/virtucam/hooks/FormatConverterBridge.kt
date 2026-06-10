@@ -895,14 +895,20 @@ class FormatConverterBridge(
 
             // If no cached JPEG, generate synchronously. Use PREVIEW bridge if capture bridge is cold.
             if (jpegBytes == null) {
+                var waitCount = 0
+                // Wait safely for the EGL thread to finish drawing the capture frame (max 500ms)
+                while (!isBufferReady && waitCount < 25) { 
+                    Thread.sleep(20)
+                    waitCount++
+                }
+
                 if (isBufferReady) {
                     jpegBytes = generateJpegSync()
                 } else {
-                    // [FIX] Fallback immediately to PREVIEW bridge if JPEG bridge is cold.
-                    // This prevents 1-second timeouts that crash the Native Camera.
+                    // Try fallback bridges if this bridge's buffer is still not ready
                     val activePreviewBridge = CameraHook.formatBridges.values.firstOrNull { it.isBufferReady }
                     if (activePreviewBridge != null) {
-                        Log.w(TAG, "CAPT_LOG [3c]: JPEG buffer cold. Generating synchronously from PREVIEW bridge.")
+                        Log.w(TAG, "CAPT_LOG [3c]: Target JPEG buffer cold. Generating synchronously from PREVIEW bridge.")
                         jpegBytes = activePreviewBridge.generateJpegSync()
                     }
                 }

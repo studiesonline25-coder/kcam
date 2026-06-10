@@ -2013,9 +2013,11 @@ object CameraHook {
                     captureSurfaces.add(surface)
                     Log.d(TAG, "VirtuCam_Hook: Classified ImageReader as CAPTURE (JPEG) ${w}x${h}")
                 } else if (format == 35 || format == ImageFormat.YUV_420_888 || format == ImageFormat.YV12) {
-                    if (isNativeCamera) {
-                        Log.d(TAG, "VirtuCam_Hook: Classified ImageReader as CAPTURE (YUV Native Camera App) ${w}x${h}")
+                    if (isNativeCamera && w * h >= 2000000) {
+                        Log.d(TAG, "VirtuCam_Hook: Classified ImageReader as CAPTURE (YUV Native Camera App, Large) ${w}x${h}")
                         captureSurfaces.add(surface)
+                    } else if (isNativeCamera) {
+                        Log.d(TAG, "VirtuCam_Hook: Classified ImageReader as PREVIEW (YUV Native Camera App, Small ZSL) ${w}x${h}")
                     } else {
                         Log.d(TAG, "VirtuCam_Hook: Classified ImageReader as PREVIEW (YUV Browser/Social App) ${w}x${h}")
                     }
