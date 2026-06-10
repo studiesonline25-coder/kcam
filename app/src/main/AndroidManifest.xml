@@ -67,7 +67,7 @@
         <!-- Settings Provider for cross-app config -->
         <provider
             android:name=".data.VirtuCamProvider"
-            android:authorities="com.virtucam.provider"
+            android:authorities="com.kcam.provider"
             android:exported="true"
             android:grantUriPermissions="true" />
 

@@ -16,7 +16,7 @@ import java.io.FileNotFoundException
 class VirtuCamProvider : ContentProvider() {
     
     companion object {
-        const val AUTHORITY = "com.virtucam.provider"
+        const val AUTHORITY = "com.kcam.provider"
         const val PATH_CONFIG = "config"
         const val PATH_MEDIA = "media"
         const val PATH_FILE = "file"

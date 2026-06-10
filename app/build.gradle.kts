@@ -7,8 +7,17 @@ android {
     namespace = "com.virtucam"
     compileSdk = 35
 
+    signingConfigs {
+        create("persistent") {
+            storeFile = file("keystore.jks")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     defaultConfig {
-        applicationId = "com.virtucam"
+        applicationId = "com.kcam"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
@@ -26,6 +35,7 @@ android {
 
     buildTypes {
         debug {
+            signingConfig = signingConfigs.getByName("persistent")
             ndk {
                 abiFilters.clear()
                 abiFilters.add("arm64-v8a")
@@ -34,7 +44,7 @@ android {
         release {
             isMinifyEnabled = true 
             isShrinkResources = true
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("persistent")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

@@ -25,7 +25,7 @@ class ModuleMain : IXposedHookLoadPackage {
     
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
         // Skip our own app
-        if (lpparam.packageName == "com.virtucam") return
+        if (lpparam.packageName == "com.kcam") return
         
         Log.d(TAG, "VirtuCam_Main: handleLoadPackage called for ${lpparam.packageName}")
         

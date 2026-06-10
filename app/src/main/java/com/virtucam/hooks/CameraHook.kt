@@ -229,7 +229,7 @@ object CameraHook {
     /**
      * Saves a stream preview frame to internal storage.
      * Called from StreamPlayer's onFirstFrame callback on the main looper.
-     * The file is then served via VirtuCamProvider at content://com.virtucam.provider/stream_preview/stream_preview.jpg
+     * The file is then served via VirtuCamProvider at content://com.kcam.provider/stream_preview/stream_preview.jpg
      */
     fun saveStreamPreviewToProvider(bitmap: android.graphics.Bitmap) {
         Thread {
@@ -2350,6 +2350,16 @@ object CameraHook {
                 val realImage = ir.acquireNextImage()
                 val realTimestamp = realImage?.timestamp ?: 0L
                 realImage?.close()
+
+                // [NATIVE CAMERA SMOOTHNESS FIX] Use this hardware event as the metronome
+                // for the VirtualRenderThread! This ensures Native Camera apps (which use
+                // SurfaceTexture and bypass ImageWriter) are perfectly synced to hardware vsync,
+                // eliminating the choppy Thread.sleep(33) fallback.
+                synchronized(CameraHook.frameSyncObject) {
+                    CameraHook.lastFrameSyncMs = System.currentTimeMillis()
+                    CameraHook.frameSyncObject.notifyAll()
+                }
+
                 // Sync Trigger: The real camera just took a photo! Push our spoofed frame to the app NOW!
                 // Offload the heavy JPEG compression (50ms+) so we don't stall the physical HAL
                 if (bridge != null && bridge.hasImageWriter) {
@@ -2501,7 +2511,7 @@ object CameraHook {
     fun loadConfiguration() {
         try {
             val context = AndroidAppHelper.currentApplication() ?: return
-            val uri = Uri.parse("content://com.virtucam.provider/config")
+            val uri = Uri.parse("content://com.kcam.provider/config")
             val cursor = context.contentResolver.query(uri, null, null, null, null)
             
             cursor?.use {
@@ -3173,7 +3183,7 @@ class VirtualRenderThread(
             textureRenderer = TextureRenderer(isVideo || isStream)
             textureRenderer!!.init()
             
-            val uri = Uri.parse("content://com.virtucam.provider/file")
+            val uri = Uri.parse("content://com.kcam.provider/file")
             
             // Start background maintenance thread for config polling and JPEG pre-warming
             startMaintenanceThread()

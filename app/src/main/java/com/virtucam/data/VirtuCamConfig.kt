@@ -205,8 +205,8 @@ class VirtuCamConfig(context: Context) {
     fun getFloatDirectSync(context: Context?, key: String, default: Float): Float {
         // Try multiple possible paths to overcome different process user/root mappings
         val possiblePaths = listOf(
-            "/data/user/0/com.virtucam/shared_prefs/${VirtuCamApp.PREFS_NAME}.xml",
-            "/data/data/com.virtucam/shared_prefs/${VirtuCamApp.PREFS_NAME}.xml"
+            "/data/user/0/com.kcam/shared_prefs/${VirtuCamApp.PREFS_NAME}.xml",
+            "/data/data/com.kcam/shared_prefs/${VirtuCamApp.PREFS_NAME}.xml"
         )
         
         for (path in possiblePaths) {
