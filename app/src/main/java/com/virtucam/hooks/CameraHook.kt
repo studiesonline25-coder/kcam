@@ -3454,12 +3454,14 @@ class VirtualRenderThread(
 
             // [PERF OPT 4 REMOVED] Surface throttle state previously caused jumping/crashing
 
-            // [BROWSER CAPTURE FIX] Always render to JPEG bridge surfaces.
-            // Previously gated by captureCount > 0, but this created a chicken-and-egg timing
-            // problem: the bridge RGBA cache wasn't populated when the push mechanism needed it,
-            // causing the JPEG generation to fail or timeout. By always rendering, the bridge
-            // cache is always warm and JPEG generation is instant when triggered.
-            // Cost: one extra EGL draw per frame to the JPEG surface (~negligible on modern GPUs).
+            // [CPU SATURATION FIX] Rendering to massive JPEG/YUV capture surfaces every frame
+            // causes fatal CPU bottlenecks and GC churn (e.g., 4000x3000 = 48MB copied per frame).
+            // We MUST gate rendering to capture surfaces by captureCount > 0. The fallback
+            // logic in FormatConverterBridge now safely delegates to the preview bridge if needed.
+            if (isCapture && CameraHook.captureCount <= 0) {
+                surfaceIndex++
+                continue
+            }
 
             val tStart = System.nanoTime()
             try {
