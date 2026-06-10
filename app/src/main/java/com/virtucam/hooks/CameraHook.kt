@@ -100,6 +100,7 @@ object CameraHook {
     val formatBridges = java.util.concurrent.ConcurrentHashMap<android.util.Size, FormatConverterBridge>()
     
     // Hardware vsync synchronization for VirtualRenderThread
+    val pendingHardwareFrames = java.util.concurrent.ConcurrentLinkedQueue<Long>()
     val frameSyncObject = Object()
     @Volatile var latestSensorTimestamp = 0L
     // [PERF OPT 3] Tracks the last time hardware sync was received.
@@ -2355,6 +2356,7 @@ object CameraHook {
                 // timestamp to the OpenGL compositor so the UI doesn't stutter.
                 if (realTimestamp > 0) {
                     CameraHook.latestSensorTimestamp = realTimestamp
+                    CameraHook.pendingHardwareFrames.offer(realTimestamp)
                 }
 
                 // [NATIVE CAMERA SMOOTHNESS FIX] Use this hardware event as the metronome
@@ -3289,7 +3291,22 @@ class VirtualRenderThread(
                             Matrix.translateM(matrix, 0, -0.5f, -0.5f, 0f)
                         }
 
-                        if (!drawToAllSurfaces(matrix, staticImageW, staticImageH)) break
+                        // [HARDWARE PARITY FIX] Consume exact hardware timestamps
+                        var renderPts = CameraHook.pendingHardwareFrames.poll()
+                        if (renderPts == null) {
+                            val msSinceLastSync = System.currentTimeMillis() - CameraHook.lastFrameSyncMs
+                            if (msSinceLastSync > 200) {
+                                try { Thread.sleep(33) } catch (_: InterruptedException) {}
+                                renderPts = android.os.SystemClock.elapsedRealtimeNanos()
+                            } else {
+                                synchronized(CameraHook.frameSyncObject) {
+                                    try { CameraHook.frameSyncObject.wait(100) } catch (_: Exception) {}
+                                }
+                                renderPts = CameraHook.pendingHardwareFrames.poll() ?: android.os.SystemClock.elapsedRealtimeNanos()
+                            }
+                        }
+
+                        if (!drawToAllSurfaces(matrix, staticImageW, staticImageH, renderPts)) break
                         
                         // Handle Photo/Capture Requests (Static Image)
                         synchronized(CameraHook) {
@@ -3329,6 +3346,21 @@ class VirtualRenderThread(
         lastNewFrameTimeNs = currentTimeNs
         
         while (isRunning) {
+            // [HARDWARE PARITY FIX] Consume exact hardware timestamps
+            var renderPts = CameraHook.pendingHardwareFrames.poll()
+            if (renderPts == null) {
+                val msSinceLastSync = System.currentTimeMillis() - CameraHook.lastFrameSyncMs
+                if (msSinceLastSync > 200) {
+                    try { Thread.sleep(33) } catch (_: InterruptedException) {}
+                    renderPts = android.os.SystemClock.elapsedRealtimeNanos()
+                } else {
+                    synchronized(CameraHook.frameSyncObject) {
+                        try { CameraHook.frameSyncObject.wait(100) } catch (_: Exception) {}
+                    }
+                    renderPts = CameraHook.pendingHardwareFrames.poll() ?: android.os.SystemClock.elapsedRealtimeNanos()
+                }
+            }
+
             frameCount++
             val nowNs = System.nanoTime()
             val deltaNs = nowNs - lastFrameTimeNs
@@ -3382,7 +3414,7 @@ class VirtualRenderThread(
             }
             
             val (vw, vh) = sizeProvider()
-            if (!drawToAllSurfaces(matrix, vw, vh)) break
+            if (!drawToAllSurfaces(matrix, vw, vh, renderPts)) break
 
             // Handle Photo/Capture Requests
             synchronized(CameraHook) {
@@ -3399,27 +3431,11 @@ class VirtualRenderThread(
                 }
             }
             
-            // [PERF OPT 3] Dynamic Capture-Sync Fallback
-            // Wait for real hardware vsync, but if no hardware sync notification has arrived
-            // for >200ms (indicating Camera1 API, burst requests, or no onCaptureCompleted hook),
-            // bypass the blocking wait and fall back to a standard 33ms sleep timer for smooth 30 FPS.
-            val msSinceLastSync = System.currentTimeMillis() - CameraHook.lastFrameSyncMs
-            if (msSinceLastSync > 200) {
-                // No hardware sync signal for >200ms — Camera1 or unhooked burst mode.
-                // Fall back to timer-based pacing to avoid 10 FPS lockup.
-                try { Thread.sleep(33) } catch (_: InterruptedException) {}
-            } else {
-                // Hardware sync is active — wait for the next vsync notification (up to 100ms)
-                synchronized(CameraHook.frameSyncObject) {
-                    try {
-                        CameraHook.frameSyncObject.wait(100)
-                    } catch (_: Exception) {}
-                }
-            }
+            // Sync and pacing moved to top of loop for Hardware Parity Fix
         }
     }
 
-    private fun drawToAllSurfaces(matrix: FloatArray, contentW: Int, contentH: Int): Boolean {
+    private fun drawToAllSurfaces(matrix: FloatArray, contentW: Int, contentH: Int, renderPts: Long): Boolean {
         // [Dynamic Resize] Recreate EGL surfaces if browser renegotiated resolution
         if (CameraHook.pendingSurfaceResize.compareAndSet(true, false)) {
             recreateEglSurfaces()
@@ -3539,7 +3555,6 @@ class VirtualRenderThread(
                     colorIntensity = screenColor.intensity
                 )
 
-                val renderPts = if (CameraHook.latestSensorTimestamp > 0) CameraHook.latestSensorTimestamp else android.os.SystemClock.elapsedRealtimeNanos()
                 eglCore?.setPresentationTime(es, renderPts)
                 
                 // [PERF OPT 4 REMOVED] Measure swapBuffers time, but do NOT throttle.
