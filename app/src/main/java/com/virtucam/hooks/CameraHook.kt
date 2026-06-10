@@ -2350,6 +2350,12 @@ object CameraHook {
                 val realImage = ir.acquireNextImage()
                 val realTimestamp = realImage?.timestamp ?: 0L
                 realImage?.close()
+                
+                // [NATIVE CAMERA SMOOTHNESS FIX 2] Provide the perfectly stable hardware
+                // timestamp to the OpenGL compositor so the UI doesn't stutter.
+                if (realTimestamp > 0) {
+                    CameraHook.latestSensorTimestamp = realTimestamp
+                }
 
                 // [NATIVE CAMERA SMOOTHNESS FIX] Use this hardware event as the metronome
                 // for the VirtualRenderThread! This ensures Native Camera apps (which use
@@ -3337,6 +3343,11 @@ class VirtualRenderThread(
             } else {
                 framesSinceNewContent++
             }
+            
+            // [PIPELINE PHASE-LOCK] Tell the video player it can decode the next frame now.
+            // This guarantees the video decodes perfectly 1:1 with the Native Camera's frame requests.
+            videoPlayer?.requestNextFrame()
+            
             mediaSurfaceTexture?.getTransformMatrix(matrix)
             
             // ANTI-DETECTION: Temporal motion smoothing

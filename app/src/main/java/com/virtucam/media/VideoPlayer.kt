@@ -42,6 +42,12 @@ class VideoPlayer(
     private var playThread: Thread? = null
     @Volatile
     private var isPlaying = false
+    
+    private val frameSemaphore = java.util.concurrent.Semaphore(1) // Start with 1 permit for the first frame
+
+    fun requestNextFrame() {
+        frameSemaphore.release()
+    }
 
     /**
      * Start playback in a background thread
@@ -181,30 +187,12 @@ class VideoPlayer(
                 }
                 else -> {
                     if (outIndex >= 0) {
-                        // === PRECISE FRAME PACING (Feature 7 - Updated) ===
-                        // Real hardware delivers frames with strict microsecond precision.
-                        // Removed random synthetic jitter that triggers "screensharing" flags.
-                        val targetNs = startNs + (info.presentationTimeUs * 1000L)
-                        val nowNs = System.nanoTime()
-                        val delayNs = targetNs - nowNs
+                        // === PRECISE PIPELINE PHASE-LOCK ===
+                        // We wait for the VirtualRenderThread to request the next frame.
+                        // This guarantees perfect 1:1 synchronization with the physical camera HAL.
+                        frameSemaphore.acquire()
 
-                        if (delayNs > 0) {
-                            // Use LockSupport for absolute hardware-like precision without
-                            // busy-waiting/spin-waiting which causes CPU thermal throttling.
-                            LockSupport.parkNanos(delayNs)
-                        }
-                        // If delayNs <= 0, we're behind schedule — render immediately (no drop)
-
-                        var doRender = info.size != 0
-                        
-                        // === ORGANIC MICRO-STUTTER SIMULATION (Feature 8) ===
-                        // A perfectly 30.000 FPS feed with 0 drops is synthetically perfect.
-                        // We simulate a 1-frame GC stall / thermal throttle roughly every ~400 frames (0.25% chance).
-                        // This causes a single 66ms interval, making the pacing curve organic.
-                        if (doRender && Math.random() < 0.0025) {
-                            doRender = false
-                            Log.d(TAG, "Simulating organic frame drop (thermal/GC stutter)")
-                        }
+                        val doRender = info.size != 0
                         
                         val tBeforeRender = System.nanoTime()
                         // Release buffer and render it to surface
