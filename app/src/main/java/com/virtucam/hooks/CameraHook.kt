@@ -3425,6 +3425,7 @@ class VirtualRenderThread(
         while (it.hasNext()) {
             val it_triple = it.next()
             val es = it_triple.first
+            val format = it_triple.third
             
             val surfaceIdx = eglSurfaceTargets.indexOfFirst { triple -> triple.first === es }
             val originalSurface = if (surfaceIdx >= 0 && surfaceIdx < originalSurfaceBackings.size) originalSurfaceBackings[surfaceIdx] else null
