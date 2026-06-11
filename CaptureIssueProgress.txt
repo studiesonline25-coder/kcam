@@ -1,0 +1,25 @@
+# VirtuCam Capture Issue Progress Log
+
+## Historical Findings & Commits
+
+**Case 1: Native Camera Cross-Stream Deadlock (Commit f9933d0)**
+* **Finding:** Native Camera uses two streams simultaneously (1080p for preview, 12MP for capture) and expects synchronous `ImageWriter` pushes.
+* **Fix Applied:** We fixed cross-stream `ImageWriter` deadlocks and ensured the capture surface correctly intercepts `acquireNextImage`.
+
+**Case 2: The 500ms Timeout Limit (Commit a197613)**
+* **Finding:** The app requested a massive 12-Megapixel image. The phone's CPU needed ~4 seconds to compress it into a JPEG using software `Bitmap.compress()`. However, the hook `overwriteImageWithLatestJpeg` was hardcoded to give up after exactly 500 milliseconds, resulting in an aggressive buffer scrub and a "photo capture failed" error.
+* **Fix Applied:** Increased the timeout loop from 500ms (25 iterations) to 5000ms (250 iterations) to give the CPU enough time to finish compressing.
+
+**Case 3: The "Thread Bomb" (Commit a757d94)**
+* **Finding:** Because the 12-Megapixel compression was taking 4 seconds, the `VirtuCam_Maintenance` thread (which checks for stuck processes) incorrectly assumed the 4-second process was permanently stuck. It forcefully reset the locks and spawned a second compression thread, causing compounding CPU overload and crashing the capture pipeline.
+* **Fix Applied:** Increased the background thread stuck-detection timeout from 5000ms to 15000ms to ensure the maintenance thread wouldn't accidentally trigger a thread bomb.
+
+## The Preview Degradation Issue & User Discovery
+
+**Case 4: The "Chicken-and-Egg" Timing Bug (User Finding, 06-11)**
+* **Context:** In an earlier attempt to stop the CPU from overheating due to 12MP JPEG compressions, I completely stopped `VirtualRenderThread` from drawing to any capture streams unless the user actively tapped the capture button (`captureCount > 0`). 
+* **User Finding 1:** The user noted that Native Camera's preview became "jumping jumping" after this change. This happened because Native Camera uses the ZSL (Zero Shutter Lag) capture stream to drive its viewfinder preview, so starving it of frames broke the preview.
+* **User Finding 2 (The Breakthrough):** The user correctly pointed out that if we stop drawing to the capture stream, then at the exact moment the user taps capture and `overwriteImageWithLatestJpeg` is called, the buffer will *not be ready*. By starving the buffer, we created a chicken-and-egg timing problem where the hook is forced to wait for a cold buffer to wake up and draw, which heavily risks timing out and causing "photo capture failed".
+* **The Final Fix (Current Commit):**
+    1. **Never Stop Drawing:** Removed the `captureCount > 0` gate. `VirtualRenderThread` now draws to ALL streams (Preview, ZSL, JPEG) continuously. This guarantees that Native Camera's preview is flawlessly smooth, and it guarantees that `overwriteImageWithLatestJpeg` always has a warm, instant buffer ready when requested.
+    2. **Surgical CPU Optimization:** To prevent the 30fps drawing from melting the phone's processor, we explicitly disabled ML Kit Face Detection and background JPEG Pre-warming for any stream larger than 1080p (> 2.1 Megapixels). The GPU handles the drawing, but the CPU skips the heavy lifting.

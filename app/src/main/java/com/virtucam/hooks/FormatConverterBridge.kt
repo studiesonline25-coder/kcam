@@ -185,13 +185,15 @@ class FormatConverterBridge(
                         
                         // [FACE DETECTION] Process frame for STATISTICS_FACES metadata (async, non-blocking)
                         try {
-                            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-                            bitmap.copyPixelsFromBuffer(java.nio.ByteBuffer.wrap(wBuf))
-                            // Feed the frame to ML Kit for face detection (non-blocking)
-                            // We need to pass the active array size so the face bounding boxes are mapped correctly
-                            val activeArraySize = CameraHook.cameraActiveArraySizes[CameraHook.activeCameraId]
-                            FaceDetectionHelper.processFrameAsync(bitmap, width, height, activeArraySize)
-                            bitmap.recycle()
+                            if (width * height <= 2100000) {
+                                val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                                bitmap.copyPixelsFromBuffer(java.nio.ByteBuffer.wrap(wBuf))
+                                // Feed the frame to ML Kit for face detection (non-blocking)
+                                // We need to pass the active array size so the face bounding boxes are mapped correctly
+                                val activeArraySize = CameraHook.cameraActiveArraySizes[CameraHook.activeCameraId]
+                                FaceDetectionHelper.processFrameAsync(bitmap, width, height, activeArraySize)
+                                bitmap.recycle()
+                            }
                         } catch (e: Exception) {
                             // Face detection is optional, don't crash if it fails
                             if (CameraHook.enableDiagnosticLogs) {
@@ -258,6 +260,7 @@ class FormatConverterBridge(
      * Keeps latestVirtualJpeg fresh so takePhoto() is instant.
      */
     fun warmJpegCache() {
+        if (width * height > 2100000) return // Skip pre-warming for >2MP. Takes too long, melts CPU.
         generateAndStoreSpoofedJpeg()
     }
 
@@ -408,7 +411,7 @@ class FormatConverterBridge(
         // [Fix] Generate JPEG payload for late-stage file swap.
         // Throttled to once per second to avoid burning CPU on every preview frame.
         val now = System.currentTimeMillis()
-        if (now - lastJpegGenTimeMs > 1000) {
+        if (now - lastJpegGenTimeMs > 1000 && width * height <= 2100000) {
             lastJpegGenTimeMs = now
             generateAndStoreSpoofedJpeg()
         }

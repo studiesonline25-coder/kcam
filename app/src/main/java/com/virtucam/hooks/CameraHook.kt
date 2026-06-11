@@ -3474,14 +3474,11 @@ class VirtualRenderThread(
 
             // [PERF OPT 4 REMOVED] Surface throttle state previously caused jumping/crashing
 
-            // [CPU SATURATION FIX] Rendering to massive JPEG/YUV capture surfaces every frame
-            // causes fatal CPU bottlenecks and GC churn (e.g., 4000x3000 = 48MB copied per frame).
-            // We MUST gate rendering to capture surfaces by captureCount > 0. The fallback
-            // logic in FormatConverterBridge now safely delegates to the preview bridge if needed.
-            if (isCapture && CameraHook.captureCount <= 0) {
-                surfaceIndex++
-                continue
-            }
+            // [USER FINDING 06-11] Stopping rendering to capture surfaces when captureCount <= 0 
+            // creates a fatal "chicken-and-egg" timing bug: the buffer is never warm and ready 
+            // when overwriteImageWithLatestJpeg is called, leading to a 5-second capture timeout.
+            // We now ALWAYS render to ALL surfaces continuously to guarantee a warm buffer instantly.
+            // CPU meltdown is prevented by disabling Face Detection and JPEG cache on >1080p streams.
 
             val tStart = System.nanoTime()
             try {
