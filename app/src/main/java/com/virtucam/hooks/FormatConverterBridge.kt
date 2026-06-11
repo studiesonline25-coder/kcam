@@ -63,6 +63,7 @@ class FormatConverterBridge(
 
     private val bufferLock = Any()
     @Volatile private var isBufferReady = false
+    @Volatile var forceRenderRequest = false
     private var writeBuffer: ByteArray? = null
     private var readyBuffer: ByteArray? = null
     private var conversionBuffer: ByteArray? = null
@@ -407,12 +408,25 @@ class FormatConverterBridge(
         
         // [Fix] Generate JPEG payload for late-stage file swap.
         // Throttled to once per second to avoid burning CPU on every preview frame.
+        // Only run for streams <= 1080p to prevent OOM / CPU meltdown on 12MP streams.
         val now = System.currentTimeMillis()
-        if (now - lastJpegGenTimeMs > 1000) {
+        if (now - lastJpegGenTimeMs > 1000 && (width * height <= 2100000)) {
             lastJpegGenTimeMs = now
             generateAndStoreSpoofedJpeg()
         }
         
+        // [ON-DEMAND RENDER] Command GPU to render a frame if buffer is cold
+        if (!isBufferReady || readyBuffer == null) {
+            Log.d(TAG, "CAPT_LOG [4c]: YUV buffer cold. Forcing render request and waiting.")
+            forceRenderRequest = true
+            
+            var waitCount = 0
+            while (!isBufferReady && waitCount < 250) { 
+                Thread.sleep(20)
+                waitCount++
+            }
+        }
+
         // [GREEN SCREEN FIX] Fallback to last good frame if current buffer is stale
         if (!isBufferReady || readyBuffer == null || conversionBuffer == null) {
             val fallback = synchronized(lastGoodLock) { lastGoodRgba?.copyOf() }
@@ -895,16 +909,17 @@ class FormatConverterBridge(
 
             // If no cached JPEG, generate synchronously. Use PREVIEW bridge if capture bridge is cold.
             if (jpegBytes == null) {
+                Log.d(TAG, "CAPT_LOG [3c]: JPEG buffer cold. Forcing render request and waiting.")
+                forceRenderRequest = true
+                
+                var waitCount = 0
+                while (!isBufferReady && waitCount < 250) { 
+                    Thread.sleep(20)
+                    waitCount++
+                }
+
                 if (isBufferReady) {
                     jpegBytes = generateJpegSync()
-                } else {
-                    // [FIX] Fallback immediately to PREVIEW bridge if JPEG bridge is cold.
-                    // This prevents 1-second timeouts that crash the Native Camera.
-                    val activePreviewBridge = CameraHook.formatBridges.values.firstOrNull { it.isBufferReady }
-                    if (activePreviewBridge != null) {
-                        Log.w(TAG, "CAPT_LOG [3c]: JPEG buffer cold. Generating synchronously from PREVIEW bridge.")
-                        jpegBytes = activePreviewBridge.generateJpegSync()
-                    }
                 }
                 
                 if (jpegBytes != null) {

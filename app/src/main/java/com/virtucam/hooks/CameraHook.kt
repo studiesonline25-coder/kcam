@@ -1328,14 +1328,7 @@ object CameraHook {
                                             CameraHook.lastFrameSyncMs = System.currentTimeMillis()
                                             CameraHook.frameSyncObject.notifyAll()
                                         }
-                                        activeBridges.forEach { 
-                                            // [HYBRID TUNING] NEVER push to JPEG bridges via Writer. 
-                                            // The synchronous acquireNextImage hook is more reliable and 
-                                            // avoids the "dequeue buffer failed" collisions we see in logs.
-                                            if (it.outputFormat == 256) return@forEach
-                                            
-                                            it.pushLatestFrameToWriter(timestamp) 
-                                        }
+                                        // [ON-DEMAND RENDER] Removed pushLatestFrameToWriter
                                     }
                                 } catch (_: Exception) {}
 
@@ -1405,10 +1398,7 @@ object CameraHook {
                                             CameraHook.lastFrameSyncMs = System.currentTimeMillis()
                                             CameraHook.frameSyncObject.notifyAll()
                                         }
-                                        activeBridges.forEach { 
-                                            if (it.outputFormat == 256) return@forEach
-                                            it.pushLatestFrameToWriter(timestamp) 
-                                        }
+                                        // [ON-DEMAND RENDER] Removed pushLatestFrameToWriter
                                     }
                                 } catch (_: Exception) {}
 
@@ -2201,6 +2191,8 @@ object CameraHook {
                             if (bridge != null) {
                                 Log.e(TAG, "CAPT_LOG [4b]: Native Camera acquireNextImage (JPEG 256) overriding directly. Image: ${image.width}x${image.height}")
                                 bridge.overwriteImageWithLatestJpeg(image)
+                                // [ON-DEMAND RENDER] Trigger immediate draw for Capture
+                                bridge.forceRenderRequest = true
                                 Log.d(TAG, "VirtuCam_Hook: Overwrote JPEG capture ${image.width}x${image.height}")
                             } else {
                                 // No matching bridge by size - try any bridge as a fallback
@@ -2208,6 +2200,8 @@ object CameraHook {
                                 if (anyBridge != null) {
                                     Log.e(TAG, "CAPT_LOG [4c]: Native Camera acquireNextImage (JPEG 256) overriding via fallback bridge. Image: ${image.width}x${image.height}")
                                     anyBridge.overwriteImageWithLatestJpeg(image)
+                                    // [ON-DEMAND RENDER] Trigger immediate draw for Capture
+                                    anyBridge.forceRenderRequest = true
                                     Log.d(TAG, "VirtuCam_Hook: Overwrote JPEG capture (fallback bridge) ${image.width}x${image.height}")
                                 } else {
                                     Log.e(TAG, "CAPT_LOG [4d]: Native Camera acquireNextImage (JPEG 256) failed - no bridge available!")
@@ -2216,7 +2210,7 @@ object CameraHook {
                         }
                         else -> {
                             // Unknown format - try YUV overwrite as a best-effort
-                            if (bridge != null && !bridge.hasImageWriter && image.planes.size >= 3) {
+                            if (bridge != null && image.planes.size >= 3) {
                                 bridge.overwriteImageWithLatestYuv(image, image.timestamp)
                             }
                         }
@@ -2368,13 +2362,7 @@ object CameraHook {
                     CameraHook.frameSyncObject.notifyAll()
                 }
 
-                // Sync Trigger: The real camera just took a photo! Push our spoofed frame to the app NOW!
-                // Offload the heavy JPEG compression (50ms+) so we don't stall the physical HAL
-                if (bridge != null && bridge.hasImageWriter) {
-                    dummySinkHandler?.post {
-                        bridge.pushLatestFrameToWriter(realTimestamp)
-                    }
-                }
+                // [ON-DEMAND RENDER] No-op for dummy sinks
             } catch (e: Exception) {
                 // Ignore errors during discard
             }
@@ -2660,9 +2648,10 @@ object CameraHook {
                                 val w = size.first
                                 val h = size.second
                                 
-                                val isCapture = captureSurfaces.contains(targetSurface)
-                                val isVideoSurface = videoSurfaces.contains(targetSurface)
                                 val format = SurfaceUtils.getSurfaceFormat(targetSurface)
+                                val size2 = SurfaceUtils.getSurfaceSize(targetSurface)
+                                val isCapture = (format == 256) || (size2.first * size2.second > 2100000)
+                                val isVideoSurface = videoSurfaces.contains(targetSurface)
                                 val isPreview = (format == 0x22 || format == 0x1)
                                 
                                 // [JPEG DIRECT OVERWRITE] For JPEG surfaces, ALWAYS use direct overwrite.
@@ -3313,10 +3302,7 @@ class VirtualRenderThread(
                             while (CameraHook.captureCount > 0) {
                                 val capture = CameraHook.captureQueue.poll()
                                 val timestamp = capture?.first ?: android.os.SystemClock.elapsedRealtimeNanos()
-                                Log.e(TAG, "CAPT_LOG [2]: VirtualRenderThread draining captureQueue. Pushing to bridges. captureCount=${CameraHook.captureCount}")
-                                CameraHook.formatBridges.values.forEach { 
-                                    it.pushLatestFrameToWriter(timestamp)
-                                }
+                                Log.e(TAG, "CAPT_LOG [2]: VirtualRenderThread draining captureQueue. captureCount=${CameraHook.captureCount}")
                                 CameraHook.captureCount--
                                 
                                 // [SAFETY VALVE] Prevent captureCount runaway (fixes "camera refuses to open" lockup)
@@ -3416,17 +3402,10 @@ class VirtualRenderThread(
             val (vw, vh) = sizeProvider()
             if (!drawToAllSurfaces(matrix, vw, vh, renderPts)) break
 
-            // Handle Photo/Capture Requests
+            // [ON-DEMAND RENDER] Capture Requests are now handled safely in bridge fallback wait loops
             synchronized(CameraHook) {
                 while (CameraHook.captureCount > 0) {
-                    val capture = CameraHook.captureQueue.poll()
-                    val timestamp = capture?.first ?: android.os.SystemClock.elapsedRealtimeNanos()
-                    
-                    CameraHook.latestVirtualJpegArea = 0
-                    
-                    CameraHook.formatBridges.values.forEach { 
-                        it.pushLatestFrameToWriter(timestamp) 
-                    }
+                    CameraHook.captureQueue.poll()
                     CameraHook.captureCount--
                 }
             }
@@ -3440,27 +3419,28 @@ class VirtualRenderThread(
         if (CameraHook.pendingSurfaceResize.compareAndSet(true, false)) {
             recreateEglSurfaces()
         }
-        // [PERF OPT 4] Surface throttle state: tracks consecutive slow swaps per surface index
-        // Surfaces whose swapBuffers blocks >25ms are likely inactive (consumer not dequeuing).
-        // We throttle rendering to them (1 in 10 frames) to prevent stalling the preview.
         
         val it = eglSurfaceTargets.iterator()
         var surfaceIndex = 0
         while (it.hasNext()) {
             val it_triple = it.next()
             val es = it_triple.first
-            val isCapture = it_triple.second
-            val format = it_triple.third
+            
+            val surfaceIdx = eglSurfaceTargets.indexOfFirst { triple -> triple.first === es }
+            val originalSurface = if (surfaceIdx >= 0 && surfaceIdx < originalSurfaceBackings.size) originalSurfaceBackings[surfaceIdx] else null
+            
+            val bridge = CameraHook.formatBridges.values.firstOrNull { it.inputSurface === originalSurface || it.outputSurface === originalSurface }
+            val isCapture = bridge?.let { it.outputFormat == 256 || (it.width * it.height > 2100000) } ?: it_triple.second
 
-            // [PERF OPT 4 REMOVED] Surface throttle state previously caused jumping/crashing
-
-            // [CPU SATURATION FIX] Rendering to massive JPEG/YUV capture surfaces every frame
-            // causes fatal CPU bottlenecks and GC churn (e.g., 4000x3000 = 48MB copied per frame).
-            // We MUST gate rendering to capture surfaces by captureCount > 0. The fallback
-            // logic in FormatConverterBridge now safely delegates to the preview bridge if needed.
-            if (isCapture && CameraHook.captureCount <= 0) {
-                surfaceIndex++
-                continue
+            // [ON-DEMAND RENDER] Gate capture surfaces behind forceRenderRequest
+            if (isCapture && bridge != null) {
+                if (!bridge.forceRenderRequest) {
+                    surfaceIndex++
+                    continue
+                }
+                // GPU is commanding to draw ONE frame. Reset the flag instantly.
+                bridge.forceRenderRequest = false
+                Log.d("VirtuCam_Render", "CAPT_LOG [ON-DEMAND]: GPU Rendering 1 frame for Capture Surface")
             }
 
             val tStart = System.nanoTime()
@@ -3470,8 +3450,6 @@ class VirtualRenderThread(
                 var vh = eglCore!!.querySurface(es, android.opengl.EGL14.EGL_HEIGHT)
                 // Before the first dequeue, eglQuerySurface often returns 0×0; then TextureRenderer
                 // skips rotation (identity MVP) and buffers stay "upright" wrongly.
-                val surfaceIdx = eglSurfaceTargets.indexOfFirst { triple -> triple.first === es }
-                val originalSurface = if (surfaceIdx >= 0 && surfaceIdx < originalSurfaceBackings.size) originalSurfaceBackings[surfaceIdx] else null
                 val isSurfaceTexture = originalSurface != null && surfaceSizes.containsKey(originalSurface)
                 val isSurfaceView = !isCapture && !isSurfaceTexture
 
