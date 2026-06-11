@@ -1249,7 +1249,7 @@ object CameraHook {
                                         }
 
                                         // 1.5 Intercept capture count for bridge triggering
-                                        if (param.method.name == "capture") {
+                                        if (param.method.name == "capture" || param.method.name == "captureBurst") {
                                             synchronized(CameraHook) {
                                                 captureCount++
                                                 captureQueue.offer(Pair(sensorTimestamp, captureCount))
@@ -1328,13 +1328,16 @@ object CameraHook {
                                             CameraHook.lastFrameSyncMs = System.currentTimeMillis()
                                             CameraHook.frameSyncObject.notifyAll()
                                         }
-                                        activeBridges.forEach { 
+                                        val targets = request.targets
+                                        activeBridges.forEach { bridge ->
                                             // [HYBRID TUNING] NEVER push to JPEG bridges via Writer. 
                                             // The synchronous acquireNextImage hook is more reliable and 
                                             // avoids the "dequeue buffer failed" collisions we see in logs.
-                                            if (it.outputFormat == 256) return@forEach
+                                            if (bridge.outputFormat == 256) return@forEach
                                             
-                                            it.pushLatestFrameToWriter(timestamp) 
+                                            if (targets.contains(bridge.outputSurface)) {
+                                                bridge.pushLatestFrameToWriter(timestamp) 
+                                            }
                                         }
                                     }
                                 } catch (_: Exception) {}
@@ -1387,8 +1390,8 @@ object CameraHook {
                                     metadataCourierMap.keys.removeIf { it < cutoff }
                                 }
 
-                                // captureSingleRequest is always a single capture (not repeating)
-                                if (param.method.name == "captureSingleRequest") {
+                                // captureSingleRequest or captureBurstRequests
+                                if (param.method.name == "captureSingleRequest" || param.method.name == "captureBurstRequests") {
                                     synchronized(CameraHook) {
                                         captureCount++
                                         captureQueue.offer(Pair(sensorTimestamp, captureCount))
@@ -1405,9 +1408,12 @@ object CameraHook {
                                             CameraHook.lastFrameSyncMs = System.currentTimeMillis()
                                             CameraHook.frameSyncObject.notifyAll()
                                         }
-                                        activeBridges.forEach { 
-                                            if (it.outputFormat == 256) return@forEach
-                                            it.pushLatestFrameToWriter(timestamp) 
+                                        val targets = request.targets
+                                        activeBridges.forEach { bridge -> 
+                                            if (bridge.outputFormat == 256) return@forEach
+                                            if (targets.contains(bridge.outputSurface)) {
+                                                bridge.pushLatestFrameToWriter(timestamp) 
+                                            }
                                         }
                                     }
                                 } catch (_: Exception) {}
@@ -3316,8 +3322,10 @@ class VirtualRenderThread(
                                 val capture = CameraHook.captureQueue.poll()
                                 val timestamp = capture?.first ?: android.os.SystemClock.elapsedRealtimeNanos()
                                 Log.e(TAG, "CAPT_LOG [2]: VirtualRenderThread draining captureQueue. Pushing to bridges. captureCount=${CameraHook.captureCount}")
-                                CameraHook.formatBridges.values.forEach { 
-                                    it.pushLatestFrameToWriter(timestamp)
+                                CameraHook.formatBridges.values.forEach { bridge ->
+                                    if (bridge.outputSurface != null && CameraHook.captureSurfaces.contains(bridge.outputSurface)) {
+                                        bridge.pushLatestFrameToWriter(timestamp)
+                                    }
                                 }
                                 CameraHook.captureCount--
                                 
@@ -3426,8 +3434,10 @@ class VirtualRenderThread(
                     
                     CameraHook.latestVirtualJpegArea = 0
                     
-                    CameraHook.formatBridges.values.forEach { 
-                        it.pushLatestFrameToWriter(timestamp) 
+                    CameraHook.formatBridges.values.forEach { bridge ->
+                        if (bridge.outputSurface != null && CameraHook.captureSurfaces.contains(bridge.outputSurface)) {
+                            bridge.pushLatestFrameToWriter(timestamp) 
+                        }
                     }
                     CameraHook.captureCount--
                 }

@@ -18,3 +18,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "VirtuCam"
 include(":app")
+include(":analyzer-sdk")
