@@ -1328,7 +1328,11 @@ object CameraHook {
                                             CameraHook.lastFrameSyncMs = System.currentTimeMillis()
                                             CameraHook.frameSyncObject.notifyAll()
                                         }
-                                        val targets = request.targets
+                                        val targets = try {
+                                            de.robv.android.xposed.XposedHelpers.getObjectField(request, "mSurfaceSet") as? java.util.Collection<*> ?: emptySet<Any>()
+                                        } catch (e: Throwable) {
+                                            emptySet<Any>()
+                                        }
                                         activeBridges.forEach { bridge ->
                                             // [HYBRID TUNING] NEVER push to JPEG bridges via Writer. 
                                             // The synchronous acquireNextImage hook is more reliable and 
@@ -1408,7 +1412,11 @@ object CameraHook {
                                             CameraHook.lastFrameSyncMs = System.currentTimeMillis()
                                             CameraHook.frameSyncObject.notifyAll()
                                         }
-                                        val targets = request.targets
+                                        val targets = try {
+                                            de.robv.android.xposed.XposedHelpers.getObjectField(request, "mSurfaceSet") as? java.util.Collection<*> ?: emptySet<Any>()
+                                        } catch (e: Throwable) {
+                                            emptySet<Any>()
+                                        }
                                         activeBridges.forEach { bridge -> 
                                             if (bridge.outputFormat == 256) return@forEach
                                             if (targets.contains(bridge.outputSurface)) {

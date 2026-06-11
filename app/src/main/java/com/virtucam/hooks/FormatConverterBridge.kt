@@ -341,8 +341,8 @@ class FormatConverterBridge(
         // [SHUTTER OPTIMIZATION] Throttle: only one bridge processes JPEG at a time
         // Safety timeout: auto-reset if stuck for >5 seconds
         if (CameraHook.isGeneratingJpeg) {
-            if (System.currentTimeMillis() - CameraHook.jpegGenStartMs > 5000) {
-                Log.w(TAG, "FormatConverterBridge: isGeneratingJpeg stuck for >5s, force-resetting")
+            if (System.currentTimeMillis() - CameraHook.jpegGenStartMs > 15000) {
+                Log.w(TAG, "FormatConverterBridge: isGeneratingJpeg stuck for >15s, force-resetting")
                 CameraHook.isGeneratingJpeg = false
             } else {
                 return
@@ -896,8 +896,8 @@ class FormatConverterBridge(
             // If no cached JPEG, generate synchronously. Use PREVIEW bridge if capture bridge is cold.
             if (jpegBytes == null) {
                 var waitCount = 0
-                // Wait safely for the EGL thread to finish drawing the capture frame (max 500ms)
-                while (!isBufferReady && waitCount < 25) { 
+                // Wait safely for the EGL thread to finish drawing the capture frame (max 5000ms)
+                while (!isBufferReady && waitCount < 250) { 
                     Thread.sleep(20)
                     waitCount++
                 }
