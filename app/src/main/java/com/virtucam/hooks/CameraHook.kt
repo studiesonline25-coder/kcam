@@ -1328,7 +1328,12 @@ object CameraHook {
                                             CameraHook.lastFrameSyncMs = System.currentTimeMillis()
                                             CameraHook.frameSyncObject.notifyAll()
                                         }
-                                        val targets = request.targets
+                                        val targets = try {
+                                            val getTargetsMethod = android.hardware.camera2.CaptureRequest::class.java.getDeclaredMethod("getTargets")
+                                            getTargetsMethod.isAccessible = true
+                                            getTargetsMethod.invoke(request) as? Collection<*>
+                                        } catch (e: Throwable) { null }
+                                        
                                         activeBridges.forEach { bridge ->
                                             // [HYBRID TUNING] NEVER push to JPEG bridges via Writer. 
                                             // The synchronous acquireNextImage hook is more reliable and 
@@ -1338,8 +1343,12 @@ object CameraHook {
                                             // [FIX] Targeted pushing: Only push to bridges that are ACTUALLY requested!
                                             // Prevents clogging the massive capture ImageReader with 30fps preview frames.
                                             if (bridge.outputSurface != null) {
-                                                val dummy = surfaceMap[bridge.outputSurface]
-                                                if (targets.contains(dummy) || targets.contains(bridge.outputSurface)) {
+                                                if (targets != null) {
+                                                    val dummy = surfaceMap[bridge.outputSurface]
+                                                    if (targets.contains(dummy) || targets.contains(bridge.outputSurface)) {
+                                                        bridge.pushLatestFrameToWriter(timestamp)
+                                                    }
+                                                } else {
                                                     bridge.pushLatestFrameToWriter(timestamp)
                                                 }
                                             }
@@ -1413,14 +1422,23 @@ object CameraHook {
                                             CameraHook.lastFrameSyncMs = System.currentTimeMillis()
                                             CameraHook.frameSyncObject.notifyAll()
                                         }
-                                        val targets = request.targets
+                                        val targets = try {
+                                            val getTargetsMethod = android.hardware.camera2.CaptureRequest::class.java.getDeclaredMethod("getTargets")
+                                            getTargetsMethod.isAccessible = true
+                                            getTargetsMethod.invoke(request) as? Collection<*>
+                                        } catch (e: Throwable) { null }
+                                        
                                         activeBridges.forEach { bridge ->
                                             if (bridge.outputFormat == 256) return@forEach
                                             
                                             // [FIX] Targeted pushing: Only push to bridges that are ACTUALLY requested!
                                             if (bridge.outputSurface != null) {
-                                                val dummy = surfaceMap[bridge.outputSurface]
-                                                if (targets.contains(dummy) || targets.contains(bridge.outputSurface)) {
+                                                if (targets != null) {
+                                                    val dummy = surfaceMap[bridge.outputSurface]
+                                                    if (targets.contains(dummy) || targets.contains(bridge.outputSurface)) {
+                                                        bridge.pushLatestFrameToWriter(timestamp)
+                                                    }
+                                                } else {
                                                     bridge.pushLatestFrameToWriter(timestamp)
                                                 }
                                             }
@@ -3006,6 +3024,8 @@ class VirtualRenderThread(
     private val sensorOrientation: Int = 0
 ) : Thread("VirtuCam-RenderThread") {
     
+    private var renderTickCount = 0L
+    
     @Volatile
     private var isRunning = true
     
@@ -3452,6 +3472,7 @@ class VirtualRenderThread(
     }
 
     private fun drawToAllSurfaces(matrix: FloatArray, contentW: Int, contentH: Int, renderPts: Long): Boolean {
+        renderTickCount++
         // [Dynamic Resize] Recreate EGL surfaces if browser renegotiated resolution
         if (CameraHook.pendingSurfaceResize.compareAndSet(true, false)) {
             recreateEglSurfaces()
@@ -3477,7 +3498,7 @@ class VirtualRenderThread(
             if (isCapture && CameraHook.captureCount <= 0) {
                 // [WARM CACHE FIX] Render once every 30 frames (1s) to keep the ImageReader warm
                 // for standalone JPEG bridges, without burning the CPU.
-                if (diagCallCount % 30 != 0L) {
+                if (renderTickCount % 30 != 0L) {
                     surfaceIndex++
                     continue
                 }
