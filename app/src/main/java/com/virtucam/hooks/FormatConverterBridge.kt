@@ -1106,33 +1106,64 @@ class FormatConverterBridge(
             }
             
             val finalLimit: Int
-            val finalTargetSize = jpegBytes.size + (exifBytes?.size ?: 0)
+            val finalTargetSize = jpegBytes.size
             if (finalTargetSize > bufCap) {
                 Log.e(TAG, "FormatConverterBridge: CRITICAL! Spoofed JPEG STILL TOO BIG. Scrubbing hardware buffer to prevent leak!")
                 scrubBufferToBlack(jpegBuffer)
                 return 
             } else {
-                // BEFORE clearing the buffer, extract the last 32 bytes which may contain the camera3_jpeg_blob
-                val blobBackup = ByteArray(32)
-                try {
-                    jpegBuffer.position(Math.max(0, jpegBuffer.capacity() - 32))
-                    jpegBuffer.get(blobBackup)
-                } catch (e: Exception) {}
-
-                try {
-                    jpegBuffer.clear()
-                    val zeroArray = ByteArray(Math.min(1024, jpegBuffer.capacity()))
-                    var written = 0
-                    while (written < jpegBuffer.capacity()) {
-                        val toWrite = Math.min(zeroArray.size, jpegBuffer.capacity() - written)
-                        jpegBuffer.put(zeroArray, 0, toWrite)
-                        written += toWrite
+                       // --- EXIF PRESERVATION MAGIC ---
+            // Extract EXIF (APP1) from the ORIGINAL hardware buffer before we overwrite it.
+            var exifBytes: ByteArray? = null
+            try {
+                jpegBuffer.position(0)
+                val header = ByteArray(2)
+                jpegBuffer.get(header)
+                if (header[0] == 0xFF.toByte() && header[1] == 0xD8.toByte()) {
+                    while (jpegBuffer.remaining() >= 4) {
+                        val marker = ByteArray(2)
+                        jpegBuffer.get(marker)
+                        val lenBytes = ByteArray(2)
+                        jpegBuffer.get(lenBytes)
+                        val len = ((lenBytes[0].toInt() and 0xFF) shl 8) or (lenBytes[1].toInt() and 0xFF)
+                        
+                        if (marker[0] == 0xFF.toByte() && marker[1] == 0xE1.toByte()) {
+                            // Found APP1 (EXIF)!
+                            Log.e(TAG, "[TELEMETRY] Found APP1 EXIF marker of length $len")
+                            val fullExifLen = len + 2
+                            jpegBuffer.position(jpegBuffer.position() - 4) // Back up to marker start
+                            val exif = ByteArray(fullExifLen)
+                            jpegBuffer.get(exif)
+                            exifBytes = exif
+                            break
+                        } else {
+                            // Skip other markers
+                            jpegBuffer.position(jpegBuffer.position() + len - 2)
+                        }
                     }
-                    jpegBuffer.clear()
-                } catch (_: Exception) {
-                    jpegBuffer.clear()
                 }
+            } catch (e: Exception) {
+                Log.e(TAG, "[TELEMETRY] Failed to extract EXIF from hardware buffer", e)
+            }
 
+            // BEFORE clearing the buffer, extract the last 32 bytes which may contain the camera3_jpeg_blob
+            val blobBackup = ByteArray(32)
+            try {
+                jpegBuffer.position(Math.max(0, jpegBuffer.capacity() - 32))
+                jpegBuffer.get(blobBackup)
+            } catch (e: Exception) {}
+
+            try {
+                jpegBuffer.clear()
+                val zeroArray = ByteArray(Math.min(1024, jpegBuffer.capacity()))
+                var written = 0
+                while (written < jpegBuffer.capacity()) {
+                    val toWrite = Math.min(zeroArray.size, jpegBuffer.capacity() - written)
+                    jpegBuffer.put(zeroArray, 0, toWrite)
+                    written += toWrite
+                }
+                jpegBuffer.clear()
+                
                 // Write SOI
                 jpegBuffer.put(0xFF.toByte())
                 jpegBuffer.put(0xD8.toByte())
@@ -1142,31 +1173,66 @@ class FormatConverterBridge(
                     jpegBuffer.put(exifBytes)
                 }
                 
-                // Write the rest of Virtual JPEG (skipping its own SOI and any APP0)
+                // Strip ALL APPn blocks (APP0 to APP15) from Virtual JPEG so they don't conflict with Hardware EXIF
                 var vOffset = 2
                 try {
-                    if (jpegBytes.size > 6 && jpegBytes[2] == 0xFF.toByte() && jpegBytes[3] == 0xE0.toByte()) {
-                        val len = ((jpegBytes[4].toInt() and 0xFF) shl 8) or (jpegBytes[5].toInt() and 0xFF)
-                        vOffset = 2 + 2 + len
+                    while (vOffset < jpegBytes.size - 4) {
+                        val b0 = jpegBytes[vOffset]
+                        val b1 = jpegBytes[vOffset+1]
+                        if (b0 == 0xFF.toByte() && (b1 >= 0xE0.toByte() && b1 <= 0xEF.toByte())) {
+                            val len = ((jpegBytes[vOffset+2].toInt() and 0xFF) shl 8) or (jpegBytes[vOffset+3].toInt() and 0xFF)
+                            vOffset += 2 + len
+                        } else {
+                            break // Reached DQT or SOF
+                        }
                     }
                 } catch (_: Exception) {}
                 
                 val toWrite = jpegBytes.size - vOffset
-                if (toWrite > 0 && jpegBuffer.position() + toWrite <= bufCap) {
-                    jpegBuffer.put(jpegBytes, vOffset, toWrite)
+                val totalCurrentSize = 2 + (exifBytes?.size ?: 0) + toWrite
+                val paddingNeeded = bufCap - totalCurrentSize
+
+                if (paddingNeeded > 0) {
+                    // Write everything except FF D9
+                    jpegBuffer.put(jpegBytes, vOffset, toWrite - 2)
+
+                    // Pad the JPEG using valid COM (Comment) segments so it perfectly fills the capacity without trailing zeroes
+                    var remainingPad = paddingNeeded
+                    while (remainingPad > 0) {
+                        val padSize = Math.min(65535, remainingPad)
+                        if (padSize < 4) {
+                            for (i in 0 until padSize) jpegBuffer.put(0.toByte())
+                            remainingPad -= padSize
+                            continue
+                        }
+                        jpegBuffer.put(0xFF.toByte())
+                        jpegBuffer.put(0xFE.toByte())
+                        val len = padSize - 2
+                        jpegBuffer.put(((len shr 8) and 0xFF).toByte())
+                        jpegBuffer.put((len and 0xFF).toByte())
+                        for (i in 0 until len - 2) {
+                            jpegBuffer.put(0.toByte())
+                        }
+                        remainingPad -= padSize
+                    }
+
+                    // Write FF D9 at the exact end of the buffer
+                    jpegBuffer.put(0xFF.toByte())
+                    jpegBuffer.put(0xD9.toByte())
+                } else {
+                    if (toWrite > 0 && jpegBuffer.position() + toWrite <= bufCap) {
+                        jpegBuffer.put(jpegBytes, vOffset, toWrite)
+                    }
                 }
                 
-                finalLimit = jpegBuffer.position()
-
-                // --- REWRITE camera3_jpeg_blob ---
-                // Native camera apps and Android framework use this blob at the very end of the GraphicBuffer
-                // to determine the actual JPEG size. If we erase it or fail to update it, the app sees a 0-byte image!
+                val finalLimit = jpegBuffer.position()
+                
+                // ONLY restore camera3_jpeg_blob if it natively existed in the buffer.
                 try {
                     var blobFound = false
                     var blobOffset = -1
                     for (i in 0..blobBackup.size - 8) {
                         if (blobBackup[i] == 0xFF.toByte() && blobBackup[i+1] == 0x00.toByte()) {
-                            // Update the size field (little endian uint32_t at offset + 4)
                             blobBackup[i+4] = (finalLimit and 0xFF).toByte()
                             blobBackup[i+5] = ((finalLimit shr 8) and 0xFF).toByte()
                             blobBackup[i+6] = ((finalLimit shr 16) and 0xFF).toByte()
@@ -1177,34 +1243,22 @@ class FormatConverterBridge(
                         }
                     }
                     
-                    if (!blobFound) {
-                        // Create a fallback 8-byte blob at the end
-                        blobBackup[24] = 0xFF.toByte(); blobBackup[25] = 0x00.toByte()
-                        blobBackup[26] = 0x00.toByte(); blobBackup[27] = 0x00.toByte()
-                        blobBackup[28] = (finalLimit and 0xFF).toByte()
-                        blobBackup[29] = ((finalLimit shr 8) and 0xFF).toByte()
-                        blobBackup[30] = ((finalLimit shr 16) and 0xFF).toByte()
-                        blobBackup[31] = ((finalLimit shr 24) and 0xFF).toByte()
-                        blobOffset = 24
+                    if (blobFound) {
+                        jpegBuffer.position(Math.max(0, jpegBuffer.capacity() - 32))
+                        jpegBuffer.put(blobBackup)
+                        val absOffset = Math.max(0, jpegBuffer.capacity() - 32) + blobOffset
+                        Log.e(TAG, "[TELEMETRY] camera3_jpeg_blob [NATIVE] struct restored at absolute offset $absOffset. Size updated to $finalLimit")
+                    } else {
+                        Log.e(TAG, "[TELEMETRY] camera3_jpeg_blob [ABSENT]. Framework stripped it or it's not a blob buffer. Skipping blob injection.")
                     }
-                    
-                    jpegBuffer.position(Math.max(0, jpegBuffer.capacity() - 32))
-                    jpegBuffer.put(blobBackup)
-                    
-                    val absOffset = Math.max(0, jpegBuffer.capacity() - 32) + blobOffset
-                    val blobType = if (blobFound) "NATIVE" else "FALLBACK"
-                    Log.e(TAG, "[TELEMETRY] camera3_jpeg_blob [$blobType] struct restored at absolute offset $absOffset. Size updated to $finalLimit")
                 } catch (e: Exception) {
                     Log.e(TAG, "[TELEMETRY] Failed to restore camera3_jpeg_blob", e)
                 }
             }
             
-            // Do NOT flip. We want the camera framework to read up to its native size.
-            // Appending our naked JPEG without EXIF APP1 blocks is enough because modern 
-            // camera zipping modules (like Xiaomi CAM_ParallelDataZipper) parse and overwrite EXIF 
-            // based on CaptureRequest parameters downstream automatically. Let them do their job.
+            // Limit must ALWAYS be set to capacity if we padded it, or finalLimit if we didn't.
             jpegBuffer.position(0)
-            jpegBuffer.limit(finalLimit)
+            jpegBuffer.limit(bufCap)
             
             // DIAGNOSTIC DUMP: Save the spoofed JPEG to SD card to see exactly what Veriff sees
             if (CameraHook.isBufferCaptureEnabled) {
