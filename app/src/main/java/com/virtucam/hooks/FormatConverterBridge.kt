@@ -989,23 +989,59 @@ class FormatConverterBridge(
             // If cached JPEG is too big for the HAL buffer, re-encode at lower quality to fit.
             // HAL buffers are typically ~290KB while our quality-85 JPEG can be ~520KB.
             val bufCap = jpegBuffer.capacity()
-            if (jpegBytes.size > bufCap) {
-                Log.w(TAG, "FormatConverterBridge: Spoofed JPEG (${jpegBytes.size}) > Buffer Capacity ($bufCap). Re-encoding to fit...")
+            
+            // --- EXIF PRESERVATION MAGIC ---
+            // Extract EXIF (APP1) from the ORIGINAL hardware buffer before we overwrite it.
+            var exifBytes: ByteArray? = null
+            try {
+                jpegBuffer.position(0)
+                val header = ByteArray(2)
+                jpegBuffer.get(header)
+                if (header[0] == 0xFF.toByte() && header[1] == 0xD8.toByte()) {
+                    while (jpegBuffer.remaining() >= 4) {
+                        val marker = ByteArray(2)
+                        jpegBuffer.get(marker)
+                        val lenBytes = ByteArray(2)
+                        jpegBuffer.get(lenBytes)
+                        val len = ((lenBytes[0].toInt() and 0xFF) shl 8) or (lenBytes[1].toInt() and 0xFF)
+                        
+                        if (marker[0] == 0xFF.toByte() && marker[1] == 0xE1.toByte()) {
+                            // Found APP1 (EXIF)!
+                            Log.d(TAG, "FormatConverterBridge: Found APP1 EXIF marker of length $len")
+                            val fullExifLen = len + 2
+                            jpegBuffer.position(jpegBuffer.position() - 4) // Back up to marker start
+                            val exif = ByteArray(fullExifLen)
+                            jpegBuffer.get(exif)
+                            exifBytes = exif
+                            break
+                        } else if (marker[0] == 0xFF.toByte() && marker[1] == 0xDA.toByte()) {
+                            break // SOS (Start of Scan) - stop searching
+                        } else {
+                            jpegBuffer.position(jpegBuffer.position() + len - 2) // Skip segment
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "FormatConverterBridge: Failed to extract EXIF: ${e.message}")
+            }
+            jpegBuffer.clear()
+
+            // Re-encode if Virtual JPEG + EXIF is too big
+            val targetSize = jpegBytes.size + (exifBytes?.size ?: 0)
+            if (targetSize > bufCap) {
+                Log.w(TAG, "FormatConverterBridge: Spoofed JPEG+EXIF ($targetSize) > Buffer Capacity ($bufCap). Re-encoding to fit...")
                 var fitted: ByteArray? = null
                 
                 if (isBufferReady) {
-                    fitted = encodeJpegFromCache(maxBytes = bufCap)
+                    fitted = encodeJpegFromCache(maxBytes = bufCap - (exifBytes?.size ?: 0))
                 } else {
-                    // [FIX] Native Camera App JPEG bridges don't have RGBA cache (isBufferReady=false).
-                    // Ask the PREVIEW bridge to re-encode the cache to fit.
                     val activePreviewBridge = CameraHook.formatBridges.values.firstOrNull { it.isBufferReady }
                     if (activePreviewBridge != null) {
-                        fitted = activePreviewBridge.encodeJpegFromCache(maxBytes = bufCap)
+                        fitted = activePreviewBridge.encodeJpegFromCache(maxBytes = bufCap - (exifBytes?.size ?: 0))
                     }
                 }
                 
-                // Fallback: If bridge encode failed or still too big, decode the bytes and compress manually.
-                if (fitted == null || fitted.size > bufCap) {
+                if (fitted == null || fitted.size + (exifBytes?.size ?: 0) > bufCap) {
                     try {
                         val bmp = android.graphics.BitmapFactory.decodeByteArray(jpegBytes, 0, jpegBytes.size)
                         if (bmp != null) {
@@ -1014,7 +1050,7 @@ class FormatConverterBridge(
                                 val baos = java.io.ByteArrayOutputStream()
                                 bmp.compress(android.graphics.Bitmap.CompressFormat.JPEG, q, baos)
                                 val out = baos.toByteArray()
-                                if (out.size <= bufCap) {
+                                if (out.size + (exifBytes?.size ?: 0) <= bufCap) {
                                     fitted = out
                                     break
                                 }
@@ -1027,21 +1063,21 @@ class FormatConverterBridge(
                     }
                 }
 
-                if (fitted != null && fitted.size <= bufCap) {
+                if (fitted != null && fitted.size + (exifBytes?.size ?: 0) <= bufCap) {
                     jpegBytes = fitted
-                    Log.d(TAG, "FormatConverterBridge: Re-encoded JPEG fits: ${fitted.size} bytes <= $bufCap")
+                    Log.d(TAG, "FormatConverterBridge: Re-encoded JPEG fits: ${fitted.size} + EXIF <= $bufCap")
                 } else {
                     Log.e(TAG, "FormatConverterBridge: Re-encode failed or still too big (${fitted?.size}). Skipping buffer overwrite.")
                 }
             }
             
             val finalLimit: Int
-            if (jpegBytes.size > bufCap) {
+            val finalTargetSize = jpegBytes.size + (exifBytes?.size ?: 0)
+            if (finalTargetSize > bufCap) {
                 Log.e(TAG, "FormatConverterBridge: CRITICAL! Spoofed JPEG STILL TOO BIG. Scrubbing hardware buffer to prevent leak!")
                 scrubBufferToBlack(jpegBuffer)
                 return 
             } else {
-                // [Surgical Scrub] Zero out the hardware buffer ONLY NOW since we are sure we can fit the spoofed JPEG.
                 try {
                     jpegBuffer.clear()
                     val zeroArray = ByteArray(Math.min(1024, jpegBuffer.capacity()))
@@ -1056,8 +1092,30 @@ class FormatConverterBridge(
                     jpegBuffer.clear()
                 }
 
-                jpegBuffer.put(jpegBytes, 0, jpegBytes.size)
-                finalLimit = jpegBytes.size
+                // Write SOI
+                jpegBuffer.put(0xFF.toByte())
+                jpegBuffer.put(0xD8.toByte())
+                
+                // Write Extracted EXIF
+                if (exifBytes != null) {
+                    jpegBuffer.put(exifBytes)
+                }
+                
+                // Write the rest of Virtual JPEG (skipping its own SOI and any APP0)
+                var vOffset = 2
+                try {
+                    if (jpegBytes.size > 6 && jpegBytes[2] == 0xFF.toByte() && jpegBytes[3] == 0xE0.toByte()) {
+                        val len = ((jpegBytes[4].toInt() and 0xFF) shl 8) or (jpegBytes[5].toInt() and 0xFF)
+                        vOffset = 2 + 2 + len
+                    }
+                } catch (_: Exception) {}
+                
+                val toWrite = jpegBytes.size - vOffset
+                if (toWrite > 0 && jpegBuffer.position() + toWrite <= bufCap) {
+                    jpegBuffer.put(jpegBytes, vOffset, toWrite)
+                }
+                
+                finalLimit = jpegBuffer.position()
             }
             
             // Do NOT flip. We want the camera framework to read up to its native size.
