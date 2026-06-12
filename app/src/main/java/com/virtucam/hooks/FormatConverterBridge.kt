@@ -1088,6 +1088,13 @@ class FormatConverterBridge(
                 scrubBufferToBlack(jpegBuffer)
                 return 
             } else {
+                // BEFORE clearing the buffer, extract the last 32 bytes which may contain the camera3_jpeg_blob
+                val blobBackup = ByteArray(32)
+                try {
+                    jpegBuffer.position(Math.max(0, jpegBuffer.capacity() - 32))
+                    jpegBuffer.get(blobBackup)
+                } catch (e: Exception) {}
+
                 try {
                     jpegBuffer.clear()
                     val zeroArray = ByteArray(Math.min(1024, jpegBuffer.capacity()))
@@ -1126,6 +1133,40 @@ class FormatConverterBridge(
                 }
                 
                 finalLimit = jpegBuffer.position()
+
+                // --- REWRITE camera3_jpeg_blob ---
+                // Native camera apps and Android framework use this blob at the very end of the GraphicBuffer
+                // to determine the actual JPEG size. If we erase it or fail to update it, the app sees a 0-byte image!
+                try {
+                    var blobFound = false
+                    for (i in 0..blobBackup.size - 8) {
+                        if (blobBackup[i] == 0xFF.toByte() && blobBackup[i+1] == 0x00.toByte()) {
+                            // Update the size field (little endian uint32_t at offset + 4)
+                            blobBackup[i+4] = (finalLimit and 0xFF).toByte()
+                            blobBackup[i+5] = ((finalLimit shr 8) and 0xFF).toByte()
+                            blobBackup[i+6] = ((finalLimit shr 16) and 0xFF).toByte()
+                            blobBackup[i+7] = ((finalLimit shr 24) and 0xFF).toByte()
+                            blobFound = true
+                            break
+                        }
+                    }
+                    
+                    if (!blobFound) {
+                        // Create a fallback 8-byte blob at the end
+                        blobBackup[24] = 0xFF.toByte(); blobBackup[25] = 0x00.toByte()
+                        blobBackup[26] = 0x00.toByte(); blobBackup[27] = 0x00.toByte()
+                        blobBackup[28] = (finalLimit and 0xFF).toByte()
+                        blobBackup[29] = ((finalLimit shr 8) and 0xFF).toByte()
+                        blobBackup[30] = ((finalLimit shr 16) and 0xFF).toByte()
+                        blobBackup[31] = ((finalLimit shr 24) and 0xFF).toByte()
+                    }
+                    
+                    jpegBuffer.position(Math.max(0, jpegBuffer.capacity() - 32))
+                    jpegBuffer.put(blobBackup)
+                    Log.d(TAG, "FormatConverterBridge: Restored camera3_jpeg_blob with new size=$finalLimit")
+                } catch (e: Exception) {
+                    Log.e(TAG, "FormatConverterBridge: Failed to restore camera3_jpeg_blob", e)
+                }
             }
             
             // Do NOT flip. We want the camera framework to read up to its native size.
