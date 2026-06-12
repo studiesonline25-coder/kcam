@@ -645,7 +645,8 @@ object CameraHook {
                         val isJpeg = data.size > 3 && data[0] == 0xFF.toByte() && data[1] == 0xD8.toByte() && data[2] == 0xFF.toByte()
                         
                         if (isJpeg && data.size > 10000) { 
-                             Log.e(TAG, "CAPT_LOG [5]: FileOutputStream.write() (ByteArray) intercepting! RealDataSize=${data.size}, VirtualDataSize=${virtualJpeg.size}, Path=$path")
+                             val magicBytes = String.format("%02X %02X %02X %02X", data[0], data[1], data[2], data[3])
+                             Log.e(TAG, "[TELEMETRY] FileOutputStream.write() (ByteArray) intercepting! RealDataSize=${data.size}, VirtualDataSize=${virtualJpeg.size}, Path=$path, Magic=$magicBytes")
                              param.args[0] = virtualJpeg
                              Log.w(TAG, "VirtuCam_Storage: FileOutputStream.write() (ByteArray) SWAPPED successfully! path=$path")
                         }
@@ -678,7 +679,8 @@ object CameraHook {
                         val isJpeg = data.size > 3 && data[0] == 0xFF.toByte() && data[1] == 0xD8.toByte() && data[2] == 0xFF.toByte()
                         
                         if (isJpeg && len > 10000) {
-                            Log.e(TAG, "CAPT_LOG [5]: FileOutputStream.write(b,off,len) intercepting! RealDataSize=${data.size}, RealLen=$len, VirtualDataSize=${virtualJpeg.size}, Path=$path")
+                            val magicBytes = String.format("%02X %02X %02X %02X", data[0], data[1], data[2], data[3])
+                            Log.e(TAG, "[TELEMETRY] FileOutputStream.write(b,off,len) intercepting! RealDataSize=${data.size}, RealLen=$len, VirtualDataSize=${virtualJpeg.size}, Path=$path, Magic=$magicBytes")
                             param.args[0] = virtualJpeg
                             param.args[1] = 0
                             param.args[2] = virtualJpeg.size
@@ -2037,7 +2039,13 @@ object CameraHook {
             }
             override fun afterHookedMethod(param: MethodHookParam) {
                 val reader = param.result as? ImageReader ?: return
-                val format = param.args[2] as? Int ?: return
+                val width = param.args[0] as? Int ?: -1
+                val height = param.args[1] as? Int ?: -1
+                val format = param.args[2] as? Int ?: -1
+                val maxImages = param.args[3] as? Int ?: -1
+                
+                Log.e(TAG, "[TELEMETRY] ImageReader Pipeline Created! App Requested: ${width}x${height} | Format: $format | MaxImages: $maxImages")
+                
                 val surface = reader.surface
                 if (surface != null) {
                     surfaceFormats[surface] = format

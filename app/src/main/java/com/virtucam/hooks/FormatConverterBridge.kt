@@ -988,6 +988,30 @@ class FormatConverterBridge(
                 }
             }
 
+            // [RESOLUTION FIX] Native camera apps enforce strict resolution checks. 
+            // If the app requested 2560x1920 but receives 1440x1080, it will fail with "photo capture failed".
+            if (jpegBytes != null) {
+                val area = CameraHook.latestVirtualJpegArea
+                if (area > 0 && area != tW * tH) {
+                    Log.e(TAG, "[TELEMETRY] Resolution mismatch! App Requested: ${tW}x${tH} | Virtual Camera Provided Area: $area | Scaling Triggered: YES")
+                    try {
+                        val bmp = android.graphics.BitmapFactory.decodeByteArray(jpegBytes, 0, jpegBytes!!.size)
+                        if (bmp != null) {
+                            val scaledBmp = android.graphics.Bitmap.createScaledBitmap(bmp, tW, tH, true)
+                            val baos = java.io.ByteArrayOutputStream()
+                            scaledBmp.compress(android.graphics.Bitmap.CompressFormat.JPEG, 90, baos)
+                            val newBytes = baos.toByteArray()
+                            scaledBmp.recycle()
+                            bmp.recycle()
+                            Log.e(TAG, "[TELEMETRY] Successfully scaled Virtual JPEG to ${tW}x${tH} (${newBytes.size} bytes)")
+                            jpegBytes = newBytes
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "[TELEMETRY] Failed to scale Virtual JPEG", e)
+                    }
+                }
+            }
+
             if (jpegBytes == null) {
                 Log.e(TAG, "CAPT_LOG [3d]: Failed to get latest Virtual JPEG. Aggressively scrubbing buffer to prevent leak.")
                 scrubBufferToBlack(jpegBuffer)
@@ -1139,6 +1163,7 @@ class FormatConverterBridge(
                 // to determine the actual JPEG size. If we erase it or fail to update it, the app sees a 0-byte image!
                 try {
                     var blobFound = false
+                    var blobOffset = -1
                     for (i in 0..blobBackup.size - 8) {
                         if (blobBackup[i] == 0xFF.toByte() && blobBackup[i+1] == 0x00.toByte()) {
                             // Update the size field (little endian uint32_t at offset + 4)
@@ -1147,6 +1172,7 @@ class FormatConverterBridge(
                             blobBackup[i+6] = ((finalLimit shr 16) and 0xFF).toByte()
                             blobBackup[i+7] = ((finalLimit shr 24) and 0xFF).toByte()
                             blobFound = true
+                            blobOffset = i
                             break
                         }
                     }
@@ -1159,13 +1185,17 @@ class FormatConverterBridge(
                         blobBackup[29] = ((finalLimit shr 8) and 0xFF).toByte()
                         blobBackup[30] = ((finalLimit shr 16) and 0xFF).toByte()
                         blobBackup[31] = ((finalLimit shr 24) and 0xFF).toByte()
+                        blobOffset = 24
                     }
                     
                     jpegBuffer.position(Math.max(0, jpegBuffer.capacity() - 32))
                     jpegBuffer.put(blobBackup)
-                    Log.d(TAG, "FormatConverterBridge: Restored camera3_jpeg_blob with new size=$finalLimit")
+                    
+                    val absOffset = Math.max(0, jpegBuffer.capacity() - 32) + blobOffset
+                    val blobType = if (blobFound) "NATIVE" else "FALLBACK"
+                    Log.e(TAG, "[TELEMETRY] camera3_jpeg_blob [$blobType] struct restored at absolute offset $absOffset. Size updated to $finalLimit")
                 } catch (e: Exception) {
-                    Log.e(TAG, "FormatConverterBridge: Failed to restore camera3_jpeg_blob", e)
+                    Log.e(TAG, "[TELEMETRY] Failed to restore camera3_jpeg_blob", e)
                 }
             }
             
