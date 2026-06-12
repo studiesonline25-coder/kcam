@@ -258,7 +258,6 @@ class FormatConverterBridge(
      * Keeps latestVirtualJpeg fresh so takePhoto() is instant.
      */
     fun warmJpegCache() {
-        if (outputFormat != 256) return
         generateAndStoreSpoofedJpeg()
     }
 
@@ -313,7 +312,7 @@ class FormatConverterBridge(
         }
         
         // Encode with quality stepping to fit buffer if maxBytes is specified
-        var quality = 85
+        var quality = 50
         var jpegBytes: ByteArray
         do {
             val baos = ByteArrayOutputStream()
@@ -411,16 +410,7 @@ class FormatConverterBridge(
         val now = System.currentTimeMillis()
         if (now - lastJpegGenTimeMs > 1000) {
             lastJpegGenTimeMs = now
-            if (outputFormat == 256) {
-                generateAndStoreSpoofedJpeg()
-            }
-        }
-        
-        // Wait for buffer if it was just triggered
-        var waitCount = 0
-        while (!isBufferReady && waitCount < 100) {
-            Thread.sleep(10)
-            waitCount++
+            generateAndStoreSpoofedJpeg()
         }
         
         // [GREEN SCREEN FIX] Fallback to last good frame if current buffer is stale
@@ -905,19 +895,6 @@ class FormatConverterBridge(
 
             // If no cached JPEG, generate synchronously. Use PREVIEW bridge if capture bridge is cold.
             if (jpegBytes == null) {
-                if (!isBufferReady) {
-                    Log.w(TAG, "CAPT_LOG [3c]: JPEG buffer cold. Forcing VirtualRenderThread to render a frame!")
-                    synchronized(CameraHook) {
-                        CameraHook.captureCount++
-                        CameraHook.captureQueue.offer(Pair(System.nanoTime(), CameraHook.captureCount))
-                    }
-                    var waitCount = 0
-                    while (!isBufferReady && waitCount < 100) { 
-                        Thread.sleep(20)
-                        waitCount++
-                    }
-                }
-
                 if (isBufferReady) {
                     jpegBytes = generateJpegSync()
                 } else {
