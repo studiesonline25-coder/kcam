@@ -258,6 +258,7 @@ class FormatConverterBridge(
      * Keeps latestVirtualJpeg fresh so takePhoto() is instant.
      */
     fun warmJpegCache() {
+        if (width * height > 1920 * 1080) return
         generateAndStoreSpoofedJpeg()
     }
 
@@ -410,7 +411,9 @@ class FormatConverterBridge(
         val now = System.currentTimeMillis()
         if (now - lastJpegGenTimeMs > 1000) {
             lastJpegGenTimeMs = now
-            generateAndStoreSpoofedJpeg()
+            if (width * height <= 1920 * 1080) {
+                generateAndStoreSpoofedJpeg()
+            }
         }
         
         // [GREEN SCREEN FIX] Fallback to last good frame if current buffer is stale
@@ -895,6 +898,19 @@ class FormatConverterBridge(
 
             // If no cached JPEG, generate synchronously. Use PREVIEW bridge if capture bridge is cold.
             if (jpegBytes == null) {
+                if (!isBufferReady) {
+                    Log.w(TAG, "CAPT_LOG [3c]: JPEG buffer cold. Forcing VirtualRenderThread to render a frame!")
+                    synchronized(CameraHook) {
+                        CameraHook.captureCount++
+                        CameraHook.captureQueue.offer(Pair(System.nanoTime(), CameraHook.captureCount))
+                    }
+                    var waitCount = 0
+                    while (!isBufferReady && waitCount < 50) { // Max 1s wait
+                        Thread.sleep(20)
+                        waitCount++
+                    }
+                }
+
                 if (isBufferReady) {
                     jpegBytes = generateJpegSync()
                 } else {
