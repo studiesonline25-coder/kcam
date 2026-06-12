@@ -76,6 +76,11 @@ class FormatConverterBridge(
     private var prevYCache: ByteArray? = null
     private var prevUvCache: ByteArray? = null
 
+    // [MEMORY POOL] Pre-allocated resources for JPEG generation
+    private var cachedBitmap: Bitmap? = null
+    private var cachedRotatedBitmap: Bitmap? = null
+    private var cachedBaos: ByteArrayOutputStream? = null
+
     private var debugCounter = 0
     private var lastBufferDumpMs = 0L
 
@@ -258,7 +263,23 @@ class FormatConverterBridge(
      * Keeps latestVirtualJpeg fresh so takePhoto() is instant.
      */
     fun warmJpegCache() {
-        if (width * height > 1920 * 1080) return
+        if (!isBufferReady) return
+        val now = System.currentTimeMillis()
+        
+        if (width * height > 1920 * 1080) {
+            // [NATIVE CAMERA FILTER] Never cache massive JPEGs for YUV bridges.
+            // YUV bridges capture instantly via memory copy, they don't need JPEGs.
+            // This prevents OOMs and preview stutter in Native Camera!
+            if (outputFormat != 256) return
+            
+            // For massive JPEG bridges (Other Camera), throttle to 1s
+            if (now - lastJpegGenTimeMs < 1000) return
+        } else {
+            // Preview bridges: warm cache frequently (every 1 second)
+            if (now - lastJpegGenTimeMs < 1000) return
+        }
+        
+        lastJpegGenTimeMs = now
         generateAndStoreSpoofedJpeg()
     }
 
@@ -296,17 +317,37 @@ class FormatConverterBridge(
         
         if (!checkDataIntegrity(rgbaBytes)) return null
         
-        val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        // [MEMORY POOL FIX] Reuse Bitmap and ByteArrayOutputStream to prevent heap fragmentation
+        var bitmap = cachedBitmap
+        if (bitmap == null || bitmap.width != w || bitmap.height != h) {
+            bitmap?.recycle()
+            bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+            cachedBitmap = bitmap
+        }
+        
         val rgbaBuffer = ByteBuffer.wrap(rgbaBytes)
         bitmap.copyPixelsFromBuffer(rgbaBuffer)
         
         // Counter-rotate to upright (undo the sensor orientation baked by TextureRenderer)
         val rotationToApply = sensorOrientation
         val uprightBitmap = if (rotationToApply != 0) {
-            val matrix = android.graphics.Matrix()
-            matrix.postRotate(rotationToApply.toFloat())
-            val rotated = Bitmap.createBitmap(bitmap, 0, 0, w, h, matrix, true)
-            bitmap.recycle()
+            val sw = if (rotationToApply % 180 == 0) w else h
+            val sh = if (rotationToApply % 180 == 0) h else w
+            var rotated = cachedRotatedBitmap
+            if (rotated == null || rotated.width != sw || rotated.height != sh) {
+                rotated?.recycle()
+                val matrix = android.graphics.Matrix()
+                matrix.postRotate(rotationToApply.toFloat())
+                rotated = Bitmap.createBitmap(bitmap, 0, 0, w, h, matrix, true)
+                cachedRotatedBitmap = rotated
+            } else {
+                val canvas = android.graphics.Canvas(rotated)
+                val matrix = android.graphics.Matrix()
+                matrix.postTranslate(-w / 2f, -h / 2f)
+                matrix.postRotate(rotationToApply.toFloat())
+                matrix.postTranslate(rotated.width / 2f, rotated.height / 2f)
+                canvas.drawBitmap(bitmap, matrix, null)
+            }
             rotated
         } else {
             bitmap
@@ -315,8 +356,14 @@ class FormatConverterBridge(
         // Encode with quality stepping to fit buffer if maxBytes is specified
         var quality = 50
         var jpegBytes: ByteArray
+        var baos = cachedBaos
+        if (baos == null) {
+            baos = ByteArrayOutputStream(1024 * 512) // Pre-allocate 512KB
+            cachedBaos = baos
+        }
+        
         do {
-            val baos = ByteArrayOutputStream()
+            baos.reset()
             uprightBitmap.compress(Bitmap.CompressFormat.JPEG, quality, baos)
             jpegBytes = baos.toByteArray()
             if (maxBytes <= 0 || jpegBytes.size <= maxBytes) break
@@ -324,7 +371,7 @@ class FormatConverterBridge(
             quality -= 10
         } while (quality >= 15)
         
-        uprightBitmap.recycle()
+        // DO NOT recycle cached bitmaps here, they are reused!
         
         if (maxBytes > 0 && jpegBytes.size > maxBytes) {
             Log.w(TAG, "JPEG still ${jpegBytes.size} bytes at quality $quality (max=$maxBytes)")
@@ -1182,6 +1229,12 @@ class FormatConverterBridge(
             handlerThread?.quitSafely()
             pushThread?.quitSafely()
             imageReader = null
+            
+            cachedBitmap?.recycle()
+            cachedBitmap = null
+            cachedRotatedBitmap?.recycle()
+            cachedRotatedBitmap = null
+            cachedBaos = null
         } catch (t: Throwable) {
             Log.e(TAG, "Error during Bridge release", t)
         }

@@ -1249,7 +1249,7 @@ object CameraHook {
                                         }
 
                                         // 1.5 Intercept capture count for bridge triggering
-                                        if (param.method.name == "capture") {
+                                        if (param.method.name == "capture" || param.method.name == "captureBurst") {
                                             synchronized(CameraHook) {
                                                 captureCount++
                                                 captureQueue.offer(Pair(sensorTimestamp, captureCount))
@@ -1328,13 +1328,21 @@ object CameraHook {
                                             CameraHook.lastFrameSyncMs = System.currentTimeMillis()
                                             CameraHook.frameSyncObject.notifyAll()
                                         }
-                                        activeBridges.forEach { 
+                                        val targets = request.targets
+                                        activeBridges.forEach { bridge ->
                                             // [HYBRID TUNING] NEVER push to JPEG bridges via Writer. 
                                             // The synchronous acquireNextImage hook is more reliable and 
                                             // avoids the "dequeue buffer failed" collisions we see in logs.
-                                            if (it.outputFormat == 256) return@forEach
+                                            if (bridge.outputFormat == 256) return@forEach
                                             
-                                            it.pushLatestFrameToWriter(timestamp) 
+                                            // [FIX] Targeted pushing: Only push to bridges that are ACTUALLY requested!
+                                            // Prevents clogging the massive capture ImageReader with 30fps preview frames.
+                                            if (bridge.outputSurface != null) {
+                                                val dummy = surfaceMap[bridge.outputSurface]
+                                                if (targets.contains(dummy) || targets.contains(bridge.outputSurface)) {
+                                                    bridge.pushLatestFrameToWriter(timestamp)
+                                                }
+                                            }
                                         }
                                     }
                                 } catch (_: Exception) {}
@@ -1387,12 +1395,12 @@ object CameraHook {
                                     metadataCourierMap.keys.removeIf { it < cutoff }
                                 }
 
-                                // captureSingleRequest is always a single capture (not repeating)
-                                if (param.method.name == "captureSingleRequest") {
+                                // captureSingleRequest and captureBurstRequests
+                                if (param.method.name == "captureSingleRequest" || param.method.name == "captureBurstRequests") {
                                     synchronized(CameraHook) {
                                         captureCount++
                                         captureQueue.offer(Pair(sensorTimestamp, captureCount))
-                                        Log.e(TAG, "CAPT_LOG [1]: Capture Event Detected via captureSingleRequest! TS=$sensorTimestamp, captureCount=${captureCount}")
+                                        Log.e(TAG, "CAPT_LOG [1]: Capture Event Detected via ${param.method.name}! TS=$sensorTimestamp, captureCount=${captureCount}")
                                     }
                                 }
 
@@ -1405,9 +1413,17 @@ object CameraHook {
                                             CameraHook.lastFrameSyncMs = System.currentTimeMillis()
                                             CameraHook.frameSyncObject.notifyAll()
                                         }
-                                        activeBridges.forEach { 
-                                            if (it.outputFormat == 256) return@forEach
-                                            it.pushLatestFrameToWriter(timestamp) 
+                                        val targets = request.targets
+                                        activeBridges.forEach { bridge ->
+                                            if (bridge.outputFormat == 256) return@forEach
+                                            
+                                            // [FIX] Targeted pushing: Only push to bridges that are ACTUALLY requested!
+                                            if (bridge.outputSurface != null) {
+                                                val dummy = surfaceMap[bridge.outputSurface]
+                                                if (targets.contains(dummy) || targets.contains(bridge.outputSurface)) {
+                                                    bridge.pushLatestFrameToWriter(timestamp)
+                                                }
+                                            }
                                         }
                                     }
                                 } catch (_: Exception) {}
@@ -3459,8 +3475,12 @@ class VirtualRenderThread(
             // We MUST gate rendering to capture surfaces by captureCount > 0. The fallback
             // logic in FormatConverterBridge now safely delegates to the preview bridge if needed.
             if (isCapture && CameraHook.captureCount <= 0) {
-                surfaceIndex++
-                continue
+                // [WARM CACHE FIX] Render once every 30 frames (1s) to keep the ImageReader warm
+                // for standalone JPEG bridges, without burning the CPU.
+                if (diagCallCount % 30 != 0L) {
+                    surfaceIndex++
+                    continue
+                }
             }
 
             val tStart = System.nanoTime()
