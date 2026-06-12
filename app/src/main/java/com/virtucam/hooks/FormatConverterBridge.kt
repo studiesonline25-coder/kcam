@@ -619,6 +619,11 @@ class FormatConverterBridge(
                             val g = (gRaw * rppgMultiplier).toInt().coerceIn(0, 255)
                             var y = ((66 * r + 129 * g + 25 * b + 128) shr 8) + 16
                             
+                            // [HDR FIX] Add ultra-fast pseudo-random temporal noise to prevent HDR algorithms from stalling on identical frames
+                            val noise = ((tx * 31 + ty * 17 + diagCallCount) % 5) - 2
+                            y += noise
+                            
+                            
                             if (CameraHook.isRefineEnabled) {
                                 // 1. Horizontal Box Blur (Fast sub-pixel blur to destroy FFT grids)
                                 if (tx > 0) {
@@ -659,6 +664,11 @@ class FormatConverterBridge(
                             // [rPPG] Modulate Green channel with synthetic blood volume pulse
                             val g = (gRaw * rppgMultiplier).toInt().coerceIn(0, 255)
                             var y = ((66 * r + 129 * g + 25 * b + 128) shr 8) + 16
+                            
+                            // [HDR FIX] Add ultra-fast pseudo-random temporal noise to prevent HDR algorithms from stalling on identical frames
+                            val noise = ((tx * 31 + ty * 17 + diagCallCount) % 5) - 2
+                            y += noise
+                            
                             
                             if (CameraHook.isRefineEnabled) {
                                 // Slow path TAA only (no easy blur access)

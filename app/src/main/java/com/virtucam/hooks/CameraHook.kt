@@ -672,8 +672,8 @@ object CameraHook {
                         
                         // [FIX] Skip our own EXIF injection temp files
                         if (path.contains("vc_exif_inject")) return
-                        // [FIX] Intercepting all writes
-                        // if (path.contains("thumb", true)) return
+                        // [FIX] Skip thumbnails so we don't overwrite them with a full JPEG
+                        if (path.contains("thumb", true)) return
                         
                         val isJpeg = data.size > 3 && data[0] == 0xFF.toByte() && data[1] == 0xD8.toByte() && data[2] == 0xFF.toByte()
                         
@@ -1344,8 +1344,15 @@ object CameraHook {
                                             // Prevents clogging the massive capture ImageReader with 30fps preview frames.
                                             if (bridge.outputSurface != null) {
                                                 if (targets != null) {
-                                                    val dummy = surfaceMap[bridge.outputSurface]
-                                                    if (targets.contains(dummy) || targets.contains(bridge.outputSurface)) {
+                                                    var isRequested = false
+                                                    for (t in targets) {
+                                                        val orig = surfaceMap[t] ?: t
+                                                        if (orig == bridge.outputSurface) {
+                                                            isRequested = true
+                                                            break
+                                                        }
+                                                    }
+                                                    if (isRequested) {
                                                         bridge.pushLatestFrameToWriter(timestamp)
                                                     }
                                                 } else {
@@ -1434,8 +1441,15 @@ object CameraHook {
                                             // [FIX] Targeted pushing: Only push to bridges that are ACTUALLY requested!
                                             if (bridge.outputSurface != null) {
                                                 if (targets != null) {
-                                                    val dummy = surfaceMap[bridge.outputSurface]
-                                                    if (targets.contains(dummy) || targets.contains(bridge.outputSurface)) {
+                                                    var isRequested = false
+                                                    for (t in targets) {
+                                                        val orig = surfaceMap[t] ?: t
+                                                        if (orig == bridge.outputSurface) {
+                                                            isRequested = true
+                                                            break
+                                                        }
+                                                    }
+                                                    if (isRequested) {
                                                         bridge.pushLatestFrameToWriter(timestamp)
                                                     }
                                                 } else {
