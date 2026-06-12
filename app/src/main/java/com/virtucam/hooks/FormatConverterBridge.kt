@@ -258,6 +258,7 @@ class FormatConverterBridge(
      * Keeps latestVirtualJpeg fresh so takePhoto() is instant.
      */
     fun warmJpegCache() {
+        if (outputFormat != 256) return
         generateAndStoreSpoofedJpeg()
     }
 
@@ -410,7 +411,9 @@ class FormatConverterBridge(
         val now = System.currentTimeMillis()
         if (now - lastJpegGenTimeMs > 1000) {
             lastJpegGenTimeMs = now
-            generateAndStoreSpoofedJpeg()
+            if (outputFormat == 256) {
+                generateAndStoreSpoofedJpeg()
+            }
         }
         
         // [GREEN SCREEN FIX] Fallback to last good frame if current buffer is stale
