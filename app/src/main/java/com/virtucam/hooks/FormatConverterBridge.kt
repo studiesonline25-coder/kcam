@@ -115,34 +115,30 @@ class FormatConverterBridge(
             handler = Handler(handlerThread!!.looper)
             
             if (outputSurface != null) {
-                if (outputFormat == 256 || outputFormat == ImageFormat.JPEG) {
-                    try {
-                        // [BROWSER CAPTURE FIX] Try API 29+ 3-arg ImageWriter.newInstance(surface, maxImages, format)
-                        // first. This is more reliable for JPEG surfaces because the format is explicitly specified,
-                        // avoiding auto-detection failures on some OEM implementations.
-                        imageWriter = try {
-                            val newInstanceMethod = ImageWriter::class.java.getMethod(
-                                "newInstance", Surface::class.java, Int::class.javaPrimitiveType, Int::class.javaPrimitiveType
-                            )
-                            val writer = newInstanceMethod.invoke(null, outputSurface, 2, outputFormat) as ImageWriter
-                            Log.d(TAG, "FormatConverterBridge: ImageWriter created via API 29+ (format=$outputFormat)")
-                            writer
-                        } catch (e: Throwable) {
-                            Log.d(TAG, "FormatConverterBridge: API 29+ ImageWriter failed (${e.message}), trying 2-arg fallback")
-                            android.media.ImageWriter.newInstance(outputSurface, 2)
-                        }
-                        
-                        // Initialize Push Thread
-                        pushThread = HandlerThread("VirtuCamPushThread").apply { start() }
-                        pushHandler = Handler(pushThread!!.looper)
-                        
-                        Log.d(TAG, "FormatConverterBridge: ImageWriter and PushThread connected for ${width}x${height} format=$outputFormat")
+                try {
+                    // [BROWSER CAPTURE FIX] Try API 29+ 3-arg ImageWriter.newInstance(surface, maxImages, format)
+                    // first. This is more reliable for JPEG surfaces because the format is explicitly specified,
+                    // avoiding auto-detection failures on some OEM implementations.
+                    imageWriter = try {
+                        val newInstanceMethod = ImageWriter::class.java.getMethod(
+                            "newInstance", Surface::class.java, Int::class.javaPrimitiveType, Int::class.javaPrimitiveType
+                        )
+                        val writer = newInstanceMethod.invoke(null, outputSurface, 2, outputFormat) as ImageWriter
+                        Log.d(TAG, "FormatConverterBridge: ImageWriter created via API 29+ (format=$outputFormat)")
+                        writer
                     } catch (e: Throwable) {
-                        Log.e(TAG, "FormatConverterBridge: Failed to connect ImageWriter for ${width}x${height} format=$outputFormat — will use direct overwrite fallback", e)
-                        imageWriter = null
+                        Log.d(TAG, "FormatConverterBridge: API 29+ ImageWriter failed (${e.message}), trying 2-arg fallback")
+                        android.media.ImageWriter.newInstance(outputSurface, 2)
                     }
-                } else {
-                    Log.d(TAG, "FormatConverterBridge: Skipping ImageWriter for format=$outputFormat (YUV streams use synchronous overwrite)")
+                    
+                    // Initialize Push Thread
+                    pushThread = HandlerThread("VirtuCamPushThread").apply { start() }
+                    pushHandler = Handler(pushThread!!.looper)
+                    
+                    Log.d(TAG, "FormatConverterBridge: ImageWriter and PushThread connected for ${width}x${height} format=$outputFormat")
+                } catch (e: Throwable) {
+                    Log.e(TAG, "FormatConverterBridge: Failed to connect ImageWriter for ${width}x${height} format=$outputFormat — will use direct overwrite fallback", e)
+                    imageWriter = null
                 }
             }
             
@@ -1337,18 +1333,8 @@ class FormatConverterBridge(
     fun connectToImageReader(imageReader: ImageReader) {
         try {
             this.imageReader = imageReader
-            if (outputFormat == 256 || outputFormat == ImageFormat.JPEG) {
-                this.imageWriter = ImageWriter.newInstance(imageReader.surface, 5, outputFormat)
-                
-                if (pushThread == null) {
-                    pushThread = HandlerThread("VirtuCamPushThread").apply { start() }
-                    pushHandler = Handler(pushThread!!.looper)
-                }
-                
-                Log.i(TAG, "FormatConverterBridge: Connected ImageWriter to ImageReader ${width}x${height} for format $outputFormat")
-            } else {
-                Log.i(TAG, "FormatConverterBridge: Connected to ImageReader ${width}x${height} for format $outputFormat (Skipping ImageWriter)")
-            }
+            this.imageWriter = ImageWriter.newInstance(imageReader.surface, 5, outputFormat)
+            Log.i(TAG, "FormatConverterBridge: Connected to ImageReader ${width}x${height} for format $outputFormat")
         } catch (e: Exception) {
             Log.e(TAG, "FormatConverterBridge: Failed to connect to ImageReader", e)
         }
