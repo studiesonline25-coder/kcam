@@ -1261,9 +1261,10 @@ class FormatConverterBridge(
             // Limit must ALWAYS be set to capacity if we padded it, or finalLimit if we didn't.
             jpegBuffer.position(0)
             jpegBuffer.limit(bufCap)
+        }
             
-            // DIAGNOSTIC DUMP: Save the spoofed JPEG to SD card to see exactly what Veriff sees
-            if (CameraHook.isBufferCaptureEnabled) {
+        // DIAGNOSTIC DUMP: Save the spoofed JPEG to SD card to see exactly what Veriff sees
+        if (CameraHook.isBufferCaptureEnabled) {
                 saveDebugImage(jpegBytes, "capture_jpeg_${System.currentTimeMillis()}.jpg")
             }
             
