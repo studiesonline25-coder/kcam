@@ -1254,6 +1254,8 @@ class FormatConverterBridge(
                 } catch (e: Exception) {
                     Log.e(TAG, "[TELEMETRY] Failed to restore camera3_jpeg_blob", e)
                 }
+            } catch (e: Exception) {
+                Log.e(TAG, "[TELEMETRY] Failed to construct padded JPEG", e)
             }
             
             // Limit must ALWAYS be set to capacity if we padded it, or finalLimit if we didn't.
