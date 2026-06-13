@@ -2623,10 +2623,39 @@ object CameraHook {
      * Hooks createCaptureSession(List<Surface>, ...)
      */
     private fun hookCameraDevice(lpparam: XC_LoadPackage.LoadPackageParam) {
-        val cameraDeviceImplClass = XposedHelpers.findClassIfExists(
-            "android.hardware.camera2.impl.CameraDeviceImpl",
-            lpparam.classLoader
-        ) ?: return
+        // --- CLAUDE DIAGNOSTIC STEPS 1, 2, 3 ---
+        val classloaders = listOf(
+            ClassLoader.getSystemClassLoader(),
+            lpparam.classLoader,
+            Thread.currentThread().contextClassLoader
+        )
+        
+        var targetClass: Class<*>? = null
+        
+        classloaders.forEachIndexed { index, cl ->
+            try {
+                if (cl != null) {
+                    val found = XposedHelpers.findClassIfExists("android.hardware.camera2.impl.CameraDeviceImpl", cl)
+                    if (found != null) {
+                        Log.e("DIAGNOSTIC_VIRTUCAM", "CLAUDE: CLASS FOUND in classloader $index: $cl")
+                        if (targetClass == null) {
+                            targetClass = found
+                        }
+                    } else {
+                        Log.e("DIAGNOSTIC_VIRTUCAM", "CLAUDE: Not found in classloader $index")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("DIAGNOSTIC_VIRTUCAM", "CLAUDE: Exception checking classloader $index", e)
+            }
+        }
+        
+        if (targetClass == null) {
+            Log.e("DIAGNOSTIC_VIRTUCAM", "CLAUDE FATAL: CameraDeviceImpl is MISSING from ALL ClassLoaders. Sandbox isolation confirmed.")
+            return
+        }
+
+        val cameraDeviceImplClass = targetClass!!
 
         XposedBridge.hookAllMethods(
             cameraDeviceImplClass,
@@ -2777,10 +2806,21 @@ object CameraHook {
      * Hooks createCaptureSessionByOutputConfigurations(List<OutputConfiguration>, ...)
      */
     private fun hookCameraDeviceOutputConfigurations(lpparam: XC_LoadPackage.LoadPackageParam) {
-        val cameraDeviceImplClass = XposedHelpers.findClassIfExists(
-            "android.hardware.camera2.impl.CameraDeviceImpl",
-            lpparam.classLoader
-        ) ?: return
+        val classloaders = listOf(
+            ClassLoader.getSystemClassLoader(),
+            lpparam.classLoader,
+            Thread.currentThread().contextClassLoader
+        )
+        
+        var targetClass: Class<*>? = null
+        classloaders.forEach { cl ->
+            if (cl != null && targetClass == null) {
+                targetClass = XposedHelpers.findClassIfExists("android.hardware.camera2.impl.CameraDeviceImpl", cl)
+            }
+        }
+        
+        if (targetClass == null) return
+        val cameraDeviceImplClass = targetClass!!
 
         XposedBridge.hookAllMethods(
             cameraDeviceImplClass,
