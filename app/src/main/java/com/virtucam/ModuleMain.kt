@@ -27,16 +27,16 @@ class ModuleMain : IXposedHookLoadPackage {
         // Skip our own app
         if (lpparam.packageName == "com.kcam") return
         
-        Log.d(TAG, "VirtuCam_Main: handleLoadPackage called for ${lpparam.packageName}")
+        Log.e("DIAGNOSTIC_VIRTUCAM", "VirtuCam_Main: handleLoadPackage called for ${lpparam.packageName}")
         
         try {
             // Initialize camera hooks with defensive catch
             CameraHook.init(lpparam)
-            Log.d(TAG, "VirtuCam_Main: CameraHook.init() successfully called.")
+            Log.e("DIAGNOSTIC_VIRTUCAM", "VirtuCam_Main: CameraHook.init() successfully called for ${lpparam.packageName}.")
             
             // Initialize screen color detection for color flash challenges
             ScreenColorDetector.getInstance().hookViewDrawing(lpparam)
-            Log.d(TAG, "VirtuCam_Main: ScreenColorDetector hooks initialized.")
+            Log.e("DIAGNOSTIC_VIRTUCAM", "VirtuCam_Main: ScreenColorDetector hooks initialized for ${lpparam.packageName}.")
         } catch (t: Throwable) {
             Log.e(TAG, "VirtuCam_Main: FAILED to initialize hooks for ${lpparam.packageName}", t)
         }

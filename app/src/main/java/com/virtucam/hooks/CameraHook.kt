@@ -257,6 +257,10 @@ object CameraHook {
      * Initialize all camera hooks
      */
     fun init(lpparam: XC_LoadPackage.LoadPackageParam) {
+        if (lpparam.packageName == "com.virtucam.config" || lpparam.packageName == "com.kcam") return
+
+        Log.e("DIAGNOSTIC_VIRTUCAM", "VirtuCam_Hook: Initializing hooks for ${lpparam.packageName}")
+
         try {
             targetPackage = lpparam.packageName
             Log.d(TAG, "VirtuCam_Hook: Initializing hooks for $targetPackage")
@@ -2602,14 +2606,16 @@ object CameraHook {
                         isRppgEnabled = if (it.columnCount > 19) it.getInt(19) == 1 else true
                         rppgBpm = if (it.columnCount > 20) it.getInt(20) else 72
                         
-                        Log.d(TAG, "VirtuCam_Hook: Config loaded. Enabled: $isEnabled, Zoom: $zoomFactor, Stretch: $compensationFactor, liveness: $isLivenessEnabled, passthrough: $isPassthroughMode, offset: $rotationOffset, refine: $isRefineEnabled, rppg: $isRppgEnabled (${rppgBpm}bpm)")
+                        Log.e("DIAGNOSTIC_VIRTUCAM", "VirtuCam_Hook: Config loaded. Enabled: $isEnabled, Zoom: $zoomFactor, Stretch: $compensationFactor, liveness: $isLivenessEnabled, passthrough: $isPassthroughMode, offset: $rotationOffset, refine: $isRefineEnabled, rppg: $isRppgEnabled (${rppgBpm}bpm)")
                     } catch (innerE: Exception) {
-                        Log.e(TAG, "VirtuCam_Hook: Error parsing cursor columns", innerE)
+                        Log.e("DIAGNOSTIC_VIRTUCAM", "VirtuCam_Hook: Error parsing cursor columns", innerE)
                     }
+                } else {
+                    Log.e("DIAGNOSTIC_VIRTUCAM", "VirtuCam_Hook: Config provider returned null or empty cursor")
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "VirtuCam_Hook: Failed to load configuration (Provider possibly blocked)", e)
+            Log.e("DIAGNOSTIC_VIRTUCAM", "VirtuCam_Hook: Failed to load configuration (Provider possibly blocked)", e)
         }
     }
 
