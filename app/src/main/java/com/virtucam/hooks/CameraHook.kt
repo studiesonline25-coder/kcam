@@ -2518,15 +2518,16 @@ object CameraHook {
         
         val isVideoSurface = videoSurfaces.contains(targetSurface)
         
-        // [JPEG DIRECT OVERWRITE] For JPEG surfaces, always use direct overwrite.
-        // Don't swap with dummy — HAL writes real JPEG, acquireNextImage hook overwrites it.
-        if (format == 256 && !isPreview && !isVideoSurface) {
+        // [DIRECT OVERWRITE] For supported capture formats, use direct overwrite.
+        // Don't swap with dummy — HAL writes real data, acquireNextImage hook overwrites it.
+        val isDirectOverwriteSupported = format == 256 || format == 35 || format == 32 || format == 17
+        if (isDirectOverwriteSupported && !isPreview && !isVideoSurface) {
             val realSensorOrientation = resolveSensorOrientationDeg()
-            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: JPEG OutputConfig ${w}x${h} — direct overwrite (no dummy, no ImageWriter)")
+            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Capture OutputConfig ${w}x${h} (Format $format) — direct overwrite (no dummy, no ImageWriter)")
             val b = FormatConverterBridge(w, h, null, format, realSensorOrientation, rotationOffset, isColorSwapped)
             activeBridges.add(b)
             formatBridges[android.util.Size(w, h)] = b
-            // Don't modify the OutputConfiguration — keep Chrome's original JPEG surface
+            // Don't modify the OutputConfiguration — keep the original surface
             return b.inputSurface ?: targetSurface
         }
 
@@ -2721,19 +2722,19 @@ object CameraHook {
                                 val format = SurfaceUtils.getSurfaceFormat(targetSurface)
                                 val isPreview = (format == 0x22 || format == 0x1)
                                 
-                                // [JPEG DIRECT OVERWRITE] For JPEG surfaces, ALWAYS use direct overwrite.
-                                // Don't swap with dummy, don't use ImageWriter (dequeueInputImage fails
-                                // with "dequeue buffer failed" on Chrome's JPEG surface). Instead:
-                                // 1. Keep Chrome's original JPEG surface in the session
+                                // [DIRECT OVERWRITE] For supported capture formats, ALWAYS use direct overwrite.
+                                // Don't swap with dummy, don't use ImageWriter. Instead:
+                                // 1. Keep the original surface in the session
                                 // 2. Create bridge WITHOUT ImageWriter (null outputSurface) for RGBA caching
-                                // 3. HAL writes real JPEG to Chrome's surface
-                                // 4. Our acquireNextImage hook [4b] overwrites it with virtual content
-                                if (format == 256 && !isPreview && !isVideoSurface) {
+                                // 3. HAL writes real data to the original surface
+                                // 4. Our acquireNextImage hook overwrites it with virtual content
+                                val isDirectOverwriteSupported = format == 256 || format == 35 || format == 32 || format == 17
+                                if (isDirectOverwriteSupported && !isPreview && !isVideoSurface) {
                                     val b = FormatConverterBridge(w, h, null, format, resolveSensorOrientationDeg(), rotationOffset, isColorSwapped)
                                     activeBridges.add(b)
                                     formatBridges[android.util.Size(w, h)] = b
-                                    Log.e(TAG, "VirtuCam_Hook: JPEG ${w}x${h} — direct overwrite (no dummy, no ImageWriter)")
-                                    newSurfaces.add(targetSurface) // Keep Chrome's original JPEG surface
+                                    Log.e(TAG, "VirtuCam_Hook: Capture ${w}x${h} (Format $format) — direct overwrite (no dummy, no ImageWriter)")
+                                    newSurfaces.add(targetSurface) // Keep the original surface
                                     targetSurfaces.add(Triple(b.inputSurface ?: targetSurface, true, format))
                                     continue
                                 }
