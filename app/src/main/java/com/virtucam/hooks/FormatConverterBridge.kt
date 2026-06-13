@@ -115,7 +115,7 @@ class FormatConverterBridge(
             handler = Handler(handlerThread!!.looper)
             
             if (outputSurface != null) {
-                if (outputFormat == 256 || outputFormat == ImageFormat.JPEG) {
+                if (outputFormat == 256 || outputFormat == ImageFormat.JPEG || outputFormat == 35 || outputFormat == ImageFormat.YUV_420_888 || outputFormat == ImageFormat.YV12) {
                     try {
                         // [BROWSER CAPTURE FIX] Try API 29+ 3-arg ImageWriter.newInstance(surface, maxImages, format)
                         // first. This is more reliable for JPEG surfaces because the format is explicitly specified,
@@ -124,12 +124,12 @@ class FormatConverterBridge(
                             val newInstanceMethod = ImageWriter::class.java.getMethod(
                                 "newInstance", Surface::class.java, Int::class.javaPrimitiveType, Int::class.javaPrimitiveType
                             )
-                            val writer = newInstanceMethod.invoke(null, outputSurface, 2, outputFormat) as ImageWriter
+                            val writer = newInstanceMethod.invoke(null, outputSurface, 1, outputFormat) as ImageWriter
                             Log.d(TAG, "FormatConverterBridge: ImageWriter created via API 29+ (format=$outputFormat)")
                             writer
                         } catch (e: Throwable) {
-                            Log.d(TAG, "FormatConverterBridge: API 29+ ImageWriter failed (${e.message}), trying 2-arg fallback")
-                            android.media.ImageWriter.newInstance(outputSurface, 2)
+                            Log.d(TAG, "FormatConverterBridge: API 29+ ImageWriter failed (${e.message}), trying 2-arg fallback with maxImages=1")
+                            android.media.ImageWriter.newInstance(outputSurface, 1)
                         }
                         
                         // Initialize Push Thread
@@ -1337,8 +1337,8 @@ class FormatConverterBridge(
     fun connectToImageReader(imageReader: ImageReader) {
         try {
             this.imageReader = imageReader
-            if (outputFormat == 256 || outputFormat == ImageFormat.JPEG) {
-                this.imageWriter = ImageWriter.newInstance(imageReader.surface, 5, outputFormat)
+            if (outputFormat == 256 || outputFormat == ImageFormat.JPEG || outputFormat == 35 || outputFormat == ImageFormat.YUV_420_888 || outputFormat == ImageFormat.YV12) {
+                this.imageWriter = ImageWriter.newInstance(imageReader.surface, 1, outputFormat)
                 
                 if (pushThread == null) {
                     pushThread = HandlerThread("VirtuCamPushThread").apply { start() }
