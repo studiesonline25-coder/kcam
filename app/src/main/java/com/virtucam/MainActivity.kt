@@ -66,7 +66,18 @@ class MainActivity : AppCompatActivity() {
             }
         }
         
+        val assetLoader = androidx.webkit.WebViewAssetLoader.Builder()
+            .addPathHandler("/assets/", androidx.webkit.WebViewAssetLoader.AssetsPathHandler(this))
+            .build()
+        
         webView.webViewClient = object : WebViewClient() {
+            override fun shouldInterceptRequest(
+                view: WebView,
+                request: WebResourceRequest
+            ): WebResourceResponse? {
+                return assetLoader.shouldInterceptRequest(request.url)
+            }
+
             override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
                 injectBridgeLogic()
             }
@@ -77,7 +88,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         webView.addJavascriptInterface(AndroidInterface(), "Android")
-        webView.loadUrl("file:///android_asset/newUI/index.html")
+        webView.loadUrl("https://appassets.androidplatform.net/assets/newUI/index.html")
     }
 
     private fun syncConfigToWeb() {

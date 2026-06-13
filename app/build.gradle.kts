@@ -86,6 +86,7 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.activity:activity-ktx:1.8.2")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+    implementation("androidx.webkit:webkit:1.11.0")
     
     // Xposed API
     compileOnly("de.robv.android.xposed:api:82")
