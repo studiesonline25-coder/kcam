@@ -1924,14 +1924,14 @@ object CameraHook {
             "android.hardware.camera2.impl.CameraDeviceImpl", lpparam.classLoader
         ) ?: return
 
-        XposedBridge.hookAllMethods(deviceImplClass, "submitCaptureRequest", object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
+        val pineSubmitCaptureRequestHook = object : top.canyie.pine.callback.MethodHook() {
+            override fun beforeCall(callFrame: top.canyie.pine.Pine.CallFrame) {
                 applyDeferredHooksToClassLoader(Thread.currentThread().contextClassLoader)
                 if (!isEnabled || surfaceMap.isEmpty()) return
 
                 try {
                     // First argument is List<CaptureRequest>
-                    val requestList = param.args[0] as? List<*> ?: return
+                    val requestList = callFrame.args[0] as? List<*> ?: return
 
                     for (reqObj in requestList) {
                         if (reqObj == null) continue
