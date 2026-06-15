@@ -2048,26 +2048,36 @@ object CameraHook {
             "android.media.ImageReader", lpparam.classLoader
         ) ?: return
 
-        // [ONCE AND FOR ALL] Track Surface formats from ImageReader creation
-        XposedBridge.hookAllMethods(imageReaderClass, "newInstance", object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
+        // [PINE MIGRATION] Track Surface formats from ImageReader creation using AOT-bypassing Pine
+        val pineImageReaderHook = object : top.canyie.pine.callback.MethodHook() {
+            override fun beforeCall(callFrame: top.canyie.pine.Pine.CallFrame) {
                 applyDeferredHooksToClassLoader(Thread.currentThread().contextClassLoader)
             }
-            override fun afterHookedMethod(param: MethodHookParam) {
-                val reader = param.result as? ImageReader ?: return
-                val width = param.args[0] as? Int ?: -1
-                val height = param.args[1] as? Int ?: -1
-                val format = param.args[2] as? Int ?: -1
-                val maxImages = param.args[3] as? Int ?: -1
+            override fun afterCall(callFrame: top.canyie.pine.Pine.CallFrame) {
+                val reader = callFrame.result as? ImageReader ?: return
+                val width = callFrame.args[0] as? Int ?: -1
+                val height = callFrame.args[1] as? Int ?: -1
+                val format = callFrame.args[2] as? Int ?: -1
+                val maxImages = callFrame.args[3] as? Int ?: -1
                 
-                Log.e(TAG, "[TELEMETRY] ImageReader Pipeline Created! App Requested: ${width}x${height} | Format: $format | MaxImages: $maxImages")
+                Log.e(TAG, "[PINE TELEMETRY] ImageReader Pipeline Created! App Requested: ${width}x${height} | Format: $format | MaxImages: $maxImages")
                 
                 val surface = reader.surface
                 if (surface != null) {
+                    surfaceSizes[surface] = Pair(width, height)
                     surfaceFormats[surface] = format
                 }
             }
-        })
+        }
+
+        imageReaderClass.declaredMethods.filter { it.name == "newInstance" }.forEach { method ->
+            try {
+                top.canyie.pine.Pine.hook(method, pineImageReaderHook)
+                Log.e(TAG, "PINE HOOK REGISTRATION: Successfully injected native Pine hook on ImageReader.newInstance!")
+            } catch (e: Throwable) {
+                Log.e(TAG, "PINE HOOK FATAL: Failed to inject Pine hook on ImageReader.newInstance", e)
+            }
+        }
 
         XposedHelpers.findAndHookMethod(imageReaderClass, "getSurface", object : XC_MethodHook() {
             override fun afterHookedMethod(param: MethodHookParam) {
@@ -2102,53 +2112,48 @@ object CameraHook {
             }
         })
 
-        // Hook SurfaceTexture for Preview size tracking
+        // [PINE MIGRATION] Hook SurfaceTexture for Preview size tracking
         try {
-            XposedHelpers.findAndHookMethod(
-                "android.graphics.SurfaceTexture",
-                lpparam.classLoader,
-                "setDefaultBufferSize",
-                Int::class.java, Int::class.java,
-                object : XC_MethodHook() {
-                    override fun afterHookedMethod(param: MethodHookParam) {
-                        val st = param.thisObject as? SurfaceTexture ?: return
-                        val w = param.args[0] as Int
-                        val h = param.args[1] as Int
+            val surfaceTextureClass = XposedHelpers.findClassIfExists("android.graphics.SurfaceTexture", lpparam.classLoader)
+            if (surfaceTextureClass != null) {
+                val setSizeMethod = surfaceTextureClass.getDeclaredMethod("setDefaultBufferSize", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType)
+                top.canyie.pine.Pine.hook(setSizeMethod, object : top.canyie.pine.callback.MethodHook() {
+                    override fun afterCall(callFrame: top.canyie.pine.Pine.CallFrame) {
+                        val st = callFrame.thisObject as? SurfaceTexture ?: return
+                        val w = callFrame.args[0] as Int
+                        val h = callFrame.args[1] as Int
                         val oldSize = surfaceTextureSizes[st]
                         surfaceTextureSizes[st] = Pair(w, h)
-                        // [DIAGNOSTIC] Log ALL setDefaultBufferSize calls unconditionally
-                        Log.e(TAG, "VirtuCam_Hook: setDefaultBufferSize(${w}x${h}) called on ST@${System.identityHashCode(st).toString(16)} (old=${oldSize?.let{"${it.first}x${it.second}"}?:"none"}, renderActive=${renderThreads.isNotEmpty()})")
-                        // Signal resize only if dimensions actually changed and render threads are active
+                        Log.e(TAG, "PINE_Hook: setDefaultBufferSize(${w}x${h}) called on ST@${System.identityHashCode(st).toString(16)}")
                         if (oldSize != null && (oldSize.first != w || oldSize.second != h) && renderThreads.isNotEmpty()) {
-                            Log.e(TAG, "VirtuCam_Hook: SurfaceTexture RESIZED from ${oldSize.first}x${oldSize.second} -> ${w}x${h} - signaling EGL recreate")
+                            Log.e(TAG, "PINE_Hook: SurfaceTexture RESIZED - signaling EGL recreate")
                             pendingSurfaceResize.set(true)
                         }
                     }
-                }
-            )
+                })
+                Log.e(TAG, "PINE HOOK REGISTRATION: Successfully injected native Pine hook on SurfaceTexture.setDefaultBufferSize!")
+            }
+        } catch (e: Throwable) {
+            Log.e(TAG, "VirtuCam_Hook: Failed to hook SurfaceTexture.setDefaultBufferSize", e)
+        }
 
-            // Associate SurfaceTexture with Surface for later lookup
-            XposedHelpers.findAndHookConstructor(
-                "android.view.Surface",
-                lpparam.classLoader,
-                SurfaceTexture::class.java,
-                object : XC_MethodHook() {
-                    override fun afterHookedMethod(param: MethodHookParam) {
-                        val s = param.thisObject as? Surface ?: return
-                        val st = param.args[0] as? SurfaceTexture ?: return
-                        
-                        // [TOTAL SURVEILLANCE - MOVED OUTSIDE] We no longer hook this inside the constructor
-                        // to prevent redundant layering and crashes (fixes Phoenix).
-                        // Instead, we just associate the size below.
-
+            // [PINE MIGRATION] Associate SurfaceTexture with Surface for later lookup
+            val surfaceClass = XposedHelpers.findClassIfExists("android.view.Surface", lpparam.classLoader)
+            if (surfaceClass != null) {
+                val constructor = surfaceClass.getDeclaredConstructor(SurfaceTexture::class.java)
+                top.canyie.pine.Pine.hook(constructor, object : top.canyie.pine.callback.MethodHook() {
+                    override fun afterCall(callFrame: top.canyie.pine.Pine.CallFrame) {
+                        val s = callFrame.thisObject as? Surface ?: return
+                        val st = callFrame.args[0] as? SurfaceTexture ?: return
                         val size = surfaceTextureSizes[st]
                         if (size != null) {
                             surfaceSizes[s] = size
-                            Log.d(TAG, "VirtuCam_Hook: Associated Surface with SurfaceTexture size ${size.first}x${size.second}")
+                            Log.d(TAG, "PINE_Hook: Associated Surface with SurfaceTexture size ${size.first}x${size.second}")
                         }
                     }
-                }
-            )
+                })
+                Log.e(TAG, "PINE HOOK REGISTRATION: Successfully injected native Pine hook on Surface(SurfaceTexture) constructor!")
+            }
 
             // [TOTAL SURVEILLANCE] Hook getTransformMatrix GLOBALLY for SurfaceTexture
             // This is safer and only applies once per app launch.
@@ -3715,9 +3720,7 @@ class VirtualRenderThread(
                 val surfaceIdx = eglSurfaceTargets.indexOfFirst { triple -> triple.first === es }
                 val originalSurface = if (surfaceIdx >= 0 && surfaceIdx < originalSurfaceBackings.size) originalSurfaceBackings[surfaceIdx] else null
                 val isSurfaceTexture = originalSurface != null && surfaceSizes.containsKey(originalSurface)
-                // [AOT FIX] AOT breaks ImageReader.newInstance hooks, so surfaceSizes is empty.
-                // We use the format directly to classify raw hardware buffers vs SurfaceViews.
-                val isSurfaceView = !isCapture && (format == 0x22 || format == 0x1)
+                val isSurfaceView = !isCapture && !isSurfaceTexture
 
                 if ((vw <= 0 || vh <= 0) && originalSurface != null) {
                     CameraHook.trackedSurfaceSize(originalSurface)?.let { (w, h) ->
