@@ -2657,6 +2657,17 @@ object CameraHook {
 
         val cameraDeviceImplClass = targetClass!!
 
+        try {
+            Log.e("DIAGNOSTIC_VIRTUCAM", "=== DUMPING CameraDeviceImpl METHODS ON ANDROID 16 ===")
+            cameraDeviceImplClass.declaredMethods.forEach { method ->
+                if (method.name.contains("Session", ignoreCase = true)) {
+                    Log.e("DIAGNOSTIC_VIRTUCAM", "FOUND METHOD: ${method.name}(${method.parameterTypes.joinToString { it.simpleName }})")
+                }
+            }
+        } catch (e: Throwable) {
+            Log.e("DIAGNOSTIC_VIRTUCAM", "Failed to dump methods", e)
+        }
+
         XposedBridge.hookAllMethods(
             cameraDeviceImplClass,
             "createCaptureSession",
