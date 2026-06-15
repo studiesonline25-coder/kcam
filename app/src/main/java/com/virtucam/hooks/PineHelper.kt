@@ -22,7 +22,7 @@ object PineHelper {
                 try {
                     val p = top.canyie.pine.Pine.hook(method, hook)
                     if (p != null) hooks.add(p) else hooks.add(Any())
-                    hooked = true
+
                     Log.i("DIAGNOSTIC_VIRTUCAM", "PINE HOOK REGISTRATION: Successfully injected hook on ${clazz.name}.$methodName")
                 } catch (e: Throwable) {
                     Log.e("DIAGNOSTIC_VIRTUCAM", "PINE HOOK FATAL: Failed to inject hook on ${clazz.name}.$methodName", e)
@@ -31,7 +31,7 @@ object PineHelper {
         } catch (e: Throwable) {
             Log.e("DIAGNOSTIC_VIRTUCAM", "PINE HOOK FATAL: Reflection error querying ${clazz.name}.$methodName", e)
         }
-        if (!hooked) {
+        if (hooks.isEmpty()) {
             Log.w("DIAGNOSTIC_VIRTUCAM", "PINE HOOK WARNING: Target method $methodName not found or failed in ${clazz.name}")
         }
         return hooks
