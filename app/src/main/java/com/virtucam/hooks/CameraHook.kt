@@ -280,6 +280,7 @@ object CameraHook {
             
             hookCameraManager(lpparam)
             hookImageReader(lpparam)
+            hookSurfaceTexture(lpparam)
             hookCaptureRequest(lpparam)
             hookJitterMetadata(lpparam)
             hookSubmitCaptureRequest(lpparam)
@@ -2070,13 +2071,20 @@ object CameraHook {
             }
         }
 
-        imageReaderClass.declaredMethods.filter { it.name == "newInstance" }.forEach { method ->
-            try {
-                top.canyie.pine.Pine.hook(method, pineImageReaderHook)
-                Log.e(TAG, "PINE HOOK REGISTRATION: Successfully injected native Pine hook on ImageReader.newInstance!")
-            } catch (e: Throwable) {
-                Log.e(TAG, "PINE HOOK FATAL: Failed to inject Pine hook on ImageReader.newInstance", e)
-            }
+        try {
+            val method = imageReaderClass.getDeclaredMethod("newInstance", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType, Int::class.javaPrimitiveType, Int::class.javaPrimitiveType)
+            top.canyie.pine.Pine.hook(method, pineImageReaderHook)
+            Log.e(TAG, "PINE HOOK REGISTRATION: Successfully injected native Pine hook on ImageReader.newInstance!")
+        } catch (e: Throwable) {
+            Log.e(TAG, "PINE HOOK FATAL: Failed to inject Pine hook on ImageReader.newInstance", e)
+        }
+        
+        try {
+            val method2 = imageReaderClass.getDeclaredMethod("newInstance", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType, Int::class.javaPrimitiveType, Int::class.javaPrimitiveType, Long::class.javaPrimitiveType)
+            top.canyie.pine.Pine.hook(method2, pineImageReaderHook)
+            Log.e(TAG, "PINE HOOK REGISTRATION: Successfully injected native Pine hook on ImageReader.newInstance(long)!")
+        } catch (e: Throwable) {
+            // Optional overload, ignore if not found
         }
 
         XposedHelpers.findAndHookMethod(imageReaderClass, "getSurface", object : XC_MethodHook() {
@@ -2111,8 +2119,9 @@ object CameraHook {
                 }
             }
         })
+    }
 
-        // [PINE MIGRATION] Hook SurfaceTexture for Preview size tracking
+    private fun hookSurfaceTexture(lpparam: XC_LoadPackage.LoadPackageParam) {
         try {
             val surfaceTextureClass = XposedHelpers.findClassIfExists("android.graphics.SurfaceTexture", lpparam.classLoader)
             if (surfaceTextureClass != null) {
