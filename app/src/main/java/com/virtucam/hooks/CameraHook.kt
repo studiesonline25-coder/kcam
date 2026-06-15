@@ -3036,17 +3036,9 @@ object CameraHook {
                     val isSurfaceList = configsList[0] is Surface
                     
                     if (isSurfaceList) {
-                        // Handle List<Surface>
-                        val newSurfaces = ArrayList<Surface>()
-                        for (surface in configsList) {
-                            if (surface !is Surface) continue
-                            val isCapture = captureSurfaces.contains(surface)
-                            val format = surfaceFormats[surface] ?: 0x1
-                            val resolvedSurface = getVirtualSurface(format) ?: surface
-                            targetSurfaces.add(Triple(resolvedSurface, isCapture, format))
-                            newSurfaces.add(resolvedSurface)
-                        }
-                        param.args[listIndex] = newSurfaces
+                        Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Intercepted List<Surface>, skipping (only OutputConfig supported)")
+                        // We could handle List<Surface> here, but it's rarely used (mostly high speed)
+                        // and we don't have getVirtualSurface implemented for raw Surfaces without size.
                     } else {
                         // Handle List<OutputConfiguration>
                         for (config in configsList) {
