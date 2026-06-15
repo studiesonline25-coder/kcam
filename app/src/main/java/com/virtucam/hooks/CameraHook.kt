@@ -3064,10 +3064,10 @@ object CameraHook {
         }
 
         cameraDeviceImplClass.declaredMethods.forEach { method ->
-            if (method.name == "createCaptureSessionInternal" || 
-                method.name == "createCustomCaptureSession" || 
+            if (method.name == "createCustomCaptureSession" || 
                 method.name == "createConstrainedHighSpeedCaptureSession" ||
-                method.name == "createCaptureSession") {
+                method.name == "createCaptureSession" ||
+                method.name == "createCaptureSessionByOutputConfigurations") {
                 try {
                     top.canyie.pine.Pine.hook(method, pineInternalMethodHook)
                     Log.e("DIAGNOSTIC_VIRTUCAM", "PINE HOOK REGISTRATION: Successfully injected native Pine hook on ${method.name}!")
