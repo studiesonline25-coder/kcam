@@ -3006,12 +3006,26 @@ object CameraHook {
                     var configsList: List<*>? = null
                     var listIndex = -1
                     
-                    // Find the List argument
-                    for (i in args.indices) {
-                        if (args[i] is List<*>) {
-                            configsList = args[i] as List<*>
-                            listIndex = i
-                            break
+                    // 1. Check if the first argument is SessionConfiguration (Android 9+)
+                    if (args.isNotEmpty() && args[0] != null && args[0]!!.javaClass.name.endsWith("SessionConfiguration")) {
+                        try {
+                            val sessionConfig = args[0]!!
+                            val getOutputConfigsMethod = sessionConfig.javaClass.getMethod("getOutputConfigurations")
+                            configsList = getOutputConfigsMethod.invoke(sessionConfig) as? List<*>
+                            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Extracted OutputConfigurations from SessionConfiguration")
+                        } catch (e: Throwable) {
+                            Log.e(TAG, "VirtuCam_Hook: Failed to extract from SessionConfiguration", e)
+                        }
+                    } 
+                    
+                    // 2. Fallback: Find the List argument directly (Legacy)
+                    if (configsList == null) {
+                        for (i in args.indices) {
+                            if (args[i] is List<*>) {
+                                configsList = args[i] as List<*>
+                                listIndex = i
+                                break
+                            }
                         }
                     }
                     
