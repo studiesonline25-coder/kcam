@@ -3715,7 +3715,9 @@ class VirtualRenderThread(
                 val surfaceIdx = eglSurfaceTargets.indexOfFirst { triple -> triple.first === es }
                 val originalSurface = if (surfaceIdx >= 0 && surfaceIdx < originalSurfaceBackings.size) originalSurfaceBackings[surfaceIdx] else null
                 val isSurfaceTexture = originalSurface != null && surfaceSizes.containsKey(originalSurface)
-                val isSurfaceView = !isCapture && !isSurfaceTexture
+                // [AOT FIX] AOT breaks ImageReader.newInstance hooks, so surfaceSizes is empty.
+                // We use the format directly to classify raw hardware buffers vs SurfaceViews.
+                val isSurfaceView = !isCapture && (format == 0x22 || format == 0x1)
 
                 if ((vw <= 0 || vh <= 0) && originalSurface != null) {
                     CameraHook.trackedSurfaceSize(originalSurface)?.let { (w, h) ->
