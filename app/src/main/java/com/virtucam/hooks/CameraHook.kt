@@ -2991,6 +2991,91 @@ object CameraHook {
                 }
             }
         )
+
+        // --- ANDROID 16 / XIAOMI INTERNAL SESSION METHODS ---
+        val internalMethodHook = object : XC_MethodHook() {
+            override fun beforeHookedMethod(param: MethodHookParam) {
+                try {
+                    loadConfiguration()
+                    if (!isEnabled) {
+                        Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Module OFF, allowing ${param.method.name}")
+                        return
+                    }
+                    
+                    val args = param.args
+                    var configsList: List<*>? = null
+                    var listIndex = -1
+                    
+                    // Find the List argument (it could be at index 0 or 1 depending on the method)
+                    for (i in args.indices) {
+                        if (args[i] is List<*>) {
+                            configsList = args[i] as List<*>
+                            listIndex = i
+                            break
+                        }
+                    }
+                    
+                    if (configsList.isNullOrEmpty()) return
+                    
+                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Intercepted ${param.method.name} - list size: ${configsList.size}")
+                    
+                    // Direct sensing
+                    try {
+                        val cameraDevice = param.thisObject as android.hardware.camera2.CameraDevice
+                        activeCameraId = cameraDevice.id
+                        val manager = AndroidAppHelper.currentApplication().getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
+                        val characteristics = manager.getCameraCharacteristics(activeCameraId)
+                        val facing = characteristics.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
+                        if (facing != null) cameraFacings[activeCameraId] = mapLensFacingForVirtuCam(facing) ?: 0
+                        cameraOrientations[activeCameraId] = characteristics.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
+                    } catch (_: Throwable) {}
+
+                    stopOldPipeline()
+                    
+                    val targetSurfaces = ArrayList<Triple<Surface, Boolean, Int>>()
+                    val isSurfaceList = configsList[0] is Surface
+                    
+                    if (isSurfaceList) {
+                        // Handle List<Surface>
+                        val newSurfaces = ArrayList<Surface>()
+                        for (surface in configsList) {
+                            if (surface !is Surface) continue
+                            val isCapture = captureSurfaces.contains(surface)
+                            val format = surfaceFormats[surface] ?: 0x1
+                            val resolvedSurface = getVirtualSurface(format) ?: surface
+                            targetSurfaces.add(Triple(resolvedSurface, isCapture, format))
+                            newSurfaces.add(resolvedSurface)
+                        }
+                        param.args[listIndex] = newSurfaces
+                    } else {
+                        // Handle List<OutputConfiguration>
+                        for (config in configsList) {
+                            if (config == null) continue
+                            try {
+                                val getSurfaceMethod = config.javaClass.getMethod("getSurface")
+                                val targetSurface = getSurfaceMethod.invoke(config) as? Surface
+                                
+                                if (targetSurface != null) {
+                                    val isCapture = captureSurfaces.contains(targetSurface)
+                                    val format = SurfaceUtils.getSurfaceFormat(targetSurface)
+                                    val resolvedSurface = swapSurfaceInOutputConfig(config, targetSurface)
+                                    targetSurfaces.add(Triple(resolvedSurface, isCapture, format))
+                                }
+                            } catch (_: Throwable) {}
+                        }
+                    }
+                    
+                    startRenderThreads(targetSurfaces)
+                    obfuscateStackTrace()
+                } catch (t: Throwable) {
+                    Log.e(TAG, "VirtuCam_Hook: Error in ${param.method.name} hook", t)
+                }
+            }
+        }
+
+        XposedBridge.hookAllMethods(cameraDeviceImplClass, "createCaptureSessionInternal", internalMethodHook)
+        XposedBridge.hookAllMethods(cameraDeviceImplClass, "createCustomCaptureSession", internalMethodHook)
+        XposedBridge.hookAllMethods(cameraDeviceImplClass, "createConstrainedHighSpeedCaptureSession", internalMethodHook)
     }
 
     private fun stopOldPipeline() {
