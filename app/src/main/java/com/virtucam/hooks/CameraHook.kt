@@ -2119,97 +2119,6 @@ object CameraHook {
                 }
             }
         })
-    }
-
-    private fun hookSurfaceTexture(lpparam: XC_LoadPackage.LoadPackageParam) {
-        try {
-            val surfaceTextureClass = XposedHelpers.findClassIfExists("android.graphics.SurfaceTexture", lpparam.classLoader)
-            if (surfaceTextureClass != null) {
-                val setSizeMethod = surfaceTextureClass.getDeclaredMethod("setDefaultBufferSize", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType)
-                top.canyie.pine.Pine.hook(setSizeMethod, object : top.canyie.pine.callback.MethodHook() {
-                    override fun afterCall(callFrame: top.canyie.pine.Pine.CallFrame) {
-                        val st = callFrame.thisObject as? SurfaceTexture ?: return
-                        val w = callFrame.args[0] as Int
-                        val h = callFrame.args[1] as Int
-                        val oldSize = surfaceTextureSizes[st]
-                        surfaceTextureSizes[st] = Pair(w, h)
-                        Log.e(TAG, "PINE_Hook: setDefaultBufferSize(${w}x${h}) called on ST@${System.identityHashCode(st).toString(16)}")
-                        if (oldSize != null && (oldSize.first != w || oldSize.second != h) && renderThreads.isNotEmpty()) {
-                            Log.e(TAG, "PINE_Hook: SurfaceTexture RESIZED - signaling EGL recreate")
-                            pendingSurfaceResize.set(true)
-                        }
-                    }
-                })
-                Log.e(TAG, "PINE HOOK REGISTRATION: Successfully injected native Pine hook on SurfaceTexture.setDefaultBufferSize!")
-            }
-        } catch (e: Throwable) {
-            Log.e(TAG, "VirtuCam_Hook: Failed to hook SurfaceTexture.setDefaultBufferSize", e)
-        }
-
-            // [PINE MIGRATION] Associate SurfaceTexture with Surface for later lookup
-            val surfaceClass = XposedHelpers.findClassIfExists("android.view.Surface", lpparam.classLoader)
-            if (surfaceClass != null) {
-                val constructor = surfaceClass.getDeclaredConstructor(SurfaceTexture::class.java)
-                top.canyie.pine.Pine.hook(constructor, object : top.canyie.pine.callback.MethodHook() {
-                    override fun afterCall(callFrame: top.canyie.pine.Pine.CallFrame) {
-                        val s = callFrame.thisObject as? Surface ?: return
-                        val st = callFrame.args[0] as? SurfaceTexture ?: return
-                        val size = surfaceTextureSizes[st]
-                        if (size != null) {
-                            surfaceSizes[s] = size
-                            Log.d(TAG, "PINE_Hook: Associated Surface with SurfaceTexture size ${size.first}x${size.second}")
-                        }
-                    }
-                })
-                Log.e(TAG, "PINE HOOK REGISTRATION: Successfully injected native Pine hook on Surface(SurfaceTexture) constructor!")
-            }
-
-            // [TOTAL SURVEILLANCE] Hook getTransformMatrix GLOBALLY for SurfaceTexture
-            // This is safer and only applies once per app launch.
-            try {
-                XposedHelpers.findAndHookMethod(
-                    "android.graphics.SurfaceTexture",
-                    lpparam.classLoader,
-                    "getTransformMatrix",
-                    FloatArray::class.java,
-                    object : XC_MethodHook() {
-                        private var localFrameCount = 0
-                        
-                        override fun afterHookedMethod(param: MethodHookParam) {
-                            val matrix = param.args[0] as? FloatArray ?: return
-
-                            if (isEnabled) {
-                                // Act as real hardware: return a transform matrix encoding the sensor orientation.
-                                // This makes preview look upright to the user — same as real camera behavior.
-                                // The EGL buffer content is rendered at sensor-native orientation, so the matrix
-                                // counter-rotates correctly (front=270°, back=180°).
-                                val sensorRot = resolveSensorOrientationDeg()
-                                android.opengl.Matrix.setIdentityM(matrix, 0)
-                                // Rotate around center (0,0 translated to 0.5,0.5)
-                                android.opengl.Matrix.translateM(matrix, 0, 0.5f, 0.5f, 0f)
-                                android.opengl.Matrix.scaleM(matrix, 0, 1f, -1f, 1f) // Standard SurfaceTexture Y-flip
-                                android.opengl.Matrix.rotateM(matrix, 0, sensorRot.toFloat(), 0f, 0f, 1f)
-                                android.opengl.Matrix.translateM(matrix, 0, -0.5f, -0.5f, 0f)
-                            } else {
-                                // Audit-only: log the real matrix (throttled)
-                                localFrameCount++
-                                if (localFrameCount % 300 == 0) {
-                                    val mStr = matrix.joinToString(", ") { String.format("%.2f", it) }
-                                    Log.e(TAG, "SURVEILLANCE: Real ST Matrix -> [$mStr]")
-                                }
-                                // Record for hardware parity analysis
-                                val isFront = (cameraFacings[activeCameraId] == 1)
-                                try { HardwareAuditLogger.logTransformMatrix(activeCameraId, isFront, matrix) } catch (_: Throwable) {}
-                            }
-                        }
-                    }
-                )
-            } catch (e: Throwable) {
-                Log.e(TAG, "VirtuCam_Hook: Failed to hook getTransformMatrix surveillance: ${e.message}")
-            }
-
-        } catch (_: Throwable) {}
-
         val overwriteHook = object : XC_MethodHook() {
             override fun afterHookedMethod(param: MethodHookParam) {
                 // Secondary Defense: Suppress format mismatch exceptions from nativeImageSetup.
@@ -2315,6 +2224,96 @@ object CameraHook {
 
         XposedBridge.hookAllMethods(imageReaderClass, "acquireNextImage", overwriteHook)
         XposedBridge.hookAllMethods(imageReaderClass, "acquireLatestImage", overwriteHook)
+    }
+    }
+
+    private fun hookSurfaceTexture(lpparam: XC_LoadPackage.LoadPackageParam) {
+        try {
+            val surfaceTextureClass = XposedHelpers.findClassIfExists("android.graphics.SurfaceTexture", lpparam.classLoader)
+            if (surfaceTextureClass != null) {
+                val setSizeMethod = surfaceTextureClass.getDeclaredMethod("setDefaultBufferSize", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType)
+                top.canyie.pine.Pine.hook(setSizeMethod, object : top.canyie.pine.callback.MethodHook() {
+                    override fun afterCall(callFrame: top.canyie.pine.Pine.CallFrame) {
+                        val st = callFrame.thisObject as? SurfaceTexture ?: return
+                        val w = callFrame.args[0] as Int
+                        val h = callFrame.args[1] as Int
+                        val oldSize = surfaceTextureSizes[st]
+                        surfaceTextureSizes[st] = Pair(w, h)
+                        Log.e(TAG, "PINE_Hook: setDefaultBufferSize(${w}x${h}) called on ST@${System.identityHashCode(st).toString(16)}")
+                        if (oldSize != null && (oldSize.first != w || oldSize.second != h) && renderThreads.isNotEmpty()) {
+                            Log.e(TAG, "PINE_Hook: SurfaceTexture RESIZED - signaling EGL recreate")
+                            pendingSurfaceResize.set(true)
+                        }
+                    }
+                })
+                Log.e(TAG, "PINE HOOK REGISTRATION: Successfully injected native Pine hook on SurfaceTexture.setDefaultBufferSize!")
+            }
+        } catch (e: Throwable) {
+            Log.e(TAG, "VirtuCam_Hook: Failed to hook SurfaceTexture.setDefaultBufferSize", e)
+        }
+
+            // [PINE MIGRATION] Associate SurfaceTexture with Surface for later lookup
+            val surfaceClass = XposedHelpers.findClassIfExists("android.view.Surface", lpparam.classLoader)
+            if (surfaceClass != null) {
+                val constructor = surfaceClass.getDeclaredConstructor(SurfaceTexture::class.java)
+                top.canyie.pine.Pine.hook(constructor, object : top.canyie.pine.callback.MethodHook() {
+                    override fun afterCall(callFrame: top.canyie.pine.Pine.CallFrame) {
+                        val s = callFrame.thisObject as? Surface ?: return
+                        val st = callFrame.args[0] as? SurfaceTexture ?: return
+                        val size = surfaceTextureSizes[st]
+                        if (size != null) {
+                            surfaceSizes[s] = size
+                            Log.d(TAG, "PINE_Hook: Associated Surface with SurfaceTexture size ${size.first}x${size.second}")
+                        }
+                    }
+                })
+                Log.e(TAG, "PINE HOOK REGISTRATION: Successfully injected native Pine hook on Surface(SurfaceTexture) constructor!")
+            }
+
+            // [TOTAL SURVEILLANCE] Hook getTransformMatrix GLOBALLY for SurfaceTexture
+            // This is safer and only applies once per app launch.
+            try {
+                XposedHelpers.findAndHookMethod(
+                    "android.graphics.SurfaceTexture",
+                    lpparam.classLoader,
+                    "getTransformMatrix",
+                    FloatArray::class.java,
+                    object : XC_MethodHook() {
+                        private var localFrameCount = 0
+                        
+                        override fun afterHookedMethod(param: MethodHookParam) {
+                            val matrix = param.args[0] as? FloatArray ?: return
+
+                            if (isEnabled) {
+                                // Act as real hardware: return a transform matrix encoding the sensor orientation.
+                                // This makes preview look upright to the user — same as real camera behavior.
+                                // The EGL buffer content is rendered at sensor-native orientation, so the matrix
+                                // counter-rotates correctly (front=270°, back=180°).
+                                val sensorRot = resolveSensorOrientationDeg()
+                                android.opengl.Matrix.setIdentityM(matrix, 0)
+                                // Rotate around center (0,0 translated to 0.5,0.5)
+                                android.opengl.Matrix.translateM(matrix, 0, 0.5f, 0.5f, 0f)
+                                android.opengl.Matrix.scaleM(matrix, 0, 1f, -1f, 1f) // Standard SurfaceTexture Y-flip
+                                android.opengl.Matrix.rotateM(matrix, 0, sensorRot.toFloat(), 0f, 0f, 1f)
+                                android.opengl.Matrix.translateM(matrix, 0, -0.5f, -0.5f, 0f)
+                            } else {
+                                // Audit-only: log the real matrix (throttled)
+                                localFrameCount++
+                                if (localFrameCount % 300 == 0) {
+                                    val mStr = matrix.joinToString(", ") { String.format("%.2f", it) }
+                                    Log.e(TAG, "SURVEILLANCE: Real ST Matrix -> [$mStr]")
+                                }
+                                // Record for hardware parity analysis
+                                val isFront = (cameraFacings[activeCameraId] == 1)
+                                try { HardwareAuditLogger.logTransformMatrix(activeCameraId, isFront, matrix) } catch (_: Throwable) {}
+                            }
+                        }
+                    }
+                )
+            } catch (e: Throwable) {
+                Log.e(TAG, "VirtuCam_Hook: Failed to hook getTransformMatrix surveillance: ${e.message}")
+            }
+
     }
 
     private fun hookCamera1(lpparam: XC_LoadPackage.LoadPackageParam) {
