@@ -3065,9 +3065,14 @@ object CameraHook {
             }
         }
 
-        XposedBridge.hookAllMethods(cameraDeviceImplClass, "createCaptureSessionInternal", internalMethodHook)
-        XposedBridge.hookAllMethods(cameraDeviceImplClass, "createCustomCaptureSession", internalMethodHook)
-        XposedBridge.hookAllMethods(cameraDeviceImplClass, "createConstrainedHighSpeedCaptureSession", internalMethodHook)
+        val h1 = XposedBridge.hookAllMethods(cameraDeviceImplClass, "createCaptureSessionInternal", internalMethodHook)
+        Log.e("DIAGNOSTIC_VIRTUCAM", "HOOK REGISTRATION: createCaptureSessionInternal -> Hooked ${h1.size} methods")
+        
+        val h2 = XposedBridge.hookAllMethods(cameraDeviceImplClass, "createCustomCaptureSession", internalMethodHook)
+        Log.e("DIAGNOSTIC_VIRTUCAM", "HOOK REGISTRATION: createCustomCaptureSession -> Hooked ${h2.size} methods")
+        
+        val h3 = XposedBridge.hookAllMethods(cameraDeviceImplClass, "createConstrainedHighSpeedCaptureSession", internalMethodHook)
+        Log.e("DIAGNOSTIC_VIRTUCAM", "HOOK REGISTRATION: createConstrainedHighSpeedCaptureSession -> Hooked ${h3.size} methods")
     }
 
     private fun stopOldPipeline() {
