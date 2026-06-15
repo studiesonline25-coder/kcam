@@ -284,14 +284,14 @@ object CameraHook {
             hookCaptureRequest(lpparam)
             hookJitterMetadata(lpparam)
             hookSubmitCaptureRequest(lpparam)
-            hookCameraError(lpparam)
+
             hookCaptureSurfaces(lpparam)
             hookCameraDevice(lpparam)
             hookCameraDeviceOutputConfigurations(lpparam)
             hookCamera1(lpparam)
             hookCaptureCallback(lpparam)
             hookXiaomiBypass(lpparam)
-            hookSystemLogRedirection(lpparam)
+
             hookSensorOrientationSpoof(lpparam)
             hookLazyClasses(lpparam) // Replaces hookXiaomiStorage and hookXiaomiParallelDeep
             hookFileOutputStream(lpparam)
@@ -1489,30 +1489,7 @@ object CameraHook {
     /**
      * Redirect system-level Xiaomi logs to our diagnostic stream.
      */
-    private fun hookSystemLogRedirection(lpparam: XC_LoadPackage.LoadPackageParam) {
-        val logClass = XposedHelpers.findClassIfExists("android.util.Log", lpparam.classLoader) ?: return
-        
-        val logHook = object : PineHelper.PineCompatibleMethodHook() {
-            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
-                val tag = param.args[0] as? String ?: return
-                val msg = param.args[1] as? String ?: return
-                
-                if (tag.contains("MIVI", true) || 
-                    tag.contains("MiAlgo", true) || 
-                    tag.contains("ParallelData", true) || 
-                    tag.contains("CAM_Storage", true)) {
-                    
-                    logE("DIAGNOSTIC_VIRTUCAM", "[$tag] $msg")
-                }
-            }
-        }
-        
-        PineHelper.hookAllMethods(logClass, "v", logHook)
-        PineHelper.hookAllMethods(logClass, "d", logHook)
-        PineHelper.hookAllMethods(logClass, "i", logHook)
-        PineHelper.hookAllMethods(logClass, "w", logHook)
-        PineHelper.hookAllMethods(logClass, "e", logHook)
-    }
+
 
     /**
      * Spoof Sensor Orientation to 0 to prevent double-rotation for apps that ignore JPEG_ORIENTATION tags.
@@ -1527,29 +1504,7 @@ object CameraHook {
      * When the camera HAL encounters issues with our dummy surfaces, it fires onError(),
      * which causes the app to show an error dialog or crash. We suppress this entirely.
      */
-    private fun hookCameraError(lpparam: XC_LoadPackage.LoadPackageParam) {
-        val stateCallbackClass = XposedHelpers.findClassIfExists(
-            "android.hardware.camera2.CameraDevice\$StateCallback", lpparam.classLoader
-        ) ?: return
 
-        PineHelper.hookAllMethods(stateCallbackClass, "onError", object : PineHelper.PineCompatibleMethodHook() {
-            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
-                if (!isEnabled) return
-                val errorCode = if (param.args.size >= 2) param.args[1] as? Int else null
-                Log.d(TAG, "VirtuCam_Hook: Suppressed CameraDevice.onError (code=$errorCode)")
-                param.result = null // Prevent the callback from executing
-            }
-        })
-
-        // Also suppress onDisconnected to prevent the app from closing when the HAL disconnects
-        PineHelper.hookAllMethods(stateCallbackClass, "onDisconnected", object : PineHelper.PineCompatibleMethodHook() {
-            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
-                if (!isEnabled) return
-                Log.d(TAG, "VirtuCam_Hook: Suppressed CameraDevice.onDisconnected")
-                param.result = null
-            }
-        })
-    }
 
     private fun hookCaptureSurfaces(lpparam: XC_LoadPackage.LoadPackageParam) {
         try {
