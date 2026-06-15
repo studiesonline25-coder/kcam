@@ -2022,7 +2022,19 @@ object CameraHook {
                     Log.e(TAG, "VirtuCam_Hook: Error mutating immutable CaptureRequest in submitCaptureRequest", t)
                 }
             }
-        })
+        }
+
+        // Apply Pine hook to all submitCaptureRequest methods
+        deviceImplClass.declaredMethods.forEach { method ->
+            if (method.name == "submitCaptureRequest") {
+                try {
+                    top.canyie.pine.Pine.hook(method, pineSubmitCaptureRequestHook)
+                    Log.e("DIAGNOSTIC_VIRTUCAM", "PINE HOOK REGISTRATION: Successfully injected native Pine hook on submitCaptureRequest!")
+                } catch (e: Throwable) {
+                    Log.e("DIAGNOSTIC_VIRTUCAM", "PINE HOOK FATAL: Failed to inject Pine hook on submitCaptureRequest", e)
+                }
+            }
+        }
     }
 
     /**
