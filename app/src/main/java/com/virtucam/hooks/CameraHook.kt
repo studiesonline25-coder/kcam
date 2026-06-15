@@ -2992,21 +2992,21 @@ object CameraHook {
             }
         )
 
-        // --- ANDROID 16 / XIAOMI INTERNAL SESSION METHODS ---
-        val internalMethodHook = object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
+        // --- PINE: NATIVE AOT-BYPASSING SESSION METHODS ---
+        val pineInternalMethodHook = object : top.canyie.pine.callback.MethodHook() {
+            override fun beforeCall(callFrame: top.canyie.pine.Pine.CallFrame) {
                 try {
                     loadConfiguration()
                     if (!isEnabled) {
-                        Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Module OFF, allowing ${param.method.name}")
+                        Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Module OFF, allowing ${callFrame.method.name}")
                         return
                     }
                     
-                    val args = param.args
+                    val args = callFrame.args
                     var configsList: List<*>? = null
                     var listIndex = -1
                     
-                    // Find the List argument (it could be at index 0 or 1 depending on the method)
+                    // Find the List argument
                     for (i in args.indices) {
                         if (args[i] is List<*>) {
                             configsList = args[i] as List<*>
@@ -3017,11 +3017,11 @@ object CameraHook {
                     
                     if (configsList.isNullOrEmpty()) return
                     
-                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Intercepted ${param.method.name} - list size: ${configsList.size}")
+                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: PINE INTERCEPTED ${callFrame.method.name} - list size: ${configsList.size}")
                     
                     // Direct sensing
                     try {
-                        val cameraDevice = param.thisObject as android.hardware.camera2.CameraDevice
+                        val cameraDevice = callFrame.thisObject as android.hardware.camera2.CameraDevice
                         activeCameraId = cameraDevice.id
                         val manager = AndroidAppHelper.currentApplication().getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
                         val characteristics = manager.getCameraCharacteristics(activeCameraId)
@@ -3037,8 +3037,6 @@ object CameraHook {
                     
                     if (isSurfaceList) {
                         Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Intercepted List<Surface>, skipping (only OutputConfig supported)")
-                        // We could handle List<Surface> here, but it's rarely used (mostly high speed)
-                        // and we don't have getVirtualSurface implemented for raw Surfaces without size.
                     } else {
                         // Handle List<OutputConfiguration>
                         for (config in configsList) {
@@ -3060,19 +3058,24 @@ object CameraHook {
                     startRenderThreads(targetSurfaces)
                     obfuscateStackTrace()
                 } catch (t: Throwable) {
-                    Log.e(TAG, "VirtuCam_Hook: Error in ${param.method.name} hook", t)
+                    Log.e(TAG, "VirtuCam_Hook: Error in ${callFrame.method.name} PINE hook", t)
                 }
             }
         }
 
-        val h1 = XposedBridge.hookAllMethods(cameraDeviceImplClass, "createCaptureSessionInternal", internalMethodHook)
-        Log.e("DIAGNOSTIC_VIRTUCAM", "HOOK REGISTRATION: createCaptureSessionInternal -> Hooked ${h1.size} methods")
-        
-        val h2 = XposedBridge.hookAllMethods(cameraDeviceImplClass, "createCustomCaptureSession", internalMethodHook)
-        Log.e("DIAGNOSTIC_VIRTUCAM", "HOOK REGISTRATION: createCustomCaptureSession -> Hooked ${h2.size} methods")
-        
-        val h3 = XposedBridge.hookAllMethods(cameraDeviceImplClass, "createConstrainedHighSpeedCaptureSession", internalMethodHook)
-        Log.e("DIAGNOSTIC_VIRTUCAM", "HOOK REGISTRATION: createConstrainedHighSpeedCaptureSession -> Hooked ${h3.size} methods")
+        cameraDeviceImplClass.declaredMethods.forEach { method ->
+            if (method.name == "createCaptureSessionInternal" || 
+                method.name == "createCustomCaptureSession" || 
+                method.name == "createConstrainedHighSpeedCaptureSession" ||
+                method.name == "createCaptureSession") {
+                try {
+                    top.canyie.pine.Pine.hook(method, pineInternalMethodHook)
+                    Log.e("DIAGNOSTIC_VIRTUCAM", "PINE HOOK REGISTRATION: Successfully injected native Pine hook on ${method.name}!")
+                } catch (e: Throwable) {
+                    Log.e("DIAGNOSTIC_VIRTUCAM", "PINE HOOK FATAL: Failed to inject Pine hook on ${method.name}", e)
+                }
+            }
+        }
     }
 
     private fun stopOldPipeline() {

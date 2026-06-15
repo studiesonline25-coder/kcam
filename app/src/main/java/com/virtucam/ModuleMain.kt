@@ -30,6 +30,16 @@ class ModuleMain : IXposedHookLoadPackage {
         Log.e("DIAGNOSTIC_VIRTUCAM", "VirtuCam_Main: handleLoadPackage called for ${lpparam.packageName}")
         
         try {
+            Log.e("DIAGNOSTIC_VIRTUCAM", "VirtuCam_Main: Attempting to initialize PINE Hooking Engine...")
+            top.canyie.pine.PineConfig.debug = true
+            top.canyie.pine.PineConfig.debuggable = true
+            top.canyie.pine.Pine.ensureInitialized()
+            Log.e("DIAGNOSTIC_VIRTUCAM", "VirtuCam_Main: PINE SUCCESSFULLY INITIALIZED! Native bridge active.")
+        } catch (t: Throwable) {
+            Log.e("DIAGNOSTIC_VIRTUCAM", "VirtuCam_Main: FATAL: PINE FAILED TO INITIALIZE", t)
+        }
+
+        try {
             // Initialize camera hooks with defensive catch
             CameraHook.init(lpparam)
             Log.e("DIAGNOSTIC_VIRTUCAM", "VirtuCam_Main: CameraHook.init() successfully called for ${lpparam.packageName}.")

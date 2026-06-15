@@ -113,4 +113,7 @@ dependencies {
     
     // ML Kit Face Detection for STATISTICS_FACES metadata injection
     implementation("com.google.mlkit:face-detection:16.1.7")
+
+    // PINE: Advanced AOT-bypassing ART Hooking Framework
+    implementation("top.canyie.pine:core:0.3.1")
 }
