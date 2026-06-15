@@ -18,7 +18,7 @@ import android.media.ExifInterface
 import java.util.Collections
 import java.util.WeakHashMap
 import java.util.HashSet
-import de.robv.android.xposed.XC_MethodHook
+import de.robv.android.xposed.PineHelper.PineCompatibleMethodHook
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
 import de.robv.android.xposed.callbacks.XC_LoadPackage
@@ -321,8 +321,8 @@ object CameraHook {
      */
     private fun hookContextWrapper(lpparam: XC_LoadPackage.LoadPackageParam) {
         try {
-            XposedBridge.hookAllMethods(android.content.ContextWrapper::class.java, "attachBaseContext", object : XC_MethodHook() {
-                override fun afterHookedMethod(param: MethodHookParam) {
+            PineHelper.hookAllMethods(android.content.ContextWrapper::class.java, "attachBaseContext", object : PineHelper.PineCompatibleMethodHook() {
+                override fun afterHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                     try {
                         val ctx = param.thisObject as? android.content.Context ?: return
                         applyDeferredHooksToClassLoader(ctx.classLoader)
@@ -433,8 +433,8 @@ object CameraHook {
         }
 
         // 1. Boolean Squasher + Physical Copy + Manual Scan: Hook by name first, then by reflection as fallback
-        val squashAndScanHook = object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
+        val squashAndScanHook = object : PineHelper.PineCompatibleMethodHook() {
+            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 try {
                     if (!isEnabled) return
                     var filePath: String? = null
@@ -483,8 +483,8 @@ object CameraHook {
         }
 
         // Try named hooks first
-        val addImageHooks = XposedBridge.hookAllMethods(storageClass, "addImage", squashAndScanHook)
-        val updateImageHooks = XposedBridge.hookAllMethods(storageClass, "updateImage", squashAndScanHook)
+        val addImageHooks = PineHelper.hookAllMethods(storageClass, "addImage", squashAndScanHook)
+        val updateImageHooks = PineHelper.hookAllMethods(storageClass, "updateImage", squashAndScanHook)
         logE("DIAGNOSTIC_VIRTUCAM", "hookAllMethods('addImage') returned ${addImageHooks.size} hooks")
         logE("DIAGNOSTIC_VIRTUCAM", "hookAllMethods('updateImage') returned ${updateImageHooks.size} hooks")
 
@@ -505,8 +505,8 @@ object CameraHook {
         }
 
         // 2. Payload Replacement Hook
-        val replaceImageHook = object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
+        val replaceImageHook = object : PineHelper.PineCompatibleMethodHook() {
+            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 try {
                     if (!isEnabled) return
                     val virtualJpeg = latestVirtualJpeg ?: return
@@ -540,9 +540,9 @@ object CameraHook {
                 } catch (_: Throwable) {}
             }
         }
-        XposedBridge.hookAllMethods(storageClass, "addImage", replaceImageHook)
-        XposedBridge.hookAllMethods(storageClass, "updateImage", replaceImageHook)
-        XposedBridge.hookAllMethods(storageClass, "saveToCloud", replaceImageHook)
+        PineHelper.hookAllMethods(storageClass, "addImage", replaceImageHook)
+        PineHelper.hookAllMethods(storageClass, "updateImage", replaceImageHook)
+        PineHelper.hookAllMethods(storageClass, "saveToCloud", replaceImageHook)
     }
 
 
@@ -555,8 +555,8 @@ object CameraHook {
      */
     private fun hookFilePathNormalization(lpparam: XC_LoadPackage.LoadPackageParam) {
         val fileClass = java.io.File::class.java
-        XposedBridge.hookAllConstructors(fileClass, object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
+        XposedBridge.hookAllConstructors(fileClass, object : PineHelper.PineCompatibleMethodHook() {
+            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 if (!isEnabled) return
                 if (param.args.isEmpty()) return
                 val firstArg = param.args[0]
@@ -591,13 +591,13 @@ object CameraHook {
      * we hook the low-level FileOutputStream to catch any .jpg writes in temp/cache dirs.
      */
     private fun hookFileOutputStream(lpparam: XC_LoadPackage.LoadPackageParam) {
-        XposedHelpers.findAndHookConstructor(
+        PineHelper.findAndHookConstructor(
             "java.io.FileOutputStream",
             lpparam.classLoader,
             java.io.File::class.java,
             Boolean::class.javaPrimitiveType,
-            object : XC_MethodHook() {
-                override fun beforeHookedMethod(param: MethodHookParam) {
+            object : PineHelper.PineCompatibleMethodHook() {
+                override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                     try {
                         if (!isEnabled) return
                         val arg = param.args[0]
@@ -625,13 +625,13 @@ object CameraHook {
             }
         )
         
-        XposedHelpers.findAndHookMethod(
+        PineHelper.findAndHookMethod(
             "java.io.FileOutputStream",
             lpparam.classLoader,
             "write",
             ByteArray::class.java,
-            object : XC_MethodHook() {
-                override fun beforeHookedMethod(param: MethodHookParam) {
+            object : PineHelper.PineCompatibleMethodHook() {
+                override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                     try {
                         if (!isEnabled) return
                         val virtualJpeg = latestVirtualJpeg ?: return
@@ -660,15 +660,15 @@ object CameraHook {
             }
         )
 
-        XposedHelpers.findAndHookMethod(
+        PineHelper.findAndHookMethod(
             "java.io.FileOutputStream",
             lpparam.classLoader,
             "write",
             ByteArray::class.java,
             Int::class.javaPrimitiveType,
             Int::class.javaPrimitiveType,
-            object : XC_MethodHook() {
-                override fun beforeHookedMethod(param: MethodHookParam) {
+            object : PineHelper.PineCompatibleMethodHook() {
+                override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                     try {
                         if (!isEnabled) return
                         val virtualJpeg = latestVirtualJpeg ?: return
@@ -705,8 +705,8 @@ object CameraHook {
      */
     private fun hookMediaScanner(lpparam: XC_LoadPackage.LoadPackageParam) {
         val scannerClass = XposedHelpers.findClassIfExists("android.media.MediaScannerConnection", lpparam.classLoader) ?: return
-        XposedBridge.hookAllMethods(scannerClass, "scanFile", object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
+        PineHelper.hookAllMethods(scannerClass, "scanFile", object : PineHelper.PineCompatibleMethodHook() {
+            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 if (!isEnabled) return
                 if (param.args.size < 2) return
                 val paths = param.args[1] as? Array<String> ?: return
@@ -733,8 +733,8 @@ object CameraHook {
     private fun hookContentResolver(lpparam: XC_LoadPackage.LoadPackageParam) {
         val resolverClass = android.content.ContentResolver::class.java
         
-        val resolverHook = object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
+        val resolverHook = object : PineHelper.PineCompatibleMethodHook() {
+            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 try {
                     if (!isEnabled) return
                     // Only care about images MediaStore inserts
@@ -809,7 +809,7 @@ object CameraHook {
                 } catch (_: Exception) {}
             }
             
-            override fun afterHookedMethod(param: MethodHookParam) {
+            override fun afterHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 try {
                     if (!isEnabled) return
                     // After insert(), get the returned URI and trigger a broadcast scan
@@ -954,8 +954,8 @@ object CameraHook {
 
         }
         
-        XposedBridge.hookAllMethods(resolverClass, "insert", resolverHook)
-        XposedBridge.hookAllMethods(resolverClass, "update", resolverHook)
+        PineHelper.hookAllMethods(resolverClass, "insert", resolverHook)
+        PineHelper.hookAllMethods(resolverClass, "update", resolverHook)
     }
 
 
@@ -967,8 +967,8 @@ object CameraHook {
     private fun hookContentValues(lpparam: XC_LoadPackage.LoadPackageParam) {
         val cvClass = android.content.ContentValues::class.java
         
-        XposedHelpers.findAndHookMethod(cvClass, "put", String::class.java, String::class.java, object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
+        PineHelper.findAndHookMethod(cvClass, "put", String::class.java, String::class.java, object : PineHelper.PineCompatibleMethodHook() {
+            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 if (!isEnabled) return
                 val key = param.args[0] as String
                 val value = param.args[1] as? String ?: return
@@ -986,8 +986,8 @@ object CameraHook {
             }
         })
 
-        XposedHelpers.findAndHookMethod(cvClass, "put", String::class.java, Integer::class.java, object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
+        PineHelper.findAndHookMethod(cvClass, "put", String::class.java, Integer::class.java, object : PineHelper.PineCompatibleMethodHook() {
+            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 if (!isEnabled) return
                 val key = param.args[0] as String
                 if (key == "orientation") {
@@ -1007,8 +1007,8 @@ object CameraHook {
      */
     private fun hookBroadcastIntents(lpparam: XC_LoadPackage.LoadPackageParam) {
         val contextWrapperClass = android.content.ContextWrapper::class.java
-        XposedBridge.hookAllMethods(contextWrapperClass, "sendBroadcast", object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
+        PineHelper.hookAllMethods(contextWrapperClass, "sendBroadcast", object : PineHelper.PineCompatibleMethodHook() {
+            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 if (!isEnabled) return
                 val intent = param.args[0] as? android.content.Intent ?: return
                 val action = intent.action ?: return
@@ -1042,8 +1042,8 @@ object CameraHook {
             "android.hardware.camera2.impl.CameraCaptureSessionImpl", lpparam.classLoader
         ) ?: return
 
-        XposedBridge.hookAllMethods(cameraCaptureSessionClass, "setRepeatingRequest", object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
+        PineHelper.hookAllMethods(cameraCaptureSessionClass, "setRepeatingRequest", object : PineHelper.PineCompatibleMethodHook() {
+            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 if (!isEnabled) return
                 val request = param.args[0] as? android.hardware.camera2.CaptureRequest ?: return
                 
@@ -1075,15 +1075,15 @@ object CameraHook {
      */
     private fun applyParallelTaskDataHooks(ptdClass: Class<*>) {
         try {
-            XposedBridge.hookAllMethods(ptdClass, "setParallel", object : XC_MethodHook() {
-                override fun beforeHookedMethod(param: MethodHookParam) {
+            PineHelper.hookAllMethods(ptdClass, "setParallel", object : PineHelper.PineCompatibleMethodHook() {
+                override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                     param.args[0] = false
                     logD("DIAGNOSTIC_VIRTUCAM", "ParallelTaskData: Forced setParallel(false)")
                 }
             })
             // Also squash isParallel getter just in case
-            XposedBridge.hookAllMethods(ptdClass, "isParallel", object : XC_MethodHook() {
-                override fun afterHookedMethod(param: MethodHookParam) {
+            PineHelper.hookAllMethods(ptdClass, "isParallel", object : PineHelper.PineCompatibleMethodHook() {
+                override fun afterHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                     param.result = false
                 }
             })
@@ -1095,8 +1095,8 @@ object CameraHook {
     private fun applyParallelDataZipperHooks(zipperClass: Class<*>) {
         try {
             // Hook the final assembly of parallel results
-            XposedBridge.hookAllMethods(zipperClass, "setResult", object : XC_MethodHook() {
-                override fun beforeHookedMethod(param: MethodHookParam) {
+            PineHelper.hookAllMethods(zipperClass, "setResult", object : PineHelper.PineCompatibleMethodHook() {
+                override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                     // Try to force the zipper to THINK it's not parallel anymore
                     // This is aggressive and might crash, but it's our best bet to stop the redirect
                     logD("DIAGNOSTIC_VIRTUCAM", "ParallelDataZipper: Intercepted setResult")
@@ -1104,8 +1104,8 @@ object CameraHook {
             })
             
             // Hook any method that returns a ParallelTaskData object to squash its "isParallel" flag
-            XposedBridge.hookAllMethods(zipperClass, "getParallelTaskData", object : XC_MethodHook() {
-                override fun afterHookedMethod(param: MethodHookParam) {
+            PineHelper.hookAllMethods(zipperClass, "getParallelTaskData", object : PineHelper.PineCompatibleMethodHook() {
+                override fun afterHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                     val ptd = param.result
                     if (ptd != null) {
                         try {
@@ -1122,8 +1122,8 @@ object CameraHook {
 
     private fun applyAlgorithmManagerHooks(algoManagerClass: Class<*>) {
         try {
-            XposedBridge.hookAllMethods(algoManagerClass, "isParallelCaptureEnabled", object : XC_MethodHook() {
-                override fun afterHookedMethod(param: MethodHookParam) {
+            PineHelper.hookAllMethods(algoManagerClass, "isParallelCaptureEnabled", object : PineHelper.PineCompatibleMethodHook() {
+                override fun afterHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                     param.result = false
                 }
             })
@@ -1137,8 +1137,8 @@ object CameraHook {
      * Log if the app tries to delete our physical DCIM file.
      */
     private fun hookFileDeletionGuard(lpparam: XC_LoadPackage.LoadPackageParam) {
-        XposedHelpers.findAndHookMethod(java.io.File::class.java, "delete", object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
+        PineHelper.findAndHookMethod(java.io.File::class.java, "delete", object : PineHelper.PineCompatibleMethodHook() {
+            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 if (!isEnabled) return
                 val file = param.thisObject as java.io.File
                 val path = file.absolutePath
@@ -1183,8 +1183,8 @@ object CameraHook {
 
         // [HARDWARE AUDIT] Always-on wrapper that records CaptureResults regardless of isEnabled.
         // This is separate from the spoofing logic below so audit data is captured even when OFF.
-        val auditOnlyHook = object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
+        val auditOnlyHook = object : PineHelper.PineCompatibleMethodHook() {
+            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 try {
                     val callbackIndex = 1
                     val originalCallback = if (param.args.size > callbackIndex)
@@ -1209,13 +1209,13 @@ object CameraHook {
                 } catch (_: Throwable) {}
             }
         }
-        XposedBridge.hookAllMethods(sessionClass, "capture", auditOnlyHook)
-        XposedBridge.hookAllMethods(sessionClass, "captureBurst", auditOnlyHook)
-        XposedBridge.hookAllMethods(sessionClass, "setRepeatingRequest", auditOnlyHook)
-        XposedBridge.hookAllMethods(sessionClass, "setRepeatingBurst", auditOnlyHook)
+        PineHelper.hookAllMethods(sessionClass, "capture", auditOnlyHook)
+        PineHelper.hookAllMethods(sessionClass, "captureBurst", auditOnlyHook)
+        PineHelper.hookAllMethods(sessionClass, "setRepeatingRequest", auditOnlyHook)
+        PineHelper.hookAllMethods(sessionClass, "setRepeatingBurst", auditOnlyHook)
 
-        val callbackHook = object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
+        val callbackHook = object : PineHelper.PineCompatibleMethodHook() {
+            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 try {
                     if (!isEnabled) return
                     val callbackIndex = if (param.method.name == "capture") 1 else 1
@@ -1385,16 +1385,16 @@ object CameraHook {
             }
         }
 
-        XposedBridge.hookAllMethods(sessionClass, "capture", callbackHook)
-        XposedBridge.hookAllMethods(sessionClass, "captureBurst", callbackHook)
-        XposedBridge.hookAllMethods(sessionClass, "setRepeatingRequest", callbackHook)
+        PineHelper.hookAllMethods(sessionClass, "capture", callbackHook)
+        PineHelper.hookAllMethods(sessionClass, "captureBurst", callbackHook)
+        PineHelper.hookAllMethods(sessionClass, "setRepeatingRequest", callbackHook)
 
         // [BROWSER CAPTURE FIX] Hook API 28+ Executor-based capture methods.
         // Chromium and modern apps may use captureSingleRequest(CaptureRequest, Executor, CaptureCallback)
         // instead of capture(CaptureRequest, CaptureCallback, Handler).
         // The callback is at index 2 (not 1) in these methods.
-        val executorCallbackHook = object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
+        val executorCallbackHook = object : PineHelper.PineCompatibleMethodHook() {
+            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 try {
                     if (!isEnabled) return
                     // captureSingleRequest(CaptureRequest, Executor, CaptureCallback) → callback at index 2
@@ -1481,9 +1481,9 @@ object CameraHook {
                 }
             }
         }
-        XposedBridge.hookAllMethods(sessionClass, "captureSingleRequest", executorCallbackHook)
-        XposedBridge.hookAllMethods(sessionClass, "captureBurstRequests", executorCallbackHook)
-        XposedBridge.hookAllMethods(sessionClass, "setSingleRepeatingRequest", executorCallbackHook)
+        PineHelper.hookAllMethods(sessionClass, "captureSingleRequest", executorCallbackHook)
+        PineHelper.hookAllMethods(sessionClass, "captureBurstRequests", executorCallbackHook)
+        PineHelper.hookAllMethods(sessionClass, "setSingleRepeatingRequest", executorCallbackHook)
     }
 
     /**
@@ -1492,8 +1492,8 @@ object CameraHook {
     private fun hookSystemLogRedirection(lpparam: XC_LoadPackage.LoadPackageParam) {
         val logClass = XposedHelpers.findClassIfExists("android.util.Log", lpparam.classLoader) ?: return
         
-        val logHook = object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
+        val logHook = object : PineHelper.PineCompatibleMethodHook() {
+            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 val tag = param.args[0] as? String ?: return
                 val msg = param.args[1] as? String ?: return
                 
@@ -1507,11 +1507,11 @@ object CameraHook {
             }
         }
         
-        XposedBridge.hookAllMethods(logClass, "v", logHook)
-        XposedBridge.hookAllMethods(logClass, "d", logHook)
-        XposedBridge.hookAllMethods(logClass, "i", logHook)
-        XposedBridge.hookAllMethods(logClass, "w", logHook)
-        XposedBridge.hookAllMethods(logClass, "e", logHook)
+        PineHelper.hookAllMethods(logClass, "v", logHook)
+        PineHelper.hookAllMethods(logClass, "d", logHook)
+        PineHelper.hookAllMethods(logClass, "i", logHook)
+        PineHelper.hookAllMethods(logClass, "w", logHook)
+        PineHelper.hookAllMethods(logClass, "e", logHook)
     }
 
     /**
@@ -1532,8 +1532,8 @@ object CameraHook {
             "android.hardware.camera2.CameraDevice\$StateCallback", lpparam.classLoader
         ) ?: return
 
-        XposedBridge.hookAllMethods(stateCallbackClass, "onError", object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
+        PineHelper.hookAllMethods(stateCallbackClass, "onError", object : PineHelper.PineCompatibleMethodHook() {
+            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 if (!isEnabled) return
                 val errorCode = if (param.args.size >= 2) param.args[1] as? Int else null
                 Log.d(TAG, "VirtuCam_Hook: Suppressed CameraDevice.onError (code=$errorCode)")
@@ -1542,8 +1542,8 @@ object CameraHook {
         })
 
         // Also suppress onDisconnected to prevent the app from closing when the HAL disconnects
-        XposedBridge.hookAllMethods(stateCallbackClass, "onDisconnected", object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
+        PineHelper.hookAllMethods(stateCallbackClass, "onDisconnected", object : PineHelper.PineCompatibleMethodHook() {
+            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 if (!isEnabled) return
                 Log.d(TAG, "VirtuCam_Hook: Suppressed CameraDevice.onDisconnected")
                 param.result = null
@@ -1555,8 +1555,8 @@ object CameraHook {
         try {
             val mediaCodecClass = XposedHelpers.findClassIfExists("android.media.MediaCodec", lpparam.classLoader)
             if (mediaCodecClass != null) {
-                XposedBridge.hookAllMethods(mediaCodecClass, "createInputSurface", object : XC_MethodHook() {
-                    override fun afterHookedMethod(param: MethodHookParam) {
+                PineHelper.hookAllMethods(mediaCodecClass, "createInputSurface", object : PineHelper.PineCompatibleMethodHook() {
+                    override fun afterHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                         val s = param.result as? Surface ?: return
                         captureSurfaces.add(s)
                         videoSurfaces.add(s)
@@ -1567,8 +1567,8 @@ object CameraHook {
             
             val mediaRecorderClass = XposedHelpers.findClassIfExists("android.media.MediaRecorder", lpparam.classLoader)
             if (mediaRecorderClass != null) {
-                XposedBridge.hookAllMethods(mediaRecorderClass, "getSurface", object : XC_MethodHook() {
-                    override fun afterHookedMethod(param: MethodHookParam) {
+                PineHelper.hookAllMethods(mediaRecorderClass, "getSurface", object : PineHelper.PineCompatibleMethodHook() {
+                    override fun afterHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                         val s = param.result as? Surface ?: return
                         captureSurfaces.add(s)
                         videoSurfaces.add(s)
@@ -1586,8 +1586,8 @@ object CameraHook {
         val managerClass = XposedHelpers.findClassIfExists("android.hardware.camera2.CameraManager", lpparam.classLoader) ?: return
 
         // 1. Hook standard openCamera(String, StateCallback, Handler)
-        XposedHelpers.findAndHookMethod(managerClass, "openCamera", String::class.java, "android.hardware.camera2.CameraDevice.StateCallback", Handler::class.java, object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
+        PineHelper.findAndHookMethod(managerClass, "openCamera", String::class.java, "android.hardware.camera2.CameraDevice.StateCallback", Handler::class.java, object : PineHelper.PineCompatibleMethodHook() {
+            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 try {
                     applyDeferredHooksToClassLoader(Thread.currentThread().contextClassLoader)
                     val cameraId = param.args[0] as String
@@ -1604,8 +1604,8 @@ object CameraHook {
         })
 
         // 2. Hook modern openCamera(String, Executor, StateCallback) - CRITICAL FOR BROWSERS
-        XposedHelpers.findAndHookMethod(managerClass, "openCamera", String::class.java, java.util.concurrent.Executor::class.java, "android.hardware.camera2.CameraDevice.StateCallback", object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
+        PineHelper.findAndHookMethod(managerClass, "openCamera", String::class.java, java.util.concurrent.Executor::class.java, "android.hardware.camera2.CameraDevice.StateCallback", object : PineHelper.PineCompatibleMethodHook() {
+            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 try {
                     applyDeferredHooksToClassLoader(Thread.currentThread().contextClassLoader)
                     val cameraId = param.args[0] as String
@@ -1623,8 +1623,8 @@ object CameraHook {
 
         // 3. Hook extension openCamera(String, Int, Executor, StateCallback)
         try {
-            XposedHelpers.findAndHookMethod(managerClass, "openCamera", String::class.java, Int::class.javaPrimitiveType, java.util.concurrent.Executor::class.java, "android.hardware.camera2.CameraDevice.StateCallback", object : XC_MethodHook() {
-                override fun beforeHookedMethod(param: MethodHookParam) {
+            PineHelper.findAndHookMethod(managerClass, "openCamera", String::class.java, Int::class.javaPrimitiveType, java.util.concurrent.Executor::class.java, "android.hardware.camera2.CameraDevice.StateCallback", object : PineHelper.PineCompatibleMethodHook() {
+                override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                     try {
                         applyDeferredHooksToClassLoader(Thread.currentThread().contextClassLoader)
                         val cameraId = param.args[0] as String
@@ -1641,8 +1641,8 @@ object CameraHook {
             })
         } catch (_: Throwable) {}
 
-        XposedBridge.hookAllMethods(managerClass, "getCameraCharacteristics", object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam) {
+        PineHelper.hookAllMethods(managerClass, "getCameraCharacteristics", object : PineHelper.PineCompatibleMethodHook() {
+            override fun afterHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 val cameraId = param.args[0] as? String ?: "unknown"
                 val char = param.result as? android.hardware.camera2.CameraCharacteristics ?: return
                 
@@ -1698,8 +1698,8 @@ object CameraHook {
         ) ?: return
 
         // [TOTAL SURVEILLANCE] Log all settings sent to the hardware
-        XposedBridge.hookAllMethods(builderClass, "set", object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
+        PineHelper.hookAllMethods(builderClass, "set", object : PineHelper.PineCompatibleMethodHook() {
+            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 try {
                     val key = param.args[0]
                     val value = param.args[1]
@@ -1725,8 +1725,8 @@ object CameraHook {
             }
         })
 
-        XposedBridge.hookAllMethods(builderClass, "addTarget", object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
+        PineHelper.hookAllMethods(builderClass, "addTarget", object : PineHelper.PineCompatibleMethodHook() {
+            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 try {
                     val originalSurface = param.args[0] as? Surface ?: return
                     
@@ -1767,8 +1767,8 @@ object CameraHook {
                 "android.hardware.camera2.CaptureRequest\$Builder", lpparam.classLoader
             ) ?: return
 
-            XposedBridge.hookAllMethods(builderClass, "build", object : XC_MethodHook() {
-                override fun beforeHookedMethod(param: MethodHookParam) {
+            PineHelper.hookAllMethods(builderClass, "build", object : PineHelper.PineCompatibleMethodHook() {
+                override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                     try {
                         if (!isEnabled) return
                         val builder = param.thisObject ?: return
@@ -2087,8 +2087,8 @@ object CameraHook {
             // Optional overload, ignore if not found
         }
 
-        XposedHelpers.findAndHookMethod(imageReaderClass, "getSurface", object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam) {
+        PineHelper.findAndHookMethod(imageReaderClass, "getSurface", object : PineHelper.PineCompatibleMethodHook() {
+            override fun afterHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 val reader = param.thisObject as? ImageReader ?: return
                 val surface = param.result as? Surface ?: return
                 val format = XposedHelpers.callMethod(reader, "getImageFormat") as? Int ?: return
@@ -2119,8 +2119,8 @@ object CameraHook {
                 }
             }
         })
-        val overwriteHook = object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam) {
+        val overwriteHook = object : PineHelper.PineCompatibleMethodHook() {
+            override fun afterHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 // Secondary Defense: Suppress format mismatch exceptions from nativeImageSetup.
                 if (param.throwable is UnsupportedOperationException) {
                     Log.d(TAG, "VirtuCam_Hook: Suppressed format mismatch: ${param.throwable?.message}")
@@ -2222,8 +2222,8 @@ object CameraHook {
             }
         }
 
-        XposedBridge.hookAllMethods(imageReaderClass, "acquireNextImage", overwriteHook)
-        XposedBridge.hookAllMethods(imageReaderClass, "acquireLatestImage", overwriteHook)
+        PineHelper.hookAllMethods(imageReaderClass, "acquireNextImage", overwriteHook)
+        PineHelper.hookAllMethods(imageReaderClass, "acquireLatestImage", overwriteHook)
     }
     }
 
@@ -2273,15 +2273,15 @@ object CameraHook {
             // [TOTAL SURVEILLANCE] Hook getTransformMatrix GLOBALLY for SurfaceTexture
             // This is safer and only applies once per app launch.
             try {
-                XposedHelpers.findAndHookMethod(
+                PineHelper.findAndHookMethod(
                     "android.graphics.SurfaceTexture",
                     lpparam.classLoader,
                     "getTransformMatrix",
                     FloatArray::class.java,
-                    object : XC_MethodHook() {
+                    object : PineHelper.PineCompatibleMethodHook() {
                         private var localFrameCount = 0
                         
-                        override fun afterHookedMethod(param: MethodHookParam) {
+                        override fun afterHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                             val matrix = param.args[0] as? FloatArray ?: return
 
                             if (isEnabled) {
@@ -2319,8 +2319,8 @@ object CameraHook {
     private fun hookCamera1(lpparam: XC_LoadPackage.LoadPackageParam) {
         val cameraClass = XposedHelpers.findClassIfExists("android.hardware.Camera", lpparam.classLoader) ?: return
 
-        XposedBridge.hookAllMethods(cameraClass, "open", object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam) {
+        PineHelper.hookAllMethods(cameraClass, "open", object : PineHelper.PineCompatibleMethodHook() {
+            override fun afterHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 try {
                     val cameraId = if (param.args.isNotEmpty() && param.args[0] is Int) {
                         param.args[0] as Int
@@ -2343,8 +2343,8 @@ object CameraHook {
             }
         })
 
-        XposedBridge.hookAllMethods(cameraClass, "setPreviewTexture", object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
+        PineHelper.hookAllMethods(cameraClass, "setPreviewTexture", object : PineHelper.PineCompatibleMethodHook() {
+            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 try {
                     loadConfiguration()
                     if (!isEnabled) return
@@ -2357,8 +2357,8 @@ object CameraHook {
             }
         })
 
-        XposedBridge.hookAllMethods(cameraClass, "setPreviewDisplay", object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
+        PineHelper.hookAllMethods(cameraClass, "setPreviewDisplay", object : PineHelper.PineCompatibleMethodHook() {
+            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 try {
                     loadConfiguration()
                     if (!isEnabled) return
@@ -2693,12 +2693,12 @@ object CameraHook {
             Log.e("DIAGNOSTIC_VIRTUCAM", "Failed to dump methods", e)
         }
 
-        XposedBridge.hookAllMethods(
+        PineHelper.hookAllMethods(
             cameraDeviceImplClass,
             "createCaptureSession",
-            object : XC_MethodHook() {
+            object : PineHelper.PineCompatibleMethodHook() {
                 @Suppress("UNCHECKED_CAST")
-                override fun beforeHookedMethod(param: MethodHookParam) {
+                override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                     try {
                         // Lazy load configuration when camera is actually accessed
                         loadConfiguration()
@@ -2858,11 +2858,11 @@ object CameraHook {
         if (targetClass == null) return
         val cameraDeviceImplClass = targetClass!!
 
-        XposedBridge.hookAllMethods(
+        PineHelper.hookAllMethods(
             cameraDeviceImplClass,
             "createCaptureSessionByOutputConfigurations",
-            object : XC_MethodHook() {
-                override fun beforeHookedMethod(param: MethodHookParam) {
+            object : PineHelper.PineCompatibleMethodHook() {
+                override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                     try {
                         loadConfiguration()
 
@@ -2936,11 +2936,11 @@ object CameraHook {
         )
         
         // Android 28+ uses SessionConfiguration
-        XposedBridge.hookAllMethods(
+        PineHelper.hookAllMethods(
             cameraDeviceImplClass,
             "createCaptureSession",
-            object : XC_MethodHook() {
-                override fun beforeHookedMethod(param: MethodHookParam) {
+            object : PineHelper.PineCompatibleMethodHook() {
+                override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                     try {
                         loadConfiguration()
 
@@ -3946,8 +3946,8 @@ class VirtualRenderThread(
                 "android.view.TextureView", lpparam.classLoader
             )
             if (textureViewCls != null) {
-                XposedBridge.hookAllMethods(textureViewCls, "setTransform", object : XC_MethodHook() {
-                    override fun afterHookedMethod(param: MethodHookParam) {
+                PineHelper.hookAllMethods(textureViewCls, "setTransform", object : PineHelper.PineCompatibleMethodHook() {
+                    override fun afterHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                         try {
                             val matrix = param.args[0] as? android.graphics.Matrix ?: return
                             val vals = FloatArray(9)
@@ -3970,9 +3970,9 @@ class VirtualRenderThread(
                 "android.view.View", lpparam.classLoader
             )
             if (viewCls != null) {
-                XposedHelpers.findAndHookMethod(viewCls, "setRotation", Float::class.javaPrimitiveType,
-                    object : XC_MethodHook() {
-                        override fun afterHookedMethod(param: MethodHookParam) {
+                PineHelper.findAndHookMethod(viewCls, "setRotation", Float::class.javaPrimitiveType,
+                    object : PineHelper.PineCompatibleMethodHook() {
+                        override fun afterHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                             try {
                                 val deg = (param.args[0] as Float)
                                 if (deg != 0f) {
