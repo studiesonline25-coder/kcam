@@ -106,10 +106,7 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer-rtsp:$media3_version")
     implementation("androidx.media3:media3-datasource-rtmp:$media3_version")
     
-    // Lightweight RTSP Client
-    implementation("com.github.alexeyvasilyev:rtsp-client-android:5.6.4") {
-        exclude(group = "androidx.camera")
-    }
+
     
     // ML Kit Face Detection for STATISTICS_FACES metadata injection
     implementation("com.google.mlkit:face-detection:16.1.7")
