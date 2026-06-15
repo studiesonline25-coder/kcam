@@ -15,12 +15,13 @@ object PineHelper {
         open fun afterHookedMethod(param: top.canyie.pine.Pine.CallFrame) {}
     }
 
-    fun hookAllMethods(clazz: Class<*>, methodName: String, hook: PineCompatibleMethodHook) {
-        var hooked = false
+    fun hookAllMethods(clazz: Class<*>, methodName: String, hook: PineCompatibleMethodHook): Set<Any> {
+        val hooks = mutableSetOf<Any>()
         try {
             clazz.declaredMethods.filter { it.name == methodName }.forEach { method ->
                 try {
-                    top.canyie.pine.Pine.hook(method, hook)
+                    val p = top.canyie.pine.Pine.hook(method, hook)
+                    if (p != null) hooks.add(p) else hooks.add(Any())
                     hooked = true
                     Log.i("DIAGNOSTIC_VIRTUCAM", "PINE HOOK REGISTRATION: Successfully injected hook on ${clazz.name}.$methodName")
                 } catch (e: Throwable) {
@@ -33,9 +34,31 @@ object PineHelper {
         if (!hooked) {
             Log.w("DIAGNOSTIC_VIRTUCAM", "PINE HOOK WARNING: Target method $methodName not found or failed in ${clazz.name}")
         }
+        return hooks
     }
 
-    fun findAndHookMethod(className: String, classLoader: ClassLoader, methodName: String, vararg parameterTypesAndCallback: Any) {
+    fun hookAllConstructors(clazz: Class<*>, hook: PineCompatibleMethodHook): Set<Any> {
+        val hooks = mutableSetOf<Any>()
+        try {
+            clazz.declaredConstructors.forEach { constructor ->
+                try {
+                    val p = top.canyie.pine.Pine.hook(constructor, hook)
+                    if (p != null) hooks.add(p) else hooks.add(Any())
+                    Log.i("DIAGNOSTIC_VIRTUCAM", "PINE HOOK REGISTRATION: Successfully injected hook on constructor for ${clazz.name}")
+                } catch (e: Throwable) {
+                    Log.e("DIAGNOSTIC_VIRTUCAM", "PINE HOOK FATAL: Failed to inject hook on constructor for ${clazz.name}", e)
+                }
+            }
+        } catch (e: Throwable) {
+            Log.e("DIAGNOSTIC_VIRTUCAM", "PINE HOOK FATAL: Reflection error querying constructors for ${clazz.name}", e)
+        }
+        if (hooks.isEmpty()) {
+            Log.w("DIAGNOSTIC_VIRTUCAM", "PINE HOOK WARNING: No constructors found or failed in ${clazz.name}")
+        }
+        return hooks
+    }
+
+    fun findAndHookMethod(className: String, classLoader: ClassLoader, methodName: String, vararg parameterTypesAndCallback: Any?) {
         try {
             val clazz = XposedHelpers.findClassIfExists(className, classLoader)
             if (clazz == null) {
@@ -48,7 +71,7 @@ object PineHelper {
         }
     }
 
-    fun findAndHookMethod(clazz: Class<*>, methodName: String, vararg parameterTypesAndCallback: Any) {
+    fun findAndHookMethod(clazz: Class<*>, methodName: String, vararg parameterTypesAndCallback: Any?) {
         try {
             val hook = parameterTypesAndCallback.last() as PineCompatibleMethodHook
             val parameterTypes = parameterTypesAndCallback.dropLast(1).toTypedArray()
@@ -64,7 +87,7 @@ object PineHelper {
         }
     }
 
-    fun findAndHookConstructor(className: String, classLoader: ClassLoader, vararg parameterTypesAndCallback: Any) {
+    fun findAndHookConstructor(className: String, classLoader: ClassLoader, vararg parameterTypesAndCallback: Any?) {
         try {
             val clazz = XposedHelpers.findClassIfExists(className, classLoader)
             if (clazz == null) {
@@ -77,7 +100,7 @@ object PineHelper {
         }
     }
 
-    fun findAndHookConstructor(clazz: Class<*>, vararg parameterTypesAndCallback: Any) {
+    fun findAndHookConstructor(clazz: Class<*>, vararg parameterTypesAndCallback: Any?) {
         try {
             val hook = parameterTypesAndCallback.last() as PineCompatibleMethodHook
             val parameterTypes = parameterTypesAndCallback.dropLast(1).toTypedArray()

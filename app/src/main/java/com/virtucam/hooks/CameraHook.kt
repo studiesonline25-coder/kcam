@@ -18,7 +18,7 @@ import android.media.ExifInterface
 import java.util.Collections
 import java.util.WeakHashMap
 import java.util.HashSet
-import de.robv.android.xposed.PineHelper.PineCompatibleMethodHook
+
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
 import de.robv.android.xposed.callbacks.XC_LoadPackage
@@ -495,7 +495,7 @@ object CameraHook {
                 for (method in storageClass.declaredMethods) {
                     val hasBooleanParam = method.parameterTypes.any { it == Boolean::class.javaPrimitiveType || it == java.lang.Boolean::class.java }
                     if (hasBooleanParam) {
-                        XposedBridge.hookMethod(method, squashAndScanHook)
+                        top.canyie.pine.Pine.hook(method, squashAndScanHook)
                         logE("DIAGNOSTIC_VIRTUCAM", "  Hooked Storage.${method.name}() [has boolean param]")
                     }
                 }
@@ -555,7 +555,7 @@ object CameraHook {
      */
     private fun hookFilePathNormalization(lpparam: XC_LoadPackage.LoadPackageParam) {
         val fileClass = java.io.File::class.java
-        XposedBridge.hookAllConstructors(fileClass, object : PineHelper.PineCompatibleMethodHook() {
+        PineHelper.hookAllConstructors(fileClass, object : PineHelper.PineCompatibleMethodHook() {
             override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 if (!isEnabled) return
                 if (param.args.isEmpty()) return
@@ -2224,7 +2224,6 @@ object CameraHook {
 
         PineHelper.hookAllMethods(imageReaderClass, "acquireNextImage", overwriteHook)
         PineHelper.hookAllMethods(imageReaderClass, "acquireLatestImage", overwriteHook)
-    }
     }
 
     private fun hookSurfaceTexture(lpparam: XC_LoadPackage.LoadPackageParam) {
