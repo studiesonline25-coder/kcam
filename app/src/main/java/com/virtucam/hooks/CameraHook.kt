@@ -2918,54 +2918,92 @@ object CameraHook {
                         if (!isEnabled) return
                         
                         val args = param.args
-                        if (args.isEmpty()) return
-                        
-                        val sessionConfig = args[0]
-                        if (sessionConfig != null && sessionConfig.javaClass.simpleName == "SessionConfiguration") {
-                            val getOutputConfigsMethod = sessionConfig.javaClass.getMethod("getOutputConfigurations")
-                            val configs = getOutputConfigsMethod.invoke(sessionConfig) as? List<*>
-                            
-                            if (!configs.isNullOrEmpty()) {
-                                Log.d(TAG, "VirtuCam_Hook: Intercepted SessionConfiguration - count: ${configs.size}")
-                                
-                                // [HARDENING] Direct Sensing
-                                try {
-                                    val cameraDevice = param.thisObject as android.hardware.camera2.CameraDevice
-                                    activeCameraId = cameraDevice.id
-                                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Direct Device Sensing (SessionConfig) - Active Camera: $activeCameraId")
-                                    
-                                    val manager = AndroidAppHelper.currentApplication().getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
-                                    val characteristics = manager.getCameraCharacteristics(activeCameraId)
-                                    val facing = characteristics.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
-                                    if (facing != null) cameraFacings[activeCameraId] = mapLensFacingForVirtuCam(facing) ?: 0
-                                    cameraOrientations[activeCameraId] = characteristics.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
-                                } catch (e: Throwable) {
-                                    Log.e(TAG, "VirtuCam_Hook: Failed direct sensing in SessionConfig", e)
-                                }
+                        if (args.isEmpty() || args[0] !is List<*>) return
 
-                                stopOldPipeline()
-                                
-                                 val targetSurfaces = ArrayList<Triple<Surface, Boolean, Int>>()
-                                 
-                                 for (config in configs) {
-                                      if (config == null) continue
-                                      val getSurfaceMethod = config.javaClass.getMethod("getSurface")
-                                      val targetSurface = getSurfaceMethod.invoke(config) as? Surface
-                                      
-                                      if (targetSurface != null) {
-                                          val isCapture = captureSurfaces.contains(targetSurface)
-                                          val format = SurfaceUtils.getSurfaceFormat(targetSurface)
-                                          val resolvedSurface = swapSurfaceInOutputConfig(config, targetSurface)
-                                          targetSurfaces.add(Triple(resolvedSurface, isCapture, format))
-                                      }
-                                  }
-                                
-                                startRenderThreads(targetSurfaces)
-                                obfuscateStackTrace()
+                        val surfacesList = args[0] as List<Surface>
+                        if (surfacesList.isNotEmpty()) {
+                            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: createCaptureSession called with ${surfacesList.size} targets")
+                            for (s in surfacesList) {
+                                val size = SurfaceUtils.getSurfaceSize(s)
+                                val fmt = SurfaceUtils.getSurfaceFormat(s)
+                                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Target Surface: ${size.first}x${size.second}, Format=$fmt")
                             }
+
+                            // [HARDWARE AUDIT] Always begin session logging (read-only surveillance)
+                            try {
+                                val auditSurfaces = surfacesList.map { s ->
+                                    val sz = SurfaceUtils.getSurfaceSize(s)
+                                    val fmt = SurfaceUtils.getSurfaceFormat(s)
+                                    Pair(fmt, sz)
+                                }
+                                HardwareAuditLogger.beginSession(activeCameraId, auditSurfaces)
+                            } catch (_: Throwable) {}
+                            
+                            stopOldPipeline()
+                            
+                            // [HARDENING] Force fetch active cameraId facing directly from the device
+                            try {
+                                val cameraDevice = param.thisObject as android.hardware.camera2.CameraDevice
+                                activeCameraId = cameraDevice.id
+                                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Direct Device Sensing (createCaptureSession) - Active Camera: $activeCameraId")
+                                
+                                val manager = AndroidAppHelper.currentApplication().getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
+                                val characteristics = manager.getCameraCharacteristics(activeCameraId)
+                                val facing = characteristics.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
+                                if (facing != null) cameraFacings[activeCameraId] = mapLensFacingForVirtuCam(facing) ?: 0
+                                cameraOrientations[activeCameraId] = characteristics.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
+                            } catch (e: Throwable) {
+                                Log.e(TAG, "VirtuCam_Hook: Failed direct sensing in createCaptureSession", e)
+                            }
+
+                            val newSurfaces = ArrayList<Surface>()
+                            val targetSurfaces = ArrayList<Triple<Surface, Boolean, Int>>()
+                            
+                            for (targetSurface in surfacesList) {
+                                val size = SurfaceUtils.getSurfaceSize(targetSurface)
+                                val w = size.first
+                                val h = size.second
+                                
+                                val isCapture = captureSurfaces.contains(targetSurface)
+                                val isVideoSurface = videoSurfaces.contains(targetSurface)
+                                val format = SurfaceUtils.getSurfaceFormat(targetSurface)
+                                val isPreview = (format == 0x22 || format == 0x1)
+                                
+                                // [JPEG DIRECT OVERWRITE] For JPEG surfaces, ALWAYS use direct overwrite.
+                                if (format == 256 && !isPreview && !isVideoSurface) {
+                                    val b = FormatConverterBridge(w, h, null, format, resolveSensorOrientationDeg(), rotationOffset, isColorSwapped)
+                                    activeBridges.add(b)
+                                    formatBridges[android.util.Size(w, h)] = b
+                                    Log.e(TAG, "VirtuCam_Hook: Capture ${w}x${h} (Format $format) — direct overwrite (no dummy, no ImageWriter)")
+                                    newSurfaces.add(targetSurface) // Keep the original surface
+                                    targetSurfaces.add(Triple(b.inputSurface ?: targetSurface, true, format))
+                                    continue
+                                }
+                                
+                                val bridge = if (!isPreview && !isVideoSurface) {
+                                    val b = FormatConverterBridge(w, h, targetSurface, format, resolveSensorOrientationDeg(), rotationOffset, isColorSwapped)
+                                    activeBridges.add(b)
+                                    formatBridges[android.util.Size(w, h)] = b
+                                    b
+                                } else {
+                                    null
+                                }
+                                
+                                val dummySurface = createDummySurface(targetSurface, w, h, bridge)
+                                surfaceMap[targetSurface] = dummySurface
+                                newSurfaces.add(dummySurface)
+                                
+                                val resolvedSurface = bridge?.inputSurface ?: targetSurface
+                                targetSurfaces.add(Triple(resolvedSurface, isCapture, format))
+                            }
+                            
+                            param.args[0] = newSurfaces
+                            
+                            startRenderThreads(targetSurfaces)
+                            obfuscateStackTrace()
                         }
                     } catch (t: Throwable) {
-                        Log.e(TAG, "VirtuCam_Hook: Error overriding SessionConfiguration", t)
+                        Log.e(TAG, "VirtuCam_Hook: Error in createCaptureSession hook", t)
                     }
                 }
             }
