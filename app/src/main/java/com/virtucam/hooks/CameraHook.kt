@@ -1749,9 +1749,9 @@ object CameraHook {
                     try {
                         if (!isEnabled) return
                         val builder = param.thisObject
-                        XposedHelpers.callMethod(builder, "set", XposedHelpers.getStaticObjectField(CaptureRequest::class.java, "CONTROL_ENABLE_ZSL"), false)
-                        XposedHelpers.callMethod(builder, "set", XposedHelpers.getStaticObjectField(CaptureRequest::class.java, "XIAOMI_MFNR_ENABLED"), false)
-                        XposedHelpers.callMethod(builder, "set", XposedHelpers.getStaticObjectField(CaptureRequest::class.java, "XIAOMI_HDR_SR_ENABLED"), false)
+                        XposedHelpers.callMethod(builder, "set", XposedHelpers.getStaticObjectField(android.hardware.camera2.CaptureRequest::class.java, "CONTROL_ENABLE_ZSL"), false)
+                        XposedHelpers.callMethod(builder, "set", XposedHelpers.getStaticObjectField(android.hardware.camera2.CaptureRequest::class.java, "XIAOMI_MFNR_ENABLED"), false)
+                        XposedHelpers.callMethod(builder, "set", XposedHelpers.getStaticObjectField(android.hardware.camera2.CaptureRequest::class.java, "XIAOMI_HDR_SR_ENABLED"), false)
                         Log.e(TAG, "VirtuCam_Hook: Xiaomi Parallel Bypass applied to CaptureRequest.")
                     } catch (_: Throwable) {}
                 }
@@ -2144,21 +2144,30 @@ object CameraHook {
             Log.e(TAG, "VirtuCam_Hook: Failed to hook SurfaceTexture.setDefaultBufferSize", e)
         }
 
-            // [PINE MIGRATION] Associate SurfaceTexture with Surface for later lookup
-            pineHooks.addAll(PineHelper.findAndHookConstructor(Surface::class.java, lpparam.classLoader, SurfaceTexture::class.java, object : PineHelper.PineCompatibleMethodHook() {
-                override fun afterHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
-                    val surface = param.thisObject as? Surface ?: return
-                    val st = param.args[0] as? SurfaceTexture ?: return
-                    surfaceTextureSurfaces[surface] = st
+            val surfaceClass = XposedHelpers.findClassIfExists("android.view.Surface", lpparam.classLoader)
+            if (surfaceClass != null) {
+                try {
+                    val constructor = surfaceClass.getDeclaredConstructor(SurfaceTexture::class.java)
+                    val p = top.canyie.pine.Pine.hook(constructor, object : PineHelper.PineCompatibleMethodHook() {
+                        override fun afterHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
+                            val surface = param.thisObject as? Surface ?: return
+                            val st = param.args[0] as? SurfaceTexture ?: return
+                            surfaceTextureSurfaces[surface] = st
 
-                    val size = stSizes[st]
-                    if (size != null) {
-                        surfaceSizes[surface] = size
-                        surfaceFormats[surface] = 34
-                        Log.d(TAG, "PINE_Hook: Associated Surface with SurfaceTexture size ${size.first}x${size.second}")
-                    }
+                            val size = stSizes[st]
+                            if (size != null) {
+                                surfaceSizes[surface] = size
+                                surfaceFormats[surface] = 34
+                                Log.d(TAG, "PINE_Hook: Associated Surface with SurfaceTexture size ${size.first}x${size.second}")
+                            }
+                        }
+                    })
+                    if (p != null) pineHooks.add(p)
+                    Log.i(TAG, "PINE HOOK REGISTRATION: Successfully injected hook on Surface(SurfaceTexture)")
+                } catch (e: Throwable) {
+                    Log.e(TAG, "PINE HOOK FATAL: Failed to inject hook on Surface(SurfaceTexture)", e)
                 }
-            }))
+            }
 
             // [TOTAL SURVEILLANCE] Hook getTransformMatrix GLOBALLY for SurfaceTexture
             // This is safer and only applies once per app launch.
@@ -2572,7 +2581,7 @@ object CameraHook {
 
         val cameraDeviceImplClass = targetClass!!
 
-        PineHelper.hookAllMethods(
+        pineHooks.addAll(PineHelper.hookAllMethods(
             cameraDeviceImplClass,
             "createCaptureSession",
             object : PineHelper.PineCompatibleMethodHook() {
