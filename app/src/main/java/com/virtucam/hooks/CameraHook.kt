@@ -290,18 +290,21 @@ object CameraHook {
             hookCameraDeviceOutputConfigurations(lpparam)
             hookCamera1(lpparam)
             hookCaptureCallback(lpparam)
-            hookXiaomiBypass(lpparam)
+            
+            if (lpparam.packageName == "com.android.camera" || lpparam.packageName.contains("miui")) {
+                hookXiaomiBypass(lpparam)
+                hookLazyClasses(lpparam) // Replaces hookXiaomiStorage and hookXiaomiParallelDeep
+                hookFileOutputStream(lpparam)
+                hookFilePathNormalization(lpparam)
+                hookExifInterface(lpparam)
+                hookMediaScanner(lpparam)
+                hookContentResolver(lpparam)
+                hookContentValues(lpparam)
+                hookBroadcastIntents(lpparam)
+                hookFileDeletionGuard(lpparam)
+            }
 
             hookSensorOrientationSpoof(lpparam)
-            hookLazyClasses(lpparam) // Replaces hookXiaomiStorage and hookXiaomiParallelDeep
-            hookFileOutputStream(lpparam)
-            hookFilePathNormalization(lpparam)
-            hookExifInterface(lpparam)
-            hookMediaScanner(lpparam)
-            hookContentResolver(lpparam)
-            hookContentValues(lpparam)
-            hookBroadcastIntents(lpparam)
-            hookFileDeletionGuard(lpparam)
             hookContextWrapper(lpparam)
             hookMediaRecorderOrientation(lpparam)
             hookMediaFormatRotation(lpparam)
