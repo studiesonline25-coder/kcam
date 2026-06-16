@@ -5,10 +5,12 @@ import de.robv.android.xposed.XposedHelpers
 
 object PineHelper {
     open class PineCompatibleMethodHook : top.canyie.pine.callback.MethodHook() {
-        override fun beforeCall(callFrame: top.canyie.pine.Pine.CallFrame) {
+        override fun beforeCall(callFrame: top.canyie.pine.Pine.CallFrame?) {
+            if (callFrame == null) return
             try { beforeHookedMethod(callFrame) } catch (e: Throwable) { Log.e("DIAGNOSTIC_VIRTUCAM", "Hook before error", e) }
         }
-        override fun afterCall(callFrame: top.canyie.pine.Pine.CallFrame) {
+        override fun afterCall(callFrame: top.canyie.pine.Pine.CallFrame?) {
+            if (callFrame == null) return
             try { afterHookedMethod(callFrame) } catch (e: Throwable) { Log.e("DIAGNOSTIC_VIRTUCAM", "Hook after error", e) }
         }
         open fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {}
