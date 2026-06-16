@@ -1055,8 +1055,8 @@ object CameraHook {
             "android.hardware.camera2.impl.CameraCaptureSessionImpl", lpparam.classLoader
         ) ?: return
 
-        PineHelper.hookAllMethods(cameraCaptureSessionClass, "setRepeatingRequest", object : PineHelper.PineCompatibleMethodHook() {
-            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
+        XposedBridge.hookAllMethods(cameraCaptureSessionClass, "setRepeatingRequest", object : de.robv.android.xposed.XC_MethodHook() {
+            override fun beforeHookedMethod(param: MethodHookParam) {
                 if (!isEnabled) return
                 val request = param.args[0] as? android.hardware.camera2.CaptureRequest ?: return
                 
@@ -1196,8 +1196,8 @@ object CameraHook {
 
         // [HARDWARE AUDIT] Always-on wrapper that records CaptureResults regardless of isEnabled.
         // This is separate from the spoofing logic below so audit data is captured even when OFF.
-        val auditOnlyHook = object : PineHelper.PineCompatibleMethodHook() {
-            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
+        val auditOnlyHook = object : de.robv.android.xposed.XC_MethodHook() {
+            override fun beforeHookedMethod(param: MethodHookParam) {
                 try {
                     val callbackIndex = 1
                     val originalCallback = if (param.args.size > callbackIndex)
@@ -1222,13 +1222,13 @@ object CameraHook {
                 } catch (_: Throwable) {}
             }
         }
-        PineHelper.hookAllMethods(sessionClass, "capture", auditOnlyHook)
-        PineHelper.hookAllMethods(sessionClass, "captureBurst", auditOnlyHook)
-        PineHelper.hookAllMethods(sessionClass, "setRepeatingRequest", auditOnlyHook)
-        PineHelper.hookAllMethods(sessionClass, "setRepeatingBurst", auditOnlyHook)
+        XposedBridge.hookAllMethods(sessionClass, "capture", auditOnlyHook)
+        XposedBridge.hookAllMethods(sessionClass, "captureBurst", auditOnlyHook)
+        XposedBridge.hookAllMethods(sessionClass, "setRepeatingRequest", auditOnlyHook)
+        XposedBridge.hookAllMethods(sessionClass, "setRepeatingBurst", auditOnlyHook)
 
-        val callbackHook = object : PineHelper.PineCompatibleMethodHook() {
-            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
+        val callbackHook = object : de.robv.android.xposed.XC_MethodHook() {
+            override fun beforeHookedMethod(param: MethodHookParam) {
                 try {
                     if (!isEnabled) return
                     val callbackIndex = if (param.method.name == "capture") 1 else 1
@@ -1398,16 +1398,16 @@ object CameraHook {
             }
         }
 
-        PineHelper.hookAllMethods(sessionClass, "capture", callbackHook)
-        PineHelper.hookAllMethods(sessionClass, "captureBurst", callbackHook)
-        PineHelper.hookAllMethods(sessionClass, "setRepeatingRequest", callbackHook)
+        XposedBridge.hookAllMethods(sessionClass, "capture", callbackHook)
+        XposedBridge.hookAllMethods(sessionClass, "captureBurst", callbackHook)
+        XposedBridge.hookAllMethods(sessionClass, "setRepeatingRequest", callbackHook)
 
         // [BROWSER CAPTURE FIX] Hook API 28+ Executor-based capture methods.
         // Chromium and modern apps may use captureSingleRequest(CaptureRequest, Executor, CaptureCallback)
         // instead of capture(CaptureRequest, CaptureCallback, Handler).
         // The callback is at index 2 (not 1) in these methods.
-        val executorCallbackHook = object : PineHelper.PineCompatibleMethodHook() {
-            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
+        val executorCallbackHook = object : de.robv.android.xposed.XC_MethodHook() {
+            override fun beforeHookedMethod(param: MethodHookParam) {
                 try {
                     if (!isEnabled) return
                     // captureSingleRequest(CaptureRequest, Executor, CaptureCallback) → callback at index 2
@@ -1494,9 +1494,9 @@ object CameraHook {
                 }
             }
         }
-        PineHelper.hookAllMethods(sessionClass, "captureSingleRequest", executorCallbackHook)
-        PineHelper.hookAllMethods(sessionClass, "captureBurstRequests", executorCallbackHook)
-        PineHelper.hookAllMethods(sessionClass, "setSingleRepeatingRequest", executorCallbackHook)
+        XposedBridge.hookAllMethods(sessionClass, "captureSingleRequest", executorCallbackHook)
+        XposedBridge.hookAllMethods(sessionClass, "captureBurstRequests", executorCallbackHook)
+        XposedBridge.hookAllMethods(sessionClass, "setSingleRepeatingRequest", executorCallbackHook)
     }
 
     /**
@@ -1666,8 +1666,8 @@ object CameraHook {
         ) ?: return
 
         // [TOTAL SURVEILLANCE] Log all settings sent to the hardware
-        pineHooks.addAll(PineHelper.hookAllMethods(builderClass, "set", object : PineHelper.PineCompatibleMethodHook() {
-            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
+        XposedBridge.hookAllMethods(builderClass, "set", object : de.robv.android.xposed.XC_MethodHook() {
+            override fun beforeHookedMethod(param: MethodHookParam) {
                 try {
                     val key = param.args[0]
                     val value = param.args[1]
@@ -1691,10 +1691,10 @@ object CameraHook {
                     try { HardwareAuditLogger.logCaptureRequest(keyName, value) } catch (_: Throwable) {}
                 } catch (_: Throwable) {}
             }
-        }))
+        })
 
-        pineHooks.addAll(PineHelper.hookAllMethods(builderClass, "addTarget", object : PineHelper.PineCompatibleMethodHook() {
-            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
+        XposedBridge.hookAllMethods(builderClass, "addTarget", object : de.robv.android.xposed.XC_MethodHook() {
+            override fun beforeHookedMethod(param: MethodHookParam) {
                 try {
                     val originalSurface = param.args[0] as? Surface ?: return
                     
@@ -1723,7 +1723,7 @@ object CameraHook {
                     Log.e(TAG, "VirtuCam_Hook: Error in CaptureRequest.addTarget hook", t)
                 }
             }
-        }))
+        })
     }
 
 
@@ -1744,8 +1744,8 @@ object CameraHook {
                 "android.hardware.camera2.CaptureRequest\$Builder", lpparam.classLoader
             ) ?: return
 
-            pineHooks.addAll(PineHelper.hookAllMethods(builderClass, "build", object : PineHelper.PineCompatibleMethodHook() {
-                override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
+            XposedBridge.hookAllMethods(builderClass, "build", object : de.robv.android.xposed.XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
                     try {
                         if (!isEnabled) return
                         val builder = param.thisObject
@@ -1755,7 +1755,7 @@ object CameraHook {
                         Log.e(TAG, "VirtuCam_Hook: Xiaomi Parallel Bypass applied to CaptureRequest.")
                     } catch (_: Throwable) {}
                 }
-            }))
+            })
         } catch (e: Exception) {
             Log.e(TAG, "Failed to hook Xiaomi Capture Pipeline bypass", e)
         }
@@ -2782,6 +2782,7 @@ object CameraHook {
                     
                     val args = callFrame.args
                     var configsList: List<*>? = null
+                    var listIndex = -1
                     
                     // 1. Check if the first argument is SessionConfiguration (Android 9+)
                     if (args.isNotEmpty() && args[0] != null && args[0]!!.javaClass.name.endsWith("SessionConfiguration")) {
@@ -2800,6 +2801,7 @@ object CameraHook {
                         for (i in args.indices) {
                             if (args[i] is List<*>) {
                                 configsList = args[i] as List<*>
+                                listIndex = i
                                 break
                             }
                         }
@@ -2826,7 +2828,57 @@ object CameraHook {
                     val isSurfaceList = configsList[0] is Surface
                     
                     if (isSurfaceList) {
-                        Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Intercepted List<Surface>, skipping (only OutputConfig supported)")
+                        Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Processing List<Surface> for Firefox/Legacy fallback")
+                        val newSurfaces = ArrayList<Surface>()
+                        
+                        for (s in configsList) {
+                            val targetSurface = s as? Surface ?: continue
+                            val isCapture = captureSurfaces.contains(targetSurface)
+                            val isVideoSurface = videoSurfaces.contains(targetSurface)
+                            
+                            val size = SurfaceUtils.getSurfaceSize(targetSurface)
+                            val w = size.first
+                            val h = size.second
+                            val format = SurfaceUtils.getSurfaceFormat(targetSurface)
+                            val isPreview = (format == 0x22 || format == 0x1)
+                            
+                            // [JPEG DIRECT OVERWRITE]
+                            if (format == 256 && !isPreview && !isVideoSurface) {
+                                val b = FormatConverterBridge(w, h, null, format, resolveSensorOrientationDeg(), rotationOffset, isColorSwapped)
+                                activeBridges.add(b)
+                                formatBridges[android.util.Size(w, h)] = b
+                                newSurfaces.add(targetSurface)
+                                targetSurfaces.add(Triple(b.inputSurface ?: targetSurface, true, format))
+                                continue
+                            }
+                            
+                            val bridge = if (!isPreview && !isVideoSurface) {
+                                val b = FormatConverterBridge(w, h, targetSurface, format, resolveSensorOrientationDeg(), rotationOffset, isColorSwapped)
+                                activeBridges.add(b)
+                                formatBridges[android.util.Size(w, h)] = b
+                                b
+                            } else {
+                                null
+                            }
+                            
+                            val dummySurface = createDummySurface(targetSurface, w, h, bridge)
+                            surfaceMap[targetSurface] = dummySurface
+                            newSurfaces.add(dummySurface)
+                            
+                            val resolvedSurface = bridge?.inputSurface ?: targetSurface
+                            
+                            val reader = imageReaderSurfaces[targetSurface]
+                            if (reader != null) imageReaderToDummy[reader] = resolvedSurface
+                            
+                            val st = surfaceTextureSurfaces[targetSurface]
+                            if (st != null) surfaceTextureToDummy[st] = resolvedSurface
+                                    
+                            targetSurfaces.add(Triple(resolvedSurface, isCapture, format))
+                        }
+                        
+                        if (listIndex != -1) {
+                            callFrame.args[listIndex] = newSurfaces
+                        }
                     } else {
                         // Extract targets from List<OutputConfiguration>
                         for (config in configsList) {
