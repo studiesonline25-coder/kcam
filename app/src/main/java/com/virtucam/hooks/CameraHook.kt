@@ -80,6 +80,15 @@ object CameraHook {
     
     // Maps original surfaces to their formats for correct rendering
     internal val surfaceFormats = java.util.concurrent.ConcurrentHashMap<Surface, Int>()
+    private val imageReaderSurfaces = java.util.concurrent.ConcurrentHashMap<Surface, android.media.ImageReader>()
+    private val imageReaderToDummy = java.util.concurrent.ConcurrentHashMap<android.media.ImageReader, Surface>()
+    private val surfaceTextureSurfaces = java.util.concurrent.ConcurrentHashMap<Surface, android.graphics.SurfaceTexture>()
+    private val surfaceTextureToDummy = java.util.concurrent.ConcurrentHashMap<android.graphics.SurfaceTexture, Surface>()
+
+    private val isProcessingCaptureSession = ThreadLocal<Boolean>()
+    
+    // Maintain strong references to dynamically registered Pine hooks to prevent GC
+    private val pineHooks = java.util.concurrent.ConcurrentHashMap.newKeySet<Any>()
     
     // Track characteristics per cameraId
     private val cameraOrientations = java.util.concurrent.ConcurrentHashMap<String, Int>()
@@ -1657,7 +1666,7 @@ object CameraHook {
         ) ?: return
 
         // [TOTAL SURVEILLANCE] Log all settings sent to the hardware
-        PineHelper.hookAllMethods(builderClass, "set", object : PineHelper.PineCompatibleMethodHook() {
+        pineHooks.addAll(PineHelper.hookAllMethods(builderClass, "set", object : PineHelper.PineCompatibleMethodHook() {
             override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 try {
                     val key = param.args[0]
@@ -1682,9 +1691,9 @@ object CameraHook {
                     try { HardwareAuditLogger.logCaptureRequest(keyName, value) } catch (_: Throwable) {}
                 } catch (_: Throwable) {}
             }
-        })
+        }))
 
-        PineHelper.hookAllMethods(builderClass, "addTarget", object : PineHelper.PineCompatibleMethodHook() {
+        pineHooks.addAll(PineHelper.hookAllMethods(builderClass, "addTarget", object : PineHelper.PineCompatibleMethodHook() {
             override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 try {
                     val originalSurface = param.args[0] as? Surface ?: return
@@ -1696,7 +1705,16 @@ object CameraHook {
 
                     if (!isEnabled) return
                     
-                    val dummySurface = surfaceMap[originalSurface]
+                    var dummySurface = surfaceMap[originalSurface]
+                    if (dummySurface == null) {
+                        val reader = imageReaderSurfaces[originalSurface]
+                        if (reader != null) dummySurface = imageReaderToDummy[reader]
+                        else {
+                            val st = surfaceTextureSurfaces[originalSurface]
+                            if (st != null) dummySurface = surfaceTextureToDummy[st]
+                        }
+                    }
+                    
                     if (dummySurface != null) {
                         Log.d(TAG, "VirtuCam_Hook: CaptureRequest.addTarget() → swapped to dummy surface")
                         param.args[0] = dummySurface
@@ -1705,7 +1723,7 @@ object CameraHook {
                     Log.e(TAG, "VirtuCam_Hook: Error in CaptureRequest.addTarget hook", t)
                 }
             }
-        })
+        }))
     }
 
 
@@ -1726,61 +1744,18 @@ object CameraHook {
                 "android.hardware.camera2.CaptureRequest\$Builder", lpparam.classLoader
             ) ?: return
 
-            PineHelper.hookAllMethods(builderClass, "build", object : PineHelper.PineCompatibleMethodHook() {
+            pineHooks.addAll(PineHelper.hookAllMethods(builderClass, "build", object : PineHelper.PineCompatibleMethodHook() {
                 override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                     try {
                         if (!isEnabled) return
-                        val builder = param.thisObject ?: return
-                        
-                        // [Redmi 14C Fix] Apply Xiaomi Capture Bypass (forces 'Simple' capture path)
-                        // By disabling the Parallel Engine (MiAlgo/MIVI), we prevent it from rejecting virtual buffers.
-                        val template = try { XposedHelpers.getIntField(builder, "mTemplate") } catch (e: Exception) { -1 }
-                        
-                        // 2. NUCLEAR SWEEP: Disable EVERYTHING titled 'xiaomi' or 'mivi'
-                        // This forces the phone to treat our request as a 'Naked' frame with no special logic allowed.
-                        val context = android.app.AndroidAppHelper.currentApplication()
-                        val chars = try {
-                            val manager = context?.getSystemService(android.content.Context.CAMERA_SERVICE) as? android.hardware.camera2.CameraManager
-                            manager?.getCameraCharacteristics(activeCameraId)
-                        } catch (_: Exception) { null }
-
-                        val keys = chars?.availableCaptureRequestKeys ?: discoveredXiaomiKeys.values
-                        for (key in keys) {
-                            val name = key.name
-                            if (name.contains("xiaomi", true) || name.contains("mivi", true)) {
-                                try {
-                                    if (name == "xiaomi.capturepipeline.simple") {
-                                        setXiaomiVendorTag(builder, name, 1.toByte())
-                                    } else {
-                                        // Set to false or 0 based on type
-                                        setXiaomiVendorTag(builder, name, false)
-                                        setXiaomiVendorTag(builder, name, 0.toByte())
-                                        setXiaomiVendorTag(builder, name, 0)
-                                    }
-                                } catch (_: Exception) {}
-                            }
-                        }
-
-                        if (template != 2 && template != 5) return // Early exit for preview if it's not a capture request
-                        
-                        Log.d(TAG, "XiaomiBypass: Applied Nuclear Metadata Sweep to template $template")
-                        
-                        // Disable multi-frame and post-processing dependencies
-                        setXiaomiVendorTag(builder, "xiaomi.mfnr.enabled", 0.toByte())
-                        setXiaomiVendorTag(builder, "xiaomi.hdr.enabled", 0.toByte())
-                        setXiaomiVendorTag(builder, "xiaomi.multiframe.inputNum", 1)
-                        setXiaomiVendorTag(builder, "xiaomi.snapshot.optimize.enabled", 0.toByte())
-                        setXiaomiVendorTag(builder, "xiaomi.mivi.super.pixel.enabled", false)
-                        setXiaomiVendorTag(builder, "xiaomi.mivi.super.night.enabled", false)
-                        setXiaomiVendorTag(builder, "xiaomi.capturepipeline.simple", 1.toByte())
-                        setXiaomiVendorTag(builder, "xiaomi.parallel.enabled", 0.toByte())
-                        setXiaomiVendorTag(builder, "xiaomi.mivi.enabled", false)
-                        setXiaomiVendorTag(builder, "xiaomi.algo.enabled", false)
-                        setXiaomiVendorTag(builder, "xiaomi.sat.enabled", 0.toByte())
-                        
+                        val builder = param.thisObject
+                        XposedHelpers.callMethod(builder, "set", XposedHelpers.getStaticObjectField(CaptureRequest::class.java, "CONTROL_ENABLE_ZSL"), false)
+                        XposedHelpers.callMethod(builder, "set", XposedHelpers.getStaticObjectField(CaptureRequest::class.java, "XIAOMI_MFNR_ENABLED"), false)
+                        XposedHelpers.callMethod(builder, "set", XposedHelpers.getStaticObjectField(CaptureRequest::class.java, "XIAOMI_HDR_SR_ENABLED"), false)
+                        Log.e(TAG, "VirtuCam_Hook: Xiaomi Parallel Bypass applied to CaptureRequest.")
                     } catch (_: Throwable) {}
                 }
-            })
+            }))
         } catch (e: Exception) {
             Log.e(TAG, "Failed to hook Xiaomi Capture Pipeline bypass", e)
         }
@@ -1988,7 +1963,8 @@ object CameraHook {
         deviceImplClass.declaredMethods.forEach { method ->
             if (method.name == "submitCaptureRequest") {
                 try {
-                    top.canyie.pine.Pine.hook(method, pineSubmitCaptureRequestHook)
+                    val p = top.canyie.pine.Pine.hook(method, pineSubmitCaptureRequestHook)
+                    if (p != null) pineHooks.add(p)
                     Log.e("DIAGNOSTIC_VIRTUCAM", "PINE HOOK REGISTRATION: Successfully injected native Pine hook on submitCaptureRequest!")
                 } catch (e: Throwable) {
                     Log.e("DIAGNOSTIC_VIRTUCAM", "PINE HOOK FATAL: Failed to inject Pine hook on submitCaptureRequest", e)
@@ -2009,75 +1985,37 @@ object CameraHook {
         ) ?: return
 
         // [PINE MIGRATION] Track Surface formats from ImageReader creation using AOT-bypassing Pine
-        val pineImageReaderHook = object : top.canyie.pine.callback.MethodHook() {
-            override fun beforeCall(callFrame: top.canyie.pine.Pine.CallFrame) {
-                applyDeferredHooksToClassLoader(Thread.currentThread().contextClassLoader)
-            }
-            override fun afterCall(callFrame: top.canyie.pine.Pine.CallFrame) {
-                val reader = callFrame.result as? ImageReader ?: return
-                val width = callFrame.args[0] as? Int ?: -1
-                val height = callFrame.args[1] as? Int ?: -1
-                val format = callFrame.args[2] as? Int ?: -1
-                val maxImages = callFrame.args[3] as? Int ?: -1
+        val pineImageReaderHook = object : PineHelper.PineCompatibleMethodHook() {
+            override fun afterHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
+                val reader = param.thisObject as? android.media.ImageReader ?: return
+                val surface = param.result as? Surface ?: return
                 
-                Log.e(TAG, "[PINE TELEMETRY] ImageReader Pipeline Created! App Requested: ${width}x${height} | Format: $format | MaxImages: $maxImages")
-                
-                val surface = reader.surface
-                if (surface != null) {
-                    surfaceSizes[surface] = Pair(width, height)
-                    surfaceFormats[surface] = format
+                imageReaderSurfaces[surface] = reader
+
+                val w = reader.width
+                val h = reader.height
+                val format = reader.imageFormat
+                surfaceSizes[surface] = Pair(w, h)
+                surfaceFormats[surface] = format
+
+                if (format == 256) {
+                    captureSurfaces.add(surface)
+                    Log.d(TAG, "VirtuCam_Hook: Classified ImageReader as CAPTURE (format=256) ${w}x${h}")
+                } else if (format == 34 || format == 35) {
+                    Log.d(TAG, "VirtuCam_Hook: Classified ImageReader as PREVIEW (format=$format) ${w}x${h}")
                 }
             }
-        }
-
-        try {
-            val method = imageReaderClass.getDeclaredMethod("newInstance", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType, Int::class.javaPrimitiveType, Int::class.javaPrimitiveType)
-            top.canyie.pine.Pine.hook(method, pineImageReaderHook)
-            Log.e(TAG, "PINE HOOK REGISTRATION: Successfully injected native Pine hook on ImageReader.newInstance!")
-        } catch (e: Throwable) {
-            Log.e(TAG, "PINE HOOK FATAL: Failed to inject Pine hook on ImageReader.newInstance", e)
         }
         
         try {
-            val method2 = imageReaderClass.getDeclaredMethod("newInstance", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType, Int::class.javaPrimitiveType, Int::class.javaPrimitiveType, Long::class.javaPrimitiveType)
-            top.canyie.pine.Pine.hook(method2, pineImageReaderHook)
-            Log.e(TAG, "PINE HOOK REGISTRATION: Successfully injected native Pine hook on ImageReader.newInstance(long)!")
+            val method = imageReaderClass.getMethod("getSurface")
+            val p = top.canyie.pine.Pine.hook(method, pineImageReaderHook)
+            if (p != null) pineHooks.add(p)
+            Log.i("DIAGNOSTIC_VIRTUCAM", "PINE HOOK REGISTRATION: Successfully injected exact hook on android.media.ImageReader.getSurface")
         } catch (e: Throwable) {
-            // Optional overload, ignore if not found
+            Log.e("DIAGNOSTIC_VIRTUCAM", "PINE HOOK FATAL: Failed to inject exact hook on getSurface", e)
         }
 
-        PineHelper.findAndHookMethod(imageReaderClass, "getSurface", object : PineHelper.PineCompatibleMethodHook() {
-            override fun afterHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
-                val reader = param.thisObject as? ImageReader ?: return
-                val surface = param.result as? Surface ?: return
-                val format = XposedHelpers.callMethod(reader, "getImageFormat") as? Int ?: return
-                val w = XposedHelpers.callMethod(reader, "getWidth") as? Int ?: 0
-                val h = XposedHelpers.callMethod(reader, "getHeight") as? Int ?: 0
-                
-                surfaceFormats[surface] = format
-                // [Browser vs Native Camera Fix] Differentiate Format 35 by Host Package
-                val isNativeCamera = targetPackage.lowercase().contains("camera") || targetPackage == "net.sourceforge.opencamera" || targetPackage.contains("miui")
-                
-                if (format == 256) { // Always classify JPEG as capture
-                    captureSurfaces.add(surface)
-                    Log.d(TAG, "VirtuCam_Hook: Classified ImageReader as CAPTURE (JPEG) ${w}x${h}")
-                } else if (format == 35 || format == ImageFormat.YUV_420_888 || format == ImageFormat.YV12) {
-                    if (isNativeCamera) {
-                        Log.d(TAG, "VirtuCam_Hook: Classified ImageReader as CAPTURE (YUV Native Camera App) ${w}x${h}")
-                        captureSurfaces.add(surface)
-                    } else {
-                        Log.d(TAG, "VirtuCam_Hook: Classified ImageReader as PREVIEW (YUV Browser/Social App) ${w}x${h}")
-                    }
-                } else {
-                    Log.d(TAG, "VirtuCam_Hook: Classified ImageReader as PREVIEW (format=$format) ${w}x${h}")
-                }
-                
-                if (w > 0 && h > 0) {
-                    surfaceSizes[surface] = Pair(w, h)
-                    Log.d(TAG, "VirtuCam_Hook: Tracked ImageReader surface ${w}x${h} format=$format isCapture=${format == 256}")
-                }
-            }
-        })
         val overwriteHook = object : PineHelper.PineCompatibleMethodHook() {
             override fun afterHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 // Secondary Defense: Suppress format mismatch exceptions from nativeImageSetup.
@@ -2186,47 +2124,41 @@ object CameraHook {
     }
 
     private fun hookSurfaceTexture(lpparam: XC_LoadPackage.LoadPackageParam) {
+        val stSizes = java.util.concurrent.ConcurrentHashMap<SurfaceTexture, Pair<Int, Int>>()
+        
         try {
             val surfaceTextureClass = XposedHelpers.findClassIfExists("android.graphics.SurfaceTexture", lpparam.classLoader)
             if (surfaceTextureClass != null) {
                 val setSizeMethod = surfaceTextureClass.getDeclaredMethod("setDefaultBufferSize", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType)
-                top.canyie.pine.Pine.hook(setSizeMethod, object : top.canyie.pine.callback.MethodHook() {
+                pineHooks.add(top.canyie.pine.Pine.hook(setSizeMethod, object : top.canyie.pine.callback.MethodHook() {
                     override fun afterCall(callFrame: top.canyie.pine.Pine.CallFrame) {
                         val st = callFrame.thisObject as? SurfaceTexture ?: return
                         val w = callFrame.args[0] as Int
                         val h = callFrame.args[1] as Int
-                        val oldSize = surfaceTextureSizes[st]
-                        surfaceTextureSizes[st] = Pair(w, h)
-                        Log.e(TAG, "PINE_Hook: setDefaultBufferSize(${w}x${h}) called on ST@${System.identityHashCode(st).toString(16)}")
-                        if (oldSize != null && (oldSize.first != w || oldSize.second != h) && renderThreads.isNotEmpty()) {
-                            Log.e(TAG, "PINE_Hook: SurfaceTexture RESIZED - signaling EGL recreate")
-                            pendingSurfaceResize.set(true)
-                        }
+                        stSizes[st] = Pair(w, h)
+                        Log.e(TAG, "PINE_Hook: setDefaultBufferSize(${w}x${h})")
                     }
-                })
-                Log.e(TAG, "PINE HOOK REGISTRATION: Successfully injected native Pine hook on SurfaceTexture.setDefaultBufferSize!")
+                }))
             }
         } catch (e: Throwable) {
             Log.e(TAG, "VirtuCam_Hook: Failed to hook SurfaceTexture.setDefaultBufferSize", e)
         }
 
             // [PINE MIGRATION] Associate SurfaceTexture with Surface for later lookup
-            val surfaceClass = XposedHelpers.findClassIfExists("android.view.Surface", lpparam.classLoader)
-            if (surfaceClass != null) {
-                val constructor = surfaceClass.getDeclaredConstructor(SurfaceTexture::class.java)
-                top.canyie.pine.Pine.hook(constructor, object : top.canyie.pine.callback.MethodHook() {
-                    override fun afterCall(callFrame: top.canyie.pine.Pine.CallFrame) {
-                        val s = callFrame.thisObject as? Surface ?: return
-                        val st = callFrame.args[0] as? SurfaceTexture ?: return
-                        val size = surfaceTextureSizes[st]
-                        if (size != null) {
-                            surfaceSizes[s] = size
-                            Log.d(TAG, "PINE_Hook: Associated Surface with SurfaceTexture size ${size.first}x${size.second}")
-                        }
+            pineHooks.addAll(PineHelper.findAndHookConstructor(Surface::class.java, lpparam.classLoader, SurfaceTexture::class.java, object : PineHelper.PineCompatibleMethodHook() {
+                override fun afterHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
+                    val surface = param.thisObject as? Surface ?: return
+                    val st = param.args[0] as? SurfaceTexture ?: return
+                    surfaceTextureSurfaces[surface] = st
+
+                    val size = stSizes[st]
+                    if (size != null) {
+                        surfaceSizes[surface] = size
+                        surfaceFormats[surface] = 34
+                        Log.d(TAG, "PINE_Hook: Associated Surface with SurfaceTexture size ${size.first}x${size.second}")
                     }
-                })
-                Log.e(TAG, "PINE HOOK REGISTRATION: Successfully injected native Pine hook on Surface(SurfaceTexture) constructor!")
-            }
+                }
+            }))
 
             // [TOTAL SURVEILLANCE] Hook getTransformMatrix GLOBALLY for SurfaceTexture
             // This is safer and only applies once per app launch.
@@ -2640,23 +2572,18 @@ object CameraHook {
 
         val cameraDeviceImplClass = targetClass!!
 
-        try {
-            Log.e("DIAGNOSTIC_VIRTUCAM", "=== DUMPING CameraDeviceImpl METHODS ON ANDROID 16 ===")
-            cameraDeviceImplClass.declaredMethods.forEach { method ->
-                if (method.name.contains("Session", ignoreCase = true)) {
-                    Log.e("DIAGNOSTIC_VIRTUCAM", "FOUND METHOD: ${method.name}(${method.parameterTypes.joinToString { it.simpleName }})")
-                }
-            }
-        } catch (e: Throwable) {
-            Log.e("DIAGNOSTIC_VIRTUCAM", "Failed to dump methods", e)
-        }
-
         PineHelper.hookAllMethods(
             cameraDeviceImplClass,
             "createCaptureSession",
             object : PineHelper.PineCompatibleMethodHook() {
                 @Suppress("UNCHECKED_CAST")
                 override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
+                    if (isProcessingCaptureSession.get() == true) {
+                        Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Ignoring re-entrant createCaptureSession (List)")
+                        return
+                    }
+                    isProcessingCaptureSession.set(true)
+
                     try {
                         // Lazy load configuration when camera is actually accessed
                         loadConfiguration()
@@ -2777,6 +2704,13 @@ object CameraHook {
                                 
                                 val dummySurface = createDummySurface(targetSurface, w, h, bridge)
                                 surfaceMap[targetSurface] = dummySurface
+                                
+                                val reader = imageReaderSurfaces[targetSurface]
+                                if (reader != null) imageReaderToDummy[reader] = dummySurface
+                                
+                                val st = surfaceTextureSurfaces[targetSurface]
+                                if (st != null) surfaceTextureToDummy[st] = dummySurface
+
                                 newSurfaces.add(dummySurface)
                                 
                                 val resolvedSurface = bridge?.inputSurface ?: targetSurface
@@ -2792,8 +2726,11 @@ object CameraHook {
                         Log.e(TAG, "VirtuCam_Hook: Error in createCaptureSession hook", t)
                     }
                 }
+                override fun afterHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
+                    isProcessingCaptureSession.set(false)
+                }
             }
-        )
+        ))
     }
 
     /**
@@ -2816,206 +2753,15 @@ object CameraHook {
         if (targetClass == null) return
         val cameraDeviceImplClass = targetClass!!
 
-        PineHelper.hookAllMethods(
-            cameraDeviceImplClass,
-            "createCaptureSessionByOutputConfigurations",
-            object : PineHelper.PineCompatibleMethodHook() {
-                override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
-                    try {
-                        loadConfiguration()
-
-                        // [AUDIT TRACKING] Always update activeCameraId for read-only audit
-                        try {
-                            val cameraDevice = param.thisObject as android.hardware.camera2.CameraDevice
-                            val newId = cameraDevice.id
-                            if (newId != activeCameraId) {
-                                Log.e(TAG, "AUDIT: activeCameraId changed $activeCameraId -> $newId via createCaptureSessionByOutputConfigurations")
-                                activeCameraId = newId
-                                try {
-                                    val manager = AndroidAppHelper.currentApplication().getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
-                                    val characteristics = manager.getCameraCharacteristics(activeCameraId)
-                                    val facing = characteristics.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
-                                    if (facing != null) cameraFacings[activeCameraId] = mapLensFacingForVirtuCam(facing) ?: 0
-                                    cameraOrientations[activeCameraId] = characteristics.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
-                                } catch (_: Throwable) {}
-                            }
-                        } catch (_: Throwable) {}
-
-                        if (!isEnabled) return
-                        
-                        val args = param.args
-                        if (args.isEmpty() || args[0] !is List<*>) return
-                        
-                        val configs = args[0] as List<*>
-                        if (configs.isNotEmpty()) {
-                            Log.d(TAG, "VirtuCam_Hook: Intercepted createCaptureSessionByOutputConfigurations - count: ${configs.size}")
-                            
-                            // [HARDENING] Direct Sensing
-                            try {
-                                val cameraDevice = param.thisObject as android.hardware.camera2.CameraDevice
-                                activeCameraId = cameraDevice.id
-                                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Direct Device Sensing (OutputConfigs) - Active Camera: $activeCameraId")
-                                
-                                val manager = AndroidAppHelper.currentApplication().getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
-                                val characteristics = manager.getCameraCharacteristics(activeCameraId)
-                                val facing = characteristics.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
-                                if (facing != null) cameraFacings[activeCameraId] = mapLensFacingForVirtuCam(facing) ?: 0
-                                cameraOrientations[activeCameraId] = characteristics.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
-                            } catch (e: Throwable) {
-                                Log.e(TAG, "VirtuCam_Hook: Failed direct sensing in OutputConfigs", e)
-                            }
-
-                            stopOldPipeline()
-                            
-                             val targetSurfaces = ArrayList<Triple<Surface, Boolean, Int>>()
-                             
-                             for (config in configs) {
-                                 if (config == null) continue
-                                 
-                                 val getSurfaceMethod = config.javaClass.getMethod("getSurface")
-                                 val targetSurface = getSurfaceMethod.invoke(config) as? Surface
-                                 
-                                 if (targetSurface != null) {
-                                     val isCapture = captureSurfaces.contains(targetSurface)
-                                     val format = surfaceFormats[targetSurface] ?: 0x1
-                                     val resolvedSurface = swapSurfaceInOutputConfig(config, targetSurface)
-                                     targetSurfaces.add(Triple(resolvedSurface, isCapture, format))
-                                 }
-                             }
-                            
-                            startRenderThreads(targetSurfaces)
-                            obfuscateStackTrace()
-                        }
-                    } catch (t: Throwable) {
-                        Log.e(TAG, "VirtuCam_Hook: Error in createCaptureSessionByOutputConfigurations hook", t)
-                    }
-                }
-            }
-        )
-        
-        // Android 28+ uses SessionConfiguration
-        PineHelper.hookAllMethods(
-            cameraDeviceImplClass,
-            "createCaptureSession",
-            object : PineHelper.PineCompatibleMethodHook() {
-                override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
-                    try {
-                        loadConfiguration()
-
-                        // [AUDIT TRACKING] Always update activeCameraId for read-only audit
-                        try {
-                            val cameraDevice = param.thisObject as android.hardware.camera2.CameraDevice
-                            val newId = cameraDevice.id
-                            if (newId != activeCameraId) {
-                                Log.e(TAG, "AUDIT: activeCameraId changed $activeCameraId -> $newId via SessionConfiguration")
-                                activeCameraId = newId
-                                try {
-                                    val manager = AndroidAppHelper.currentApplication().getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
-                                    val characteristics = manager.getCameraCharacteristics(activeCameraId)
-                                    val facing = characteristics.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
-                                    if (facing != null) cameraFacings[activeCameraId] = mapLensFacingForVirtuCam(facing) ?: 0
-                                    cameraOrientations[activeCameraId] = characteristics.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
-                                } catch (_: Throwable) {}
-                            }
-                        } catch (_: Throwable) {}
-
-                        if (!isEnabled) return
-                        
-                        val args = param.args
-                        if (args.isEmpty() || args[0] !is List<*>) return
-
-                        val surfacesList = args[0] as List<Surface>
-                        if (surfacesList.isNotEmpty()) {
-                            Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: createCaptureSession called with ${surfacesList.size} targets")
-                            for (s in surfacesList) {
-                                val size = SurfaceUtils.getSurfaceSize(s)
-                                val fmt = SurfaceUtils.getSurfaceFormat(s)
-                                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Target Surface: ${size.first}x${size.second}, Format=$fmt")
-                            }
-
-                            // [HARDWARE AUDIT] Always begin session logging (read-only surveillance)
-                            try {
-                                val auditSurfaces = surfacesList.map { s ->
-                                    val sz = SurfaceUtils.getSurfaceSize(s)
-                                    val fmt = SurfaceUtils.getSurfaceFormat(s)
-                                    Pair(fmt, sz)
-                                }
-                                HardwareAuditLogger.beginSession(activeCameraId, auditSurfaces)
-                            } catch (_: Throwable) {}
-                            
-                            stopOldPipeline()
-                            
-                            // [HARDENING] Force fetch active cameraId facing directly from the device
-                            try {
-                                val cameraDevice = param.thisObject as android.hardware.camera2.CameraDevice
-                                activeCameraId = cameraDevice.id
-                                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Direct Device Sensing (createCaptureSession) - Active Camera: $activeCameraId")
-                                
-                                val manager = AndroidAppHelper.currentApplication().getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
-                                val characteristics = manager.getCameraCharacteristics(activeCameraId)
-                                val facing = characteristics.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
-                                if (facing != null) cameraFacings[activeCameraId] = mapLensFacingForVirtuCam(facing) ?: 0
-                                cameraOrientations[activeCameraId] = characteristics.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
-                            } catch (e: Throwable) {
-                                Log.e(TAG, "VirtuCam_Hook: Failed direct sensing in createCaptureSession", e)
-                            }
-
-                            val newSurfaces = ArrayList<Surface>()
-                            val targetSurfaces = ArrayList<Triple<Surface, Boolean, Int>>()
-                            
-                            for (targetSurface in surfacesList) {
-                                val size = SurfaceUtils.getSurfaceSize(targetSurface)
-                                val w = size.first
-                                val h = size.second
-                                
-                                val isCapture = captureSurfaces.contains(targetSurface)
-                                val isVideoSurface = videoSurfaces.contains(targetSurface)
-                                val format = SurfaceUtils.getSurfaceFormat(targetSurface)
-                                val isPreview = (format == 0x22 || format == 0x1)
-                                
-                                // [JPEG DIRECT OVERWRITE] For JPEG surfaces, ALWAYS use direct overwrite.
-                                if (format == 256 && !isPreview && !isVideoSurface) {
-                                    val b = FormatConverterBridge(w, h, null, format, resolveSensorOrientationDeg(), rotationOffset, isColorSwapped)
-                                    activeBridges.add(b)
-                                    formatBridges[android.util.Size(w, h)] = b
-                                    Log.e(TAG, "VirtuCam_Hook: Capture ${w}x${h} (Format $format) — direct overwrite (no dummy, no ImageWriter)")
-                                    newSurfaces.add(targetSurface) // Keep the original surface
-                                    targetSurfaces.add(Triple(b.inputSurface ?: targetSurface, true, format))
-                                    continue
-                                }
-                                
-                                val bridge = if (!isPreview && !isVideoSurface) {
-                                    val b = FormatConverterBridge(w, h, targetSurface, format, resolveSensorOrientationDeg(), rotationOffset, isColorSwapped)
-                                    activeBridges.add(b)
-                                    formatBridges[android.util.Size(w, h)] = b
-                                    b
-                                } else {
-                                    null
-                                }
-                                
-                                val dummySurface = createDummySurface(targetSurface, w, h, bridge)
-                                surfaceMap[targetSurface] = dummySurface
-                                newSurfaces.add(dummySurface)
-                                
-                                val resolvedSurface = bridge?.inputSurface ?: targetSurface
-                                targetSurfaces.add(Triple(resolvedSurface, isCapture, format))
-                            }
-                            
-                            param.args[0] = newSurfaces
-                            
-                            startRenderThreads(targetSurfaces)
-                            obfuscateStackTrace()
-                        }
-                    } catch (t: Throwable) {
-                        Log.e(TAG, "VirtuCam_Hook: Error in createCaptureSession hook", t)
-                    }
-                }
-            }
-        )
-
         // --- PINE: NATIVE AOT-BYPASSING SESSION METHODS ---
         val pineInternalMethodHook = object : top.canyie.pine.callback.MethodHook() {
             override fun beforeCall(callFrame: top.canyie.pine.Pine.CallFrame) {
+                if (isProcessingCaptureSession.get() == true) {
+                    Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Ignoring re-entrant createCaptureSession (Config)")
+                    return
+                }
+                isProcessingCaptureSession.set(true)
+
                 try {
                     loadConfiguration()
                     if (!isEnabled) {
@@ -3025,7 +2771,6 @@ object CameraHook {
                     
                     val args = callFrame.args
                     var configsList: List<*>? = null
-                    var listIndex = -1
                     
                     // 1. Check if the first argument is SessionConfiguration (Android 9+)
                     if (args.isNotEmpty() && args[0] != null && args[0]!!.javaClass.name.endsWith("SessionConfiguration")) {
@@ -3044,7 +2789,6 @@ object CameraHook {
                         for (i in args.indices) {
                             if (args[i] is List<*>) {
                                 configsList = args[i] as List<*>
-                                listIndex = i
                                 break
                             }
                         }
@@ -3073,7 +2817,7 @@ object CameraHook {
                     if (isSurfaceList) {
                         Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Intercepted List<Surface>, skipping (only OutputConfig supported)")
                     } else {
-                        // Handle List<OutputConfiguration>
+                        // Extract targets from List<OutputConfiguration>
                         for (config in configsList) {
                             if (config == null) continue
                             try {
@@ -3082,11 +2826,36 @@ object CameraHook {
                                 
                                 if (targetSurface != null) {
                                     val isCapture = captureSurfaces.contains(targetSurface)
+                                    val isVideoSurface = videoSurfaces.contains(targetSurface)
+                                    
+                                    val size = SurfaceUtils.getSurfaceSize(targetSurface)
+                                    val w = size.first
+                                    val h = size.second
                                     val format = SurfaceUtils.getSurfaceFormat(targetSurface)
+                                    val isPreview = (format == 0x22 || format == 0x1)
+                                    
+                                    // [JPEG DIRECT OVERWRITE]
+                                    if (format == 256 && !isPreview && !isVideoSurface) {
+                                        val b = FormatConverterBridge(w, h, null, format, resolveSensorOrientationDeg(), rotationOffset, isColorSwapped)
+                                        activeBridges.add(b)
+                                        formatBridges[android.util.Size(w, h)] = b
+                                        targetSurfaces.add(Triple(b.inputSurface ?: targetSurface, true, format))
+                                        continue
+                                    }
+
                                     val resolvedSurface = swapSurfaceInOutputConfig(config, targetSurface)
+                                    
+                                    val reader = imageReaderSurfaces[targetSurface]
+                                    if (reader != null) imageReaderToDummy[reader] = resolvedSurface
+                                    
+                                    val st = surfaceTextureSurfaces[targetSurface]
+                                    if (st != null) surfaceTextureToDummy[st] = resolvedSurface
+
                                     targetSurfaces.add(Triple(resolvedSurface, isCapture, format))
                                 }
-                            } catch (_: Throwable) {}
+                            } catch (e: Throwable) {
+                                Log.e(TAG, "Error in config loop", e)
+                            }
                         }
                     }
                     
@@ -3094,6 +2863,8 @@ object CameraHook {
                     obfuscateStackTrace()
                 } catch (t: Throwable) {
                     Log.e(TAG, "VirtuCam_Hook: Error in ${callFrame.method.name} PINE hook", t)
+                } finally {
+                    isProcessingCaptureSession.set(false)
                 }
             }
         }
@@ -3104,10 +2875,11 @@ object CameraHook {
                 method.name == "createCaptureSession" ||
                 method.name == "createCaptureSessionByOutputConfigurations") {
                 try {
-                    top.canyie.pine.Pine.hook(method, pineInternalMethodHook)
+                    val p = top.canyie.pine.Pine.hook(method, pineInternalMethodHook)
+                    if (p != null) pineHooks.add(p)
                     Log.e("DIAGNOSTIC_VIRTUCAM", "PINE HOOK REGISTRATION: Successfully injected native Pine hook on ${method.name}!")
                 } catch (e: Throwable) {
-                    Log.e("DIAGNOSTIC_VIRTUCAM", "PINE HOOK FATAL: Failed to inject Pine hook on ${method.name}", e)
+                    Log.e("DIAGNOSTIC_VIRTUCAM", "PINE HOOK FATAL: Failed native Pine hook on ${method.name}!", e)
                 }
             }
         }
