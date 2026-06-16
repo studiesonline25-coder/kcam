@@ -19,6 +19,7 @@ object PineHelper {
 
     fun hookAllMethods(clazz: Class<*>, methodName: String, hook: PineCompatibleMethodHook): Set<Any> {
         val hooks = mutableSetOf<Any>()
+        hooks.add(hook) // Prevent GC of the MethodHook
         try {
             clazz.declaredMethods.filter { it.name == methodName }.forEach { method ->
                 try {
@@ -41,6 +42,7 @@ object PineHelper {
 
     fun hookAllConstructors(clazz: Class<*>, hook: PineCompatibleMethodHook): Set<Any> {
         val hooks = mutableSetOf<Any>()
+        hooks.add(hook) // Prevent GC of the MethodHook
         try {
             clazz.declaredConstructors.forEach { constructor ->
                 try {

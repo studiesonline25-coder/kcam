@@ -2148,7 +2148,7 @@ object CameraHook {
             if (surfaceClass != null) {
                 try {
                     val constructor = surfaceClass.getDeclaredConstructor(SurfaceTexture::class.java)
-                    val p = top.canyie.pine.Pine.hook(constructor, object : PineHelper.PineCompatibleMethodHook() {
+                    val hook = object : PineHelper.PineCompatibleMethodHook() {
                         override fun afterHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                             val surface = param.thisObject as? Surface ?: return
                             val st = param.args[0] as? SurfaceTexture ?: return
@@ -2161,8 +2161,10 @@ object CameraHook {
                                 Log.d(TAG, "PINE_Hook: Associated Surface with SurfaceTexture size ${size.first}x${size.second}")
                             }
                         }
-                    })
+                    }
+                    val p = top.canyie.pine.Pine.hook(constructor, hook)
                     if (p != null) pineHooks.add(p)
+                    pineHooks.add(hook) // Prevent GC of the MethodHook
                     Log.i(TAG, "PINE HOOK REGISTRATION: Successfully injected hook on Surface(SurfaceTexture)")
                 } catch (e: Throwable) {
                     Log.e(TAG, "PINE HOOK FATAL: Failed to inject hook on Surface(SurfaceTexture)", e)
