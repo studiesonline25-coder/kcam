@@ -264,8 +264,14 @@ object CameraHook {
             targetPackage = lpparam.packageName
             Log.d(TAG, "VirtuCam_Hook: Initializing hooks for $targetPackage")
 
-            isVirtualEnvironment = lpparam.processName.contains("saas.i18n") || lpparam.processName.contains("stub")
-            Log.d(TAG, "VirtuCam_Hook: isVirtualEnvironment = $isVirtualEnvironment (process: ${lpparam.processName})")
+            val realProcessName = try {
+                java.io.File("/proc/self/cmdline").readText().trim('\u0000')
+            } catch (e: Throwable) {
+                lpparam.processName
+            }
+
+            isVirtualEnvironment = realProcessName.contains("saas.i18n") || realProcessName.contains("stub") || realProcessName.contains(":")
+            Log.e(TAG, "VirtuCam_Hook: True Process Name = $realProcessName | isVirtualEnvironment = $isVirtualEnvironment")
 
             // Boot the hardware audit logger
             try {
@@ -291,7 +297,7 @@ object CameraHook {
             hookCamera1(lpparam)
             hookCaptureCallback(lpparam)
             
-            if (lpparam.processName == "com.android.camera" || lpparam.processName.contains("miui")) {
+            if (realProcessName == "com.android.camera" || realProcessName.contains("miui")) {
                 hookXiaomiBypass(lpparam)
                 hookLazyClasses(lpparam) // Replaces hookXiaomiStorage and hookXiaomiParallelDeep
                 hookFileOutputStream(lpparam)
