@@ -2973,13 +2973,13 @@ object CameraHook {
      */
     private object SurfaceUtils {
         fun getSurfaceFormat(surface: Surface): Int {
-            if (isVirtualEnvironment) return 0x22
-
             // Check our telemetry map first (populated via ImageReader hooks)
             val trackedFormat = surfaceFormats[surface]
             if (trackedFormat != null) {
                 return trackedFormat
             }
+            
+            if (isVirtualEnvironment) return 0x22
             
             return try {
                 val utilsClass = Class.forName("android.hardware.camera2.utils.SurfaceUtils")
@@ -2992,11 +2992,11 @@ object CameraHook {
         }
 
         fun getSurfaceSize(surface: Surface): Pair<Int, Int> {
-            if (isVirtualEnvironment) return Pair(1280, 720)
-
             // Priority 1: Our robust telemetry map
             val tracked = surfaceSizes[surface]
             if (tracked != null) return tracked
+
+            if (isVirtualEnvironment) return Pair(1280, 720)
 
             return try {
                 val utilsClass = Class.forName("android.hardware.camera2.utils.SurfaceUtils")
