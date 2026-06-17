@@ -4,6 +4,10 @@ import android.util.Log
 import de.robv.android.xposed.XposedHelpers
 
 object PineHelper {
+    // [CRITICAL] Pine hooks will be garbage collected if not referenced globally.
+    // We store every successfully created hook here to keep it alive forever.
+    private val activeHooks = java.util.Collections.synchronizedSet(java.util.HashSet<Any>())
+
     open class PineCompatibleMethodHook : top.canyie.pine.callback.MethodHook() {
         override fun beforeCall(callFrame: top.canyie.pine.Pine.CallFrame?) {
             if (callFrame == null) return
@@ -17,15 +21,13 @@ object PineHelper {
         open fun afterHookedMethod(param: top.canyie.pine.Pine.CallFrame) {}
     }
 
-    fun hookAllMethods(clazz: Class<*>, methodName: String, hook: PineCompatibleMethodHook): Set<Any> {
-        val hooks = mutableSetOf<Any>()
-        hooks.add(hook) // Prevent GC of the MethodHook
+    fun hookAllMethods(clazz: Class<*>, methodName: String, hook: PineCompatibleMethodHook) {
+        activeHooks.add(hook) // Prevent GC of the MethodHook
         try {
             clazz.declaredMethods.filter { it.name == methodName }.forEach { method ->
                 try {
                     val p = top.canyie.pine.Pine.hook(method, hook)
-                    if (p != null) hooks.add(p) else hooks.add(Any())
-
+                    if (p != null) activeHooks.add(p)
                     Log.i("DIAGNOSTIC_VIRTUCAM", "PINE HOOK REGISTRATION: Successfully injected hook on ${clazz.name}.$methodName")
                 } catch (e: Throwable) {
                     Log.e("DIAGNOSTIC_VIRTUCAM", "PINE HOOK FATAL: Failed to inject hook on ${clazz.name}.$methodName", e)
@@ -34,20 +36,15 @@ object PineHelper {
         } catch (e: Throwable) {
             Log.e("DIAGNOSTIC_VIRTUCAM", "PINE HOOK FATAL: Reflection error querying ${clazz.name}.$methodName", e)
         }
-        if (hooks.isEmpty()) {
-            Log.w("DIAGNOSTIC_VIRTUCAM", "PINE HOOK WARNING: Target method $methodName not found or failed in ${clazz.name}")
-        }
-        return hooks
     }
 
-    fun hookAllConstructors(clazz: Class<*>, hook: PineCompatibleMethodHook): Set<Any> {
-        val hooks = mutableSetOf<Any>()
-        hooks.add(hook) // Prevent GC of the MethodHook
+    fun hookAllConstructors(clazz: Class<*>, hook: PineCompatibleMethodHook) {
+        activeHooks.add(hook) // Prevent GC of the MethodHook
         try {
             clazz.declaredConstructors.forEach { constructor ->
                 try {
                     val p = top.canyie.pine.Pine.hook(constructor, hook)
-                    if (p != null) hooks.add(p) else hooks.add(Any())
+                    if (p != null) activeHooks.add(p)
                     Log.i("DIAGNOSTIC_VIRTUCAM", "PINE HOOK REGISTRATION: Successfully injected hook on constructor for ${clazz.name}")
                 } catch (e: Throwable) {
                     Log.e("DIAGNOSTIC_VIRTUCAM", "PINE HOOK FATAL: Failed to inject hook on constructor for ${clazz.name}", e)
@@ -56,10 +53,6 @@ object PineHelper {
         } catch (e: Throwable) {
             Log.e("DIAGNOSTIC_VIRTUCAM", "PINE HOOK FATAL: Reflection error querying constructors for ${clazz.name}", e)
         }
-        if (hooks.isEmpty()) {
-            Log.w("DIAGNOSTIC_VIRTUCAM", "PINE HOOK WARNING: No constructors found or failed in ${clazz.name}")
-        }
-        return hooks
     }
 
     fun findAndHookMethod(className: String, classLoader: ClassLoader, methodName: String, vararg parameterTypesAndCallback: Any?) {
@@ -78,10 +71,12 @@ object PineHelper {
     fun findAndHookMethod(clazz: Class<*>, methodName: String, vararg parameterTypesAndCallback: Any?) {
         try {
             val hook = parameterTypesAndCallback.last() as PineCompatibleMethodHook
+            activeHooks.add(hook)
             val parameterTypes = parameterTypesAndCallback.dropLast(1).toTypedArray()
             val method = XposedHelpers.findMethodExact(clazz, methodName, *parameterTypes)
             try {
-                top.canyie.pine.Pine.hook(method, hook)
+                val p = top.canyie.pine.Pine.hook(method, hook)
+                if (p != null) activeHooks.add(p)
                 Log.i("DIAGNOSTIC_VIRTUCAM", "PINE HOOK REGISTRATION: Successfully injected exact hook on ${clazz.name}.$methodName")
             } catch (e: Throwable) {
                 Log.e("DIAGNOSTIC_VIRTUCAM", "PINE HOOK FATAL: Failed to inject exact hook on ${clazz.name}.$methodName", e)
@@ -107,16 +102,29 @@ object PineHelper {
     fun findAndHookConstructor(clazz: Class<*>, vararg parameterTypesAndCallback: Any?) {
         try {
             val hook = parameterTypesAndCallback.last() as PineCompatibleMethodHook
+            activeHooks.add(hook)
             val parameterTypes = parameterTypesAndCallback.dropLast(1).toTypedArray()
             val constructor = XposedHelpers.findConstructorExact(clazz, *parameterTypes)
             try {
-                top.canyie.pine.Pine.hook(constructor, hook)
+                val p = top.canyie.pine.Pine.hook(constructor, hook)
+                if (p != null) activeHooks.add(p)
                 Log.i("DIAGNOSTIC_VIRTUCAM", "PINE HOOK REGISTRATION: Successfully injected hook on constructor for ${clazz.name}")
             } catch (e: Throwable) {
                 Log.e("DIAGNOSTIC_VIRTUCAM", "PINE HOOK FATAL: Failed to inject hook on constructor for ${clazz.name}", e)
             }
         } catch (e: Throwable) {
-            Log.e("DIAGNOSTIC_VIRTUCAM", "PINE HOOK FATAL: Reflection/Class error finding constructor for ${clazz.name}", e)
+            Log.e("DIAGNOSTIC_VIRTUCAM", "PINE HOOK FATAL: Reflection error finding constructor for ${clazz.name}", e)
+        }
+    }
+
+    fun hookMethod(method: java.lang.reflect.Member, hook: PineCompatibleMethodHook) {
+        activeHooks.add(hook)
+        try {
+            val p = top.canyie.pine.Pine.hook(method, hook)
+            if (p != null) activeHooks.add(p)
+            Log.i("DIAGNOSTIC_VIRTUCAM", "PINE HOOK REGISTRATION: Successfully injected raw hook on ${method.name}")
+        } catch (e: Throwable) {
+            Log.e("DIAGNOSTIC_VIRTUCAM", "PINE HOOK FATAL: Failed to inject raw hook on ${method.name}", e)
         }
     }
 }
