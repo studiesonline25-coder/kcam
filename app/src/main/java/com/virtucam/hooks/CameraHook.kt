@@ -2968,10 +2968,11 @@ object CameraHook {
             }
             
             return try {
-                // Heuristic: If we don't know the format, we try to guess if it's a preview surface.
-                // Preview surfaces usually don't have ImageReader metadata attached.
-                0x22 // Default to PRIVATE (Hijack-able)
-            } catch (e: Exception) {
+                val utilsClass = Class.forName("android.hardware.camera2.utils.SurfaceUtils")
+                val getFormatMethod = utilsClass.getMethod("getSurfaceFormat", Surface::class.java)
+                getFormatMethod.invoke(null, surface) as Int
+            } catch (e: Throwable) {
+                Log.e(TAG, "VirtuCam: Failed to get real surface format, defaulting to 0x22", e)
                 0x22
             }
         }
@@ -2981,8 +2982,19 @@ object CameraHook {
             val tracked = surfaceSizes[surface]
             if (tracked != null) return tracked
 
-            // Priority 2: Generic fallback (Legacy)
-            return Pair(1280, 720)
+            return try {
+                val utilsClass = Class.forName("android.hardware.camera2.utils.SurfaceUtils")
+                val getSizeMethod = utilsClass.getMethod("getSurfaceSize", Surface::class.java)
+                val sizeObj = getSizeMethod.invoke(null, surface)
+                if (sizeObj is android.util.Size) {
+                    Pair(sizeObj.width, sizeObj.height)
+                } else {
+                    Pair(1280, 720)
+                }
+            } catch (e: Throwable) {
+                Log.e(TAG, "VirtuCam: Failed to get real surface size, defaulting to 1280x720", e)
+                Pair(1280, 720)
+            }
         }
     }
 
