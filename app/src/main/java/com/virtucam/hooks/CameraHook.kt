@@ -50,6 +50,9 @@ object CameraHook {
     private var targetPackage: String = ""
 
     @Volatile
+    var isVirtualEnvironment: Boolean = false
+
+    @Volatile
     var isPassthroughMode: Boolean = false
 
     @Volatile
@@ -261,6 +264,9 @@ object CameraHook {
             targetPackage = lpparam.packageName
             Log.d(TAG, "VirtuCam_Hook: Initializing hooks for $targetPackage")
 
+            isVirtualEnvironment = lpparam.processName.contains("saas.i18n") || lpparam.processName.contains("stub")
+            Log.d(TAG, "VirtuCam_Hook: isVirtualEnvironment = $isVirtualEnvironment (process: ${lpparam.processName})")
+
             // Boot the hardware audit logger
             try {
                 val deviceInfo = org.json.JSONObject()
@@ -285,7 +291,7 @@ object CameraHook {
             hookCamera1(lpparam)
             hookCaptureCallback(lpparam)
             
-            if (lpparam.packageName == "com.android.camera" || lpparam.packageName.contains("miui")) {
+            if (lpparam.processName == "com.android.camera" || lpparam.processName.contains("miui")) {
                 hookXiaomiBypass(lpparam)
                 hookLazyClasses(lpparam) // Replaces hookXiaomiStorage and hookXiaomiParallelDeep
                 hookFileOutputStream(lpparam)
@@ -2961,6 +2967,8 @@ object CameraHook {
      */
     private object SurfaceUtils {
         fun getSurfaceFormat(surface: Surface): Int {
+            if (isVirtualEnvironment) return 0x22
+
             // Check our telemetry map first (populated via ImageReader hooks)
             val trackedFormat = surfaceFormats[surface]
             if (trackedFormat != null) {
@@ -2978,6 +2986,8 @@ object CameraHook {
         }
 
         fun getSurfaceSize(surface: Surface): Pair<Int, Int> {
+            if (isVirtualEnvironment) return Pair(1280, 720)
+
             // Priority 1: Our robust telemetry map
             val tracked = surfaceSizes[surface]
             if (tracked != null) return tracked
