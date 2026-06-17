@@ -279,23 +279,26 @@ object CameraHook {
             hookCaptureRequest(lpparam)
             hookJitterMetadata(lpparam)
             hookSubmitCaptureRequest(lpparam)
-            hookCameraError(lpparam)
             hookCaptureSurfaces(lpparam)
             hookCameraDevice(lpparam)
             hookCameraDeviceOutputConfigurations(lpparam)
             hookCamera1(lpparam)
             hookCaptureCallback(lpparam)
-            hookXiaomiBypass(lpparam)
+            
+            if (lpparam.packageName == "com.android.camera" || lpparam.packageName.contains("miui")) {
+                hookXiaomiBypass(lpparam)
+                hookLazyClasses(lpparam) // Replaces hookXiaomiStorage and hookXiaomiParallelDeep
+                hookFileOutputStream(lpparam)
+                hookFilePathNormalization(lpparam)
+                hookExifInterface(lpparam)
+                hookMediaScanner(lpparam)
+                hookContentResolver(lpparam)
+                hookContentValues(lpparam)
+                hookBroadcastIntents(lpparam)
+                hookFileDeletionGuard(lpparam)
+            }
+            
             hookSensorOrientationSpoof(lpparam)
-            hookLazyClasses(lpparam) // Replaces hookXiaomiStorage and hookXiaomiParallelDeep
-            hookFileOutputStream(lpparam)
-            hookFilePathNormalization(lpparam)
-            hookExifInterface(lpparam)
-            hookMediaScanner(lpparam)
-            hookContentResolver(lpparam)
-            hookContentValues(lpparam)
-            hookBroadcastIntents(lpparam)
-            hookFileDeletionGuard(lpparam)
             hookContextWrapper(lpparam)
             hookMediaRecorderOrientation(lpparam)
             hookMediaFormatRotation(lpparam)
@@ -1497,30 +1500,6 @@ object CameraHook {
      * When the camera HAL encounters issues with our dummy surfaces, it fires onError(),
      * which causes the app to show an error dialog or crash. We suppress this entirely.
      */
-    private fun hookCameraError(lpparam: XC_LoadPackage.LoadPackageParam) {
-        val stateCallbackClass = XposedHelpers.findClassIfExists(
-            "android.hardware.camera2.CameraDevice\$StateCallback", lpparam.classLoader
-        ) ?: return
-
-        PineHelper.hookAllMethods(stateCallbackClass, "onError", object : PineHelper.PineCompatibleMethodHook() {
-            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
-                if (!isEnabled) return
-                val errorCode = if (param.args.size >= 2) param.args[1] as? Int else null
-                Log.d(TAG, "VirtuCam_Hook: Suppressed CameraDevice.onError (code=$errorCode)")
-                param.result = null // Prevent the callback from executing
-            }
-        })
-
-        // Also suppress onDisconnected to prevent the app from closing when the HAL disconnects
-        PineHelper.hookAllMethods(stateCallbackClass, "onDisconnected", object : PineHelper.PineCompatibleMethodHook() {
-            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
-                if (!isEnabled) return
-                Log.d(TAG, "VirtuCam_Hook: Suppressed CameraDevice.onDisconnected")
-                param.result = null
-            }
-        })
-    }
-
     private fun hookCaptureSurfaces(lpparam: XC_LoadPackage.LoadPackageParam) {
         try {
             val mediaCodecClass = XposedHelpers.findClassIfExists("android.media.MediaCodec", lpparam.classLoader)
