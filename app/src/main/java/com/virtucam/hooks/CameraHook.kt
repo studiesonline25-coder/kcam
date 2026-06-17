@@ -201,9 +201,12 @@ object CameraHook {
      */
     fun resolveSensorOrientationDeg(): Int {
         val id = activeCameraId
+        val cached = cameraOrientations[id]
+        if (cached != null) return normalizeOrientationDeg(cached)
+        
         try {
             val app = AndroidAppHelper.currentApplication()
-                ?: return normalizeOrientationDeg(cameraOrientations[id] ?: 90)
+                ?: return 90
             val mgr = app.getSystemService(android.content.Context.CAMERA_SERVICE)
                 as android.hardware.camera2.CameraManager
             val chars = mgr.getCameraCharacteristics(id)
@@ -212,8 +215,6 @@ object CameraHook {
             cameraOrientations[id] = normalized
             return normalized
         } catch (_: Throwable) {
-            val cached = cameraOrientations[id]
-            if (cached != null) return normalizeOrientationDeg(cached)
             return 90
         }
     }
