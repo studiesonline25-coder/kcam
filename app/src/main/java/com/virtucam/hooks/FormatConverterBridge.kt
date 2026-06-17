@@ -13,6 +13,7 @@ import android.view.Surface
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.util.concurrent.Executors
 import java.nio.ByteBuffer
 
 /**
@@ -86,6 +87,12 @@ class FormatConverterBridge(
 
     // [HARDENING] Push Thread to prevent deadlocks in browser ImageCapture
     private var pushThread: HandlerThread? = null
+    
+    // [PERFORMANCE FIX] Dedicated thread pool for heavy YUV conversion/pushing to avoid blocking HAL's ImageAvailableListener
+    private val writerExecutor = Executors.newSingleThreadExecutor()
+
+    // Threads for caching and pushing
+    private var cacheThread: HandlerThread? = null
     private var pushHandler: Handler? = null
     
     // [HARDENING] Last Good Frame Fallback
@@ -1354,6 +1361,20 @@ class FormatConverterBridge(
         }
     }
 
+    @Volatile private var isReleasing = false
+
+    /**
+     * Asynchronously pushes the latest cached RGBA frame into the target ImageReader.
+     * Prevents blocking the caller (dummySinkHandler) so hardware frames don't queue up.
+     */
+    fun asyncPushLatestFrameToWriter(timestamp: Long) {
+        if (imageWriter == null || isReleasing) return
+        writerExecutor.execute {
+            if (isReleasing) return@execute
+            pushLatestFrameToWriter(timestamp)
+        }
+    }
+
     /**
      * Pushes the latest cached RGBA frame into the target ImageReader using the ImageWriter.
      * Synchronized via the Capture Session's sensor timestamp.
@@ -1364,75 +1385,50 @@ class FormatConverterBridge(
             return
         }
         
-        Log.e(TAG, "CAPT_LOG [3b]: pushLatestFrameToWriter posting to pushHandler to dequeue and push frame. timestamp=$timestamp")
-        pushHandler?.post {
+        Log.e(TAG, "CAPT_LOG [3b]: pushLatestFrameToWriter dequeueing and pushing frame synchronously on current thread. timestamp=$timestamp")
+        try {
+            val outImage = try { writer.dequeueInputImage() } catch (e: Exception) { 
+                Log.e(TAG, "CAPT_LOG [3-ERR]: dequeueInputImage threw exception: ${e.message}")
+                null 
+            } ?: run {
+                Log.e(TAG, "CAPT_LOG [3-ERR]: dequeueInputImage returned NULL! Buffer queue likely full or not ready.")
+                return
+            }
+            
+            var success = false
             try {
-
-                val outImage = try { writer.dequeueInputImage() } catch (e: Exception) { 
-                    Log.e(TAG, "CAPT_LOG [3-ERR]: dequeueInputImage threw exception: ${e.message}")
-                    null 
-                } ?: run {
-                    Log.e(TAG, "CAPT_LOG [3-ERR]: dequeueInputImage returned NULL! Buffer queue likely full or not ready.")
-                    return@post
+                outImage.timestamp = timestamp
+                
+                val fmt = outImage.format
+                if (fmt == 256) { // JPEG
+                    overwriteImageWithLatestJpeg(outImage)
+                } else {
+                    overwriteImageWithLatestYuv(outImage, timestamp)
                 }
                 
-                var success = false
-                try {
-                    outImage.timestamp = timestamp
-                    
-                    val fmt = outImage.format
-                    if (fmt == 256) { // JPEG
-                        overwriteImageWithLatestJpeg(outImage)
-                    } else {
-                        overwriteImageWithLatestYuv(outImage, timestamp)
-                    }
-                    
-                    writer.queueInputImage(outImage)
-                    success = true
-                } finally {
-                    if (!success) {
-                        try { outImage.close() } catch (e: Exception) {}
-                    }
+                writer.queueInputImage(outImage)
+                success = true
+            } finally {
+                if (!success) {
+                    try { outImage.close() } catch (e: Exception) {}
                 }
-            } catch (e: Exception) {}
-        } ?: run {
-            Log.w(TAG, "CAPT_LOG [3b-WARN]: pushHandler is null, falling back to Thread")
-            Thread {
-                try {
-
-                    val outImage = try { writer.dequeueInputImage() } catch (e: Exception) { 
-                        Log.e(TAG, "CAPT_LOG [3-ERR]: dequeueInputImage threw exception: ${e.message}")
-                        null 
-                    } ?: run {
-                        Log.e(TAG, "CAPT_LOG [3-ERR]: dequeueInputImage returned NULL! Buffer queue likely full or not ready.")
-                        return@Thread
-                    }
-                    
-                    var success = false
-                    try {
-                        outImage.timestamp = timestamp
-                        
-                        val fmt = outImage.format
-                        if (fmt == 256) { // JPEG
-                            overwriteImageWithLatestJpeg(outImage)
-                        } else {
-                            overwriteImageWithLatestYuv(outImage, timestamp)
-                        }
-                        
-                        writer.queueInputImage(outImage)
-                        success = true
-                    } finally {
-                        if (!success) {
-                            try { outImage.close() } catch (e: Exception) {}
-                        }
-                    }
-                } catch (e: Exception) {}
-            }.start()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "CAPT_LOG [3-ERR]: pushLatestFrameToWriter failed: ${e.message}")
         }
     }
 
     fun release() {
+        isReleasing = true
         try {
+            // [HARDENING] Gracefully shut down the executor and wait to prevent Use-After-Free native crashes!
+            writerExecutor.shutdownNow()
+            try {
+                writerExecutor.awaitTermination(500, java.util.concurrent.TimeUnit.MILLISECONDS)
+            } catch (e: Exception) {
+                // Ignore
+            }
+
             imageWriter?.close()
             imageWriter = null
             imageReader?.close()

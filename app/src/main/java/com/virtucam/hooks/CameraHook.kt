@@ -301,14 +301,15 @@ object CameraHook {
             if (realProcessName == "com.android.camera" || realProcessName.contains("miui")) {
                 hookXiaomiBypass(lpparam)
                 hookLazyClasses(lpparam) // Replaces hookXiaomiStorage and hookXiaomiParallelDeep
-                hookFileOutputStream(lpparam)
-                hookFilePathNormalization(lpparam)
-                hookExifInterface(lpparam)
-                hookMediaScanner(lpparam)
-                hookContentResolver(lpparam)
-                hookContentValues(lpparam)
-                hookBroadcastIntents(lpparam)
-                hookFileDeletionGuard(lpparam)
+                // [STABILITY FIX] Disabled unstable File I/O and ContentResolver hooks that cause 0x60 native crashes in file-logger
+                // hookFileOutputStream(lpparam)
+                // hookFilePathNormalization(lpparam)
+                // hookExifInterface(lpparam)
+                // hookMediaScanner(lpparam)
+                // hookContentResolver(lpparam)
+                // hookContentValues(lpparam)
+                // hookBroadcastIntents(lpparam)
+                // hookFileDeletionGuard(lpparam)
             }
             
             hookSensorOrientationSpoof(lpparam)
@@ -1370,10 +1371,10 @@ object CameraHook {
                                                         }
                                                     }
                                                     if (isRequested) {
-                                                        bridge.pushLatestFrameToWriter(timestamp)
+                                                        bridge.asyncPushLatestFrameToWriter(timestamp)
                                                     }
                                                 } else {
-                                                    bridge.pushLatestFrameToWriter(timestamp)
+                                                    bridge.asyncPushLatestFrameToWriter(timestamp)
                                                 }
                                             }
                                         }
@@ -1467,10 +1468,11 @@ object CameraHook {
                                                         }
                                                     }
                                                     if (isRequested) {
-                                                        bridge.pushLatestFrameToWriter(timestamp)
+                                                        bridge.asyncPushLatestFrameToWriter(timestamp)
                                                     }
                                                 } else {
-                                                    bridge.pushLatestFrameToWriter(timestamp)
+                                                    bridge.asyncPushLatestFrameToWriter(timestamp)
+
                                                 }
                                             }
                                         }
@@ -2394,9 +2396,7 @@ object CameraHook {
                 // Sync Trigger: The real camera just took a photo! Push our spoofed frame to the app NOW!
                 // Offload the heavy JPEG compression (50ms+) so we don't stall the physical HAL
                 if (bridge != null && bridge.hasImageWriter) {
-                    dummySinkHandler?.post {
-                        bridge.pushLatestFrameToWriter(realTimestamp)
-                    }
+                    bridge.asyncPushLatestFrameToWriter(realTimestamp)
                 }
             } catch (e: Exception) {
                 // Ignore errors during discard
@@ -3356,7 +3356,7 @@ class VirtualRenderThread(
                                 val timestamp = capture?.first ?: android.os.SystemClock.elapsedRealtimeNanos()
                                 Log.e(TAG, "CAPT_LOG [2]: VirtualRenderThread draining captureQueue. Pushing to bridges. captureCount=${CameraHook.captureCount}")
                                 CameraHook.formatBridges.values.forEach { 
-                                    it.pushLatestFrameToWriter(timestamp)
+                                    it.asyncPushLatestFrameToWriter(timestamp)
                                 }
                                 CameraHook.captureCount--
                                 
@@ -3389,6 +3389,16 @@ class VirtualRenderThread(
         while (isRunning) {
             // [HARDWARE PARITY FIX] Consume exact hardware timestamps
             var renderPts = CameraHook.pendingHardwareFrames.poll()
+            if (renderPts != null) {
+                // [NATIVE CAMERA SMOOTHNESS FIX] Drain backlog! If the render thread fell behind,
+                // skip old frames and only render the latest, otherwise we get bursts of
+                // instantaneous EGL draws leading to periodic micro-stutters!
+                var nextPts = CameraHook.pendingHardwareFrames.poll()
+                while (nextPts != null) {
+                    renderPts = nextPts
+                    nextPts = CameraHook.pendingHardwareFrames.poll()
+                }
+            }
             if (renderPts == null) {
                 val msSinceLastSync = System.currentTimeMillis() - CameraHook.lastFrameSyncMs
                 if (msSinceLastSync > 200) {
@@ -3466,7 +3476,7 @@ class VirtualRenderThread(
                     CameraHook.latestVirtualJpegArea = 0
                     
                     CameraHook.formatBridges.values.forEach { 
-                        it.pushLatestFrameToWriter(timestamp) 
+                        it.asyncPushLatestFrameToWriter(timestamp) 
                     }
                     CameraHook.captureCount--
                 }
