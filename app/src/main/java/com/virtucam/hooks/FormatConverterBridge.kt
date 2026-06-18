@@ -1363,15 +1363,36 @@ class FormatConverterBridge(
 
     @Volatile private var isReleasing = false
 
+    private val pendingTimestamp = java.util.concurrent.atomic.AtomicLong(-1L)
+    private val isWriterBusy = java.util.concurrent.atomic.AtomicBoolean(false)
+
     /**
      * Asynchronously pushes the latest cached RGBA frame into the target ImageReader.
      * Prevents blocking the caller (dummySinkHandler) so hardware frames don't queue up.
      */
     fun asyncPushLatestFrameToWriter(timestamp: Long) {
         if (imageWriter == null || isReleasing) return
-        writerExecutor.execute {
-            if (isReleasing) return@execute
-            pushLatestFrameToWriter(timestamp)
+        pendingTimestamp.set(timestamp)
+        scheduleWriterDrain()
+    }
+
+    private fun scheduleWriterDrain() {
+        if (isWriterBusy.compareAndSet(false, true)) {
+            writerExecutor.execute {
+                try {
+                    while (true) {
+                        if (isReleasing) break
+                        val ts = pendingTimestamp.getAndSet(-1L)
+                        if (ts == -1L) break
+                        pushLatestFrameToWriter(ts)
+                    }
+                } finally {
+                    isWriterBusy.set(false)
+                    if (pendingTimestamp.get() != -1L) {
+                        scheduleWriterDrain()
+                    }
+                }
+            }
         }
     }
 

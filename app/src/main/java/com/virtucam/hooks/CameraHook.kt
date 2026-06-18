@@ -39,6 +39,8 @@ object CameraHook {
     private const val TAG = "VirtuCam_Hook"
     private var isEnabled = true
     @Volatile
+    var isReleasingEnvironment = false
+    @Volatile
     var isMirrored: Boolean = false
     
     @Volatile
@@ -2353,8 +2355,8 @@ object CameraHook {
             Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Failed to create ImageReader with $width x $height format $readerFormat! Trying YUV fallback...", e)
             ImageReader.newInstance(width, height, android.graphics.ImageFormat.YUV_420_888, 5)
         }
-        
-        reader.setOnImageAvailableListener({ ir ->
+        if (!isReleasingEnvironment) {
+            reader.setOnImageAvailableListener({ ir ->
             try {
                 // [BROWSER CAPTURE FIX] For JPEG dummy sinks, increment captureCount BEFORE
                 // acquireNextImage. This is critical because:
@@ -2402,6 +2404,9 @@ object CameraHook {
                 // Ignore errors during discard
             }
         }, dummySinkHandler)
+        } else {
+            Log.w(TAG, "DIAGNOSTIC_VIRTUCAM: Skipping dummy surface listener attachment due to teardown.")
+        }
         
         val surface = reader.surface
         
@@ -2905,6 +2910,7 @@ object CameraHook {
     }
 
     private fun stopOldPipeline() {
+        isReleasingEnvironment = true
         // [HARDWARE AUDIT] End the current session and flush to disk before tearing down
         try { HardwareAuditLogger.endSession() } catch (_: Throwable) {}
 
@@ -2921,7 +2927,10 @@ object CameraHook {
         // Release old dummy surfaces safely now that render threads are stopped
         dummySurfaces.forEach { try { it.release() } catch (_: Throwable) {} }
         dummySurfaces.clear()
-        dummyImageReaders.forEach { try { it.close() } catch (_: Throwable) {} }
+        dummyImageReaders.forEach { try {
+            it.setOnImageAvailableListener(null, null)
+            it.close()
+        } catch (_: Throwable) {} }
         dummyImageReaders.clear()
         
         try {
@@ -2939,6 +2948,7 @@ object CameraHook {
         // The JPEG session's bridge will update it with full-resolution data once ready.
         captureCount = 0
         captureQueue.clear()
+        isReleasingEnvironment = false
     }
 
     private fun startRenderThreads(targetSurfaces: List<Triple<Surface, Boolean, Int>>) { // Changed to Triple
@@ -3389,16 +3399,6 @@ class VirtualRenderThread(
         while (isRunning) {
             // [HARDWARE PARITY FIX] Consume exact hardware timestamps
             var renderPts = CameraHook.pendingHardwareFrames.poll()
-            if (renderPts != null) {
-                // [NATIVE CAMERA SMOOTHNESS FIX] Drain backlog! If the render thread fell behind,
-                // skip old frames and only render the latest, otherwise we get bursts of
-                // instantaneous EGL draws leading to periodic micro-stutters!
-                var nextPts = CameraHook.pendingHardwareFrames.poll()
-                while (nextPts != null) {
-                    renderPts = nextPts
-                    nextPts = CameraHook.pendingHardwareFrames.poll()
-                }
-            }
             if (renderPts == null) {
                 val msSinceLastSync = System.currentTimeMillis() - CameraHook.lastFrameSyncMs
                 if (msSinceLastSync > 200) {
