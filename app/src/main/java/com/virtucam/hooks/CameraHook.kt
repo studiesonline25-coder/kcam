@@ -115,6 +115,7 @@ object CameraHook {
     // Global telemetry for surface dimensions
     private val surfaceSizes = java.util.Collections.synchronizedMap(java.util.WeakHashMap<Surface, Pair<Int, Int>>())
     private val surfaceTextureSizes = java.util.Collections.synchronizedMap(java.util.WeakHashMap<SurfaceTexture, Pair<Int, Int>>())
+    private val textureViewSurfaces = java.util.Collections.synchronizedMap(java.util.WeakHashMap<Surface, Boolean>())
 
     // Dynamic Xiaomi Vendor Tag Discovery
     private val discoveredXiaomiKeys = java.util.concurrent.ConcurrentHashMap<String, android.hardware.camera2.CaptureRequest.Key<*>>()
@@ -2101,6 +2102,9 @@ object CameraHook {
                             surfaceSizes[s] = size
                             Log.d(TAG, "VirtuCam_Hook: Associated Surface with SurfaceTexture size ${size.first}x${size.second}")
                         }
+                        
+                        // Explicitly track that this Surface was created from a SurfaceTexture
+                        textureViewSurfaces[s] = true
                     }
                 }
             )
@@ -2486,6 +2490,10 @@ object CameraHook {
         surfaceFormats[targetSurface] = format
         val isPreview = (format == 0x22 || format == 0x1)
         
+        val isTextureView = textureViewSurfaces.containsKey(targetSurface)
+        val canvasType = if (isTextureView) "TextureView" else "SurfaceView/ImageReader"
+        
+        Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: [SURFACE CLASSIFIER] Target Surface (SessionConfig): ${w}x${h}, Format=$format, CanvasType=$canvasType")
         Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Swapping OutputConfig Surface. Size=${w}x${h}, Format=$format, isPreview=$isPreview")
         
         val isVideoSurface = videoSurfaces.contains(targetSurface)
