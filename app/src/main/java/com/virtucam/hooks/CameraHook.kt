@@ -114,7 +114,54 @@ object CameraHook {
     
     // Global telemetry for surface dimensions
     private val surfaceSizes = java.util.Collections.synchronizedMap(java.util.WeakHashMap<Surface, Pair<Int, Int>>())
-    private val surfaceTextureSizes = java.util.Collections.synchronizedMap(java.util.WeakHashMap<SurfaceTexture, Pair<Int, Int>>())
+    // surfaceTextureSizes removed
+    val surfaceTextureMap = java.util.Collections.synchronizedMap(java.util.WeakHashMap<Surface, java.lang.ref.WeakReference<Surface>>())
+    val surfaceViewMap = java.util.Collections.synchronizedMap(java.util.WeakHashMap<Surface, java.lang.ref.WeakReference<Surface>>())
+
+    // [SMART METHOD] OS-Level Memory Usage Flags Tracking
+    private var surfaceUtilsGetUsageMethod: java.lang.reflect.Method? = null
+    private var surfaceUtilsGetSizeMethod: java.lang.reflect.Method? = null
+    
+    init {
+        try {
+            val clazz = Class.forName("android.hardware.camera2.utils.SurfaceUtils")
+            surfaceUtilsGetUsageMethod = clazz.getDeclaredMethod("getSurfaceUsage", Surface::class.java)
+            surfaceUtilsGetUsageMethod?.isAccessible = true
+            
+            surfaceUtilsGetSizeMethod = clazz.getDeclaredMethod("getSurfaceSize", Surface::class.java)
+            surfaceUtilsGetSizeMethod?.isAccessible = true
+        } catch (e: Exception) {
+            Log.e(TAG, "VirtuCam_Hook: Failed to reflect SurfaceUtils (Smart Method unavailable)", e)
+        }
+    }
+
+    fun isSurfaceTextureView(surface: Surface): Boolean {
+        try {
+            surfaceUtilsGetUsageMethod?.let { method ->
+                val usageFlags = method.invoke(null, surface) as Long
+                // USAGE_GPU_SAMPLED_IMAGE = 0x100L (TextureView/OpenGL)
+                val isTexture = (usageFlags and 0x100L) != 0L
+                return isTexture
+            }
+        } catch (e: Exception) {
+            // Silently fall through to legacy fallback
+        }
+        // We abandoned surfaceSizes.containsKey fallback because it conflates ImageReader captures
+        // with SurfaceTexture previews. We rely purely on the native flag.
+        return false
+    }
+
+    fun getNativeSurfaceSize(surface: Surface): Pair<Int, Int>? {
+        try {
+            surfaceUtilsGetSizeMethod?.let { method ->
+                val sizeObj = method.invoke(null, surface) as? android.util.Size
+                if (sizeObj != null) {
+                    return Pair(sizeObj.width, sizeObj.height)
+                }
+            }
+        } catch (e: Exception) {}
+        return surfaceSizes[surface]
+    }
 
     // Dynamic Xiaomi Vendor Tag Discovery
     private val discoveredXiaomiKeys = java.util.concurrent.ConcurrentHashMap<String, android.hardware.camera2.CaptureRequest.Key<*>>()
@@ -231,7 +278,7 @@ object CameraHook {
 
     fun isActiveCameraFrontFacing(): Boolean = cameraFacings[activeCameraId] == 1
 
-    fun trackedSurfaceSize(surface: Surface): Pair<Int, Int>? = surfaceSizes[surface]
+    fun trackedSurfaceSize(surface: Surface): Pair<Int, Int>? = getNativeSurfaceSize(surface)
 
     /**
      * Saves a stream preview frame to internal storage.
@@ -2057,53 +2104,8 @@ object CameraHook {
             }
         })
 
-        // Hook SurfaceTexture for Preview size tracking
-        try {
-            PineHelper.findAndHookMethod(
-                "android.graphics.SurfaceTexture",
-                lpparam.classLoader,
-                "setDefaultBufferSize",
-                Int::class.java, Int::class.java,
-                object : PineHelper.PineCompatibleMethodHook() {
-                    override fun afterHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
-                        val st = param.thisObject as? SurfaceTexture ?: return
-                        val w = param.args[0] as Int
-                        val h = param.args[1] as Int
-                        val oldSize = surfaceTextureSizes[st]
-                        surfaceTextureSizes[st] = Pair(w, h)
-                        // [DIAGNOSTIC] Log ALL setDefaultBufferSize calls unconditionally
-                        Log.e(TAG, "VirtuCam_Hook: setDefaultBufferSize(${w}x${h}) called on ST@${System.identityHashCode(st).toString(16)} (old=${oldSize?.let{"${it.first}x${it.second}"}?:"none"}, renderActive=${renderThreads.isNotEmpty()})")
-                        // Signal resize only if dimensions actually changed and render threads are active
-                        if (oldSize != null && (oldSize.first != w || oldSize.second != h) && renderThreads.isNotEmpty()) {
-                            Log.e(TAG, "VirtuCam_Hook: SurfaceTexture RESIZED from ${oldSize.first}x${oldSize.second} -> ${w}x${h} - signaling EGL recreate")
-                            pendingSurfaceResize.set(true)
-                        }
-                    }
-                }
-            )
-
-            // Associate SurfaceTexture with Surface for later lookup
-            PineHelper.findAndHookConstructor(
-                "android.view.Surface",
-                lpparam.classLoader,
-                SurfaceTexture::class.java,
-                object : PineHelper.PineCompatibleMethodHook() {
-                    override fun afterHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
-                        val s = param.thisObject as? Surface ?: return
-                        val st = param.args[0] as? SurfaceTexture ?: return
-                        
-                        // [TOTAL SURVEILLANCE - MOVED OUTSIDE] We no longer hook this inside the constructor
-                        // to prevent redundant layering and crashes (fixes Phoenix).
-                        // Instead, we just associate the size below.
-
-                        val size = surfaceTextureSizes[st]
-                        if (size != null) {
-                            surfaceSizes[s] = size
-                            Log.d(TAG, "VirtuCam_Hook: Associated Surface with SurfaceTexture size ${size.first}x${size.second}")
-                        }
-                    }
-                }
-            )
+        // [REMOVED] SurfaceTexture.setDefaultBufferSize and SurfaceTexture->Surface association
+        // were abandoned as unreliable and leading to missed tracking or conflation with ImageReader surfaces.
 
             // [TOTAL SURVEILLANCE] Hook getTransformMatrix GLOBALLY for SurfaceTexture
             // This is safer and only applies once per app launch.
@@ -2120,16 +2122,15 @@ object CameraHook {
                             val matrix = param.args[0] as? FloatArray ?: return
 
                             if (isEnabled) {
-                                // Act as real hardware: return a transform matrix encoding the sensor orientation.
-                                // This makes preview look upright to the user ΓÇö same as real camera behavior.
-                                // The EGL buffer content is rendered at sensor-native orientation, so the matrix
-                                // counter-rotates correctly (front=270┬░, back=180┬░).
-                                val sensorRot = resolveSensorOrientationDeg()
+                                // Act as real hardware: The Android Camera HAL provides a raw, sensor-oriented
+                                // (sideways) image to the TextureView. The ST matrix typically only applies a Y-flip, 
+                                // it DOES NOT rotate the image upright. The app itself is expected to apply a rotation 
+                                // via TextureView.setTransform() to make it upright based on sensor orientation.
                                 android.opengl.Matrix.setIdentityM(matrix, 0)
                                 // Rotate around center (0,0 translated to 0.5,0.5)
                                 android.opengl.Matrix.translateM(matrix, 0, 0.5f, 0.5f, 0f)
                                 android.opengl.Matrix.scaleM(matrix, 0, 1f, -1f, 1f) // Standard SurfaceTexture Y-flip
-                                android.opengl.Matrix.rotateM(matrix, 0, sensorRot.toFloat(), 0f, 0f, 1f)
+                                // DO NOT ROTATE BY SENSOR ORIENTATION HERE! This caused double-rotations in TikTok/HD Camera.
                                 android.opengl.Matrix.translateM(matrix, 0, -0.5f, -0.5f, 0f)
                             } else {
                                 // Audit-only: log the real matrix (throttled)
@@ -2650,7 +2651,17 @@ object CameraHook {
                             for (s in surfacesList) {
                                 val size = SurfaceUtils.getSurfaceSize(s)
                                 val fmt = SurfaceUtils.getSurfaceFormat(s)
-                                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: Target Surface: ${size.first}x${size.second}, Format=$fmt")
+                                val isTexture = isSurfaceTextureView(s)
+                                val canvasType = if (isTexture) "TextureView" else "SurfaceView/ImageReader"
+                                Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: [SURFACE CLASSIFIER] Target Surface: ${size.first}x${size.second}, Format=$fmt, CanvasType=$canvasType")
+                                
+                                if (isTexture) {
+                                    surfaceTextureMap[s] = java.lang.ref.WeakReference(s)
+                                    Log.d("virtucam", "createCaptureSession: Surface detected as TextureView via Gralloc flag: $s")
+                                } else {
+                                    surfaceViewMap[s] = java.lang.ref.WeakReference(s)
+                                    Log.d("virtucam", "createCaptureSession: Surface detected as SurfaceView via Gralloc flag: $s")
+                                }
                             }
 
                             // [HARDWARE AUDIT] Always begin session logging (read-only surveillance)
@@ -2809,6 +2820,20 @@ object CameraHook {
                                  val targetSurface = getSurfaceMethod.invoke(config) as? Surface
                                  
                                  if (targetSurface != null) {
+                                     val size = SurfaceUtils.getSurfaceSize(targetSurface)
+                                     val fmt = SurfaceUtils.getSurfaceFormat(targetSurface)
+                                     val isTexture = isSurfaceTextureView(targetSurface)
+                                     val canvasType = if (isTexture) "TextureView" else "SurfaceView/ImageReader"
+                                     Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: [SURFACE CLASSIFIER] Target Surface (Config): ${size.first}x${size.second}, Format=$fmt, CanvasType=$canvasType")
+
+                                     if (isTexture) {
+                                         surfaceTextureMap[targetSurface] = java.lang.ref.WeakReference(targetSurface)
+                                         Log.d("virtucam", "createCaptureSessionByOutputConfigurations: Surface detected as TextureView via Gralloc flag: $targetSurface")
+                                     } else {
+                                         surfaceViewMap[targetSurface] = java.lang.ref.WeakReference(targetSurface)
+                                         Log.d("virtucam", "createCaptureSessionByOutputConfigurations: Surface detected as SurfaceView via Gralloc flag: $targetSurface")
+                                     }
+
                                      val isCapture = captureSurfaces.contains(targetSurface)
                                      val format = surfaceFormats[targetSurface] ?: 0x1
                                      val resolvedSurface = swapSurfaceInOutputConfig(config, targetSurface)
@@ -2890,6 +2915,20 @@ object CameraHook {
                                       val targetSurface = getSurfaceMethod.invoke(config) as? Surface
                                       
                                       if (targetSurface != null) {
+                                          val size = SurfaceUtils.getSurfaceSize(targetSurface)
+                                          val fmt = SurfaceUtils.getSurfaceFormat(targetSurface)
+                                          val isTexture = isSurfaceTextureView(targetSurface)
+                                          val canvasType = if (isTexture) "TextureView" else "SurfaceView/ImageReader"
+                                          Log.e(TAG, "DIAGNOSTIC_VIRTUCAM: [SURFACE CLASSIFIER] Target Surface (SessionConfig): ${size.first}x${size.second}, Format=$fmt, CanvasType=$canvasType")
+
+                                          if (isTexture) {
+                                              surfaceTextureMap[targetSurface] = java.lang.ref.WeakReference(targetSurface)
+                                              Log.d("virtucam", "createCaptureSession (SessionConfig): Surface detected as TextureView via Gralloc flag: $targetSurface")
+                                          } else {
+                                              surfaceViewMap[targetSurface] = java.lang.ref.WeakReference(targetSurface)
+                                              Log.d("virtucam", "createCaptureSession (SessionConfig): Surface detected as SurfaceView via Gralloc flag: $targetSurface")
+                                          }
+
                                           val isCapture = captureSurfaces.contains(targetSurface)
                                           val format = SurfaceUtils.getSurfaceFormat(targetSurface)
                                           val resolvedSurface = swapSurfaceInOutputConfig(config, targetSurface)
@@ -3528,7 +3567,7 @@ class VirtualRenderThread(
                 // skips rotation (identity MVP) and buffers stay "upright" wrongly.
                 val surfaceIdx = eglSurfaceTargets.indexOfFirst { triple -> triple.first === es }
                 val originalSurface = if (surfaceIdx >= 0 && surfaceIdx < originalSurfaceBackings.size) originalSurfaceBackings[surfaceIdx] else null
-                val isSurfaceTexture = originalSurface != null && surfaceSizes.containsKey(originalSurface)
+                val isSurfaceTexture = originalSurface != null && CameraHook.isSurfaceTextureView(originalSurface)
                 val isSurfaceView = !isCapture && !isSurfaceTexture
 
                 if ((vw <= 0 || vh <= 0) && originalSurface != null) {
