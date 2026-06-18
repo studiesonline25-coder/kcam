@@ -2150,8 +2150,6 @@ object CameraHook {
                 Log.e(TAG, "VirtuCam_Hook: Failed to hook getTransformMatrix surveillance: ${e.message}")
             }
 
-        } catch (_: Throwable) {}
-
         val overwriteHook = object : PineHelper.PineCompatibleMethodHook() {
             override fun afterHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
                 // Secondary Defense: Suppress format mismatch exceptions from nativeImageSetup.
