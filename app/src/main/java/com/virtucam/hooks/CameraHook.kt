@@ -300,6 +300,7 @@ object CameraHook {
             hookCameraDeviceOutputConfigurations(lpparam)
             hookCamera1(lpparam)
             hookCaptureCallback(lpparam)
+            hookStoragePathRewriter(lpparam)
             
             if (realProcessName == "com.android.camera" || realProcessName.contains("miui")) {
                 hookXiaomiBypass(lpparam)
@@ -1920,7 +1921,19 @@ object CameraHook {
                             
                             for (surfaceObj in surfaceCollection) {
                                 val s = surfaceObj as? Surface ?: continue
-                                val dummySurface = surfaceMap[s]
+                                var dummySurface = surfaceMap[s]
+                                if (dummySurface == null) {
+                                    // [Intent Identity Bug Fix] Search surfaceMap by size and format!
+                                    val sFmt = SurfaceUtils.getSurfaceFormat(s)
+                                    val sSize = SurfaceUtils.getSurfaceSize(s)
+                                    for ((origKey, dummyVal) in surfaceMap) {
+                                        if (SurfaceUtils.getSurfaceFormat(origKey) == sFmt && 
+                                            SurfaceUtils.getSurfaceSize(origKey) == sSize) {
+                                            dummySurface = dummyVal
+                                            break
+                                        }
+                                    }
+                                }
                                 if (dummySurface != null && dummySurface != s) {
                                     toRemove.add(s)
                                     toAdd.add(dummySurface)
@@ -3797,6 +3810,65 @@ class VirtualRenderThread(
                     })
             }
         } catch (_: Throwable) {}
+    }
+
+    private val isRewritingPath = object : ThreadLocal<Boolean>() {
+        override fun initialValue(): Boolean = false
+    }
+
+    private fun hookStoragePathRewriter(lpparam: XC_LoadPackage.LoadPackageParam) {
+        val fileClass = java.io.File::class.java
+
+        val hook = object : PineHelper.PineCompatibleMethodHook() {
+            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
+                if (!isEnabled || isRewritingPath.get() == true) return
+                try {
+                    isRewritingPath.set(true)
+                    
+                    if (param.args.size == 1 && param.args[0] is String) {
+                        val pathArg = param.args[0] as String
+                        if (pathArg.contains("scopedStorage", true) && pathArg.contains("top.bienvenido.saas.i18n", true)) {
+                            val fileName = pathArg.substringAfterLast("/")
+                            val safePath = "/data/data/${lpparam.packageName}/cache/$fileName"
+                            param.args[0] = safePath
+                            Log.e(TAG, "VirtuCam_StorageBypass: Rewrote File(String) path natively! Old=$pathArg, New=$safePath")
+                        }
+                    } else if (param.args.size == 2) {
+                        val parentArg = param.args[0]
+                        val childArg = param.args[1] as? String ?: return
+                        
+                        var parentPath = ""
+                        if (parentArg is String) {
+                            parentPath = parentArg
+                        } else if (parentArg is java.io.File) {
+                            parentPath = parentArg.absolutePath
+                        }
+                        
+                        if (parentPath.contains("scopedStorage", true) && parentPath.contains("top.bienvenido.saas.i18n", true)) {
+                            val safeDir = "/data/data/${lpparam.packageName}/cache"
+                            if (parentArg is String) {
+                                param.args[0] = safeDir
+                            } else if (parentArg is java.io.File) {
+                                param.args[0] = java.io.File(safeDir)
+                            }
+                            Log.e(TAG, "VirtuCam_StorageBypass: Rewrote File(parent, child) path natively! Old=$parentPath, New=$safeDir")
+                        }
+                    }
+                } catch (e: Exception) {
+                    // Ignore quietly to not disrupt file IO
+                } finally {
+                    isRewritingPath.set(false)
+                }
+            }
+        }
+
+        try {
+            PineHelper.findAndHookConstructor(fileClass, lpparam.classLoader, String::class.java, hook)
+            PineHelper.findAndHookConstructor(fileClass, lpparam.classLoader, String::class.java, String::class.java, hook)
+            PineHelper.findAndHookConstructor(fileClass, lpparam.classLoader, java.io.File::class.java, String::class.java, hook)
+        } catch (e: Exception) {
+            Log.e(TAG, "VirtuCam_StorageBypass: Failed to hook File constructors", e)
+        }
     }
 }
 
