@@ -147,6 +147,20 @@ object CameraHook {
     @Volatile
     var enableDiagnosticLogs: Boolean = false  // Set to true for debugging
 
+    // [eKYC Zoom Defeat] Dynamically updated from API interception
+    @Volatile var apiZoomFactor: Float = 1.0f
+    @Volatile var apiPanX: Float = 0.0f
+    @Volatile var apiPanY: Float = 0.0f
+    @Volatile var activeArrayWidth: Int = 0
+    @Volatile var activeArrayHeight: Int = 0
+
+    // [Active Hardware Override Defeat] Dynamically updated from API interception
+    @Volatile var apiFlashIntensity: Float = 0.0f
+    @Volatile var apiBlurRadius: Float = 0.0f
+    @Volatile var apiExposureMultiplier: Float = 1.0f
+    @Volatile var lastRequestedExposureTimeNs: Long = 33333333L
+    @Volatile var lastRequestedIso: Int = 100
+
     // Signal for VirtualRenderThread to recreate EGL surfaces when browser renegotiates resolution
     val pendingSurfaceResize = java.util.concurrent.atomic.AtomicBoolean(false)
 
@@ -1687,6 +1701,66 @@ object CameraHook {
                         }
                     }
 
+                    // [eKYC Zoom Defeat] Intercept SCALER_CROP_REGION for Camera2
+                    if (keyName == "android.scaler.cropRegion" && value is android.graphics.Rect) {
+                        try {
+                            val activeArray = cameraActiveArraySizes[activeCameraId]
+                            if (activeArray != null) {
+                                activeArrayWidth = activeArray.width()
+                                activeArrayHeight = activeArray.height()
+                                
+                                val cropRegion = value
+                                val zoomX = activeArrayWidth.toFloat() / cropRegion.width().toFloat()
+                                val zoomY = activeArrayHeight.toFloat() / cropRegion.height().toFloat()
+                                apiZoomFactor = Math.min(zoomX, zoomY).coerceAtLeast(1.0f)
+                                
+                                val centerX = cropRegion.left + (cropRegion.width() / 2f)
+                                val centerY = cropRegion.top + (cropRegion.height() / 2f)
+                                val activeCenterX = activeArrayWidth / 2f
+                                val activeCenterY = activeArrayHeight / 2f
+                                
+                                apiPanX = (centerX - activeCenterX) / activeArrayWidth.toFloat()
+                                apiPanY = (centerY - activeCenterY) / activeArrayHeight.toFloat()
+                                
+                                Log.e(TAG, "ZOOM_INTERCEPT: SCALER_CROP_REGION caught! $cropRegion -> Zoom: $apiZoomFactor, Pan: ($apiPanX, $apiPanY)")
+                            }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "ZOOM_INTERCEPT: Error calculating crop region", e)
+                        }
+                    }
+
+                    // [Active Hardware Override Defeat] Flashlight Reflection Trap
+                    if (keyName == "android.flash.mode" && value is Int) {
+                        apiFlashIntensity = if (value == 1 || value == 2) 1.0f else 0.0f
+                        if (apiFlashIntensity > 0) Log.e(TAG, "HARDWARE_OVERRIDE: Flashlight mode $value intercepted!")
+                    }
+
+                    // [Active Hardware Override Defeat] Optical Focus Blur Trap
+                    if (keyName == "android.lens.focusDistance" && value is Float) {
+                        if (value > 5.0f) {
+                            apiBlurRadius = ((value - 5.0f) * 0.1f).coerceIn(0.0f, 1.0f)
+                            Log.e(TAG, "HARDWARE_OVERRIDE: Macro focus distance $value intercepted -> Blur: $apiBlurRadius")
+                        } else {
+                            apiBlurRadius = 0.0f
+                        }
+                    }
+
+                    // [Active Hardware Override Defeat] Exposure Compensation Trap
+                    if (keyName == "android.sensor.exposureTime" && value is Long) {
+                        lastRequestedExposureTimeNs = value
+                        val exposureRatio = lastRequestedExposureTimeNs.toDouble() / 33_333_333.0
+                        val isoRatio = lastRequestedIso.toDouble() / 100.0
+                        apiExposureMultiplier = (exposureRatio * isoRatio).toFloat().coerceIn(0.05f, 5.0f)
+                        Log.e(TAG, "HARDWARE_OVERRIDE: Shutter speed ${value}ns intercepted -> ExposureMultiplier: $apiExposureMultiplier")
+                    }
+                    if (keyName == "android.sensor.sensitivity" && value is Int) {
+                        lastRequestedIso = value
+                        val exposureRatio = lastRequestedExposureTimeNs.toDouble() / 33_333_333.0
+                        val isoRatio = lastRequestedIso.toDouble() / 100.0
+                        apiExposureMultiplier = (exposureRatio * isoRatio).toFloat().coerceIn(0.05f, 5.0f)
+                        Log.e(TAG, "HARDWARE_OVERRIDE: ISO $value intercepted -> ExposureMultiplier: $apiExposureMultiplier")
+                    }
+
                     // [HARDWARE AUDIT] Always record request fields (read-only surveillance)
                     try { HardwareAuditLogger.logCaptureRequest(keyName, value) } catch (_: Throwable) {}
                 } catch (_: Throwable) {}
@@ -2328,6 +2402,32 @@ object CameraHook {
                     startRenderThreads(listOf(Triple(holeSurface, false, 0x1))) // Default to RGBA8888
                 } catch (t: Throwable) {
                     Log.e(TAG, "VirtuCam_Hook: Error in Camera1 setPreviewDisplay hook", t)
+                }
+            }
+        })
+
+        // [eKYC Zoom Defeat] Intercept Camera1 setParameters for zoom
+        PineHelper.hookAllMethods(cameraClass, "setParameters", object : PineHelper.PineCompatibleMethodHook() {
+            override fun beforeHookedMethod(param: top.canyie.pine.Pine.CallFrame) {
+                try {
+                    val params = param.args[0] ?: return
+                    
+                    // Extract the raw zoom index and max zoom
+                    val zoomIndex = XposedHelpers.callMethod(params, "getZoom") as? Int ?: return
+                    val zoomRatios = XposedHelpers.callMethod(params, "getZoomRatios") as? List<*> ?: return
+                    
+                    if (zoomIndex >= 0 && zoomIndex < zoomRatios.size) {
+                        val ratioInt = zoomRatios[zoomIndex] as? Int ?: 100
+                        apiZoomFactor = (ratioInt / 100.0f).coerceAtLeast(1.0f)
+                        
+                        // Camera1 zoom is always centered
+                        apiPanX = 0f
+                        apiPanY = 0f
+                        
+                        Log.e(TAG, "ZOOM_INTERCEPT: Camera1 setParameters zoom caught! Index: $zoomIndex -> Zoom Factor: $apiZoomFactor")
+                    }
+                } catch (e: Throwable) {
+                    Log.w(TAG, "ZOOM_INTERCEPT: Error hooking Camera1 setParameters", e)
                 }
             }
         })
@@ -3597,7 +3697,7 @@ class VirtualRenderThread(
 
                 // Front/Back Camera Differentiation (Feature 10)
                 // Slight crop/zoom applied only to front camera to mimic lens variation
-                val finalZoom = if (isActuallyFront) CameraHook.zoomFactor * 1.05f else CameraHook.zoomFactor
+                val finalZoom = (if (isActuallyFront) CameraHook.zoomFactor * 1.05f else CameraHook.zoomFactor) * CameraHook.apiZoomFactor
 
                 val ratio = getTargetRatio(vw, vh, isSurfaceView)
 
@@ -3631,7 +3731,12 @@ class VirtualRenderThread(
                     colorTintR = screenColor.r,
                     colorTintG = screenColor.g,
                     colorTintB = screenColor.b,
-                    colorIntensity = screenColor.intensity
+                    colorIntensity = screenColor.intensity,
+                    apiPanX = CameraHook.apiPanX,
+                    apiPanY = CameraHook.apiPanY,
+                    apiFlashIntensity = CameraHook.apiFlashIntensity,
+                    apiBlurRadius = CameraHook.apiBlurRadius,
+                    apiExposureMultiplier = CameraHook.apiExposureMultiplier
                 )
 
                 eglCore?.setPresentationTime(es, renderPts)

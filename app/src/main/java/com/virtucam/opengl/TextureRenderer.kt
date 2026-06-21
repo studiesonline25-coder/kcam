@@ -41,6 +41,9 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             uniform float uTime;
             uniform vec3 uColorTint;      // RGB color tint (0-1 range)
             uniform float uColorIntensity; // How strong the tint is (0-1)
+            uniform float uFlashIntensity;
+            uniform float uBlurRadius;
+            uniform float uExposureMultiplier;
             const float blurSize = 0.02;
             
             // High-quality hash function for better noise distribution
@@ -173,18 +176,42 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                     sum += texture2D(sTexture, vec2(vTextureCoord.x + blurSize, vTextureCoord.y + blurSize));
                     gl_FragColor = vec4((sum / 16.0).rgb * 0.4 * uBrightness, 1.0);
                 } else {
-                    // Chromatic aberration (lens imperfection)
-                    vec2 caOffset = (vTextureCoord - 0.5) * 0.0012;
-                    float r = texture2D(sTexture, vTextureCoord + caOffset).r;
-                    float g = texture2D(sTexture, vTextureCoord).g;
-                    float b = texture2D(sTexture, vTextureCoord - caOffset).b;
-                    vec3 baseColor = vec3(r, g, b);
+                    // ANTI-DETECTION: Hardware Override Simulation (Blur)
+                    vec3 baseColor;
+                    if (uBlurRadius > 0.0) {
+                        float dynBlur = blurSize * uBlurRadius * 2.0;
+                        vec4 sum = vec4(0.0);
+                        sum += texture2D(sTexture, vec2(vTextureCoord.x - dynBlur, vTextureCoord.y - dynBlur));
+                        sum += texture2D(sTexture, vec2(vTextureCoord.x, vTextureCoord.y - dynBlur)) * 2.0;
+                        sum += texture2D(sTexture, vec2(vTextureCoord.x + dynBlur, vTextureCoord.y - dynBlur));
+                        sum += texture2D(sTexture, vec2(vTextureCoord.x - dynBlur, vTextureCoord.y)) * 2.0;
+                        sum += texture2D(sTexture, vec2(vTextureCoord.x, vTextureCoord.y)) * 4.0;
+                        sum += texture2D(sTexture, vec2(vTextureCoord.x + dynBlur, vTextureCoord.y)) * 2.0;
+                        sum += texture2D(sTexture, vec2(vTextureCoord.x - dynBlur, vTextureCoord.y + dynBlur));
+                        sum += texture2D(sTexture, vec2(vTextureCoord.x, vTextureCoord.y + dynBlur)) * 2.0;
+                        sum += texture2D(sTexture, vec2(vTextureCoord.x + dynBlur, vTextureCoord.y + dynBlur));
+                        baseColor = (sum / 16.0).rgb;
+                    } else {
+                        // Chromatic aberration (lens imperfection)
+                        vec2 caOffset = (vTextureCoord - 0.5) * 0.0012;
+                        float r = texture2D(sTexture, vTextureCoord + caOffset).r;
+                        float g = texture2D(sTexture, vTextureCoord).g;
+                        float b = texture2D(sTexture, vTextureCoord - caOffset).b;
+                        baseColor = vec3(r, g, b);
+                    }
                     
                     // ANTI-DETECTION: Enhance texture detail (counteracts H.264 smoothing)
                     vec3 detailedColor = enhanceDetail(baseColor, vTextureCoord, uTime);
                     
                     // Apply ambient color tint (simulates screen light reflection on face)
                     vec3 tintedColor = applyAmbientTint(detailedColor, uColorTint, uColorIntensity);
+                    
+                    // ANTI-DETECTION: Hardware Override Simulation (Flash and Exposure)
+                    if (uFlashIntensity > 0.0) {
+                        // Wash out color, mimic close-up flashlight
+                        tintedColor = mix(tintedColor, vec3(1.0), uFlashIntensity * 0.7);
+                    }
+                    tintedColor *= uExposureMultiplier;
                     
                     // ANTI-DETECTION: Add realistic CMOS sensor noise (ensures unique frames)
                     vec3 noise = sensorNoise(gl_FragCoord.xy, uTime, tintedColor);
@@ -207,6 +234,9 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             uniform float uTime;
             uniform vec3 uColorTint;      // RGB color tint (0-1 range)
             uniform float uColorIntensity; // How strong the tint is (0-1)
+            uniform float uFlashIntensity;
+            uniform float uBlurRadius;
+            uniform float uExposureMultiplier;
             const float blurSize = 0.02;
             
             // High-quality hash function for better noise distribution
@@ -298,8 +328,25 @@ class TextureRenderer(private val isVideo: Boolean = true) {
             }
             
             void main() {
-                vec4 tc = texture2D(sTexture, vTextureCoord);
-                vec3 baseColor = tc.rgb;
+                // ANTI-DETECTION: Hardware Override Simulation (Blur)
+                vec3 baseColor;
+                if (uBlurRadius > 0.0) {
+                    float dynBlur = blurSize * uBlurRadius * 2.0;
+                    vec4 sum = vec4(0.0);
+                    sum += texture2D(sTexture, vec2(vTextureCoord.x - dynBlur, vTextureCoord.y - dynBlur));
+                    sum += texture2D(sTexture, vec2(vTextureCoord.x, vTextureCoord.y - dynBlur)) * 2.0;
+                    sum += texture2D(sTexture, vec2(vTextureCoord.x + dynBlur, vTextureCoord.y - dynBlur));
+                    sum += texture2D(sTexture, vec2(vTextureCoord.x - dynBlur, vTextureCoord.y)) * 2.0;
+                    sum += texture2D(sTexture, vec2(vTextureCoord.x, vTextureCoord.y)) * 4.0;
+                    sum += texture2D(sTexture, vec2(vTextureCoord.x + dynBlur, vTextureCoord.y)) * 2.0;
+                    sum += texture2D(sTexture, vec2(vTextureCoord.x - dynBlur, vTextureCoord.y + dynBlur));
+                    sum += texture2D(sTexture, vec2(vTextureCoord.x, vTextureCoord.y + dynBlur)) * 2.0;
+                    sum += texture2D(sTexture, vec2(vTextureCoord.x + dynBlur, vTextureCoord.y + dynBlur));
+                    baseColor = (sum / 16.0).rgb;
+                } else {
+                    vec4 tc = texture2D(sTexture, vTextureCoord);
+                    baseColor = tc.rgb;
+                }
                 
                 // ANTI-DETECTION: Enhance texture detail
                 vec3 detailedColor = enhanceDetail(baseColor, vTextureCoord, uTime);
@@ -307,10 +354,20 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                 // Apply ambient color tint (simulates screen light reflection on face)
                 vec3 tintedColor = applyAmbientTint(detailedColor, uColorTint, uColorIntensity);
                 
+                // ANTI-DETECTION: Hardware Override Simulation (Flash and Exposure)
+                if (uFlashIntensity > 0.0) {
+                    // Wash out color, mimic close-up flashlight
+                    tintedColor = mix(tintedColor, vec3(1.0), uFlashIntensity * 0.7);
+                }
+                tintedColor *= uExposureMultiplier;
+                
                 // ANTI-DETECTION: Add realistic CMOS sensor noise (ensures unique frames)
                 vec3 noise = sensorNoise(gl_FragCoord.xy, uTime, tintedColor);
                 
-                gl_FragColor = vec4(tintedColor * uBrightness + noise, 1.0);
+                // Fixed pattern noise (hot pixels)
+                float fpn = fixedPatternNoise(gl_FragCoord.xy);
+                
+                gl_FragColor = vec4(tintedColor * uBrightness + noise + fpn, 1.0);
             }
         """
         
@@ -329,6 +386,9 @@ class TextureRenderer(private val isVideo: Boolean = true) {
     private var muTimeHandle = 0
     private var muColorTintHandle = 0
     private var muColorIntensityHandle = 0
+    private var muFlashIntensityHandle = 0
+    private var muBlurRadiusHandle = 0
+    private var muExposureMultiplierHandle = 0
     internal var textureId = -1
     private var frameCount = 0
     private val vertexBuffer: FloatBuffer = ByteBuffer.allocateDirect(VERTEX_COORDS.size * FLOAT_SIZE_BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer().apply { put(VERTEX_COORDS).position(0) }
@@ -354,6 +414,9 @@ class TextureRenderer(private val isVideo: Boolean = true) {
         muTimeHandle = GLES20.glGetUniformLocation(program, "uTime")
         muColorTintHandle = GLES20.glGetUniformLocation(program, "uColorTint")
         muColorIntensityHandle = GLES20.glGetUniformLocation(program, "uColorIntensity")
+        muFlashIntensityHandle = GLES20.glGetUniformLocation(program, "uFlashIntensity")
+        muBlurRadiusHandle = GLES20.glGetUniformLocation(program, "uBlurRadius")
+        muExposureMultiplierHandle = GLES20.glGetUniformLocation(program, "uExposureMultiplier")
         textureId = IntArray(1).apply { GLES20.glGenTextures(1, this, 0) }[0]
         val target = if (isVideo) GLES11Ext.GL_TEXTURE_EXTERNAL_OES else GLES20.GL_TEXTURE_2D
         GLES20.glBindTexture(target, textureId)
@@ -370,7 +433,8 @@ class TextureRenderer(private val isVideo: Boolean = true) {
              brightnessMultiplier: Float = 1.0f, timeValue: Float = 0.0f,
              gyroOffsetX: Float = 0f, gyroOffsetY: Float = 0f,
              colorTintR: Float = 0f, colorTintG: Float = 0f, colorTintB: Float = 0f,
-             colorIntensity: Float = 0f) {
+             colorIntensity: Float = 0f,
+             apiPanX: Float = 0f, apiPanY: Float = 0f) {
              
         if (viewWidth > 0 && viewHeight > 0) GLES20.glViewport(0, 0, viewWidth, viewHeight)
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
@@ -380,6 +444,12 @@ class TextureRenderer(private val isVideo: Boolean = true) {
         // Set color tint uniforms for ambient light simulation
         GLES20.glUniform3f(muColorTintHandle, colorTintR, colorTintG, colorTintB)
         GLES20.glUniform1f(muColorIntensityHandle, colorIntensity)
+        
+        // Set hardware override simulation uniforms
+        GLES20.glUniform1f(muFlashIntensityHandle, apiFlashIntensity)
+        GLES20.glUniform1f(muBlurRadiusHandle, apiBlurRadius)
+        GLES20.glUniform1f(muExposureMultiplierHandle, apiExposureMultiplier)
+        
         val target = if (isVideo) GLES11Ext.GL_TEXTURE_EXTERNAL_OES else GLES20.GL_TEXTURE_2D
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
         GLES20.glBindTexture(target, textureId)
@@ -418,6 +488,11 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                     Matrix.rotateM(modelMatrix, 0, gyroOffsetY, 1f, 0f, 0f)  // Pitch (X-axis rotation)
                     Matrix.rotateM(modelMatrix, 0, gyroOffsetX, 0f, 1f, 0f)  // Roll (Y-axis rotation)
                     Matrix.translateM(modelMatrix, 0, -0.5f, -0.5f, 0f)
+                }
+
+                // eKYC Zoom Pan (SCALER_CROP_REGION offsets)
+                if (apiPanX != 0f || apiPanY != 0f) {
+                    Matrix.translateM(modelMatrix, 0, -apiPanX * 2.0f, apiPanY * 2.0f, 0f)
                 }
                 
                 // 2. Viewport fitting
