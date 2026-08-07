@@ -24,8 +24,22 @@ class ModuleMain : IXposedHookLoadPackage {
     }
     
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
-        // Skip our own app
-        if (lpparam.packageName == "com.kcam") return
+        // Skip our own app and common system UI elements to prevent instability/shaking
+        val ignorePackages = setOf(
+            "com.kcam",
+            "com.virtucam",
+            "android",
+            "com.android.systemui",
+            "com.google.android.apps.nexuslauncher",
+            "com.miui.home",
+            "com.sec.android.app.launcher",
+            "com.oneplus.launcher"
+        )
+        if (ignorePackages.contains(lpparam.packageName) || 
+            lpparam.packageName.contains("launcher") || 
+            lpparam.packageName.contains("systemui")) {
+            return
+        }
         
         Log.e("DIAGNOSTIC_VIRTUCAM", "VirtuCam_Main: handleLoadPackage called for ${lpparam.packageName}")
         

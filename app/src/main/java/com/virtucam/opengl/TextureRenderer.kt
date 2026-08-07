@@ -124,13 +124,16 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                 vec3 laplacian = 4.0 * color - n - s - e - w;
                 
                 // Add subtle sharpening (restores edge detail lost to compression)
-                float sharpAmount = 0.15;
+                // Reduced sharpening in dark areas to prevent black ringing lines
+                float luma = dot(color, vec3(0.299, 0.587, 0.114));
+                float sharpAmount = 0.15 * smoothstep(0.1, 0.4, luma);
                 vec3 sharpened = color + laplacian * sharpAmount;
                 
                 // Add micro-texture variation (simulates skin pores, fabric texture)
-                float microTexture = fbmNoise(coord * 500.0, time) * 0.008;
+                // Drastically reduced amplitude to prevent black lines in dark videos
+                float microTexture = fbmNoise(coord * 500.0, time) * 0.002;
                 
-                return sharpened + microTexture;
+                return max(sharpened + microTexture, 0.0);
             }
             
             float fixedPatternNoise(vec2 p) {
@@ -219,8 +222,16 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                     // Fixed pattern noise (hot pixels)
                     float fpn = fixedPatternNoise(gl_FragCoord.xy);
                     
-                    // Final output with all anti-detection measures
-                    gl_FragColor = vec4(tintedColor * uBrightness + noise + fpn, 1.0);
+                    vec3 finalColor = tintedColor * uBrightness;
+                    
+                    // HIGHLIGHT PROTECTION (Soft Clip)
+                    // Prevents white cards and ID features from blowing out into flat white
+                    // Modified to preserve actual whites without dimming them too much
+                    vec3 overbright = max(finalColor - 0.9, vec3(0.0));
+                    finalColor = min(finalColor, vec3(0.9)) + (overbright / (1.0 + overbright));
+                    
+                    // Final output with all anti-detection measures clamped safely
+                    gl_FragColor = vec4(clamp(finalColor + noise + fpn, 0.0, 1.0), 1.0);
                 }
             }
         """
@@ -367,7 +378,14 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                 // Fixed pattern noise (hot pixels)
                 float fpn = fixedPatternNoise(gl_FragCoord.xy);
                 
-                gl_FragColor = vec4(tintedColor * uBrightness + noise + fpn, 1.0);
+                vec3 finalColor = tintedColor * uBrightness;
+                
+                // HIGHLIGHT PROTECTION (Soft Clip)
+                // Prevents white cards and ID features from blowing out into flat white
+                vec3 overbright = max(finalColor - 0.9, vec3(0.0));
+                finalColor = min(finalColor, vec3(0.9)) + (overbright / (1.0 + overbright));
+                
+                gl_FragColor = vec4(clamp(finalColor + noise + fpn, 0.0, 1.0), 1.0);
             }
         """
         
