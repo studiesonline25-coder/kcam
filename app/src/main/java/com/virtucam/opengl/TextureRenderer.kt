@@ -452,7 +452,8 @@ class TextureRenderer(private val isVideo: Boolean = true) {
              gyroOffsetX: Float = 0f, gyroOffsetY: Float = 0f,
              colorTintR: Float = 0f, colorTintG: Float = 0f, colorTintB: Float = 0f,
              colorIntensity: Float = 0f,
-             apiPanX: Float = 0f, apiPanY: Float = 0f) {
+             apiPanX: Float = 0f, apiPanY: Float = 0f,
+             apiFlashIntensity: Float = 0f, apiBlurRadius: Float = 0f, apiExposureMultiplier: Float = 1f) {
              
         if (viewWidth > 0 && viewHeight > 0) GLES20.glViewport(0, 0, viewWidth, viewHeight)
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
