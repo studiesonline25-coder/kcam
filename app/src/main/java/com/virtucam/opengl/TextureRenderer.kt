@@ -307,11 +307,14 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                 vec3 w = texture2D(sTexture, coord + vec2(-texelSize.x, 0.0)).rgb;
                 
                 vec3 laplacian = 4.0 * color - n - s - e - w;
-                float sharpAmount = 0.15;
+                // Reduced sharpening in dark areas to prevent black ringing lines
+                float luma = dot(color, vec3(0.299, 0.587, 0.114));
+                float sharpAmount = 0.15 * smoothstep(0.1, 0.4, luma);
                 vec3 sharpened = color + laplacian * sharpAmount;
                 
-                float microTexture = fbmNoise(coord * 500.0, time) * 0.008;
-                return sharpened + microTexture;
+                // Drastically reduced amplitude to prevent black lines in dark videos
+                float microTexture = fbmNoise(coord * 500.0, time) * 0.002;
+                return max(sharpened + vec3(microTexture), vec3(0.0));
             }
             
             // Apply color tint like ambient light reflection on skin
