@@ -133,7 +133,7 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                 // Drastically reduced amplitude to prevent black lines in dark videos
                 float microTexture = fbmNoise(coord * 500.0, time) * 0.002;
                 
-                return max(sharpened + microTexture, 0.0);
+                return max(sharpened + vec3(microTexture), vec3(0.0));
             }
             
             float fixedPatternNoise(vec2 p) {
@@ -156,13 +156,13 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                 float effectiveIntensity = intensity * totalReflection * 0.7;
                 
                 vec3 directReflection = tint * effectiveIntensity * 0.35;
-                vec3 ambientTint = mix(vec3(1.0), 1.0 + tint * 0.4, effectiveIntensity);
+                vec3 ambientTint = mix(vec3(1.0), vec3(1.0) + tint * 0.4, effectiveIntensity);
                 vec3 shadowShift = mix(vec3(0.0), tint * 0.1, (1.0 - luminance) * effectiveIntensity);
                 
                 vec3 tintedColor = (color + directReflection + shadowShift) * ambientTint;
                 vec3 preservedColor = mix(tintedColor, color, 0.15);
                 
-                return clamp(preservedColor, 0.0, 1.0);
+                return clamp(preservedColor, vec3(0.0), vec3(1.0));
             }
             
             void main() {
@@ -227,11 +227,11 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                     // HIGHLIGHT PROTECTION (Soft Clip)
                     // Prevents white cards and ID features from blowing out into flat white
                     // Modified to preserve actual whites without dimming them too much
-                    vec3 overbright = max(finalColor - 0.9, vec3(0.0));
-                    finalColor = min(finalColor, vec3(0.9)) + (overbright / (1.0 + overbright));
+                    vec3 overbright = max(finalColor - vec3(0.9), vec3(0.0));
+                    finalColor = min(finalColor, vec3(0.9)) + (overbright / (vec3(1.0) + overbright));
                     
                     // Final output with all anti-detection measures clamped safely
-                    gl_FragColor = vec4(clamp(finalColor + noise + fpn, 0.0, 1.0), 1.0);
+                    gl_FragColor = vec4(clamp(finalColor + noise + vec3(fpn), vec3(0.0), vec3(1.0)), 1.0);
                 }
             }
         """
@@ -329,13 +329,13 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                 float effectiveIntensity = intensity * totalReflection * 0.7;
                 
                 vec3 directReflection = tint * effectiveIntensity * 0.35;
-                vec3 ambientTint = mix(vec3(1.0), 1.0 + tint * 0.4, effectiveIntensity);
+                vec3 ambientTint = mix(vec3(1.0), vec3(1.0) + tint * 0.4, effectiveIntensity);
                 vec3 shadowShift = mix(vec3(0.0), tint * 0.1, (1.0 - luminance) * effectiveIntensity);
                 
                 vec3 tintedColor = (color + directReflection + shadowShift) * ambientTint;
                 vec3 preservedColor = mix(tintedColor, color, 0.15);
                 
-                return clamp(preservedColor, 0.0, 1.0);
+                return clamp(preservedColor, vec3(0.0), vec3(1.0));
             }
             
             void main() {
@@ -382,10 +382,10 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                 
                 // HIGHLIGHT PROTECTION (Soft Clip)
                 // Prevents white cards and ID features from blowing out into flat white
-                vec3 overbright = max(finalColor - 0.9, vec3(0.0));
-                finalColor = min(finalColor, vec3(0.9)) + (overbright / (1.0 + overbright));
+                vec3 overbright = max(finalColor - vec3(0.9), vec3(0.0));
+                finalColor = min(finalColor, vec3(0.9)) + (overbright / (vec3(1.0) + overbright));
                 
-                gl_FragColor = vec4(clamp(finalColor + noise + fpn, 0.0, 1.0), 1.0);
+                gl_FragColor = vec4(clamp(finalColor + noise + vec3(fpn), vec3(0.0), vec3(1.0)), 1.0);
             }
         """
         
