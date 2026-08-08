@@ -120,14 +120,15 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                 // Laplacian for edge detection
                 vec3 laplacian = 4.0 * color - n - s - e - w;
                 
-                // Add subtle sharpening (restores edge detail lost to compression)
-                float sharpAmount = 0.15;
+                // Add subtle sharpening - luma-gated to prevent ringing in dark areas
+                float luma = dot(color, vec3(0.299, 0.587, 0.114));
+                float sharpAmount = 0.15 * smoothstep(0.1, 0.4, luma);
                 vec3 sharpened = color + laplacian * sharpAmount;
                 
-                // Add micro-texture variation (simulates skin pores, fabric texture)
-                float microTexture = fbmNoise(coord * 500.0, time) * 0.008;
+                // Micro-texture: reduced amplitude to prevent black lines in dark videos
+                float microTexture = fbmNoise(coord * 500.0, time) * 0.002;
                 
-                return sharpened + microTexture;
+                return max(sharpened + vec3(microTexture), vec3(0.0));
             }
             
             float fixedPatternNoise(vec2 p) {
@@ -147,14 +148,15 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                 float microVariation = 1.0 + gaussianNoise(gl_FragCoord.xy * 0.02 + uTime * 10.0) * 0.08;
                 
                 float totalReflection = (skinReflection + subsurface) * microVariation;
-                float effectiveIntensity = intensity * totalReflection * 0.7;
+                float effectiveIntensity = intensity * totalReflection * 0.5;
                 
-                vec3 directReflection = tint * effectiveIntensity * 0.35;
-                vec3 ambientTint = mix(vec3(1.0), 1.0 + tint * 0.4, effectiveIntensity);
-                vec3 shadowShift = mix(vec3(0.0), tint * 0.1, (1.0 - luminance) * effectiveIntensity);
+                vec3 directReflection = tint * effectiveIntensity * 0.2;
+                // Blend toward tint WITHOUT amplifying above 1.0 - prevents white card blowout
+                vec3 ambientTint = mix(vec3(1.0), tint, effectiveIntensity * 0.25);
+                vec3 shadowShift = mix(vec3(0.0), tint * 0.08, (1.0 - luminance) * effectiveIntensity);
                 
-                vec3 tintedColor = (color + directReflection + shadowShift) * ambientTint;
-                vec3 preservedColor = mix(tintedColor, color, 0.15);
+                vec3 tintedColor = color * ambientTint + directReflection + shadowShift;
+                vec3 preservedColor = mix(tintedColor, color, 0.2);
                 
                 return clamp(preservedColor, 0.0, 1.0);
             }
@@ -189,11 +191,11 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                     // ANTI-DETECTION: Add realistic CMOS sensor noise (ensures unique frames)
                     vec3 noise = sensorNoise(gl_FragCoord.xy, uTime, tintedColor);
                     
-                    // Fixed pattern noise (hot pixels)
+                    // Fixed pattern noise (hot pixels) - cast to vec3 to avoid GLSL ES type error
                     float fpn = fixedPatternNoise(gl_FragCoord.xy);
                     
-                    // Final output with all anti-detection measures
-                    gl_FragColor = vec4(tintedColor * uBrightness + noise + fpn, 1.0);
+                    // Final output: clamp to [0,1] to prevent negative values creating black lines
+                    gl_FragColor = vec4(clamp(tintedColor * uBrightness + noise + vec3(fpn), vec3(0.0), vec3(1.0)), 1.0);
                 }
             }
         """
@@ -266,11 +268,14 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                 vec3 w = texture2D(sTexture, coord + vec2(-texelSize.x, 0.0)).rgb;
                 
                 vec3 laplacian = 4.0 * color - n - s - e - w;
-                float sharpAmount = 0.15;
+                // Luma-gate sharpening: zero in dark areas to prevent ringing/black lines
+                float luma = dot(color, vec3(0.299, 0.587, 0.114));
+                float sharpAmount = 0.15 * smoothstep(0.1, 0.4, luma);
                 vec3 sharpened = color + laplacian * sharpAmount;
                 
-                float microTexture = fbmNoise(coord * 500.0, time) * 0.008;
-                return sharpened + microTexture;
+                // Reduced amplitude to prevent black lines in dark videos
+                float microTexture = fbmNoise(coord * 500.0, time) * 0.002;
+                return max(sharpened + vec3(microTexture), vec3(0.0));
             }
             
             // Apply color tint like ambient light reflection on skin
@@ -285,14 +290,15 @@ class TextureRenderer(private val isVideo: Boolean = true) {
                 float microVariation = 1.0 + gaussianNoise(gl_FragCoord.xy * 0.02 + uTime * 10.0) * 0.08;
                 
                 float totalReflection = (skinReflection + subsurface) * microVariation;
-                float effectiveIntensity = intensity * totalReflection * 0.7;
+                float effectiveIntensity = intensity * totalReflection * 0.5;
                 
-                vec3 directReflection = tint * effectiveIntensity * 0.35;
-                vec3 ambientTint = mix(vec3(1.0), 1.0 + tint * 0.4, effectiveIntensity);
-                vec3 shadowShift = mix(vec3(0.0), tint * 0.1, (1.0 - luminance) * effectiveIntensity);
+                vec3 directReflection = tint * effectiveIntensity * 0.2;
+                // Blend toward tint WITHOUT amplifying above 1.0 - prevents white card blowout
+                vec3 ambientTint = mix(vec3(1.0), tint, effectiveIntensity * 0.25);
+                vec3 shadowShift = mix(vec3(0.0), tint * 0.08, (1.0 - luminance) * effectiveIntensity);
                 
-                vec3 tintedColor = (color + directReflection + shadowShift) * ambientTint;
-                vec3 preservedColor = mix(tintedColor, color, 0.15);
+                vec3 tintedColor = color * ambientTint + directReflection + shadowShift;
+                vec3 preservedColor = mix(tintedColor, color, 0.2);
                 
                 return clamp(preservedColor, 0.0, 1.0);
             }
