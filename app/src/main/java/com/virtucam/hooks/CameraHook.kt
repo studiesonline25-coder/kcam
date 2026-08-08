@@ -3207,8 +3207,10 @@ class VirtualRenderThread(
                     lightListener = object : android.hardware.SensorEventListener {
                         override fun onSensorChanged(event: android.hardware.SensorEvent) {
                             val lux = event.values[0]
-                            // Normal indoor light is ~100-300 lux. We vary brightness from 0.85 to 1.15
-                            val target = 0.85f + (lux.coerceIn(0f, 1000f) / 1000f) * 0.3f
+                            // Normal indoor light is ~100-300 lux.
+                            // Range [0.88, 1.00]: simulate slight dim in very dark rooms,
+                            // but NEVER amplify above 1.0 — that blows out white card details.
+                            val target = 0.88f + (lux.coerceIn(0f, 1000f) / 1000f) * 0.12f
                             // Smooth interpolation
                             ambientLightMultiplier += (target - ambientLightMultiplier) * 0.1f
                         }
